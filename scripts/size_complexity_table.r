@@ -12,7 +12,7 @@ baseDirectory <- "C:/Users/jgbro/OneDrive/Documentos/Workspaces/design-analysis-
 #
 # Dados de tamanho
 #
-data <- read_tsv(paste0(baseDirectory, "/PACOTE/results/JARProjectCharacteristics", project, ".data"));
+data <- read_tsv(paste0(baseDirectory, "/data/project-size/JARProjectCharacteristics.data"));
 
 result1 <- data %>% 
             group_by(versions) %>% 
@@ -28,7 +28,7 @@ result1 <- data %>%
 #
 # Carrega dados sobre as dependências
 #
-data2 <- read_tsv(paste0(baseDirectory, "/PACOTE/results/ODEMProjectCharacteristics", project, ".data"));
+data2 <- read_tsv(paste0(baseDirectory, "/data/project-size/ODEMProjectCharacteristics.data"));
 
 # Apenas para o JHotdraw
 if (project == "JHotDraw") {

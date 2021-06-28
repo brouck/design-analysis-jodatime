@@ -1,0 +1,1069 @@
+From ef954b6ee3e46bf6d76f5e76d3bc6ac8adc72aec Mon Sep 17 00:00:00 2001
+From: KAWACHI Takashi <tkawachi@gmail.com>
+Date: Tue, 21 Jul 2015 16:25:32 +0900
+Subject: [PATCH 1/7] Fix javadoc
+
+---
+ src/main/java/org/joda/time/DateTime.java | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/main/java/org/joda/time/DateTime.java b/src/main/java/org/joda/time/DateTime.java
+index 73a33b005..bbc17e957 100644
+--- a/src/main/java/org/joda/time/DateTime.java
++++ b/src/main/java/org/joda/time/DateTime.java
+@@ -138,7 +138,7 @@ public static DateTime now(Chronology chronology) {
+      * the offset is directly parsed and stored.
+      * As such, {@code DateTime.parse("2010-06-30T01:20+02:00")} and
+      * {@code new DateTime("2010-06-30T01:20+02:00"))} are NOT equal.
+-     * The object produced via this method has a zone of {@code DateTimeZone.forOffsetHours(1)}.
++     * The object produced via this method has a zone of {@code DateTimeZone.forOffsetHours(2)}.
+      * The object produced via the constructor has a zone of {@code DateTimeZone.getDefault()}.
+      * 
+      * @param str  the string to parse, not null
+
+From b707aaa1ec0fa3d84eda7d44862cdb80efb2b3ee Mon Sep 17 00:00:00 2001
+From: Tiem Song <tiembo@users.noreply.github.com>
+Date: Fri, 24 Jul 2015 11:53:04 -0700
+Subject: [PATCH 2/7] Change 1.x to 2.x in README
+
+---
+ README.md | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/README.md b/README.md
+index 2037b4e46..433d37f31 100644
+--- a/README.md
++++ b/README.md
+@@ -47,7 +47,7 @@ Various documentation is available:
+ 
+ ### Releases
+ [Release 2.8.1](http://www.joda.org/joda-time/download.html) is the current latest release.
+-This release is considered stable and worthy of the 1.x tag.
++This release is considered stable and worthy of the 2.x tag.
+ It depends on JDK 1.5 or later.
+ 
+ Available in the [Maven Central repository](http://search.maven.org/#artifactdetails|joda-time|joda-time|2.8.1|jar)
+
+From a7923174aa1e8a23c27ce0f6ae329467b0379b14 Mon Sep 17 00:00:00 2001
+From: Hans Joachim Desserud <github@desserud.org>
+Date: Wed, 29 Jul 2015 19:46:35 +0200
+Subject: [PATCH 3/7] Fixes typo. s/exract/extract/
+
+---
+ src/main/java/org/joda/time/ReadableInterval.java      | 4 ++--
+ src/main/java/org/joda/time/base/AbstractInterval.java | 4 ++--
+ 2 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/src/main/java/org/joda/time/ReadableInterval.java b/src/main/java/org/joda/time/ReadableInterval.java
+index d0c728232..73a494f1e 100644
+--- a/src/main/java/org/joda/time/ReadableInterval.java
++++ b/src/main/java/org/joda/time/ReadableInterval.java
+@@ -260,7 +260,7 @@
+      * Converts the duration of the interval to a period using the
+      * standard period type.
+      * <p>
+-     * This method should be used to exract the field values describing the
++     * This method should be used to extract the field values describing the
+      * difference between the start and end instants.
+      *
+      * @return a time period derived from the interval
+@@ -271,7 +271,7 @@
+      * Converts the duration of the interval to a period using the
+      * specified period type.
+      * <p>
+-     * This method should be used to exract the field values describing the
++     * This method should be used to extract the field values describing the
+      * difference between the start and end instants.
+      *
+      * @param type  the requested type of the duration, null means standard
+diff --git a/src/main/java/org/joda/time/base/AbstractInterval.java b/src/main/java/org/joda/time/base/AbstractInterval.java
+index 86b7f83ff..17caf63ac 100644
+--- a/src/main/java/org/joda/time/base/AbstractInterval.java
++++ b/src/main/java/org/joda/time/base/AbstractInterval.java
+@@ -424,7 +424,7 @@ public Duration toDuration() {
+      * Converts the duration of the interval to a <code>Period</code> using the
+      * All period type.
+      * <p>
+-     * This method should be used to exract the field values describing the
++     * This method should be used to extract the field values describing the
+      * difference between the start and end instants.
+      *
+      * @return a time period derived from the interval
+@@ -437,7 +437,7 @@ public Period toPeriod() {
+      * Converts the duration of the interval to a <code>Period</code> using the
+      * specified period type.
+      * <p>
+-     * This method should be used to exract the field values describing the
++     * This method should be used to extract the field values describing the
+      * difference between the start and end instants.
+      *
+      * @param type  the requested type of the duration, null means AllType
+
+From 1367aa889cc666802c95de70b07c920d254a3520 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Tue, 11 Aug 2015 12:39:31 +0100
+Subject: [PATCH 4/7] Bump version
+
+---
+ RELEASE-NOTES.txt | 7 ++++++-
+ pom.xml           | 2 +-
+ 2 files changed, 7 insertions(+), 2 deletions(-)
+
+diff --git a/RELEASE-NOTES.txt b/RELEASE-NOTES.txt
+index 828451ebb..4dbc42e3c 100644
+--- a/RELEASE-NOTES.txt
++++ b/RELEASE-NOTES.txt
+@@ -1,4 +1,4 @@
+-Joda-Time version 2.8.1
++Joda-Time version 2.8.2
+ -----------------------
+ 
+ Joda-Time is a date and time handling library that seeks to replace the JDK
+@@ -16,6 +16,11 @@ of restrictions. If the license causes you problems please contact the mailing l
+ ** http://www.joda.org/joda-time/related.html **
+ 
+ 
++Changes in 2.8.2
++================
++
++
++
+ Changes in 2.8.1
+ ================
+ - Fixed to handle JDK 8u60 [#288, #291]
+diff --git a/pom.xml b/pom.xml
+index 8e288e77e..efc75ed79 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -9,7 +9,7 @@
+   <artifactId>joda-time</artifactId>
+   <packaging>jar</packaging>
+   <name>Joda-Time</name>
+-  <version>2.8.1</version>
++  <version>2.8.2-SNAPSHOT</version>
+   <description>Date and time library to replace JDK date handling</description>
+   <url>http://www.joda.org/joda-time/</url>
+ 
+
+From ab7fc12af2a0fa23065bb732ae45c6aa4b21c2e4 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Tue, 11 Aug 2015 12:39:41 +0100
+Subject: [PATCH 5/7] Update to time-zone data 2015f
+
+---
+ RELEASE-NOTES.txt                             |  1 +
+ pom.xml                                       |  2 +-
+ src/main/java/org/joda/time/tz/src/africa     |  4 +-
+ src/main/java/org/joda/time/tz/src/asia       | 25 +++++--
+ src/main/java/org/joda/time/tz/src/europe     | 71 +++++++++++--------
+ .../java/org/joda/time/tz/src/northamerica    | 19 +++--
+ .../java/org/joda/time/tz/src/southamerica    | 43 ++++++-----
+ 7 files changed, 107 insertions(+), 58 deletions(-)
+
+diff --git a/RELEASE-NOTES.txt b/RELEASE-NOTES.txt
+index 4dbc42e3c..292dac2fa 100644
+--- a/RELEASE-NOTES.txt
++++ b/RELEASE-NOTES.txt
+@@ -18,6 +18,7 @@ of restrictions. If the license causes you problems please contact the mailing l
+ 
+ Changes in 2.8.2
+ ================
++- DateTimeZone data updated to version 2015f
+ 
+ 
+ 
+diff --git a/pom.xml b/pom.xml
+index efc75ed79..2452e8eca 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -799,6 +799,6 @@
+     <!-- Other properties -->
+     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+-    <tz.database.version>2015e</tz.database.version>
++    <tz.database.version>2015f</tz.database.version>
+   </properties>
+ </project>
+diff --git a/src/main/java/org/joda/time/tz/src/africa b/src/main/java/org/joda/time/tz/src/africa
+index 5ad47e360..f20d21602 100644
+--- a/src/main/java/org/joda/time/tz/src/africa
++++ b/src/main/java/org/joda/time/tz/src/africa
+@@ -538,7 +538,7 @@ Zone	Africa/Tripoli	0:52:44 -	LMT	1920
+ 
+ # From Alex Krivenyshev (2008-07-11):
+ # Seems that English language article "The revival of daylight saving
+-# time: Energy conservation?"-# No. 16578 (07/11/2008) was originally
++# time: Energy conservation?"- No. 16578 (07/11/2008) was originally
+ # published on Monday, June 30, 2008...
+ #
+ # I guess that article in French "Le gouvernement avance l'introduction
+@@ -670,7 +670,7 @@ Zone Indian/Mauritius	3:50:00 -	LMT	1907 # Port Louis
+ # Here is a link to official document from Royaume du Maroc Premier Ministre,
+ # Ministère de la Modernisation des Secteurs Publics
+ #
+-# Under Article 1 of Royal Decree No. 455-67 of Act 23 safar 1387 (2 june 1967)
++# Under Article 1 of Royal Decree No. 455-67 of Act 23 safar 1387 (2 June 1967)
+ # concerning the amendment of the legal time, the Ministry of Modernization of
+ # Public Sectors announced that the official time in the Kingdom will be
+ # advanced 60 minutes from Sunday 31 May 2009 at midnight.
+diff --git a/src/main/java/org/joda/time/tz/src/asia b/src/main/java/org/joda/time/tz/src/asia
+index 756e3d0e5..4f8756b87 100644
+--- a/src/main/java/org/joda/time/tz/src/asia
++++ b/src/main/java/org/joda/time/tz/src/asia
+@@ -6,7 +6,7 @@
+ # tz@iana.org for general use in the future).  For more, please see
+ # the file CONTRIBUTING in the tz distribution.
+ 
+-# From Paul Eggert (2014-10-31):
++# From Paul Eggert (2015-08-08):
+ #
+ # Unless otherwise specified, the source for data through 1990 is:
+ # Thomas G. Shanks and Rique Pottenger, The International Atlas (6th edition),
+@@ -43,7 +43,7 @@
+ #	2:00 EET  EEST	Eastern European Time
+ #	2:00 IST  IDT	Israel
+ #	3:00 AST  ADT	Arabia*
+-#	3:30 IRST IRDT	Iran
++#	3:30 IRST IRDT	Iran*
+ #	4:00 GST	Gulf*
+ #	5:30 IST	India
+ #	7:00 ICT	Indochina, most times and locations*
+@@ -52,10 +52,11 @@
+ #	8:00 CST	China
+ #	8:00 IDT	Indochina, 1943-45, 1947-55, 1960-75 (some locations)*
+ #	8:00 JWST	Western Standard Time (Japan, 1896/1937)*
++#	8:30 KST  KDT	Korea when at +0830*
+ #	9:00 JCST	Central Standard Time (Japan, 1896/1937)
+ #	9:00 WIT	east Indonesia (Waktu Indonesia Timur)
+ #	9:00 JST  JDT	Japan
+-#	9:00 KST  KDT	Korea
++#	9:00 KST  KDT	Korea when at +09
+ #	9:30 ACST	Australian Central Standard Time
+ #
+ # See the 'europe' file for Russia and Turkey in Asia.
+@@ -1027,7 +1028,7 @@ Zone Asia/Jayapura	9:22:48 -	LMT	1932 Nov
+ #
+ # From Roozbeh Pournader (2007-11-05):
+ # This is quoted from Official Gazette of the Islamic Republic of
+-# Iran, Volume 63, Number 18242, dated Tuesday 1386/6/24
++# Iran, Volume 63, No. 18242, dated Tuesday 1386/6/24
+ # [2007-10-16]. I am doing the best translation I can:...
+ # The official time of the country will be moved forward for one hour
+ # on the 24 hours of the first day of the month of Farvardin and will
+@@ -1557,7 +1558,7 @@ Zone	Asia/Amman	2:23:44 -	LMT	1931
+ # - Qyzylorda switched from +5:00 to +6:00 on 1992-01-19 02:00.
+ # - Oral switched from +5:00 to +4:00 in spring 1989.
+ 
+-# From Kazakhstan Embassy's News Bulletin #11
++# From Kazakhstan Embassy's News Bulletin No. 11
+ # <http://www.kazsociety.org.uk/news/2005/03/30.htm> (2005-03-21):
+ # The Government of Kazakhstan passed a resolution March 15 abolishing
+ # daylight saving time citing lack of economic benefits and health
+@@ -1711,6 +1712,17 @@ Rule	ROK	1987	1988	-	Oct	Sun>=8	3:00	0	S
+ #
+ # For Pyongyang we have no information; guess no changes since World War II.
+ 
++# From Steffen Thorsen (2015-08-07):
++# According to many news sources, North Korea is going to change to
++# the 8:30 time zone on August 15, one example:
++# http://www.bbc.com/news/world-asia-33815049
++#
++# From Paul Eggert (2015-08-07):
++# No transition time is specified; assume 00:00.
++# There is no common English-language abbreviation for this time zone.
++# Use %z rather than invent one.  We can't assume %z works everywhere yet,
++# so for now substitute its output manually.
++
+ # Zone	NAME		GMTOFF	RULES	FORMAT	[UNTIL]
+ Zone	Asia/Seoul	8:27:52	-	LMT	1908 Apr  1
+ 			8:30	-	KST	1912 Jan  1
+@@ -1723,7 +1735,8 @@ Zone	Asia/Pyongyang	8:23:00 -	LMT	1908 Apr  1
+ 			8:30	-	KST	1912 Jan  1
+ 			9:00	-	JCST	1937 Oct  1
+ 			9:00	-	JST	1945 Aug 24
+-			9:00	-	KST
++			9:00	-	KST	2015 Aug 15
++			8:30	-	KST
+ 
+ ###############################################################################
+ 
+diff --git a/src/main/java/org/joda/time/tz/src/europe b/src/main/java/org/joda/time/tz/src/europe
+index c64c41bec..6b89b6e1f 100644
+--- a/src/main/java/org/joda/time/tz/src/europe
++++ b/src/main/java/org/joda/time/tz/src/europe
+@@ -193,11 +193,14 @@
+ #	republished in Finest Hour (Spring 2002) 1(114):26
+ #	http://www.winstonchurchill.org/images/finesthour/Vol.01%20No.114.pdf
+ 
+-# From Paul Eggert (1996-09-03):
++# From Paul Eggert (2015-08-08):
+ # The OED Supplement says that the English originally said "Daylight Saving"
+ # when they were debating the adoption of DST in 1908; but by 1916 this
+ # term appears only in quotes taken from DST's opponents, whereas the
+ # proponents (who eventually won the argument) are quoted as using "Summer".
++# The term "Summer Time" was introduced by Herbert Samuel, Home Secretary; see:
++# Viscount Samuel. Leisure in a Democracy. Cambridge University Press
++# ISBN 978-1-107-49471-8 (1949, reissued 2015), p 8.
+ 
+ # From Arthur David Olson (1989-01-19):
+ # A source at the British Information Office in New York avers that it's
+@@ -343,7 +346,7 @@
+ 
+ # From an anonymous contributor (1996-06-02):
+ # The law governing time in Ireland is under Statutory Instrument SI 395/94,
+-# which gives force to European Union 7th Council Directive # 94/21/EC.
++# which gives force to European Union 7th Council Directive No. 94/21/EC.
+ # Under this directive, the Minister for Justice in Ireland makes appropriate
+ # regulations. I spoke this morning with the Secretary of the Department of
+ # Justice (tel +353 1 678 9711) who confirmed to me that the correct name is
+@@ -592,11 +595,11 @@ Rule	Russia	1921	only	-	Feb	14	23:00	1:00	MSD
+ Rule	Russia	1921	only	-	Mar	20	23:00	2:00	MSM  # Midsummer
+ Rule	Russia	1921	only	-	Sep	 1	 0:00	1:00	MSD
+ Rule	Russia	1921	only	-	Oct	 1	 0:00	0	-
+-# Act No.925 of the Council of Ministers of the USSR (1980-10-24):
++# Act No. 925 of the Council of Ministers of the USSR (1980-10-24):
+ Rule	Russia	1981	1984	-	Apr	 1	 0:00	1:00	S
+ Rule	Russia	1981	1983	-	Oct	 1	 0:00	0	-
+-# Act No.967 of the Council of Ministers of the USSR (1984-09-13), repeated in
+-# Act No.227 of the Council of Ministers of the USSR (1989-03-14):
++# Act No. 967 of the Council of Ministers of the USSR (1984-09-13), repeated in
++# Act No. 227 of the Council of Ministers of the USSR (1989-03-14):
+ Rule	Russia	1984	1991	-	Sep	lastSun	 2:00s	0	-
+ Rule	Russia	1985	1991	-	Mar	lastSun	 2:00s	1:00	S
+ #
+@@ -828,7 +831,7 @@ Zone	Europe/Brussels	0:17:30 -	LMT	1880
+ # Bulgaria
+ #
+ # From Plamen Simenov via Steffen Thorsen (1999-09-09):
+-# A document of Government of Bulgaria (No.94/1997) says:
++# A document of Government of Bulgaria (No. 94/1997) says:
+ # EET -> EETDST is in 03:00 Local time in last Sunday of March ...
+ # EETDST -> EET is in 04:00 Local time in last Sunday of October
+ #
+@@ -845,7 +848,7 @@ Zone	Europe/Sofia	1:33:16 -	LMT	1880
+ 			1:00	C-Eur	CE%sT	1945
+ 			1:00	-	CET	1945 Apr  2  3:00
+ 			2:00	-	EET	1979 Mar 31 23:00
+-			2:00	Bulg	EE%sT	1982 Sep 26  2:00
++			2:00	Bulg	EE%sT	1982 Sep 26  3:00
+ 			2:00	C-Eur	EE%sT	1991
+ 			2:00	E-Eur	EE%sT	1997
+ 			2:00	EU	EE%sT
+@@ -1062,8 +1065,8 @@ Zone America/Thule	-4:35:08 -	LMT	1916 Jul 28 # Pituffik air base
+ # after that.
+ 
+ # From Mart Oruaas (2000-01-29):
+-# Regulation no. 301 (1999-10-12) obsoletes previous regulation
+-# no. 206 (1998-09-22) and thus sticks Estonia to +02:00 GMT for all
++# Regulation No. 301 (1999-10-12) obsoletes previous regulation
++# No. 206 (1998-09-22) and thus sticks Estonia to +02:00 GMT for all
+ # the year round.  The regulation is effective 1999-11-01.
+ 
+ # From Toomas Soome (2002-02-21):
+@@ -1084,7 +1087,7 @@ Zone	Europe/Tallinn	1:39:00	-	LMT	1880
+ 			3:00	Russia	MSK/MSD	1989 Mar 26  2:00s
+ 			2:00	1:00	EEST	1989 Sep 24  2:00s
+ 			2:00	C-Eur	EE%sT	1998 Sep 22
+-			2:00	EU	EE%sT	1999 Nov  1
++			2:00	EU	EE%sT	1999 Oct 31  4:00
+ 			2:00	-	EET	2002 Feb 21
+ 			2:00	EU	EE%sT
+ 
+@@ -1527,21 +1530,21 @@ Link	Europe/Rome	Europe/San_Marino
+ # correct data in juridical acts and I found some juridical documents about
+ # changes in the counting of time in Latvia from 1981....
+ #
+-# Act No.35 of the Council of Ministers of Latvian SSR of 1981-01-22 ...
+-# according to the Act No.925 of the Council of Ministers of USSR of 1980-10-24
++# Act No. 35 of the Council of Ministers of Latvian SSR of 1981-01-22 ...
++# according to the Act No. 925 of the Council of Ministers of USSR of 1980-10-24
+ # ...: all year round the time of 2nd time zone + 1 hour, in addition turning
+ # the hands of the clock 1 hour forward on 1 April at 00:00 (GMT 31 March 21:00)
+ # and 1 hour backward on the 1 October at 00:00 (GMT 30 September 20:00).
+ #
+-# Act No.592 of the Council of Ministers of Latvian SSR of 1984-09-24 ...
+-# according to the Act No.967 of the Council of Ministers of USSR of 1984-09-13
++# Act No. 592 of the Council of Ministers of Latvian SSR of 1984-09-24 ...
++# according to the Act No. 967 of the Council of Ministers of USSR of 1984-09-13
+ # ...: all year round the time of 2nd time zone + 1 hour, in addition turning
+ # the hands of the clock 1 hour forward on the last Sunday of March at 02:00
+ # (GMT 23:00 on the previous day) and 1 hour backward on the last Sunday of
+ # September at 03:00 (GMT 23:00 on the previous day).
+ #
+-# Act No.81 of the Council of Ministers of Latvian SSR of 1989-03-22 ...
+-# according to the Act No.227 of the Council of Ministers of USSR of 1989-03-14
++# Act No. 81 of the Council of Ministers of Latvian SSR of 1989-03-22 ...
++# according to the Act No. 227 of the Council of Ministers of USSR of 1989-03-14
+ # ...: since the last Sunday of March 1989 in Lithuanian SSR, Latvian SSR,
+ # Estonian SSR and Kaliningrad region of Russian Federation all year round the
+ # time of 2nd time zone (Moscow time minus one hour). On the territory of Latvia
+@@ -1558,7 +1561,7 @@ Link	Europe/Rome	Europe/San_Marino
+ # From Andrei Ivanov (2000-03-06):
+ # This year Latvia will not switch to Daylight Savings Time (as specified in
+ # The Regulations of the Cabinet of Ministers of the Rep. of Latvia of
+-# 29-Feb-2000 (#79) <http://www.lv-laiks.lv/wwwraksti/2000/071072/vd4.htm>,
++# 29-Feb-2000 (No. 79) <http://www.lv-laiks.lv/wwwraksti/2000/071072/vd4.htm>,
+ # in Latvian for subscribers only).
+ 
+ # From RFE/RL Newsline
+@@ -1763,6 +1766,18 @@ Zone	Europe/Malta	0:58:04 -	LMT	1893 Nov  2  0:00s # Valletta
+ # News from Moldova (in russian):
+ # http://ru.publika.md/link_317061.html
+ 
++# From Roman Tudos (2015-07-02):
++# http://lex.justice.md/index.php?action=view&view=doc&lang=1&id=355077
++# From Paul Eggert (2015-07-01):
++# The abovementioned official link to IGO1445-868/2014 states that
++# 2014-10-26's fallback transition occurred at 03:00 local time.  Also,
++# http://www.trm.md/en/social/la-30-martie-vom-trece-la-ora-de-vara
++# says the 2014-03-30 spring-forward transition was at 02:00 local time.
++# Guess that since 1997 Moldova has switched one hour before the EU.
++
++# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++Rule	Moldova	1997	max	-	Mar	lastSun	 2:00	1:00	S
++Rule	Moldova	1997	max	-	Oct	lastSun	 3:00	0	-
+ 
+ # Zone	NAME		GMTOFF	RULES	FORMAT	[UNTIL]
+ Zone	Europe/Chisinau	1:55:20 -	LMT	1880
+@@ -1777,7 +1792,7 @@ Zone	Europe/Chisinau	1:55:20 -	LMT	1880
+ 			2:00	Russia	EE%sT	1992
+ 			2:00	E-Eur	EE%sT	1997
+ # See Romania commentary for the guessed 1997 transition to EU rules.
+-			2:00	EU	EE%sT
++			2:00	Moldova	EE%sT
+ 
+ # Monaco
+ # Shanks & Pottenger give 0:09:20 for Paris Mean Time; go with Howse's
+@@ -2123,7 +2138,7 @@ Zone Europe/Bucharest	1:44:24 -	LMT	1891 Oct
+ # Russia
+ 
+ # From Alexander Krivenyshev (2011-09-15):
+-# Based on last Russian Government Decree # 725 on August 31, 2011
++# Based on last Russian Government Decree No. 725 on August 31, 2011
+ # (Government document
+ # http://www.government.ru/gov/results/16355/print/
+ # in Russian)
+@@ -2133,7 +2148,7 @@ Zone Europe/Bucharest	1:44:24 -	LMT	1891 Oct
+ # http://www.worldtimezone.com/dst_news/dst_news_russia36.htm
+ 
+ # From Sanjeev Gupta (2011-09-27):
+-# Scans of [Decree #23 of January 8, 1992] are available at:
++# Scans of [Decree No. 23 of January 8, 1992] are available at:
+ # http://government.consultant.ru/page.aspx?1223966
+ # They are in Cyrillic letters (presumably Russian).
+ 
+@@ -2144,19 +2159,19 @@ Zone Europe/Bucharest	1:44:24 -	LMT	1891 Oct
+ # One source is
+ # http://government.ru/gov/results/16355/
+ # which, according to translate.google.com, begins "Decree of August 31,
+-# 2011 No 725" and contains no other dates or "effective date" information.
++# 2011 No. 725" and contains no other dates or "effective date" information.
+ #
+ # Another source is
+ # http://www.rg.ru/2011/09/06/chas-zona-dok.html
+ # which, according to translate.google.com, begins "Resolution of the
+ # Government of the Russian Federation on August 31, 2011 N 725" and also
+ # contains "Date first official publication: September 6, 2011 Posted on:
+-# in the 'RG' - Federal Issue number 5573 September 6, 2011" but which
++# in the 'RG' - Federal Issue No. 5573 September 6, 2011" but which
+ # does not contain any "effective date" information.
+ #
+ # Another source is
+ # http://en.wikipedia.org/wiki/Oymyakonsky_District#cite_note-RuTime-7
+-# which, in note 8, contains "Resolution #725 of August 31, 2011...
++# which, in note 8, contains "Resolution No. 725 of August 31, 2011...
+ # Effective as of after 7 days following the day of the official publication"
+ # but which does not contain any reference to September 6, 2011.
+ #
+@@ -2364,7 +2379,7 @@ Zone Europe/Simferopol	 2:16:24 -	LMT	1880
+ # changed in May.
+ 			 2:00	E-Eur	EE%sT	1994 May
+ # From IATA SSIM (1994/1997), which also says that Kerch is still like Kiev.
+-			 3:00	E-Eur	MSK/MSD	1996 Mar 31  3:00s
++			 3:00	E-Eur	MSK/MSD	1996 Mar 31  0:00s
+ 			 3:00	1:00	MSD	1996 Oct 27  3:00s
+ # IATA SSIM (1997-09) says Crimea switched to EET/EEST.
+ # Assume it happened in March by not changing the clocks.
+@@ -2499,7 +2514,7 @@ Zone Asia/Novosibirsk	 5:31:40 -	LMT	1919 Dec 14  6:00
+ # from current Russia Zone 6 - Krasnoyarsk Time Zone (KRA) UTC +0700
+ # to Russia Zone 5 - Novosibirsk Time Zone (NOV) UTC +0600
+ #
+-# This is according to Government of Russia decree # 740, on September
++# This is according to Government of Russia decree No. 740, on September
+ # 14, 2009 "Application in the territory of the Kemerovo region the Fifth
+ # time zone." ("Russia Zone 5" or old "USSR Zone 5" is GMT +0600)
+ #
+@@ -2922,7 +2937,7 @@ Zone	Africa/Ceuta	-0:21:16 -	LMT	1901
+ Zone	Atlantic/Canary	-1:01:36 -	LMT	1922 Mar # Las Palmas de Gran C.
+ 			-1:00	-	CANT	1946 Sep 30  1:00 # Canaries T
+ 			 0:00	-	WET	1980 Apr  6  0:00s
+-			 0:00	1:00	WEST	1980 Sep 28  0:00s
++			 0:00	1:00	WEST	1980 Sep 28  1:00u
+ 			 0:00	EU	WE%sT
+ # IATA SSIM (1996-09) says the Canaries switch at 2:00u, not 1:00u.
+ # Ignore this for now, as the Canaries are part of the EU.
+@@ -3212,7 +3227,7 @@ Link	Europe/Istanbul	Asia/Istanbul	# Istanbul is in both continents.
+ # From Igor Karpov, who works for the Ukrainian Ministry of Justice,
+ # via Garrett Wollman (2003-01-27):
+ # BTW, I've found the official document on this matter. It's government
+-# regulations number 509, May 13, 1996. In my poor translation it says:
++# regulations No. 509, May 13, 1996. In my poor translation it says:
+ # "Time in Ukraine is set to second timezone (Kiev time). Each last Sunday
+ # of March at 3am the time is changing to 4am and each last Sunday of
+ # October the time at 4am is changing to 3am"
+@@ -3221,7 +3236,7 @@ Link	Europe/Istanbul	Asia/Istanbul	# Istanbul is in both continents.
+ # On September 20, 2011 the deputies of the Verkhovna Rada agreed to
+ # abolish the transfer clock to winter time.
+ #
+-# Bill number 8330 of MP from the Party of Regions Oleg Nadoshi got
++# Bill No. 8330 of MP from the Party of Regions Oleg Nadoshi got
+ # approval from 266 deputies.
+ #
+ # Ukraine abolishes transfer back to the winter time (in Russian)
+diff --git a/src/main/java/org/joda/time/tz/src/northamerica b/src/main/java/org/joda/time/tz/src/northamerica
+index 88423e61a..660a92085 100644
+--- a/src/main/java/org/joda/time/tz/src/northamerica
++++ b/src/main/java/org/joda/time/tz/src/northamerica
+@@ -1235,10 +1235,19 @@ Zone America/Goose_Bay	-4:01:40 -	LMT	1884 # Happy Valley-Goose Bay
+ 
+ # west Labrador, Nova Scotia, Prince Edward I
+ 
+-# From Paul Eggert (2006-03-22):
++# From Brian Inglis (2015-07-20):
++# From the historical weather station records available at:
++# https://weatherspark.com/history/28351/1971/Sydney-Nova-Scotia-Canada
++# Sydney shares the same time history as Glace Bay, so was
++# likely to be the same across the island....
++# Sydney, as the capital and most populous location, or Cape Breton, would
++# have been better names for the zone had we known this in 1996.
++
++# From Paul Eggert (2015-07-20):
+ # Shanks & Pottenger write that since 1970 most of this region has been like
+ # Halifax.  Many locales did not observe peacetime DST until 1972;
+-# Glace Bay, NS is the largest that we know of.
++# the Cape Breton area, represented by Glace Bay, is the largest we know of
++# (Glace Bay was perhaps not the best name choice but no point changing now).
+ # Shanks & Pottenger also write that Liverpool, NS was the only town
+ # in Canada to observe DST in 1971 but not 1970; for now we'll assume
+ # this is a typo.
+@@ -1796,13 +1805,13 @@ Zone America/Edmonton	-7:33:52 -	LMT	1906 Sep
+ # Exact date in October unknown; Sunday October 1 is a reasonable guess.
+ # 3. June 1918: switch to Pacific Daylight Time (GMT-7)
+ # Exact date in June unknown; Sunday June 2 is a reasonable guess.
+-# note#1:
++# note 1:
+ # On Oct 27/1918 when daylight saving ended in the rest of Canada,
+ # Creston did not change its clocks.
+-# note#2:
++# note 2:
+ # During WWII when the Federal Government legislated a mandatory clock change,
+ # Creston did not oblige.
+-# note#3:
++# note 3:
+ # There is no guarantee that Creston will remain on Mountain Standard Time
+ # (UTC-7) forever.
+ # The subject was debated at least once this year by the town Council.
+diff --git a/src/main/java/org/joda/time/tz/src/southamerica b/src/main/java/org/joda/time/tz/src/southamerica
+index 6bbc2c8f8..50d118ebf 100644
+--- a/src/main/java/org/joda/time/tz/src/southamerica
++++ b/src/main/java/org/joda/time/tz/src/southamerica
+@@ -131,7 +131,7 @@ Rule	Arg	2000	only	-	Mar	3	0:00	0	-
+ # Timezone Law (which never was effectively applied) will (would?) be
+ # in effect.... The article is at
+ # http://ar.clarin.com/diario/2001-06-06/e-01701.htm
+-# ... The Law itself is "Ley No 25155", sanctioned on 1999-08-25, enacted
++# ... The Law itself is "Ley No. 25155", sanctioned on 1999-08-25, enacted
+ # 1999-09-17, and published 1999-09-21.  The official publication is at:
+ # http://www.boletin.jus.gov.ar/BON/Primera/1999/09-Septiembre/21/PDF/BO21-09-99LEG.PDF
+ # Regretfully, you have to subscribe (and pay) for the on-line version....
+@@ -175,15 +175,11 @@ Rule	Arg	2000	only	-	Mar	3	0:00	0	-
+ # http://www.worldtimezone.com/dst_news/dst_news_argentina03.html
+ # http://www.impulsobaires.com.ar/nota.php?id=57832 (in spanish)
+ 
+-# From Rodrigo Severo (2008-10-06):
+-# Here is some info available at a Gentoo bug related to TZ on Argentina's DST:
+-# ...
+-# ------- Comment #1 from [jmdocile]  2008-10-06 16:28 0000 -------
+-# Hi, there is a problem with timezone-data-2008e and maybe with
+-# timezone-data-2008f
+-# Argentinian law [Number] 25.155 is no longer valid.
++# From Juan Manuel Docile in https://bugs.gentoo.org/240339 (2008-10-07)
++# via Rodrigo Severo:
++# Argentinian law No. 25.155 is no longer valid.
+ # http://www.infoleg.gov.ar/infolegInternet/anexos/60000-64999/60036/norma.htm
+-# The new one is law [Number] 26.350
++# The new one is law No. 26.350
+ # http://www.infoleg.gov.ar/infolegInternet/anexos/135000-139999/136191/norma.htm
+ # So there is no summer time in Argentina for now.
+ 
+@@ -771,7 +767,7 @@ Zone	America/La_Paz	-4:32:36 -	LMT	1890
+ #	 [ and in a second message (same day): ]
+ # I found the decree.
+ #
+-# DECRETO No- 7.584, DE 13 DE OUTUBRO DE 2011
++# DECRETO No. 7.584, DE 13 DE OUTUBRO DE 2011
+ # Link :
+ # http://www.in.gov.br/visualiza/index.jsp?data=13/10/2011&jornal=1000&pagina=6&totalArquivos=6
+ 
+@@ -1125,7 +1121,7 @@ Zone America/Rio_Branco	-4:31:12 -	LMT	1914
+ # Conflicts between [1] and [2] were resolved as follows:
+ #
+ #  - [1] says the 1910 transition was Jan 1, [2] says Jan 10 and cites
+-#    Boletín Nº 1, Aviso Nº 1 (1910).  Go with [2].
++#    Boletín No. 1, Aviso No. 1 (1910).  Go with [2].
+ #
+ #  - [1] says SMT was -4:42:45, [2] says Chile's official time from
+ #    1916 to 1919 was -4:42:46.3, the meridian of Chile's National
+@@ -1133,7 +1129,7 @@ Zone America/Rio_Branco	-4:31:12 -	LMT	1914
+ #    Quinta Normal in Santiago.  Go with [2], rounding it to -4:42:46.
+ #
+ #  - [1] says the 1918 transition was Sep 1, [2] says Sep 10 and cites
+-#    Boletín Nº 22, Aviso Nº 129/1918 (1918-08-23).  Go with [2].
++#    Boletín No. 22, Aviso No. 129/1918 (1918-08-23).  Go with [2].
+ #
+ #  - [1] does not give times for transitions; assume they occur
+ #    at midnight mainland time, the current common practice.  However,
+@@ -1533,7 +1529,7 @@ Rule	Para	1997	only	-	Feb	lastSun	0:00	0	-
+ # (1999-09) reports no date; go with above sources and Gerd Knops (2001-02-27).
+ Rule	Para	1998	2001	-	Mar	Sun>=1	0:00	0	-
+ # From Rives McDow (2002-02-28):
+-# A decree was issued in Paraguay (no. 16350) on 2002-02-26 that changed the
++# A decree was issued in Paraguay (No. 16350) on 2002-02-26 that changed the
+ # dst method to be from the first Sunday in September to the first Sunday in
+ # April.
+ Rule	Para	2002	2004	-	Apr	Sun>=1	0:00	0	-
+@@ -1713,8 +1709,19 @@ Rule	Uruguay	2005	only	-	Oct	 9	 2:00	1:00	S
+ Rule	Uruguay	2006	only	-	Mar	12	 2:00	0	-
+ # From Jesper Nørgaard Welen (2006-09-06):
+ # http://www.presidencia.gub.uy/_web/decretos/2006/09/CM%20210_08%2006%202006_00001.PDF
+-Rule	Uruguay	2006	max	-	Oct	Sun>=1	 2:00	1:00	S
+-Rule	Uruguay	2007	max	-	Mar	Sun>=8	 2:00	0	-
++#
++# From Steffen Thorsen (2015-06-30):
++# ... it looks like they will not be using DST the coming summer:
++# http://www.elobservador.com.uy/gobierno-resolvio-que-no-habra-cambio-horario-verano-n656787
++# http://www.republica.com.uy/este-ano-no-se-modificara-el-huso-horario-en-uruguay/523760/
++# From Paul Eggert (2015-06-30):
++# Apparently restaurateurs complained that DST caused people to go to the beach
++# instead of out to dinner.
++# From Pablo Camargo (2015-07-13):
++# http://archivo.presidencia.gub.uy/sci/decretos/2015/06/cons_min_201.pdf
++# [dated 2015-06-29; repeals Decree 311/006 dated 2006-09-04]
++Rule	Uruguay	2006	2014	-	Oct	Sun>=1	 2:00	1:00	S
++Rule	Uruguay	2007	2015	-	Mar	Sun>=8	 2:00	0	-
+ # Zone	NAME		GMTOFF	RULES	FORMAT	[UNTIL]
+ Zone America/Montevideo	-3:44:44 -	LMT	1898 Jun 28
+ 			-3:44:44 -	MMT	1920 May  1 # Montevideo MT
+@@ -1723,6 +1730,10 @@ Zone America/Montevideo	-3:44:44 -	LMT	1898 Jun 28
+ 
+ # Venezuela
+ #
++# From Paul Eggert (2015-07-28):
++# For the 1965 transition see Gaceta Oficial No. 27.619 (1964-12-15), p 205.533
++# http://www.pgr.gob.ve/dmdocuments/1964/27619.pdf
++#
+ # From John Stainforth (2007-11-28):
+ # ... the change for Venezuela originally expected for 2007-12-31 has
+ # been brought forward to 2007-12-09.  The official announcement was
+@@ -1734,6 +1745,6 @@ Zone America/Montevideo	-3:44:44 -	LMT	1898 Jun 28
+ # Zone	NAME		GMTOFF	RULES	FORMAT	[UNTIL]
+ Zone	America/Caracas	-4:27:44 -	LMT	1890
+ 			-4:27:40 -	CMT	1912 Feb 12 # Caracas Mean Time?
+-			-4:30	-	VET	1965        # Venezuela Time
++			-4:30	-	VET	1965 Jan  1  0:00 # Venezuela T.
+ 			-4:00	-	VET	2007 Dec  9  3:00
+ 			-4:30	-	VET
+
+From a67be5b0bdec256b99715b0e8cac855099e0e5bd Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Tue, 11 Aug 2015 12:57:30 +0100
+Subject: [PATCH 6/7] Update plugin versions
+
+---
+ pom.xml | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/pom.xml b/pom.xml
+index 2452e8eca..66efdd5a3 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -762,7 +762,7 @@
+     <!-- Plugin version numbers -->
+     <maven-assembly-plugin.version>2.5.5</maven-assembly-plugin.version>
+     <maven-changes-plugin.version>2.11</maven-changes-plugin.version>
+-    <maven-checkstyle-plugin.version>2.15</maven-checkstyle-plugin.version>
++    <maven-checkstyle-plugin.version>2.16</maven-checkstyle-plugin.version>
+     <maven-clean-plugin.version>2.6.1</maven-clean-plugin.version>
+     <maven-compiler-plugin.version>3.3</maven-compiler-plugin.version>
+     <maven-deploy-plugin.version>2.8.2</maven-deploy-plugin.version>
+@@ -773,7 +773,7 @@
+     <maven-javadoc-plugin.version>2.10.3</maven-javadoc-plugin.version>
+     <maven-jxr-plugin.version>2.5</maven-jxr-plugin.version>
+     <maven-plugin-plugin.version>3.4</maven-plugin-plugin.version>
+-    <maven-pmd-plugin.version>3.4</maven-pmd-plugin.version>
++    <maven-pmd-plugin.version>3.5</maven-pmd-plugin.version>
+     <maven-project-info-reports-plugin.version>2.8</maven-project-info-reports-plugin.version>
+     <maven-repository-plugin.version>2.4</maven-repository-plugin.version>
+     <maven-resources-plugin.version>2.7</maven-resources-plugin.version>
+
+From c09de9425d4727e35fdc5b1a69f1e3b3ea4799e0 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Tue, 11 Aug 2015 12:57:30 +0100
+Subject: [PATCH 7/7] Release 2.8.2
+
+---
+ README.md                      |   4 +-
+ RELEASE-NOTES.txt              | 155 +--------------------------------
+ pom.xml                        |   2 +-
+ src/conf/MANIFEST.MF           |  18 ++--
+ src/site/markdown/index.md     |   8 +-
+ src/site/xdoc/installation.xml |   1 +
+ src/site/xdoc/upgradeto282.xml |  52 +++++++++++
+ 7 files changed, 72 insertions(+), 168 deletions(-)
+ create mode 100644 src/site/xdoc/upgradeto282.xml
+
+diff --git a/README.md b/README.md
+index 433d37f31..7a64286b9 100644
+--- a/README.md
++++ b/README.md
+@@ -46,11 +46,11 @@ Various documentation is available:
+ 
+ 
+ ### Releases
+-[Release 2.8.1](http://www.joda.org/joda-time/download.html) is the current latest release.
++[Release 2.8.2](http://www.joda.org/joda-time/download.html) is the current latest release.
+ This release is considered stable and worthy of the 2.x tag.
+ It depends on JDK 1.5 or later.
+ 
+-Available in the [Maven Central repository](http://search.maven.org/#artifactdetails|joda-time|joda-time|2.8.1|jar)
++Available in the [Maven Central repository](http://search.maven.org/#artifactdetails|joda-time|joda-time|2.8.2|jar)
+ 
+ 
+ ### Related projects
+diff --git a/RELEASE-NOTES.txt b/RELEASE-NOTES.txt
+index 292dac2fa..eb11e1b74 100644
+--- a/RELEASE-NOTES.txt
++++ b/RELEASE-NOTES.txt
+@@ -9,8 +9,6 @@ The release runs on JDK 5 or later.
+ 
+ Joda-Time is licensed under the business-friendly Apache License Version 2.
+ This is the same license as all of Apache, plus other open source projects such as Spring.
+-The intent is to make the code available to the Java community with the minimum
+-of restrictions. If the license causes you problems please contact the mailing list.
+ 
+ **  Please also check out our related projects   **
+ ** http://www.joda.org/joda-time/related.html **
+@@ -24,164 +22,17 @@ Changes in 2.8.2
+ 
+ Changes in 2.8.1
+ ================
+-- Fixed to handle JDK 8u60 [#288, #291]
+-  Without this fix, formatting a time-zone will print "+00:00" instead of "GMT" for the GMT time-zone
+-
+-- DateTimeZone data updated to version 2015e
+-
++See http://www.joda.org/joda-time/upgradeto281.html
+ 
+ 
+ Changes in 2.8.0
+ ================
+ 
+-Enhancements since 2.7
+-----------------------
+-- Encode properties files using unicode escapes [#228]
+-  The properties files are supposed to be loaded using ISO 8859-1 but Android seems to have issues with that.
+-  Re-encode the files using unicode escapes to sidestep the issue.
+-
+-- Avoid ProGuard errors in Android jar [#246]
+-  Separate logging from time-zone compilation
+-
+-
+-Compatibility with 2.7
+-----------------------
+-Build system - Yes
+-
+-Binary compatible - Yes
+-
+-Source compatible - Yes
+-
+-Serialization compatible - Yes
+-
+-Data compatible - Yes
+- - DateTimeZone data updated to version 2015d
+- - In the past year, the IANA time-zone database maintainer has changed unique time-zone data for many parts
+-   of the world into shared "links". For example, in IANA 'Asia/Kuwait' now links to 'Asia/Riyadh'.
+-   (I personally disagree with the IANA time-zone database maintainer's actions but my objections were ignored).
+-   This was a problem for Joda-Time as we interpreted the concept of links (many years ago) as only being used
+-   for backwards compatibility. Links are exposed in Joda-Time, because if you request a time-zone for a linked
+-   identifier you get the target of the link back. As such, in recent versions of Joda-Time, it was not possible
+-   to obtain a DateTimeZone with an appropriate identifier for many parts of the world, such as 'Asia/Kuwait'.
+-   With this release, most links in the main IANA files are now restored to be real zones.
+-   As a side effect of this, some identifiers that used to act as links are now real zones.
+-   In summary, in the last Joda-Time release, requesting 'Asia/Kuwait' would have given back 'Asia/Riyadh',
+-   but it now returns 'Asia/Kuwait' (where 'Asia/Kuwait' and 'Asia/Riyadh' have the same time-zone rules).
+-   In most cases, this won't have any impact on your application.
+- Zones affected (now real zones rather than incorrect links):
+- * Africa/Bamako
+- * Africa/Banjul
+- * Africa/Conakry
+- * Africa/Dakar
+- * Africa/Freetown
+- * Africa/Lome
+- * Africa/Nouakchott
+- * Africa/Ouagadougou
+- * Africa/Sao_Tome
+- * Atlantic/St_Helena
+- * Africa/Addis_Ababa
+- * Africa/Asmara
+- * Africa/Dar_es_Salaam
+- * Africa/Djibouti
+- * Africa/Kampala
+- * Africa/Mogadishu
+- * Indian/Antananarivo
+- * Indian/Comoro
+- * Indian/Mayotte
+- * Africa/Blantyre
+- * Africa/Bujumbura
+- * Africa/Gaborone
+- * Africa/Harare
+- * Africa/Kigali
+- * Africa/Lubumbashi
+- * Africa/Lusaka
+- * Africa/Bangui
+- * Africa/Brazzaville
+- * Africa/Douala
+- * Africa/Kinshasa
+- * Africa/Libreville
+- * Africa/Luanda
+- * Africa/Malabo
+- * Africa/Niamey
+- * Africa/Porto-Novo
+- * Africa/Maseru
+- * Africa/Mbabane
+- * Africa/Juba
+- * Europe/Nicosia
+- * Asia/Bahrain
+- * Asia/Aden
+- * Asia/Kuwait
+- * Asia/Phnom_Penh
+- * Asia/Vientiane
+- * Asia/Muscat
+- * Antarctica/McMurdo
+- * Europe/Jersey
+- * Europe/Guernsey
+- * Europe/Isle_of_Man
+- * Europe/Mariehamn
+- * Europe/Busingen
+- * Europe/Vatican
+- * Europe/San_Marino
+- * Europe/Vaduz
+- * Arctic/Longyearbyen
+- * Europe/Ljubljana
+- * Europe/Podgorica
+- * Europe/Sarajevo
+- * Europe/Skopje
+- * Europe/Zagreb
+- * Europe/Bratislava
+- * Asia/Istanbul
+- * Pacific/Johnston
+- * America/Aruba
+- * America/Lower_Princes
+- * America/Kralendijk
+- * America/Anguilla
+- * America/Dominica
+- * America/Grenada
+- * America/Guadeloupe
+- * America/Marigot
+- * America/Montserrat
+- * America/St_Barthelemy
+- * America/St_Kitts
+- * America/St_Lucia
+- * America/St_Thomas
+- * America/St_Vincent
+- * America/Tortola
+-
+-The change made should mean that further damage by the IANA time-zone database maintainer
+-will be less noticeable.
+-
+-Semantic compatible - Yes
+-
+-
+-Deprecations since 2.7
+-----------------------
+-
+-
+-Bug fixes since 2.7
+--------------------
+-- Fix MonthDay.plusDays() [#227]
+-  The algorithm was incorrect when adding enough days to cause the month to change twice.
+-
+-- Fix DateTime.withDate() DateTime.withTime() [#233]
+-  The algorithm incorrectly changed the hour of day when certain DST dates were hit.
+-  The new algorithm avoids an IllegalInstantException when moving to a DST gap.
+-
+-- Fix Period.parse() [#238]
+-  Negative periods of a fraction of a second were not parsed correctly.
+-
+-- Format Etc/GMT time-zone using GMT data [#244]
+-  This change will provide better text formats for pattern letter 'z'.
+-
+-- Fix Property.toInterval() [#262]
+-  The conversion of a field property to an interval did not take the chronology into account.
+-  Thus, dateTime.hourOfDay().toInterval() previously resulted in an interval in the default
+-  chronology, rather than the chronology of the dateTime.
+-  The chronology is now passed to the interval.
++See http://www.joda.org/joda-time/upgradeto280.html
+ 
+ 
+ Scala
+---------
++-----
+ Joda-Time uses annotations from Joda-Convert.
+ In the Java programming language, this dependency is optional, however in Scala it is not.
+ Scala users must manually add the Joda-Convert v1.2 dependency.
+diff --git a/pom.xml b/pom.xml
+index 66efdd5a3..bda1d570b 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -9,7 +9,7 @@
+   <artifactId>joda-time</artifactId>
+   <packaging>jar</packaging>
+   <name>Joda-Time</name>
+-  <version>2.8.2-SNAPSHOT</version>
++  <version>2.8.2</version>
+   <description>Date and time library to replace JDK date handling</description>
+   <url>http://www.joda.org/joda-time/</url>
+ 
+diff --git a/src/conf/MANIFEST.MF b/src/conf/MANIFEST.MF
+index 00adb8edf..8bb584c9d 100644
+--- a/src/conf/MANIFEST.MF
++++ b/src/conf/MANIFEST.MF
+@@ -5,19 +5,19 @@ Specification-Vendor: Joda.org
+ Specification-Version: 2.8
+ Implementation-Vendor: Joda.org
+ Implementation-Title: org.joda.time
+-Implementation-Version: 2.8.1
++Implementation-Version: 2.8.2
+ Implementation-Vendor-Id: org.joda
+ Bundle-ManifestVersion: 2
+ Bundle-Vendor: Joda.org
+ Bundle-Name: Joda-Time
+ Bundle-SymbolicName: joda-time
+-Bundle-Version: 2.8.1
+-Export-Package: org.joda.time;version=2.8.1,
+- org.joda.time.base;version=2.8.1,
+- org.joda.time.chrono;version=2.8.1,
+- org.joda.time.convert;version=2.8.1,
+- org.joda.time.field;version=2.8.1,
+- org.joda.time.format;version=2.8.1,
+- org.joda.time.tz;version=2.8.1
++Bundle-Version: 2.8.2
++Export-Package: org.joda.time;version=2.8.2,
++ org.joda.time.base;version=2.8.2,
++ org.joda.time.chrono;version=2.8.2,
++ org.joda.time.convert;version=2.8.2,
++ org.joda.time.field;version=2.8.2,
++ org.joda.time.format;version=2.8.2,
++ org.joda.time.tz;version=2.8.2
+ Bundle-License: Apache 2.0
+ Bundle-DocURL: http://www.joda.org/joda-time/
+diff --git a/src/site/markdown/index.md b/src/site/markdown/index.md
+index c0a1327bf..146077666 100644
+--- a/src/site/markdown/index.md
++++ b/src/site/markdown/index.md
+@@ -125,21 +125,21 @@ Joda-Time is licenced under the business friendly <a href="license.html">Apache
+ 
+ ## <i></i> Releases
+ 
+-[Release 2.8.1](download.html) is the current latest release.
++[Release 2.8.2](download.html) is the current latest release.
+ This release is considered stable and worthy of the 2.x tag.
+-See the [upgrade notes](upgradeto281.html) for full details.
++See the [upgrade notes](upgradeto282.html) for full details.
+ 
+ Joda-Time requires Java SE 5 or later and has [no dependencies](dependencies.html).
+ There is a *compile-time* dependency on [Joda-Convert](http://www.joda.org/joda-convert/),
+ but this is not required at runtime thanks to the magic of annotations.
+ 
+-Available in [Maven Central](http://search.maven.org/#artifactdetails%7Cjoda-time%7Cjoda-time%7C2.8.1%7Cjar).
++Available in [Maven Central](http://search.maven.org/#artifactdetails%7Cjoda-time%7Cjoda-time%7C2.8.2%7Cjar).
+ 
+ ```xml
+ <dependency>
+   <groupId>joda-time</groupId>
+   <artifactId>joda-time</artifactId>
+-  <version>2.8.1</version>
++  <version>2.8.2</version>
+ </dependency>
+ ```
+ 
+diff --git a/src/site/xdoc/installation.xml b/src/site/xdoc/installation.xml
+index 8ddc045b1..926633875 100644
+--- a/src/site/xdoc/installation.xml
++++ b/src/site/xdoc/installation.xml
+@@ -22,6 +22,7 @@ of the source code suitable for linking to the jar file in IDEs such as Eclipse.
+ <p>
+ The release notes for upgraders can be found here:
+ <ul>
++<li><a href="upgradeto282.html">Version 2.8.2</a> - upgrade from Version 2.8.1</li>
+ <li><a href="upgradeto281.html">Version 2.8.1</a> - upgrade from Version 2.8</li>
+ <li><a href="upgradeto280.html">Version 2.8</a> - upgrade from Version 2.7</li>
+ <li><a href="upgradeto270.html">Version 2.7</a> - upgrade from Version 2.6</li>
+diff --git a/src/site/xdoc/upgradeto282.xml b/src/site/xdoc/upgradeto282.xml
+new file mode 100644
+index 000000000..e7a3c1a8e
+--- /dev/null
++++ b/src/site/xdoc/upgradeto282.xml
+@@ -0,0 +1,52 @@
++<?xml version="1.0" encoding="ISO-8859-1"?>
++
++<document>
++ <properties>
++  <title>Java date and time API - Upgrade from 2.8.1 to 2.8.2</title>
++  <author>Stephen Colebourne</author>
++ </properties>
++
++<body>
++
++<section name="Upgrade">
++<p>
++These are the release notes and advice for upgrading Joda-Time from version 2.8.1 to version 2.8.2.
++<source>
++Joda-Time version 2.8.2
++-----------------------
++
++Joda-Time is a date and time handling library that seeks to replace the JDK
++Date and Calendar classes.
++
++This release contains enhancements, bug fixes and a time zone update.
++The release runs on JDK 5 or later.
++
++Joda-Time is licensed under the business-friendly Apache License Version 2.
++This is the same license as all of Apache, plus other open source projects such as Spring.
++
++**  Please also check out our related projects   **
++** http://www.joda.org/joda-time/related.html **
++
++
++Changes in 2.8.2
++================
++- DateTimeZone data updated to version 2015f
++
++
++
++Changes in 2.8.1
++================
++See http://www.joda.org/joda-time/upgradeto281.html
++
++
++Changes in 2.8.0
++================
++
++See http://www.joda.org/joda-time/upgradeto280.html
++
++</source>
++</p>
++</section>
++
++</body>
++</document>

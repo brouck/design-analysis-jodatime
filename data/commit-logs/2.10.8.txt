@@ -1,0 +1,294 @@
+From bb9a90e7998a7cb9d8f0a35d3eb70dcc4b1afa9d Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Wed, 21 Oct 2020 09:51:43 +0100
+Subject: [PATCH 1/3] Bump version
+
+---
+ pom.xml | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/pom.xml b/pom.xml
+index c50fc8b51..7c1f8e567 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -8,7 +8,7 @@
+   <artifactId>joda-time</artifactId>
+   <packaging>jar</packaging>
+   <name>Joda-Time</name>
+-  <version>2.10.7</version>
++  <version>2.10.8-SNAPSHOT</version>
+   <description>Date and time library to replace JDK date handling</description>
+   <url>https://www.joda.org/joda-time/</url>
+ 
+
+From 6e4ed96b98c887c06cb3ba789fdd31149f0a798d Mon Sep 17 00:00:00 2001
+From: "Stephen Colebourne (CI)" <scolebourne@joda.org>
+Date: Fri, 23 Oct 2020 03:11:52 +0000
+Subject: [PATCH 2/3] Update TZDB to 2020d
+
+---
+ pom.xml                                   |  2 +-
+ src/main/java/org/joda/time/tz/src/asia   | 55 ++++++++++++++++++-----
+ src/main/java/org/joda/time/tz/src/europe | 11 +++--
+ 3 files changed, 49 insertions(+), 19 deletions(-)
+
+diff --git a/pom.xml b/pom.xml
+index 7c1f8e567..d0554d358 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -1030,6 +1030,6 @@
+     <!-- Other properties -->
+     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+-    <tz.database.version>2020c</tz.database.version>
++    <tz.database.version>2020d</tz.database.version>
+   </properties>
+ </project>
+diff --git a/src/main/java/org/joda/time/tz/src/asia b/src/main/java/org/joda/time/tz/src/asia
+index e4d84e9a2..3ebfcb409 100644
+--- a/src/main/java/org/joda/time/tz/src/asia
++++ b/src/main/java/org/joda/time/tz/src/asia
+@@ -3221,13 +3221,40 @@ Zone	Asia/Karachi	4:28:12 -	LMT	1907
+ 
+ # From Sharef Mustafa (2019-10-18):
+ # Palestine summer time will end on midnight Oct 26th 2019 ...
+-# http://www.palestinecabinet.gov.ps/website/ar/ViewDetails?ID=43948
+ #
+-# From Paul Eggert (2019-04-10):
+-# For now, guess spring-ahead transitions are March's last Friday at 00:00.
++# From Steffen Thorsen (2020-10-20):
++# Some sources such as these say, and display on clocks, that DST ended at
++# midnight last year...
++# https://www.amad.ps/ar/post/320006
++#
++# From Tim Parenti (2020-10-20):
++# The report of the Palestinian Cabinet meeting of 2019-10-14 confirms
++# a decision on (translated): "The start of the winter time in Palestine, by
++# delaying the clock by sixty minutes, starting from midnight on Friday /
++# Saturday corresponding to 26/10/2019."
++# http://www.palestinecabinet.gov.ps/portal/meeting/details/43948
++
++# From Sharef Mustafa (2020-10-20):
++# As per the palestinian cabinet announcement yesterday , the day light saving
++# shall [end] on Oct 24th 2020 at 01:00AM by delaying the clock by 60 minutes.
++# http://www.palestinecabinet.gov.ps/portal/Meeting/Details/51584
++
++# From Tim Parenti (2020-10-20):
++# Predict future fall transitions at 01:00 on the Saturday preceding October's
++# last Sunday (i.e., Sat>=24).  This is consistent with our predictions since
++# 2016, although the time of the change differed slightly in 2019.
++
++# From Pierre Cashon (2020-10-20):
++# The summer time this year started on March 28 at 00:00.
++# https://wafa.ps/ar_page.aspx?id=GveQNZa872839351758aGveQNZ
++# http://www.palestinecabinet.gov.ps/portal/meeting/details/50284
++# The winter time in 2015 started on October 23 at 01:00.
++# https://wafa.ps/ar_page.aspx?id=CgpCdYa670694628582aCgpCdY
++# http://www.palestinecabinet.gov.ps/portal/meeting/details/27583
+ #
+-# From Tim Parenti (2016-10-19):
+-# Predict fall transitions on October's last Saturday at 01:00 from now on.
++# From Paul Eggert (2019-04-10):
++# For now, guess spring-ahead transitions are at 00:00 on the Saturday
++# preceding March's last Sunday (i.e., Sat>=24).
+ 
+ # Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule EgyptAsia	1957	only	-	May	10	0:00	1:00	S
+@@ -3243,10 +3270,10 @@ Rule Palestine	2004	only	-	Oct	 1	1:00	0	-
+ Rule Palestine	2005	only	-	Oct	 4	2:00	0	-
+ Rule Palestine	2006	2007	-	Apr	 1	0:00	1:00	S
+ Rule Palestine	2006	only	-	Sep	22	0:00	0	-
+-Rule Palestine	2007	only	-	Sep	Thu>=8	2:00	0	-
++Rule Palestine	2007	only	-	Sep	13	2:00	0	-
+ Rule Palestine	2008	2009	-	Mar	lastFri	0:00	1:00	S
+ Rule Palestine	2008	only	-	Sep	 1	0:00	0	-
+-Rule Palestine	2009	only	-	Sep	Fri>=1	1:00	0	-
++Rule Palestine	2009	only	-	Sep	 4	1:00	0	-
+ Rule Palestine	2010	only	-	Mar	26	0:00	1:00	S
+ Rule Palestine	2010	only	-	Aug	11	0:00	0	-
+ Rule Palestine	2011	only	-	Apr	 1	0:01	1:00	S
+@@ -3255,12 +3282,16 @@ Rule Palestine	2011	only	-	Aug	30	0:00	1:00	S
+ Rule Palestine	2011	only	-	Sep	30	0:00	0	-
+ Rule Palestine	2012	2014	-	Mar	lastThu	24:00	1:00	S
+ Rule Palestine	2012	only	-	Sep	21	1:00	0	-
+-Rule Palestine	2013	only	-	Sep	Fri>=21	0:00	0	-
+-Rule Palestine	2014	2015	-	Oct	Fri>=21	0:00	0	-
+-Rule Palestine	2015	only	-	Mar	lastFri	24:00	1:00	S
++Rule Palestine	2013	only	-	Sep	27	0:00	0	-
++Rule Palestine	2014	only	-	Oct	24	0:00	0	-
++Rule Palestine	2015	only	-	Mar	28	0:00	1:00	S
++Rule Palestine	2015	only	-	Oct	23	1:00	0	-
+ Rule Palestine	2016	2018	-	Mar	Sat>=24	1:00	1:00	S
+-Rule Palestine	2016	max	-	Oct	lastSat	1:00	0	-
+-Rule Palestine	2019	max	-	Mar	lastFri	0:00	1:00	S
++Rule Palestine	2016	2018	-	Oct	Sat>=24	1:00	0	-
++Rule Palestine	2019	only	-	Mar	29	0:00	1:00	S
++Rule Palestine	2019	only	-	Oct	Sat>=24	0:00	0	-
++Rule Palestine	2020	max	-	Mar	Sat>=24	0:00	1:00	S
++Rule Palestine	2020	max	-	Oct	Sat>=24	1:00	0	-
+ 
+ # Zone	NAME		STDOFF	RULES	FORMAT	[UNTIL]
+ Zone	Asia/Gaza	2:17:52	-	LMT	1900 Oct
+diff --git a/src/main/java/org/joda/time/tz/src/europe b/src/main/java/org/joda/time/tz/src/europe
+index af6c62821..ea23736fc 100644
+--- a/src/main/java/org/joda/time/tz/src/europe
++++ b/src/main/java/org/joda/time/tz/src/europe
+@@ -1029,17 +1029,16 @@ Zone	Europe/Prague	0:57:44 -	LMT	1850
+ # Denmark, Faroe Islands, and Greenland
+ 
+ # From Jesper Nørgaard Welen (2005-04-26):
+-# http://www.hum.aau.dk/~poe/tid/tine/DanskTid.htm says that the law
+-# [introducing standard time] was in effect from 1894-01-01....
+-# The page http://www.retsinfo.dk/_GETDOCI_/ACCN/A18930008330-REGL
++# the law [introducing standard time] was in effect from 1894-01-01....
++# The page https://www.retsinformation.dk/eli/lta/1893/83
+ # confirms this, and states that the law was put forth 1893-03-29.
+ #
+ # The EU [actually, EEC and Euratom] treaty with effect from 1973:
+-# http://www.retsinfo.dk/_GETDOCI_/ACCN/A19722110030-REGL
++# https://www.retsinformation.dk/eli/lta/1972/21100
+ #
+ # This provoked a new law from 1974 to make possible summer time changes
+ # in subsequent decrees with the law
+-# http://www.retsinfo.dk/_GETDOCI_/ACCN/A19740022330-REGL
++# https://www.retsinformation.dk/eli/lta/1974/223
+ #
+ # It seems however that no decree was set forward until 1980.  I have
+ # not found any decree, but in another related law, the effecting DST
+@@ -1051,7 +1050,7 @@ Zone	Europe/Prague	0:57:44 -	LMT	1850
+ # The law is about the management of the extra hour, concerning
+ # working hours reported and effect on obligatory-rest rules (which
+ # was suspended on that night):
+-# http://www.retsinfo.dk/_GETDOCI_/ACCN/C19801120554-REGL
++# https://web.archive.org/web/20140104053304/https://www.retsinformation.dk/Forms/R0710.aspx?id=60267
+ 
+ # From Jesper Nørgaard Welen (2005-06-11):
+ # The Herning Folkeblad (1980-09-26) reported that the night between
+
+From 96b6ff75835edd16e36a35156d6d38a45a72372b Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Fri, 23 Oct 2020 22:03:58 +0100
+Subject: [PATCH 3/3] Release v2.10.8
+
+---
+ README.md                  |  6 +++---
+ pom.xml                    |  2 +-
+ src/changes/changes.xml    |  6 ++++++
+ src/conf/MANIFEST.MF       | 18 +++++++++---------
+ src/site/markdown/index.md |  4 ++--
+ 5 files changed, 21 insertions(+), 15 deletions(-)
+
+diff --git a/README.md b/README.md
+index 75b9b570d..86c004815 100644
+--- a/README.md
++++ b/README.md
+@@ -51,7 +51,7 @@ Various documentation is available:
+ 
+ 
+ ### Releases
+-[Release 2.10.7](https://www.joda.org/joda-time/download.html) is the current latest release.
++[Release 2.10.8](https://www.joda.org/joda-time/download.html) is the current latest release.
+ This release is considered stable and worthy of the 2.x tag.
+ It depends on JDK 1.5 or later.
+ 
+@@ -62,13 +62,13 @@ Available in the [Maven Central repository](https://search.maven.org/search?q=g:
+ <dependency>
+   <groupId>joda-time</groupId>
+   <artifactId>joda-time</artifactId>
+-  <version>2.10.7</version>
++  <version>2.10.8</version>
+ </dependency>
+ ```
+ 
+ **Gradle configuration:**
+ ```groovy
+-compile 'joda-time:joda-time:2.10.7'
++compile 'joda-time:joda-time:2.10.8'
+ ```
+ 
+ ![Tidelift dependency check](https://tidelift.com/badges/github/JodaOrg/joda-time)
+diff --git a/pom.xml b/pom.xml
+index d0554d358..64fda824b 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -8,7 +8,7 @@
+   <artifactId>joda-time</artifactId>
+   <packaging>jar</packaging>
+   <name>Joda-Time</name>
+-  <version>2.10.8-SNAPSHOT</version>
++  <version>2.10.8</version>
+   <description>Date and time library to replace JDK date handling</description>
+   <url>https://www.joda.org/joda-time/</url>
+ 
+diff --git a/src/changes/changes.xml b/src/changes/changes.xml
+index cb38abe14..881c9fcaf 100644
+--- a/src/changes/changes.xml
++++ b/src/changes/changes.xml
+@@ -8,6 +8,12 @@
+   <body>
+ 
+     <!-- types are add, fix, remove, update -->
++    <release version="2.10.8" date="2020-10-23" description="v2.10.8">
++      <action dev="jodastephen" type="fix">
++        DateTimeZone data updated to version 2020d.
++        Remove systemv and pacificnew time zones as per TZDB changes.
++      </action>
++    </release>
+     <release version="2.10.7" date="2020-10-21" description="v2.10.7">
+       <action dev="jodastephen" type="fix">
+         DateTimeZone data updated to version 2020c.
+diff --git a/src/conf/MANIFEST.MF b/src/conf/MANIFEST.MF
+index 35ad0be79..dc96851c7 100644
+--- a/src/conf/MANIFEST.MF
++++ b/src/conf/MANIFEST.MF
+@@ -5,19 +5,19 @@ Specification-Vendor: Joda.org
+ Specification-Version: 2.10
+ Implementation-Vendor: Joda.org
+ Implementation-Title: org.joda.time
+-Implementation-Version: 2.10.7
++Implementation-Version: 2.10.8
+ Implementation-Vendor-Id: org.joda
+ Bundle-ManifestVersion: 2
+ Bundle-Vendor: Joda.org
+ Bundle-Name: Joda-Time
+ Bundle-SymbolicName: joda-time
+-Bundle-Version: 2.10.7
+-Export-Package: org.joda.time;version=2.10.7,
+- org.joda.time.base;version=2.10.7,
+- org.joda.time.chrono;version=2.10.7,
+- org.joda.time.convert;version=2.10.7,
+- org.joda.time.field;version=2.10.7,
+- org.joda.time.format;version=2.10.7,
+- org.joda.time.tz;version=2.10.7
++Bundle-Version: 2.10.8
++Export-Package: org.joda.time;version=2.10.8,
++ org.joda.time.base;version=2.10.8,
++ org.joda.time.chrono;version=2.10.8,
++ org.joda.time.convert;version=2.10.8,
++ org.joda.time.field;version=2.10.8,
++ org.joda.time.format;version=2.10.8,
++ org.joda.time.tz;version=2.10.8
+ Bundle-License: Apache 2.0
+ Bundle-DocURL: https://www.joda.org/joda-time/
+diff --git a/src/site/markdown/index.md b/src/site/markdown/index.md
+index e9edddf40..7e191329e 100644
+--- a/src/site/markdown/index.md
++++ b/src/site/markdown/index.md
+@@ -130,7 +130,7 @@ Joda-Time is licenced under the business friendly <a href="licenses.html">Apache
+ 
+ ## <i></i> Releases
+ 
+-[Release 2.10.7](download.html) is the current latest release.
++[Release 2.10.8](download.html) is the current latest release.
+ This release is considered stable and worthy of the 2.x tag.
+ See the [change notes](changes-report.html) for full details.
+ 
+@@ -144,7 +144,7 @@ Available in [Maven Central](https://search.maven.org/search?q=g:joda-time%20AND
+ <dependency>
+   <groupId>joda-time</groupId>
+   <artifactId>joda-time</artifactId>
+-  <version>2.10.7</version>
++  <version>2.10.8</version>
+ </dependency>
+ ```
+ 

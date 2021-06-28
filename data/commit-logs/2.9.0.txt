@@ -1,0 +1,2831 @@
+From cb988654eebbc61d77e238b6ea690d3fe2d69fa0 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Fri, 21 Aug 2015 00:02:40 +0100
+Subject: [PATCH 01/28] Bump version
+
+---
+ RELEASE-NOTES.txt | 7 +++++--
+ pom.xml           | 2 +-
+ 2 files changed, 6 insertions(+), 3 deletions(-)
+
+diff --git a/RELEASE-NOTES.txt b/RELEASE-NOTES.txt
+index eb11e1b74..9417eac28 100644
+--- a/RELEASE-NOTES.txt
++++ b/RELEASE-NOTES.txt
+@@ -1,4 +1,4 @@
+-Joda-Time version 2.8.2
++Joda-Time version 2.8.3
+ -----------------------
+ 
+ Joda-Time is a date and time handling library that seeks to replace the JDK
+@@ -14,12 +14,15 @@ This is the same license as all of Apache, plus other open source projects such
+ ** http://www.joda.org/joda-time/related.html **
+ 
+ 
++Changes in 2.8.3
++================
++
++
+ Changes in 2.8.2
+ ================
+ - DateTimeZone data updated to version 2015f
+ 
+ 
+-
+ Changes in 2.8.1
+ ================
+ See http://www.joda.org/joda-time/upgradeto281.html
+diff --git a/pom.xml b/pom.xml
+index bda1d570b..8b55ede4b 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -9,7 +9,7 @@
+   <artifactId>joda-time</artifactId>
+   <packaging>jar</packaging>
+   <name>Joda-Time</name>
+-  <version>2.8.2</version>
++  <version>2.8.3-SNAPSHOT</version>
+   <description>Date and time library to replace JDK date handling</description>
+   <url>http://www.joda.org/joda-time/</url>
+ 
+
+From 027bfdde0338f53fc0f20a18a447c52a3f7e02cd Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Emiliano=20Clari=C3=A1?= <emiliano.claria@gmail.com>
+Date: Fri, 29 May 2015 14:53:30 -0300
+Subject: [PATCH 02/28] Use binary search when parsing the time zone id
+
+---
+ .../time/format/DateTimeFormatterBuilder.java | 42 +++++++++++++++++--
+ 1 file changed, 38 insertions(+), 4 deletions(-)
+
+diff --git a/src/main/java/org/joda/time/format/DateTimeFormatterBuilder.java b/src/main/java/org/joda/time/format/DateTimeFormatterBuilder.java
+index 9aa4f1a18..a26cc991b 100644
+--- a/src/main/java/org/joda/time/format/DateTimeFormatterBuilder.java
++++ b/src/main/java/org/joda/time/format/DateTimeFormatterBuilder.java
+@@ -17,10 +17,10 @@
+ 
+ import java.io.IOException;
+ import java.util.ArrayList;
++import java.util.Collections;
+ import java.util.List;
+ import java.util.Locale;
+ import java.util.Map;
+-import java.util.Set;
+ import java.util.concurrent.ConcurrentHashMap;
+ 
+ import org.joda.time.Chronology;
+@@ -2313,7 +2313,11 @@ public int parseInto(DateTimeParserBucket bucket, CharSequence text, int positio
+             implements InternalPrinter, InternalParser {
+ 
+         INSTANCE;
+-        static final Set<String> ALL_IDS = DateTimeZone.getAvailableIDs();
++        static final List<String> ALL_IDS;
++        static {
++            ALL_IDS = new ArrayList<String>(DateTimeZone.getAvailableIDs());
++            Collections.sort(ALL_IDS);
++        }
+         static final int MAX_LENGTH;
+         static {
+             int max = 0;
+@@ -2343,12 +2347,14 @@ public int estimateParsedLength() {
+ 
+         public int parseInto(DateTimeParserBucket bucket, CharSequence text, int position) {
+             String best = null;
+-            for (String id : ALL_IDS) {
++            int pos = prefixedStartPosition(text, position);
++            for (int i = pos; i < ALL_IDS.size(); i++) {
++                String id = ALL_IDS.get(i);
+                 if (csStartsWith(text, position, id)) {
+                     if (best == null || id.length() > best.length()) {
+                         best = id;
+                     }
+-                }
++                } else break;
+             }
+             if (best != null) {
+                 bucket.setZone(DateTimeZone.forID(best));
+@@ -2356,6 +2362,25 @@ public int parseInto(DateTimeParserBucket bucket, CharSequence text, int positio
+             }
+             return ~position;
+         }
++
++        private static int prefixedStartPosition(CharSequence text, int position) {
++            int lo = 0;
++            int hi = ALL_IDS.size() - 1;
++
++            while (lo <= hi) {
++                int mid = (lo + hi) >>> 1;
++                String value = ALL_IDS.get(mid);
++                int compare = csCompare(value, text, position);
++                if (compare > 0) {
++                    hi = mid - 1;
++                } else if (compare < 0) {
++                    lo = mid + 1;
++                } else {
++                    return mid;
++                }
++            }
++            return lo;
++        }
+     }
+ 
+     //-----------------------------------------------------------------------
+@@ -2589,6 +2614,15 @@ public int parseInto(DateTimeParserBucket bucket, CharSequence text, int positio
+         }
+     }
+ 
++    static int csCompare(String search, CharSequence text, int position) {
++        int compareLen = Math.min(text.length() - position, search.length());
++        for (int i = 0; i < compareLen; i++) {
++            int result = search.charAt(i) - text.charAt(position + i);
++            if (result != 0) return result;
++        }
++        return 0;
++    }
++
+     static boolean csStartsWith(CharSequence text, int position, String search) {
+         int searchLen = search.length();
+         if ((text.length() - position) < searchLen) {
+
+From 695c02c0165647bedbb5c0d0ac3ac19d813f3fb4 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Fri, 21 Aug 2015 00:01:59 +0100
+Subject: [PATCH 03/28] Merge faster time-zone parsing
+
+Fixes #282
+---
+ RELEASE-NOTES.txt                                  |  1 +
+ pom.xml                                            |  4 ++++
+ .../joda/time/format/DateTimeFormatterBuilder.java | 14 +++++++++-----
+ 3 files changed, 14 insertions(+), 5 deletions(-)
+
+diff --git a/RELEASE-NOTES.txt b/RELEASE-NOTES.txt
+index 9417eac28..71a901bae 100644
+--- a/RELEASE-NOTES.txt
++++ b/RELEASE-NOTES.txt
+@@ -16,6 +16,7 @@ This is the same license as all of Apache, plus other open source projects such
+ 
+ Changes in 2.8.3
+ ================
++- Faster parsing of time-zone identifiers [#282]
+ 
+ 
+ Changes in 2.8.2
+diff --git a/pom.xml b/pom.xml
+index 8b55ede4b..6b91c9e58 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -72,6 +72,10 @@
+       <name>Luc Claes</name>
+       <url>https://github.com/lucclaes</url>
+     </contributor>
++    <contributor>
++      <name>Emiliano Claria</name>
++      <url>https://github.com/emilianogc</url>
++    </contributor>
+     <contributor>
+       <name>Dan Cojocar</name>
+       <url>https://github.com/dancojocar</url>
+diff --git a/src/main/java/org/joda/time/format/DateTimeFormatterBuilder.java b/src/main/java/org/joda/time/format/DateTimeFormatterBuilder.java
+index a26cc991b..10f250258 100644
+--- a/src/main/java/org/joda/time/format/DateTimeFormatterBuilder.java
++++ b/src/main/java/org/joda/time/format/DateTimeFormatterBuilder.java
+@@ -2313,7 +2313,7 @@ public int parseInto(DateTimeParserBucket bucket, CharSequence text, int positio
+             implements InternalPrinter, InternalParser {
+ 
+         INSTANCE;
+-        static final List<String> ALL_IDS;
++        private static final List<String> ALL_IDS;
+         static {
+             ALL_IDS = new ArrayList<String>(DateTimeZone.getAvailableIDs());
+             Collections.sort(ALL_IDS);
+@@ -2354,7 +2354,9 @@ public int parseInto(DateTimeParserBucket bucket, CharSequence text, int positio
+                     if (best == null || id.length() > best.length()) {
+                         best = id;
+                     }
+-                } else break;
++                } else {
++                    break;
++                }
+             }
+             if (best != null) {
+                 bucket.setZone(DateTimeZone.forID(best));
+@@ -2370,7 +2372,7 @@ private static int prefixedStartPosition(CharSequence text, int position) {
+             while (lo <= hi) {
+                 int mid = (lo + hi) >>> 1;
+                 String value = ALL_IDS.get(mid);
+-                int compare = csCompare(value, text, position);
++                int compare = csCompare(text, position, value);
+                 if (compare > 0) {
+                     hi = mid - 1;
+                 } else if (compare < 0) {
+@@ -2614,11 +2616,13 @@ public int parseInto(DateTimeParserBucket bucket, CharSequence text, int positio
+         }
+     }
+ 
+-    static int csCompare(String search, CharSequence text, int position) {
++    static int csCompare(CharSequence text, int position, String search) {
+         int compareLen = Math.min(text.length() - position, search.length());
+         for (int i = 0; i < compareLen; i++) {
+             int result = search.charAt(i) - text.charAt(position + i);
+-            if (result != 0) return result;
++            if (result != 0) {
++                return result;
++            }
+         }
+         return 0;
+     }
+
+From 2948a362fdd63f2799794fd2ce316666756cacd5 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Fri, 21 Aug 2015 00:43:00 +0100
+Subject: [PATCH 04/28] Add Interval.parseWithOffset(String)
+
+Provides a way to parse the fixed offset in an interval string
+Fixes #299
+Fixes #296
+---
+ RELEASE-NOTES.txt                             |  3 +
+ src/main/java/org/joda/time/DateTime.java     |  4 +-
+ src/main/java/org/joda/time/Interval.java     | 77 +++++++++++++++++++
+ .../joda/time/TestInterval_Constructors.java  | 42 +++++++++-
+ 4 files changed, 123 insertions(+), 3 deletions(-)
+
+diff --git a/RELEASE-NOTES.txt b/RELEASE-NOTES.txt
+index 71a901bae..420c90c75 100644
+--- a/RELEASE-NOTES.txt
++++ b/RELEASE-NOTES.txt
+@@ -18,6 +18,9 @@ Changes in 2.8.3
+ ================
+ - Faster parsing of time-zone identifiers [#282]
+ 
++- Added Interval.parseWithOffset(String) [#299, #296]
++  Provides a way to parse the fixed offset in an interval string
++
+ 
+ Changes in 2.8.2
+ ================
+diff --git a/src/main/java/org/joda/time/DateTime.java b/src/main/java/org/joda/time/DateTime.java
+index bbc17e957..9cc6b1ebd 100644
+--- a/src/main/java/org/joda/time/DateTime.java
++++ b/src/main/java/org/joda/time/DateTime.java
+@@ -123,11 +123,11 @@ public static DateTime now(Chronology chronology) {
+     /**
+      * Parses a {@code DateTime} from the specified string.
+      * <p>
+-     * This uses {@link ISODateTimeFormat#dateTimeParser().withOffsetParsed()}
++     * This uses {@link ISODateTimeFormat#dateTimeParser()}{@code .withOffsetParsed()}
+      * which is different to passing a {@code String} to the constructor.
+      * <p>
+      * Sometimes this method and {@code new DateTime(str)} return different results.
+-     * This can be confusing as the different is not visible in {@link #toString()}.
++     * This can be confusing as the difference is not visible in {@link #toString()}.
+      * <p>
+      * When passed a date-time string without an offset, such as '2010-06-30T01:20',
+      * both the constructor and this method use the default time-zone.
+diff --git a/src/main/java/org/joda/time/Interval.java b/src/main/java/org/joda/time/Interval.java
+index 99397eba3..eb072efc2 100644
+--- a/src/main/java/org/joda/time/Interval.java
++++ b/src/main/java/org/joda/time/Interval.java
+@@ -19,8 +19,10 @@
+ 
+ import org.joda.time.base.BaseInterval;
+ import org.joda.time.chrono.ISOChronology;
++import org.joda.time.format.DateTimeFormatter;
+ import org.joda.time.format.ISODateTimeFormat;
+ import org.joda.time.format.ISOPeriodFormat;
++import org.joda.time.format.PeriodFormatter;
+ 
+ /**
+  * Interval is the standard implementation of an immutable time interval.
+@@ -61,6 +63,10 @@
+      * The String formats are described by {@link ISODateTimeFormat#dateTimeParser()}
+      * and {@link ISOPeriodFormat#standard()}, and may be 'datetime/datetime',
+      * 'datetime/period' or 'period/datetime'.
++     * <p>
++     * This method operates by parsing in the default time-zone.
++     * Any offset contained within the string being parsed will be normalised to the
++     * offset of the default time-zone. See also {@link #parseWithOffset(String)}.
+      * 
+      * @param str  the string to parse, not null
+      * @since 2.0
+@@ -69,6 +75,77 @@ public static Interval parse(String str) {
+         return new Interval(str);
+     }
+ 
++    /**
++     * Parses a {@code Interval} from the specified string, using any offset it contains.
++     * <p>
++     * The String formats are described by
++     * {@link ISODateTimeFormat#dateTimeParser()}{@code .withOffsetParsed()}
++     * and {@link ISOPeriodFormat#standard()}, and may be 'datetime/datetime',
++     * 'datetime/period' or 'period/datetime'.
++     * <p>
++     * Sometimes this method and {@code new Interval(str)} return different results.
++     * This can be confusing as the difference is not visible in {@link #toString()}.
++     * <p>
++     * When passed a string without an offset, such as '2010-06-30T01:20/P1D',
++     * both the constructor and this method use the default time-zone.
++     * As such, {@code Interval.parseWithOffset("2010-06-30T01:20/P1D")} and
++     * {@code new Interval("2010-06-30T01:20/P1D"))} are equal.
++     * <p>
++     * However, when this method is passed a string with an offset,
++     * the offset is directly parsed and stored.
++     * As such, {@code Interval.parseWithOffset("2010-06-30T01:20+02:00/P1D")} and
++     * {@code new Interval("2010-06-30T01:20+02:00/P1D"))} are NOT equal.
++     * The object produced via this method has a zone of {@code DateTimeZone.forOffsetHours(2)}.
++     * The object produced via the constructor has a zone of {@code DateTimeZone.getDefault()}.
++     * 
++     * @param str  the string to parse, not null
++     * @since 2.9
++     */
++    public static Interval parseWithOffset(String str) {
++        int separator = str.indexOf('/');
++        if (separator < 0) {
++            throw new IllegalArgumentException("Format requires a '/' separator: " + str);
++        }
++        String leftStr = str.substring(0, separator);
++        if (leftStr.length() <= 0) {
++            throw new IllegalArgumentException("Format invalid: " + str);
++        }
++        String rightStr = str.substring(separator + 1);
++        if (rightStr.length() <= 0) {
++            throw new IllegalArgumentException("Format invalid: " + str);
++        }
++
++        DateTimeFormatter dateTimeParser = ISODateTimeFormat.dateTimeParser().withOffsetParsed();
++        PeriodFormatter periodParser = ISOPeriodFormat.standard();
++        DateTime start = null;
++        Period period = null;
++        
++        // before slash
++        char c = leftStr.charAt(0);
++        if (c == 'P' || c == 'p') {
++            period = periodParser.withParseType(PeriodType.standard()).parsePeriod(leftStr);
++        } else {
++            start = dateTimeParser.parseDateTime(leftStr);
++        }
++        
++        // after slash
++        c = rightStr.charAt(0);
++        if (c == 'P' || c == 'p') {
++            if (period != null) {
++                throw new IllegalArgumentException("Interval composed of two durations: " + str);
++            }
++            period = periodParser.withParseType(PeriodType.standard()).parsePeriod(rightStr);
++            return new Interval(start, period);
++        } else {
++            DateTime end = dateTimeParser.parseDateTime(rightStr);
++            if (period != null) {
++                return new Interval(period, end);
++            } else {
++                return new Interval(start, end);
++            }
++        }
++    }
++
+     //-----------------------------------------------------------------------
+     /**
+      * Constructs an interval from a start and end instant with the ISO
+diff --git a/src/test/java/org/joda/time/TestInterval_Constructors.java b/src/test/java/org/joda/time/TestInterval_Constructors.java
+index 905b2637b..5392ca0b7 100644
+--- a/src/test/java/org/joda/time/TestInterval_Constructors.java
++++ b/src/test/java/org/joda/time/TestInterval_Constructors.java
+@@ -39,6 +39,7 @@
+ 
+     private static final DateTimeZone PARIS = DateTimeZone.forID("Europe/Paris");
+     private static final DateTimeZone LONDON = DateTimeZone.forID("Europe/London");
++    private static final DateTimeZone OFFSET_04_00 = DateTimeZone.forOffsetHours(4);
+     
+     long y2002days = 365 + 365 + 366 + 365 + 365 + 365 + 366 + 365 + 365 + 365 + 
+                      366 + 365 + 365 + 365 + 366 + 365 + 365 + 365 + 366 + 365 + 
+@@ -102,7 +103,7 @@ protected void tearDown() throws Exception {
+     }
+ 
+     //-----------------------------------------------------------------------
+-    public void testParse_noFormatter() throws Throwable {
++    public void testParse_noOffsetInString() throws Throwable {
+         DateTime start = new DateTime(2010, 6, 30, 12, 30, ISOChronology.getInstance(PARIS));
+         DateTime end = new DateTime(2010, 7, 1, 14, 30, ISOChronology.getInstance(PARIS));
+         assertEquals(new Interval(start, end), Interval.parse("2010-06-30T12:30/2010-07-01T14:30"));
+@@ -110,6 +111,45 @@ public void testParse_noFormatter() throws Throwable {
+         assertEquals(new Interval(start, end), Interval.parse("P1DT2H/2010-07-01T14:30"));
+     }
+ 
++    public void testParse_offsetInString() throws Throwable {
++        DateTime start = new DateTime(2010, 6, 30, 10, 30, ISOChronology.getInstance(PARIS));
++        DateTime end = new DateTime(2010, 7, 1, 12, 30, ISOChronology.getInstance(PARIS));
++        assertEquals(new Interval(start, end), Interval.parse("2010-06-30T12:30+04:00/2010-07-01T14:30+04:00"));
++        assertEquals(new Interval(start, end), Interval.parse("2010-06-30T12:30+04:00/P1DT2H"));
++        assertEquals(new Interval(start, end), Interval.parse("P1DT2H/2010-07-01T14:30+04:00"));
++    }
++
++    public void testParseWithOffset_noOffsetInString() throws Throwable {
++        DateTime start = new DateTime(2010, 6, 30, 12, 30, ISOChronology.getInstance(PARIS));
++        DateTime end = new DateTime(2010, 7, 1, 14, 30, ISOChronology.getInstance(PARIS));
++        assertEquals(new Interval(start, end), Interval.parseWithOffset("2010-06-30T12:30/2010-07-01T14:30"));
++        assertEquals(new Interval(start, end), Interval.parseWithOffset("2010-06-30T12:30/P1DT2H"));
++        assertEquals(new Interval(start, end), Interval.parseWithOffset("P1DT2H/2010-07-01T14:30"));
++    }
++
++    public void testParseWithOffset_offsetInString() throws Throwable {
++        DateTime start = new DateTime(2010, 6, 30, 12, 30, ISOChronology.getInstance(OFFSET_04_00));
++        DateTime end = new DateTime(2010, 7, 1, 14, 30, ISOChronology.getInstance(OFFSET_04_00));
++        assertEquals(new Interval(start, end), Interval.parseWithOffset("2010-06-30T12:30+04:00/2010-07-01T14:30+04:00"));
++        assertEquals(new Interval(start, end), Interval.parseWithOffset("2010-06-30T12:30+04:00/p1DT2H"));
++        assertEquals(new Interval(start, end), Interval.parseWithOffset("p1DT2H/2010-07-01T14:30+04:00"));
++    }
++
++    public void testParseWithOffset_invalid() throws Throwable {
++        try {
++            Interval.parseWithOffset("2010-06-30T12:30");
++            fail();
++        } catch (IllegalArgumentException ex) {
++            // expected
++        }
++        try {
++            Interval.parseWithOffset("P1D/P1D");
++            fail();
++        } catch (IllegalArgumentException ex) {
++            // expected
++        }
++    }
++
+     //-----------------------------------------------------------------------
+     public void testConstructor_long_long1() throws Throwable {
+         DateTime dt1 = new DateTime(2004, 6, 9, 0, 0, 0, 0);
+
+From 69ed639b41a4d1fe1fff68717681774c00ce56a5 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Fri, 21 Aug 2015 00:49:10 +0100
+Subject: [PATCH 05/28] Clarify PeriodFormatterBuilder docs
+
+It is in an invalid state once built
+While in theory this could be worked around,
+the effort to do so exceeds the possible benefits
+Fixes #309
+---
+ RELEASE-NOTES.txt                                              | 2 ++
+ src/main/java/org/joda/time/format/PeriodFormatterBuilder.java | 2 +-
+ 2 files changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/RELEASE-NOTES.txt b/RELEASE-NOTES.txt
+index 420c90c75..444b64ea9 100644
+--- a/RELEASE-NOTES.txt
++++ b/RELEASE-NOTES.txt
+@@ -21,6 +21,8 @@ Changes in 2.8.3
+ - Added Interval.parseWithOffset(String) [#299, #296]
+   Provides a way to parse the fixed offset in an interval string
+ 
++- Clarify that PeriodFormatterBuilder is in an invalid state once built [#309]
++
+ 
+ Changes in 2.8.2
+ ================
+diff --git a/src/main/java/org/joda/time/format/PeriodFormatterBuilder.java b/src/main/java/org/joda/time/format/PeriodFormatterBuilder.java
+index 7d8e71156..79dac4874 100644
+--- a/src/main/java/org/joda/time/format/PeriodFormatterBuilder.java
++++ b/src/main/java/org/joda/time/format/PeriodFormatterBuilder.java
+@@ -118,7 +118,7 @@ public PeriodFormatterBuilder() {
+      * This is the main method used by applications at the end of the build
+      * process to create a usable formatter.
+      * <p>
+-     * Subsequent changes to this builder do not affect the returned formatter.
++     * Once this method has been called, the builder is in an invalid state.
+      * <p>
+      * The returned formatter may not support both printing and parsing.
+      * The methods {@link PeriodFormatter#isPrinter()} and
+
+From 111295f4899b4ff9749d1e1482c6fc1f16acf077 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Fri, 21 Aug 2015 00:52:33 +0100
+Subject: [PATCH 06/28] More lenient test against system clock
+
+---
+ src/test/java/org/joda/time/TestDateTimeUtils.java | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/test/java/org/joda/time/TestDateTimeUtils.java b/src/test/java/org/joda/time/TestDateTimeUtils.java
+index 810a2da0f..f2acbdec1 100644
+--- a/src/test/java/org/joda/time/TestDateTimeUtils.java
++++ b/src/test/java/org/joda/time/TestDateTimeUtils.java
+@@ -253,7 +253,7 @@ public void testOffsetMillisToZero() {
+             DateTimeUtils.setCurrentMillisSystem();
+         }
+         long now2 = DateTimeUtils.currentTimeMillis();
+-        assertEquals(now1, now2);
++        assertEquals(Math.abs(now1 - now2) < 100, true);
+     }
+ 
+     //-----------------------------------------------------------------------
+
+From 760c27b76d9982f51d2bdc3ff7f085f3514e8ad3 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Fri, 21 Aug 2015 00:58:59 +0100
+Subject: [PATCH 07/28] Add DateTimeFormatter methods for StringBuilder
+
+Fixes #298
+---
+ RELEASE-NOTES.txt                             |  2 +
+ .../joda/time/format/DateTimeFormatter.java   | 46 +++++++++++++++++++
+ .../time/format/TestDateTimeFormatter.java    | 22 +++++++++
+ 3 files changed, 70 insertions(+)
+
+diff --git a/RELEASE-NOTES.txt b/RELEASE-NOTES.txt
+index 444b64ea9..06e8b8cb7 100644
+--- a/RELEASE-NOTES.txt
++++ b/RELEASE-NOTES.txt
+@@ -23,6 +23,8 @@ Changes in 2.8.3
+ 
+ - Clarify that PeriodFormatterBuilder is in an invalid state once built [#309]
+ 
++- Add DateTimeFormatter methods for StringBuilder [#298]
++
+ 
+ Changes in 2.8.2
+ ================
+diff --git a/src/main/java/org/joda/time/format/DateTimeFormatter.java b/src/main/java/org/joda/time/format/DateTimeFormatter.java
+index 6244369b0..ac3c360ac 100644
+--- a/src/main/java/org/joda/time/format/DateTimeFormatter.java
++++ b/src/main/java/org/joda/time/format/DateTimeFormatter.java
+@@ -498,6 +498,20 @@ public void printTo(StringBuffer buf, ReadableInstant instant) {
+         }
+     }
+ 
++    /**
++     * Prints a ReadableInstant, using the chronology supplied by the instant.
++     *
++     * @param buf  the destination to format to, not null
++     * @param instant  instant to format, null means now
++     */
++    public void printTo(StringBuilder buf, ReadableInstant instant) {
++        try {
++            printTo((Appendable) buf, instant);
++        } catch (IOException ex) {
++            // StringBuilder does not throw IOException
++        }
++    }
++
+     /**
+      * Prints a ReadableInstant, using the chronology supplied by the instant.
+      *
+@@ -537,6 +551,21 @@ public void printTo(StringBuffer buf, long instant) {
+         }
+     }
+ 
++    /**
++     * Prints an instant from milliseconds since 1970-01-01T00:00:00Z,
++     * using ISO chronology in the default DateTimeZone.
++     *
++     * @param buf  the destination to format to, not null
++     * @param instant  millis since 1970-01-01T00:00:00Z
++     */
++    public void printTo(StringBuilder buf, long instant) {
++        try {
++            printTo((Appendable) buf, instant);
++        } catch (IOException ex) {
++            // StringBuilder does not throw IOException
++        }
++    }
++
+     /**
+      * Prints an instant from milliseconds since 1970-01-01T00:00:00Z,
+      * using ISO chronology in the default DateTimeZone.
+@@ -578,6 +607,23 @@ public void printTo(StringBuffer buf, ReadablePartial partial) {
+         }
+     }
+ 
++    /**
++     * Prints a ReadablePartial.
++     * <p>
++     * Neither the override chronology nor the override zone are used
++     * by this method.
++     *
++     * @param buf  the destination to format to, not null
++     * @param partial  partial to format
++     */
++    public void printTo(StringBuilder buf, ReadablePartial partial) {
++        try {
++            printTo((Appendable) buf, partial);
++        } catch (IOException ex) {
++            // StringBuilder does not throw IOException
++        }
++    }
++
+     /**
+      * Prints a ReadablePartial.
+      * <p>
+diff --git a/src/test/java/org/joda/time/format/TestDateTimeFormatter.java b/src/test/java/org/joda/time/format/TestDateTimeFormatter.java
+index 61b9589c9..152581a9b 100644
+--- a/src/test/java/org/joda/time/format/TestDateTimeFormatter.java
++++ b/src/test/java/org/joda/time/format/TestDateTimeFormatter.java
+@@ -178,6 +178,28 @@ public void testPrint_bufferMethods() throws Exception {
+         } catch (IllegalArgumentException ex) {}
+     }
+ 
++    //-----------------------------------------------------------------------
++    public void testPrint_builderMethods() throws Exception {
++        DateTime dt = new DateTime(2004, 6, 9, 10, 20, 30, 40, UTC);
++        StringBuilder buf = new StringBuilder();
++        f.printTo(buf, dt);
++        assertEquals("Wed 2004-06-09T10:20:30Z", buf.toString());
++        
++        buf = new StringBuilder();
++        f.printTo(buf, dt.getMillis());
++        assertEquals("Wed 2004-06-09T11:20:30+01:00", buf.toString());
++        
++        buf = new StringBuilder();
++        ISODateTimeFormat.yearMonthDay().printTo(buf, dt.toYearMonthDay());
++        assertEquals("2004-06-09", buf.toString());
++        
++        buf = new StringBuilder();
++        try {
++            ISODateTimeFormat.yearMonthDay().printTo(buf, (ReadablePartial) null);
++            fail();
++        } catch (IllegalArgumentException ex) {}
++    }
++
+     //-----------------------------------------------------------------------
+     public void testPrint_writerMethods() throws Exception {
+         DateTime dt = new DateTime(2004, 6, 9, 10, 20, 30, 40, UTC);
+
+From 3b9bb54e640477752b5b254474ec7b7c27696b59 Mon Sep 17 00:00:00 2001
+From: Alex <nyrk71@gmail.com>
+Date: Thu, 3 Sep 2015 15:26:17 +0200
+Subject: [PATCH 08/28] Create a messages_it.properties file
+
+This is to add support for italian translations of time periods.
+---
+ .../joda/time/format/messages_it.properties   | 22 +++++++++++++++++++
+ 1 file changed, 22 insertions(+)
+ create mode 100644 src/main/java/org/joda/time/format/messages_it.properties
+
+diff --git a/src/main/java/org/joda/time/format/messages_it.properties b/src/main/java/org/joda/time/format/messages_it.properties
+new file mode 100644
+index 000000000..2f3a2c786
+--- /dev/null
++++ b/src/main/java/org/joda/time/format/messages_it.properties
+@@ -0,0 +1,22 @@
++PeriodFormat.space=\ 
++PeriodFormat.comma=,
++PeriodFormat.commandand=,e
++PeriodFormat.commaspaceand=, e
++PeriodFormat.commaspace=, 
++PeriodFormat.spaceandspace=\ e
++PeriodFormat.year=\ anno
++PeriodFormat.years=\ anni
++PeriodFormat.month=\ mese
++PeriodFormat.months=\ mesi
++PeriodFormat.week=\ settimana
++PeriodFormat.weeks=\ settimane
++PeriodFormat.day=\ giorno
++PeriodFormat.days=\ giorni
++PeriodFormat.hour=\ ora
++PeriodFormat.hours=\ ore
++PeriodFormat.minute=\ minuto
++PeriodFormat.minutes=\ minuti
++PeriodFormat.second=\ secondo
++PeriodFormat.seconds=\ secondi
++PeriodFormat.millisecond=\ millisecondo
++PeriodFormat.milliseconds=\ millisecondi
+
+From c31750308de7e239f5d9227c8327af3707c9f459 Mon Sep 17 00:00:00 2001
+From: Alex <nyrk71@gmail.com>
+Date: Thu, 3 Sep 2015 15:37:25 +0200
+Subject: [PATCH 09/28] Added missing trailing space.
+
+In PeriodFormat.spaceandspace the trailing space at the end of the translation was missing.
+---
+ src/main/java/org/joda/time/format/messages_it.properties | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/main/java/org/joda/time/format/messages_it.properties b/src/main/java/org/joda/time/format/messages_it.properties
+index 2f3a2c786..f58aeabd4 100644
+--- a/src/main/java/org/joda/time/format/messages_it.properties
++++ b/src/main/java/org/joda/time/format/messages_it.properties
+@@ -3,7 +3,7 @@ PeriodFormat.comma=,
+ PeriodFormat.commandand=,e
+ PeriodFormat.commaspaceand=, e
+ PeriodFormat.commaspace=, 
+-PeriodFormat.spaceandspace=\ e
++PeriodFormat.spaceandspace=\ e 
+ PeriodFormat.year=\ anno
+ PeriodFormat.years=\ anni
+ PeriodFormat.month=\ mese
+
+From 0f2e727c9f08071c74fa10cd889b048bbb611485 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Fri, 4 Sep 2015 07:44:36 +0100
+Subject: [PATCH 10/28] Add Italian period translations
+
+Fixes #312
+---
+ RELEASE-NOTES.txt | 2 ++
+ pom.xml           | 4 ++++
+ 2 files changed, 6 insertions(+)
+
+diff --git a/RELEASE-NOTES.txt b/RELEASE-NOTES.txt
+index 06e8b8cb7..bf93a087b 100644
+--- a/RELEASE-NOTES.txt
++++ b/RELEASE-NOTES.txt
+@@ -25,6 +25,8 @@ Changes in 2.8.3
+ 
+ - Add DateTimeFormatter methods for StringBuilder [#298]
+ 
++- Add Italian period translations [#312]
++
+ 
+ Changes in 2.8.2
+ ================
+diff --git a/pom.xml b/pom.xml
+index 6b91c9e58..4d2f3a3ec 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -218,6 +218,10 @@
+     <contributor>
+       <name>Maxim Zhao</name>
+     </contributor>
++    <contributor>
++      <name>Alex</name>
++      <url>https://github.com/nyrk</url>
++    </contributor>
+   </contributors>
+ 
+   <!-- ==================================================================== -->
+
+From 37e819042a1377aa81852a830d8eed7abcf7e265 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Ing=2E=20Jan=20Kal=C3=A1b?= <jan+github@kalabovi.org>
+Date: Mon, 7 Sep 2015 15:20:45 +0200
+Subject: [PATCH 11/28] Create messages_cs.properties
+
+Czech translation, adapted from Polish
+---
+ .../joda/time/format/messages_cs.properties   | 23 +++++++++++++++++++
+ 1 file changed, 23 insertions(+)
+ create mode 100644 src/main/java/org/joda/time/format/messages_cs.properties
+
+diff --git a/src/main/java/org/joda/time/format/messages_cs.properties b/src/main/java/org/joda/time/format/messages_cs.properties
+new file mode 100644
+index 000000000..c4378ff56
+--- /dev/null
++++ b/src/main/java/org/joda/time/format/messages_cs.properties
+@@ -0,0 +1,23 @@
++PeriodFormat.space=\ 
++PeriodFormat.comma=,
++PeriodFormat.commandand=,a 
++PeriodFormat.commaspaceand=, a 
++PeriodFormat.commaspace=, 
++PeriodFormat.spaceandspace=\ a 
++PeriodFormat.regex.separator=%
++PeriodFormat.years.regex=^1$%[0-9]*(?<!1)[2-4]$%[0-9]*
++PeriodFormat.years.list=\ rok%\ roky%\ let
++PeriodFormat.months.regex=^1$%[0-9]*(?<!1)[2-4]$%[0-9]*
++PeriodFormat.months.list=\ měsíc%\ měsíce%\ měsíců
++PeriodFormat.weeks.regex=^1$%[0-9]*(?<!1)[2-4]$%[0-9]*
++PeriodFormat.weeks.list=\ týden%\ tydny%\ týdnů
++PeriodFormat.day=\ den
++PeriodFormat.days=\ dny
++PeriodFormat.hours.regex=^1$%[0-9]*(?<!1)[2-4]$%[0-9]*
++PeriodFormat.hours.list=\ hodina%\ hodiny%\ hodin
++PeriodFormat.minutes.regex=^1$%[0-9]*(?<!1)[2-4]$%[0-9]*
++PeriodFormat.minutes.list=\ minuta%\ minuty%\ minut
++PeriodFormat.seconds.regex=^1$%[0-9]*(?<!1)[2-4]$%[0-9]*
++PeriodFormat.seconds.list=\ sekunda%\ sekundy%\ sekund
++PeriodFormat.milliseconds.regex=^1$%[0-9]*(?<!1)[2-4]$%[0-9]*
++PeriodFormat.milliseconds.list=\ milisekunda%\ milisekundy%\ milisekund
+
+From 3e43def3c2afeaeeeb4f121b04bd84c9ceb89045 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Ing=2E=20Jan=20Kal=C3=A1b?= <kalab@master.cz>
+Date: Mon, 7 Sep 2015 15:23:30 +0200
+Subject: [PATCH 12/28] Remove executable flag
+
+---
+ src/main/java/org/joda/time/format/messages_ja.properties | 0
+ 1 file changed, 0 insertions(+), 0 deletions(-)
+ mode change 100755 => 100644 src/main/java/org/joda/time/format/messages_ja.properties
+
+diff --git a/src/main/java/org/joda/time/format/messages_ja.properties b/src/main/java/org/joda/time/format/messages_ja.properties
+old mode 100755
+new mode 100644
+
+From 69cc7226bef635cd408705114f121d798a7d029c Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Ing=2E=20Jan=20Kal=C3=A1b?= <jan+github@kalabovi.org>
+Date: Mon, 7 Sep 2015 15:28:27 +0200
+Subject: [PATCH 13/28] typo
+
+---
+ src/main/java/org/joda/time/format/messages_cs.properties | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/main/java/org/joda/time/format/messages_cs.properties b/src/main/java/org/joda/time/format/messages_cs.properties
+index c4378ff56..774840d82 100644
+--- a/src/main/java/org/joda/time/format/messages_cs.properties
++++ b/src/main/java/org/joda/time/format/messages_cs.properties
+@@ -10,7 +10,7 @@ PeriodFormat.years.list=\ rok%\ roky%\ let
+ PeriodFormat.months.regex=^1$%[0-9]*(?<!1)[2-4]$%[0-9]*
+ PeriodFormat.months.list=\ měsíc%\ měsíce%\ měsíců
+ PeriodFormat.weeks.regex=^1$%[0-9]*(?<!1)[2-4]$%[0-9]*
+-PeriodFormat.weeks.list=\ týden%\ tydny%\ týdnů
++PeriodFormat.weeks.list=\ týden%\ týdny%\ týdnů
+ PeriodFormat.day=\ den
+ PeriodFormat.days=\ dny
+ PeriodFormat.hours.regex=^1$%[0-9]*(?<!1)[2-4]$%[0-9]*
+
+From 85e5d2f6f7b68ce95345dcd21a0a897b78914db9 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Ing=2E=20Jan=20Kal=C3=A1b?= <jan+github@kalabovi.org>
+Date: Mon, 7 Sep 2015 15:44:11 +0200
+Subject: [PATCH 14/28] Fix days
+
+---
+ src/main/java/org/joda/time/format/messages_cs.properties | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/main/java/org/joda/time/format/messages_cs.properties b/src/main/java/org/joda/time/format/messages_cs.properties
+index 774840d82..4b729a294 100644
+--- a/src/main/java/org/joda/time/format/messages_cs.properties
++++ b/src/main/java/org/joda/time/format/messages_cs.properties
+@@ -11,8 +11,8 @@ PeriodFormat.months.regex=^1$%[0-9]*(?<!1)[2-4]$%[0-9]*
+ PeriodFormat.months.list=\ měsíc%\ měsíce%\ měsíců
+ PeriodFormat.weeks.regex=^1$%[0-9]*(?<!1)[2-4]$%[0-9]*
+ PeriodFormat.weeks.list=\ týden%\ týdny%\ týdnů
+-PeriodFormat.day=\ den
+-PeriodFormat.days=\ dny
++PeriodFormat.days.regex=^1$%[0-9]*(?<!1)[2-4]$%[0-9]*
++PeriodFormat.days.list=\ den%\ dny%\ dnů
+ PeriodFormat.hours.regex=^1$%[0-9]*(?<!1)[2-4]$%[0-9]*
+ PeriodFormat.hours.list=\ hodina%\ hodiny%\ hodin
+ PeriodFormat.minutes.regex=^1$%[0-9]*(?<!1)[2-4]$%[0-9]*
+
+From 5825cc16f4ada772f6d1669e7b43084c4a123e7d Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Wed, 9 Sep 2015 00:42:04 +0100
+Subject: [PATCH 15/28] Add Czech period translations
+
+Fixes #313
+---
+ RELEASE-NOTES.txt | 2 ++
+ pom.xml           | 4 ++++
+ 2 files changed, 6 insertions(+)
+
+diff --git a/RELEASE-NOTES.txt b/RELEASE-NOTES.txt
+index bf93a087b..f390579c2 100644
+--- a/RELEASE-NOTES.txt
++++ b/RELEASE-NOTES.txt
+@@ -27,6 +27,8 @@ Changes in 2.8.3
+ 
+ - Add Italian period translations [#312]
+ 
++- Add Czech period translations [#313]
++
+ 
+ Changes in 2.8.2
+ ================
+diff --git a/pom.xml b/pom.xml
+index 4d2f3a3ec..371214e32 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -120,6 +120,10 @@
+       <name>Vsevolod Ivanov</name>
+       <url>https://github.com/seva-ask</url>
+     </contributor>
++    <contributor>
++      <name>Ing. Jan Kalab</name>
++      <url>https://github.com/Pitel</url>
++    </contributor>
+     <contributor>
+       <name>Ashish Katyal</name>
+     </contributor>
+
+From 1764f68840a77d52f23e26a7ed537cf8daa5d258 Mon Sep 17 00:00:00 2001
+From: Rok Piltaver <rok.piltaver@celtra.com>
+Date: Mon, 14 Sep 2015 12:57:18 +0200
+Subject: [PATCH 16/28] Fixed bug with uncaught overflow in
+ org/joda/time/base/AbstractInterval.toDurationMillis method. Corrected
+ mistake in documentation of org/joda/time/Interval.withEndMillis method.
+
+---
+ src/main/java/org/joda/time/Interval.java              | 2 +-
+ src/main/java/org/joda/time/base/AbstractInterval.java | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/main/java/org/joda/time/Interval.java b/src/main/java/org/joda/time/Interval.java
+index eb072efc2..f13875022 100644
+--- a/src/main/java/org/joda/time/Interval.java
++++ b/src/main/java/org/joda/time/Interval.java
+@@ -462,7 +462,7 @@ public Interval withStart(ReadableInstant start) {
+     }
+ 
+     /**
+-     * Creates a new interval with the specified start millisecond instant.
++     * Creates a new interval with the specified end millisecond instant.
+      *
+      * @param endInstant  the end instant for the new interval
+      * @return an interval with the start from this interval and the specified end
+diff --git a/src/main/java/org/joda/time/base/AbstractInterval.java b/src/main/java/org/joda/time/base/AbstractInterval.java
+index 17caf63ac..98563d323 100644
+--- a/src/main/java/org/joda/time/base/AbstractInterval.java
++++ b/src/main/java/org/joda/time/base/AbstractInterval.java
+@@ -399,7 +399,7 @@ public MutableInterval toMutableInterval() {
+      * @throws ArithmeticException if the duration exceeds the capacity of a long
+      */
+     public long toDurationMillis() {
+-        return FieldUtils.safeAdd(getEndMillis(), -getStartMillis());
++        return FieldUtils.safeSubtract(getEndMillis(), getStartMillis());
+     }
+ 
+     /**
+
+From 5846d0569dcf64cdfd024f6bf58d707f1a679f64 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Thu, 17 Sep 2015 21:22:41 +0100
+Subject: [PATCH 17/28] Fixed bug with uncaught overflow in Interval
+
+Fixes #315
+---
+ RELEASE-NOTES.txt                                    | 2 ++
+ pom.xml                                              | 4 ++++
+ src/test/java/org/joda/time/TestInterval_Basics.java | 5 +++++
+ 3 files changed, 11 insertions(+)
+
+diff --git a/RELEASE-NOTES.txt b/RELEASE-NOTES.txt
+index f390579c2..7a5e3b6fb 100644
+--- a/RELEASE-NOTES.txt
++++ b/RELEASE-NOTES.txt
+@@ -29,6 +29,8 @@ Changes in 2.8.3
+ 
+ - Add Czech period translations [#313]
+ 
++- Fix overflow bug in intervals [#315]
++
+ 
+ Changes in 2.8.2
+ ================
+diff --git a/pom.xml b/pom.xml
+index 371214e32..e2ba0b768 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -181,6 +181,10 @@
+       <name>Jorge Perez</name>
+       <url>https://github.com/jperezalv</url>
+     </contributor>
++    <contributor>
++      <name>Rok Piltaver</name>
++      <url>https://github.com/Rok-Piltaver</url>
++    </contributor>
+     <contributor>
+       <name>Michael Plump</name>
+     </contributor>
+diff --git a/src/test/java/org/joda/time/TestInterval_Basics.java b/src/test/java/org/joda/time/TestInterval_Basics.java
+index 18b3ed632..4b1e68538 100644
+--- a/src/test/java/org/joda/time/TestInterval_Basics.java
++++ b/src/test/java/org/joda/time/TestInterval_Basics.java
+@@ -140,6 +140,11 @@ public void testGetDuration2() {
+         assertSame(Duration.ZERO, test.toDuration());
+     }
+ 
++    public void testGetDuration3() {
++        Interval test = new Interval(Long.MIN_VALUE, -2);
++        assertEquals(-2L - Long.MIN_VALUE, test.toDurationMillis());
++    }
++
+     public void testEqualsHashCode() {
+         Interval test1 = new Interval(TEST_TIME1, TEST_TIME2);
+         Interval test2 = new Interval(TEST_TIME1, TEST_TIME2);
+
+From f49c671d9926eb677490a76cc8317970e5be433c Mon Sep 17 00:00:00 2001
+From: Emop Project <emopers@gmail.com>
+Date: Fri, 25 Sep 2015 10:20:36 -0500
+Subject: [PATCH 18/28] Fixed bug in ZoneInfoCompiler.java and added a test
+
+---
+ .../org/joda/time/tz/ZoneInfoCompiler.java    |  3 +++
+ .../java/org/joda/time/tz/TestCompiler.java   | 19 +++++++++++++++++++
+ 2 files changed, 22 insertions(+)
+
+diff --git a/src/main/java/org/joda/time/tz/ZoneInfoCompiler.java b/src/main/java/org/joda/time/tz/ZoneInfoCompiler.java
+index feb721556..72ffcb866 100644
+--- a/src/main/java/org/joda/time/tz/ZoneInfoCompiler.java
++++ b/src/main/java/org/joda/time/tz/ZoneInfoCompiler.java
+@@ -694,6 +694,9 @@ public String toString() {
+         public final String iLetterS;
+ 
+         Rule(StringTokenizer st) {
++            if (st.countTokens() < 6) {
++                throw new IllegalArgumentException("Attempting to create a Rule from an incomplete tokenizer");
++            }
+             iName = st.nextToken().intern();
+             iFromYear = parseYear(st.nextToken(), 0);
+             iToYear = parseYear(st.nextToken(), iFromYear);
+diff --git a/src/test/java/org/joda/time/tz/TestCompiler.java b/src/test/java/org/joda/time/tz/TestCompiler.java
+index c454747f1..8eec2bc49 100644
+--- a/src/test/java/org/joda/time/tz/TestCompiler.java
++++ b/src/test/java/org/joda/time/tz/TestCompiler.java
+@@ -21,6 +21,7 @@
+ import java.io.IOException;
+ import java.io.InputStream;
+ import java.util.StringTokenizer;
++import java.util.NoSuchElementException;
+ 
+ import junit.framework.TestCase;
+ import junit.framework.TestSuite;
+@@ -69,6 +70,12 @@ public static TestSuite suite() {
+         "            -8:00   CA  P%sT    1967\n" + 
+         "            -8:00   US  P%sT";
+ 
++        static final String BROKEN_TIMEZONE_FILE =
++        "# Incomplete Rules for building America/Los_Angeles time zone.\n" +
++        "\n" +
++        "Rule    US  1918    1919    -   Mar lastSun 2:00    1:00    D\n" +
++        "Rule    \n" ; // this line is intentionally incomplete
++
+     private DateTimeZone originalDateTimeZone = null;
+ 
+     public TestCompiler(String name) {
+@@ -118,6 +125,18 @@ public void testCompile() throws Exception {
+         TestBuilder.testReverseTransitions(tz, TestBuilder.AMERICA_LOS_ANGELES_DATA);
+     }
+ 
++    public void testCompileOnBrokenTimeZoneFile() throws Exception {
++        try {
++            Provider provider = compileAndLoad(BROKEN_TIMEZONE_FILE);
++            fail();
++        } catch(NoSuchElementException nsee) {
++            // This used to be thrown in the Rule constructor
++            fail("NoSuchElementException was thrown; broken timezone file?");
++        } catch(IllegalArgumentException iae) {
++            assertEquals("Attempting to create a Rule from an incomplete tokenizer", iae.getMessage());
++        }
++    }
++
+     private Provider compileAndLoad(String data) throws Exception {
+         File tempDir = createDataFile(data);
+         File destDir = makeTempDir();
+
+From 783e0c7552a1b7d38dc32334a75e9bb73f07575c Mon Sep 17 00:00:00 2001
+From: Buryakov Dmitry <buryakovmail@gmail.com>
+Date: Wed, 7 Oct 2015 12:39:58 +0400
+Subject: [PATCH 19/28] russian format messages
+
+---
+ .../joda/time/format/messages_ru.properties   | 23 +++++++++++++++++++
+ 1 file changed, 23 insertions(+)
+ create mode 100644 src/main/java/org/joda/time/format/messages_ru.properties
+
+diff --git a/src/main/java/org/joda/time/format/messages_ru.properties b/src/main/java/org/joda/time/format/messages_ru.properties
+new file mode 100644
+index 000000000..d07d5d7e6
+--- /dev/null
++++ b/src/main/java/org/joda/time/format/messages_ru.properties
+@@ -0,0 +1,23 @@
++PeriodFormat.space=\u0020
++PeriodFormat.comma=,
++PeriodFormat.commandand=,\u0438
++PeriodFormat.commaspaceand=, \u0438
++PeriodFormat.commaspace=,\u0020
++PeriodFormat.spaceandspace=\ \u0438\u0020
++PeriodFormat.regex.separator=%
++PeriodFormat.years.regex=^1$%[0-9]*(?<!1)[2-4]$%[0-9]*
++PeriodFormat.years.list=\ \u0433\u043E\u0434%\ \u0433\u043E\u0434\u0430%\ \u043B\u0435\u0442
++PeriodFormat.months.regex=^1$%[0-9]*(?<!1)[2-4]$%[0-9]*
++PeriodFormat.months.list=\ \u043C\u0435\u0441\u044F\u0446%\ \u043C\u0435\u0441\u044F\u0446\u0430%\ \u043C\u0435\u0441\u044F\u0446\u0435\u0432
++PeriodFormat.weeks.regex=^1$%[0-9]*(?<!1)[2-4]$%[0-9]*
++PeriodFormat.weeks.list=\ \u043D\u0435\u0434\u0435\u043B\u044F%\ \u043D\u0435\u0434\u0435\u043B\u0438%\ \u043D\u0435\u0434\u0435\u043B\u044C
++PeriodFormat.days.regex=^1$%[0-9]*(?<!1)[2-4]$%[0-9]*
++PeriodFormat.days.list=\ \u0434\u0435\u043D\u044C%\ \u0434\u043D\u044F%\ \u0434\u043D\u0435\u0439
++PeriodFormat.hours.regex=^1$%[0-9]*(?<!1)[2-4]$%[0-9]*
++PeriodFormat.hours.list=\ \u0447\u0430\u0441%\ \u0447\u0430\u0441\u0430%\ \u0447\u0430\u0441\u043E\u0432
++PeriodFormat.minutes.regex=^1$%[0-9]*(?<!1)[2-4]$%[0-9]*
++PeriodFormat.minutes.list=\ \u043C\u0438\u043D\u0443\u0442\u0430%\ \u043C\u0438\u043D\u0443\u0442\u044B%\ \u043C\u0438\u043D\u0443\u0442
++PeriodFormat.seconds.regex=^1$%[0-9]*(?<!1)[2-4]$%[0-9]*
++PeriodFormat.seconds.list=\ \u0441\u0435\u043A\u0443\u043D\u0434\u0430%\ \u0441\u0435\u043A\u0443\u043D\u0434\u044B%\ \u0441\u0435\u043A\u0443\u043D\u0434
++PeriodFormat.milliseconds.regex=^1$%[0-9]*(?<!1)[2-4]$%[0-9]*
++PeriodFormat.milliseconds.list=\ \u043C\u0438\u043B\u0438\u0441\u0435\u043A\u0443\u043D\u0434\u0430%\ \u043C\u0438\u043B\u0435\u0441\u0435\u043A\u0443\u043D\u0434\u044B%\ \u043C\u0438\u043B\u0438\u0441\u0435\u043A\u0443\u043D\u0434
+
+From 98aa441a6b110643665896ab9dac7cab6ee88936 Mon Sep 17 00:00:00 2001
+From: Buryakov Dmitry <buryakovmail@gmail.com>
+Date: Wed, 7 Oct 2015 13:04:11 +0400
+Subject: [PATCH 20/28] text mistake fix
+
+---
+ src/main/java/org/joda/time/format/messages_ru.properties | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/main/java/org/joda/time/format/messages_ru.properties b/src/main/java/org/joda/time/format/messages_ru.properties
+index d07d5d7e6..1aff4db97 100644
+--- a/src/main/java/org/joda/time/format/messages_ru.properties
++++ b/src/main/java/org/joda/time/format/messages_ru.properties
+@@ -20,4 +20,4 @@ PeriodFormat.minutes.list=\ \u043C\u0438\u043D\u0443\u0442\u0430%\ \u043C\u0438\
+ PeriodFormat.seconds.regex=^1$%[0-9]*(?<!1)[2-4]$%[0-9]*
+ PeriodFormat.seconds.list=\ \u0441\u0435\u043A\u0443\u043D\u0434\u0430%\ \u0441\u0435\u043A\u0443\u043D\u0434\u044B%\ \u0441\u0435\u043A\u0443\u043D\u0434
+ PeriodFormat.milliseconds.regex=^1$%[0-9]*(?<!1)[2-4]$%[0-9]*
+-PeriodFormat.milliseconds.list=\ \u043C\u0438\u043B\u0438\u0441\u0435\u043A\u0443\u043D\u0434\u0430%\ \u043C\u0438\u043B\u0435\u0441\u0435\u043A\u0443\u043D\u0434\u044B%\ \u043C\u0438\u043B\u0438\u0441\u0435\u043A\u0443\u043D\u0434
++PeriodFormat.milliseconds.list=\ \u043C\u0438\u043B\u043B\u0438\u0441\u0435\u043A\u0443\u043D\u0434\u0430%\ \u043C\u0438\u043B\u043B\u0438\u0441\u0435\u043A\u0443\u043D\u0434\u044B%\ \u043C\u0438\u043B\u043B\u0438\u0441\u0435\u043A\u0443\u043D\u0434
+
+From 4bac3c38ead34a77954e9901c86f691366da723d Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Tue, 13 Oct 2015 21:29:34 +0100
+Subject: [PATCH 21/28] Update to time-zone data 2015f
+
+---
+ src/main/java/org/joda/time/tz/src/Readme.txt | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/main/java/org/joda/time/tz/src/Readme.txt b/src/main/java/org/joda/time/tz/src/Readme.txt
+index 93fc6cbd5..65bc2374d 100644
+--- a/src/main/java/org/joda/time/tz/src/Readme.txt
++++ b/src/main/java/org/joda/time/tz/src/Readme.txt
+@@ -1,2 +1,2 @@
+ The data files in this directory were obtained from the public IANA time zone database,
+-http://www.iana.org/time-zones, version 2015e.
++http://www.iana.org/time-zones, version 2015f.
+
+From d2a0bb0593dab948c9b738266be880eaf00352df Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Tue, 13 Oct 2015 23:03:22 +0100
+Subject: [PATCH 22/28] Add Russian period translations
+
+Fixes #320
+---
+ RELEASE-NOTES.txt | 2 ++
+ pom.xml           | 4 ++++
+ 2 files changed, 6 insertions(+)
+
+diff --git a/RELEASE-NOTES.txt b/RELEASE-NOTES.txt
+index 7a5e3b6fb..926cbdce7 100644
+--- a/RELEASE-NOTES.txt
++++ b/RELEASE-NOTES.txt
+@@ -25,6 +25,8 @@ Changes in 2.8.3
+ 
+ - Add DateTimeFormatter methods for StringBuilder [#298]
+ 
++- Add Russian period translations [#320]
++
+ - Add Italian period translations [#312]
+ 
+ - Add Czech period translations [#313]
+diff --git a/pom.xml b/pom.xml
+index e2ba0b768..f463cc36e 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -80,6 +80,10 @@
+       <name>Dan Cojocar</name>
+       <url>https://github.com/dancojocar</url>
+     </contributor>
++    <contributor>
++      <name>dspitfire</name>
++      <url>https://github.com/dspitfire</url>
++    </contributor>
+     <contributor>
+       <name>Christopher Elkins</name>
+       <url>https://github.com/celkins</url>
+
+From dadca66121a67692d937f06c7df797886cf17d31 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Tue, 13 Oct 2015 23:08:10 +0100
+Subject: [PATCH 23/28] Better error message for malformed tzdb files
+
+Fixes #319
+---
+ RELEASE-NOTES.txt | 2 ++
+ pom.xml           | 4 ++++
+ 2 files changed, 6 insertions(+)
+
+diff --git a/RELEASE-NOTES.txt b/RELEASE-NOTES.txt
+index 926cbdce7..675368fcd 100644
+--- a/RELEASE-NOTES.txt
++++ b/RELEASE-NOTES.txt
+@@ -33,6 +33,8 @@ Changes in 2.8.3
+ 
+ - Fix overflow bug in intervals [#315]
+ 
++- Better error message for malformed tzdb files [#319]
++
+ 
+ Changes in 2.8.2
+ ================
+diff --git a/pom.xml b/pom.xml
+index f463cc36e..6cca1bce9 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -88,6 +88,10 @@
+       <name>Christopher Elkins</name>
+       <url>https://github.com/celkins</url>
+     </contributor>
++    <contributor>
++      <name>emopers</name>
++      <url>https://github.com/emopers</url>
++    </contributor>
+     <contributor>
+       <name>Jeroen van Erp</name>
+     </contributor>
+
+From 0a357a84750ac43ca0d1a068099390eadbfc0f8a Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Tue, 13 Oct 2015 23:15:01 +0100
+Subject: [PATCH 24/28] Better error message for interval constructor
+
+Fixes #321
+---
+ RELEASE-NOTES.txt                                      | 2 ++
+ src/main/java/org/joda/time/base/AbstractInterval.java | 2 +-
+ 2 files changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/RELEASE-NOTES.txt b/RELEASE-NOTES.txt
+index 675368fcd..117545faa 100644
+--- a/RELEASE-NOTES.txt
++++ b/RELEASE-NOTES.txt
+@@ -35,6 +35,8 @@ Changes in 2.8.3
+ 
+ - Better error message for malformed tzdb files [#319]
+ 
++- Better error message for interval constructor [#321]
++
+ 
+ Changes in 2.8.2
+ ================
+diff --git a/src/main/java/org/joda/time/base/AbstractInterval.java b/src/main/java/org/joda/time/base/AbstractInterval.java
+index 98563d323..9754490e9 100644
+--- a/src/main/java/org/joda/time/base/AbstractInterval.java
++++ b/src/main/java/org/joda/time/base/AbstractInterval.java
+@@ -60,7 +60,7 @@ protected AbstractInterval() {
+      */
+     protected void checkInterval(long start, long end) {
+         if (end < start) {
+-            throw new IllegalArgumentException("The end instant must be greater or equal to the start");
++            throw new IllegalArgumentException("The end instant must be greater the start");
+         }
+     }
+ 
+
+From d7774f13ad2dc7cf7295bb8376c21bbf5c662fc4 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Fri, 25 Sep 2015 08:52:29 +0100
+Subject: [PATCH 25/28] Allow min/max dates
+
+Provide some form of support for date-times up to the min/max of Long
+At the margins, calculations will be slightly imperfect
+UTC is used for the min/max
+Fixes #297
+Fixes #190
+---
+ RELEASE-NOTES.txt                             |   4 +
+ .../java/org/joda/time/DateTimeField.java     |  16 +-
+ .../java/org/joda/time/base/BaseDateTime.java |  16 +-
+ .../org/joda/time/chrono/BasicChronology.java |  46 ++-
+ .../time/chrono/BasicYearDateTimeField.java   |   9 +-
+ .../org/joda/time/chrono/ZonedChronology.java |  12 +-
+ .../time/format/DateTimeParserBucket.java     |   4 +-
+ src/test/java/org/joda/time/TestAll.java      |   3 +-
+ .../joda/time/TestDateTime_Constructors.java  |  32 +-
+ .../joda/time/TestInterval_Constructors.java  |  52 ++-
+ .../java/org/joda/time/TestMinMaxLong.java    | 317 ++++++++++++++++++
+ 11 files changed, 458 insertions(+), 53 deletions(-)
+ create mode 100644 src/test/java/org/joda/time/TestMinMaxLong.java
+
+diff --git a/RELEASE-NOTES.txt b/RELEASE-NOTES.txt
+index 117545faa..8d277ff77 100644
+--- a/RELEASE-NOTES.txt
++++ b/RELEASE-NOTES.txt
+@@ -31,6 +31,10 @@ Changes in 2.8.3
+ 
+ - Add Czech period translations [#313]
+ 
++- Allow DateTime and Interval to refer to values at Long.MIN_VALUE and Long.MAX_VALUE [#297, #190]
++  A DateTime may be created with any millisecond value, however at the very edges there may be
++  some undesirable effects, for example alway using UTC instead of the time-zone
++
+ - Fix overflow bug in intervals [#315]
+ 
+ - Better error message for malformed tzdb files [#319]
+diff --git a/src/main/java/org/joda/time/DateTimeField.java b/src/main/java/org/joda/time/DateTimeField.java
+index acf01c334..5246cefd8 100644
+--- a/src/main/java/org/joda/time/DateTimeField.java
++++ b/src/main/java/org/joda/time/DateTimeField.java
+@@ -1,5 +1,5 @@
+ /*
+- *  Copyright 2001-2005 Stephen Colebourne
++ *  Copyright 2001-2015 Stephen Colebourne
+  *
+  *  Licensed under the Apache License, Version 2.0 (the "License");
+  *  you may not use this file except in compliance with the License.
+@@ -378,6 +378,20 @@
+      */
+     public abstract long set(long instant, int value);
+ 
++    /**
++     * Sets a value in the milliseconds supplied, allowing a little leniency at the margins.
++     * <p>
++     * This is primarily an internal method used by parsing.
++     * 
++     * @param instant  the milliseconds from 1970-01-01T00:00:00Z to set in
++     * @param value  the value to set, in the units of the field
++     * @return the updated milliseconds
++     * @throws IllegalArgumentException if the value is invalid
++     */
++    public long setExtended(long instant, int value) {
++        return set(instant, value);
++    }
++
+     /**
+      * Sets a value using the specified partial instant.
+      * <p>
+diff --git a/src/main/java/org/joda/time/base/BaseDateTime.java b/src/main/java/org/joda/time/base/BaseDateTime.java
+index 4b00e77cb..0fe829fd8 100644
+--- a/src/main/java/org/joda/time/base/BaseDateTime.java
++++ b/src/main/java/org/joda/time/base/BaseDateTime.java
+@@ -1,5 +1,5 @@
+ /*
+- *  Copyright 2001-2011 Stephen Colebourne
++ *  Copyright 2001-2015 Stephen Colebourne
+  *
+  *  Licensed under the Apache License, Version 2.0 (the "License");
+  *  you may not use this file except in compliance with the License.
+@@ -124,10 +124,7 @@ public BaseDateTime(long instant, Chronology chronology) {
+         super();
+         iChronology = checkChronology(chronology);
+         iMillis = checkInstant(instant, iChronology);
+-        // validate not over maximum
+-        if (iChronology.year().isSupported()) {
+-            iChronology.year().set(iMillis, iChronology.year().get(iMillis));
+-        }
++        adjustForMinMax();
+     }
+ 
+     //-----------------------------------------------------------------------
+@@ -152,6 +149,7 @@ public BaseDateTime(Object instant, DateTimeZone zone) {
+         Chronology chrono = checkChronology(converter.getChronology(instant, zone));
+         iChronology = chrono;
+         iMillis = checkInstant(converter.getInstantMillis(instant, chrono), chrono);
++        adjustForMinMax();
+     }
+ 
+     /**
+@@ -173,6 +171,7 @@ public BaseDateTime(Object instant, Chronology chronology) {
+         InstantConverter converter = ConverterManager.getInstance().getInstantConverter(instant);
+         iChronology = checkChronology(converter.getChronology(instant, chronology));
+         iMillis = checkInstant(converter.getInstantMillis(instant, chronology), iChronology);
++        adjustForMinMax();
+     }
+ 
+     //-----------------------------------------------------------------------
+@@ -258,6 +257,13 @@ public BaseDateTime(
+         long instant = iChronology.getDateTimeMillis(year, monthOfYear, dayOfMonth,
+             hourOfDay, minuteOfHour, secondOfMinute, millisOfSecond);
+         iMillis = checkInstant(instant, iChronology);
++        adjustForMinMax();
++    }
++
++    private void adjustForMinMax() {
++        if (iMillis == Long.MIN_VALUE || iMillis == Long.MAX_VALUE) {
++            iChronology = iChronology.withUTC();
++        }
+     }
+ 
+     //-----------------------------------------------------------------------
+diff --git a/src/main/java/org/joda/time/chrono/BasicChronology.java b/src/main/java/org/joda/time/chrono/BasicChronology.java
+index d3442485f..e0ec92379 100644
+--- a/src/main/java/org/joda/time/chrono/BasicChronology.java
++++ b/src/main/java/org/joda/time/chrono/BasicChronology.java
+@@ -1,5 +1,5 @@
+ /*
+- *  Copyright 2001-2014 Stephen Colebourne
++ *  Copyright 2001-2015 Stephen Colebourne
+  *
+  *  Licensed under the Apache License, Version 2.0 (the "License");
+  *  you may not use this file except in compliance with the License.
+@@ -146,6 +146,7 @@ public DateTimeZone getZone() {
+         return DateTimeZone.UTC;
+     }
+ 
++    @Override
+     public long getDateTimeMillis(
+             int year, int monthOfYear, int dayOfMonth, int millisOfDay)
+             throws IllegalArgumentException {
+@@ -156,9 +157,10 @@ public long getDateTimeMillis(
+ 
+         FieldUtils.verifyValueBounds
+             (DateTimeFieldType.millisOfDay(), millisOfDay, 0, DateTimeConstants.MILLIS_PER_DAY - 1);
+-        return getDateMidnightMillis(year, monthOfYear, dayOfMonth) + millisOfDay;
++        return getDateTimeMillis0(year, monthOfYear, dayOfMonth, millisOfDay);
+     }
+ 
++    @Override
+     public long getDateTimeMillis(
+             int year, int monthOfYear, int dayOfMonth,
+             int hourOfDay, int minuteOfHour, int secondOfMinute, int millisOfSecond)
+@@ -173,12 +175,29 @@ public long getDateTimeMillis(
+         FieldUtils.verifyValueBounds(DateTimeFieldType.minuteOfHour(), minuteOfHour, 0, 59);
+         FieldUtils.verifyValueBounds(DateTimeFieldType.secondOfMinute(), secondOfMinute, 0, 59);
+         FieldUtils.verifyValueBounds(DateTimeFieldType.millisOfSecond(), millisOfSecond, 0, 999);
+-
+-        return getDateMidnightMillis(year, monthOfYear, dayOfMonth)
+-            + hourOfDay * DateTimeConstants.MILLIS_PER_HOUR
+-            + minuteOfHour * DateTimeConstants.MILLIS_PER_MINUTE
+-            + secondOfMinute * DateTimeConstants.MILLIS_PER_SECOND
+-            + millisOfSecond;
++        long millisOfDay = hourOfDay * DateTimeConstants.MILLIS_PER_HOUR
++                        + minuteOfHour * DateTimeConstants.MILLIS_PER_MINUTE
++                        + secondOfMinute * DateTimeConstants.MILLIS_PER_SECOND
++                        + millisOfSecond;
++        return getDateTimeMillis0(year, monthOfYear, dayOfMonth, (int) millisOfDay);
++    }
++
++    private long getDateTimeMillis0(int year, int monthOfYear, int dayOfMonth, int millisOfDay) {
++        long dayInstant = getDateMidnightMillis(year, monthOfYear, dayOfMonth);
++        // try reversed calculation from next day for MIN
++        if (dayInstant == Long.MIN_VALUE) {
++            dayInstant = getDateMidnightMillis(year, monthOfYear, dayOfMonth + 1);
++            millisOfDay  = millisOfDay - 86400000;
++        }
++        // check for limit caused by millisOfDay addition
++        // even if dayInstant already MIN or MAX, this still works fine with int math
++        long result = dayInstant + millisOfDay;
++        if (result  < 0 && dayInstant > 0) {
++            return Long.MAX_VALUE;
++        } else if (result  > 0 && dayInstant < 0) {
++            return Long.MIN_VALUE;
++        }
++        return result;
+     }
+ 
+     public int getMinimumDaysInFirstWeek() {
+@@ -608,10 +627,17 @@ int getDaysInMonthMaxForSet(long instant, int value) {
+      * @return the milliseconds
+      */
+     long getDateMidnightMillis(int year, int monthOfYear, int dayOfMonth) {
+-        FieldUtils.verifyValueBounds(DateTimeFieldType.year(), year, getMinYear(), getMaxYear());
++        FieldUtils.verifyValueBounds(DateTimeFieldType.year(), year, getMinYear() - 1, getMaxYear() + 1);
+         FieldUtils.verifyValueBounds(DateTimeFieldType.monthOfYear(), monthOfYear, 1, getMaxMonth(year));
+         FieldUtils.verifyValueBounds(DateTimeFieldType.dayOfMonth(), dayOfMonth, 1, getDaysInYearMonth(year, monthOfYear));
+-        return getYearMonthDayMillis(year, monthOfYear, dayOfMonth);
++        long instant = getYearMonthDayMillis(year, monthOfYear, dayOfMonth);
++        // check for limit caused by min/max year +1/-1
++        if (instant < 0 && year == getMaxYear() + 1) {
++            return Long.MAX_VALUE;
++        } else if (instant > 0 && year == getMinYear() - 1) {
++            return Long.MIN_VALUE;
++        }
++        return instant;
+     }
+ 
+     /**
+diff --git a/src/main/java/org/joda/time/chrono/BasicYearDateTimeField.java b/src/main/java/org/joda/time/chrono/BasicYearDateTimeField.java
+index 6ded862cc..e7f2516d1 100644
+--- a/src/main/java/org/joda/time/chrono/BasicYearDateTimeField.java
++++ b/src/main/java/org/joda/time/chrono/BasicYearDateTimeField.java
+@@ -1,5 +1,5 @@
+ /*
+- *  Copyright 2001-2013 Stephen Colebourne
++ *  Copyright 2001-2015 Stephen Colebourne
+  *
+  *  Licensed under the Apache License, Version 2.0 (the "License");
+  *  you may not use this file except in compliance with the License.
+@@ -85,6 +85,13 @@ public long set(long instant, int year) {
+         return iChronology.setYear(instant, year);
+     }
+ 
++    @Override
++    public long setExtended(long instant, int year) {
++        FieldUtils.verifyValueBounds(
++                this, year, iChronology.getMinYear() - 1, iChronology.getMaxYear() + 1);
++        return iChronology.setYear(instant, year);
++    }
++
+     public long getDifferenceAsLong(long minuendInstant, long subtrahendInstant) {
+         if (minuendInstant < subtrahendInstant) {
+             return -iChronology.getYearDifference(subtrahendInstant, minuendInstant);
+diff --git a/src/main/java/org/joda/time/chrono/ZonedChronology.java b/src/main/java/org/joda/time/chrono/ZonedChronology.java
+index 31e67ed32..0acbf689e 100644
+--- a/src/main/java/org/joda/time/chrono/ZonedChronology.java
++++ b/src/main/java/org/joda/time/chrono/ZonedChronology.java
+@@ -1,5 +1,5 @@
+ /*
+- *  Copyright 2001-2013 Stephen Colebourne
++ *  Copyright 2001-2015 Stephen Colebourne
+  *
+  *  Licensed under the Apache License, Version 2.0 (the "License");
+  *  you may not use this file except in compliance with the License.
+@@ -135,9 +135,19 @@ public long getDateTimeMillis(long instant,
+      * @return the instant from 1970-01-01T00:00:00Z
+      */
+     private long localToUTC(long localInstant) {
++        if (localInstant == Long.MAX_VALUE) {
++            return Long.MAX_VALUE;
++        } else if (localInstant == Long.MIN_VALUE) {
++            return Long.MIN_VALUE;
++        }
+         DateTimeZone zone = getZone();
+         int offset = zone.getOffsetFromLocal(localInstant);
+         long utcInstant = localInstant - offset;
++        if (localInstant > 0 && utcInstant < 0) {
++            return Long.MAX_VALUE;
++        } else if (localInstant < 0 && utcInstant > 0) {
++            return Long.MIN_VALUE;
++        }
+         int offsetBasedOnUtc = zone.getOffset(utcInstant);
+         if (offset != offsetBasedOnUtc) {
+             throw new IllegalInstantException(localInstant, zone.getID());
+diff --git a/src/main/java/org/joda/time/format/DateTimeParserBucket.java b/src/main/java/org/joda/time/format/DateTimeParserBucket.java
+index a71a6db07..552d888d6 100644
+--- a/src/main/java/org/joda/time/format/DateTimeParserBucket.java
++++ b/src/main/java/org/joda/time/format/DateTimeParserBucket.java
+@@ -1,5 +1,5 @@
+ /*
+- *  Copyright 2001-2014 Stephen Colebourne
++ *  Copyright 2001-2015 Stephen Colebourne
+  *
+  *  Licensed under the Apache License, Version 2.0 (the "License");
+  *  you may not use this file except in compliance with the License.
+@@ -565,7 +565,7 @@ void init(DateTimeField field, String text, Locale locale) {
+         
+         long set(long millis, boolean reset) {
+             if (iText == null) {
+-                millis = iField.set(millis, iValue);
++                millis = iField.setExtended(millis, iValue);
+             } else {
+                 millis = iField.set(millis, iText, iLocale);
+             }
+diff --git a/src/test/java/org/joda/time/TestAll.java b/src/test/java/org/joda/time/TestAll.java
+index 3a7fb6457..3a579c755 100644
+--- a/src/test/java/org/joda/time/TestAll.java
++++ b/src/test/java/org/joda/time/TestAll.java
+@@ -1,5 +1,5 @@
+ /*
+- *  Copyright 2001-2010 Stephen Colebourne
++ *  Copyright 2001-2015 Stephen Colebourne
+  *
+  *  Licensed under the Apache License, Version 2.0 (the "License");
+  *  you may not use this file except in compliance with the License.
+@@ -129,6 +129,7 @@ public static Test suite() {
+         suite.addTest(TestStringConvert.suite());
+         suite.addTest(TestSerialization.suite());
+         suite.addTest(TestIllegalFieldValueException.suite());
++        suite.addTest(TestMinMaxLong.suite());
+         return suite;
+     }
+ 
+diff --git a/src/test/java/org/joda/time/TestDateTime_Constructors.java b/src/test/java/org/joda/time/TestDateTime_Constructors.java
+index 24f2b1d06..7c617bfc0 100644
+--- a/src/test/java/org/joda/time/TestDateTime_Constructors.java
++++ b/src/test/java/org/joda/time/TestDateTime_Constructors.java
+@@ -1,5 +1,5 @@
+ /*
+- *  Copyright 2001-2010 Stephen Colebourne
++ *  Copyright 2001-2015 Stephen Colebourne
+  *
+  *  Licensed under the Apache License, Version 2.0 (the "License");
+  *  you may not use this file except in compliance with the License.
+@@ -243,36 +243,6 @@ public void testConstructor_long2() throws Throwable {
+         assertEquals(TEST_TIME2, test.getMillis());
+     }
+ 
+-    /**
+-     * Test constructor (long)
+-     */
+-    public void testConstructor_long_max() throws Throwable {
+-        DateTime dt = new DateTime(292278993, 12, 31, 23, 59, 59, 999);
+-        DateTime test = new DateTime(dt.getMillis());
+-        assertEquals(dt, test);
+-        try {
+-            new DateTime(dt.getMillis() + 1);
+-            fail();
+-        } catch (IllegalFieldValueException ex) {
+-            // expected
+-        }
+-    }
+-
+-    /**
+-     * Test constructor (long)
+-     */
+-    public void testConstructor_long_min() throws Throwable {
+-        DateTime dt = new DateTime(-292275054, 1, 1, 0, 0);
+-        DateTime test = new DateTime(dt.getMillis());
+-        assertEquals(dt, test);
+-        try {
+-            new DateTime(dt.getMillis() - 1);
+-            fail();
+-        } catch (IllegalFieldValueException ex) {
+-            // expected
+-        }
+-    }
+-
+     /**
+      * Test constructor (long, DateTimeZone)
+      */
+diff --git a/src/test/java/org/joda/time/TestInterval_Constructors.java b/src/test/java/org/joda/time/TestInterval_Constructors.java
+index 5392ca0b7..5e36cdb43 100644
+--- a/src/test/java/org/joda/time/TestInterval_Constructors.java
++++ b/src/test/java/org/joda/time/TestInterval_Constructors.java
+@@ -1,5 +1,5 @@
+ /*
+- *  Copyright 2001-2006 Stephen Colebourne
++ *  Copyright 2001-2015 Stephen Colebourne
+  *
+  *  Licensed under the Apache License, Version 2.0 (the "License");
+  *  you may not use this file except in compliance with the License.
+@@ -177,6 +177,56 @@ public void testConstructor_long_long3() throws Throwable {
+         } catch (IllegalArgumentException ex) {}
+     }
+ 
++    public void testConstructor_long_long_minMax() throws Throwable {
++        Interval test = new Interval(Long.MIN_VALUE, Long.MAX_VALUE);
++        assertEquals(Long.MIN_VALUE, test.getStartMillis());
++        assertEquals(Long.MAX_VALUE, test.getEndMillis());
++        assertEquals(new DateTime(Long.MIN_VALUE), test.getStart());
++        assertEquals(new DateTime(Long.MAX_VALUE), test.getEnd());
++        assertEquals(ISOChronology.getInstance(), test.getChronology());
++        assertEquals(test, test.toInterval());
++        assertEquals("-292275055-05-16T16:56:25.192+00:09:21/292278994-08-17T07:12:55.807Z", test.toString());
++        try {
++            test.toDuration();
++            fail();
++        } catch (ArithmeticException ex) {}
++        try {
++            test.toDurationMillis();
++            fail();
++        } catch (ArithmeticException ex) {}
++        try {
++            test.toPeriod();
++            fail();
++        } catch (RuntimeException ex) {}
++    }
++
++    public void testConstructor_long_long_min() throws Throwable {
++        Interval test = new Interval(Long.MIN_VALUE, Long.MIN_VALUE + 9);
++        assertEquals(Long.MIN_VALUE, test.getStartMillis());
++        assertEquals(Long.MIN_VALUE + 9, test.getEndMillis());
++        assertEquals(new DateTime(Long.MIN_VALUE), test.getStart());
++        assertEquals(new DateTime(Long.MIN_VALUE + 9), test.getEnd());
++        assertEquals(ISOChronology.getInstance(), test.getChronology());
++        assertEquals(test, test.toInterval());
++        assertEquals("-292275055-05-16T16:56:25.192+00:09:21/-292275055-05-16T16:56:25.201+00:09:21", test.toString());
++        assertEquals(9, test.toDurationMillis());
++        assertEquals(new Duration(9), test.toDuration());
++        assertEquals(new Period(9), test.toPeriod());
++    }
++
++    public void testConstructor_long_long_max() throws Throwable {
++        Interval test = new Interval(Long.MAX_VALUE - 9, Long.MAX_VALUE);
++        assertEquals(Long.MAX_VALUE - 9, test.getStartMillis());
++        assertEquals(Long.MAX_VALUE, test.getEndMillis());
++        assertEquals(new DateTime(Long.MAX_VALUE - 9), test.getStart());
++        assertEquals(new DateTime(Long.MAX_VALUE), test.getEnd());
++        assertEquals(ISOChronology.getInstance(), test.getChronology());
++        assertEquals(test, test.toInterval());
++        assertEquals("292278994-08-17T07:12:55.798Z/292278994-08-17T07:12:55.807Z", test.toString());
++        assertEquals(9, test.toDurationMillis());
++        assertEquals(new Duration(9), test.toDuration());
++    }
++
+     //-----------------------------------------------------------------------
+     public void testConstructor_long_long_Zone() throws Throwable {
+         DateTime dt1 = new DateTime(2004, 6, 9, 0, 0, 0, 0);
+diff --git a/src/test/java/org/joda/time/TestMinMaxLong.java b/src/test/java/org/joda/time/TestMinMaxLong.java
+new file mode 100644
+index 000000000..85cbe79d6
+--- /dev/null
++++ b/src/test/java/org/joda/time/TestMinMaxLong.java
+@@ -0,0 +1,317 @@
++/*
++ *  Copyright 2001-2015 Stephen Colebourne
++ *
++ *  Licensed under the Apache License, Version 2.0 (the "License");
++ *  you may not use this file except in compliance with the License.
++ *  You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ *  Unless required by applicable law or agreed to in writing, software
++ *  distributed under the License is distributed on an "AS IS" BASIS,
++ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ *  See the License for the specific language governing permissions and
++ *  limitations under the License.
++ */
++package org.joda.time;
++
++import java.util.Locale;
++
++import org.joda.time.chrono.ISOChronology;
++
++import junit.framework.TestCase;
++import junit.framework.TestSuite;
++
++/**
++ * This class is a Junit unit test for min/max long values.
++ *
++ * @author Stephen Colebourne
++ */
++public class TestMinMaxLong extends TestCase {
++
++    private static final DateTimeZone LONDON = DateTimeZone.forID("Europe/London");
++    private static final int ACTUAL_MAX_YEAR = 292278994;
++    private static final int ACTUAL_MIN_YEAR = -292275055;
++
++    private DateTimeZone zone = null;
++    private Locale locale = null;
++
++    public static void main(String[] args) {
++        junit.textui.TestRunner.run(suite());
++    }
++
++    public static TestSuite suite() {
++        return new TestSuite(TestMinMaxLong.class);
++    }
++
++    public TestMinMaxLong(String name) {
++        super(name);
++    }
++
++    protected void setUp() throws Exception {
++        zone = DateTimeZone.getDefault();
++        locale = Locale.getDefault();
++        DateTimeZone.setDefault(LONDON);
++        java.util.TimeZone.setDefault(LONDON.toTimeZone());
++        Locale.setDefault(Locale.UK);
++    }
++
++    protected void tearDown() throws Exception {
++        DateTimeZone.setDefault(zone);
++        java.util.TimeZone.setDefault(zone.toTimeZone());
++        Locale.setDefault(locale);
++        zone = null;
++    }
++
++    //-----------------------------------------------------------------------
++    public void testDateTime_max() throws Throwable {
++        // toString adjusts to UTC rather than overflow
++        DateTime dt = new DateTime(ACTUAL_MAX_YEAR, 8, 17, 7, 12, 55, 807, DateTimeZone.UTC);
++        assertEquals(Long.MAX_VALUE, dt.getMillis());
++        assertEquals(ISOChronology.getInstanceUTC(), dt.getChronology());
++        DateTime test = new DateTime(Long.MAX_VALUE);
++        assertEquals(Long.MAX_VALUE, test.getMillis());
++        assertEquals(ISOChronology.getInstanceUTC(), test.getChronology());
++    }
++
++    public void testDateTime_max_math() throws Throwable {
++        DateTime test = new DateTime(Long.MAX_VALUE);  // always in UTC
++        assertEquals("292278994-08-17T07:12:55.807Z", test.toString());
++        
++        assertEquals(new DateTime(Long.MAX_VALUE - 807, DateTimeZone.UTC), test.minus(807));
++        assertEquals("292278994-08-17T07:12:55.000Z", test.minus(807).toString());
++        
++        assertEquals(new DateTime(Long.MAX_VALUE - 1000, DateTimeZone.UTC), test.minusSeconds(1));
++        assertEquals("292278994-08-17T07:12:54.807Z", test.minusSeconds(1).toString());
++        
++        assertEquals(new DateTime(Long.MAX_VALUE - 60000, DateTimeZone.UTC), test.minusMinutes(1));
++        assertEquals("292278994-08-17T07:11:55.807Z", test.minusMinutes(1).toString());
++        
++        assertEquals(new DateTime(Long.MAX_VALUE - 3600000, DateTimeZone.UTC), test.minusHours(1));
++        assertEquals("292278994-08-17T06:12:55.807Z", test.minusHours(1).toString());
++        
++        assertEquals(new DateTime(Long.MAX_VALUE - 3600000, DateTimeZone.UTC), test.minusHours(1));
++        assertEquals("292278994-08-17T06:12:55.808Z", test.minusHours(1).plusMillis(1).toString());
++        
++        assertEquals(new DateTime(Long.MAX_VALUE - (3600000 - 60000), DateTimeZone.UTC), test.minusMinutes(59));
++        assertEquals("292278994-08-17T06:13:55.807Z", test.minusMinutes(59).toString());
++        
++        assertEquals(new DateTime(Long.MAX_VALUE - (3600000 - 60000) + 1, DateTimeZone.UTC), test.minusMinutes(59).plusMillis(1));
++        assertEquals("292278994-08-17T06:13:55.808Z", test.minusMinutes(59).plusMillis(1).toString());
++        
++        assertEquals(new DateTime(Long.MAX_VALUE - 3600000, DateTimeZone.UTC), test.minusMinutes(61).plusMinutes(1));
++        assertEquals("292278994-08-17T06:12:55.807Z", test.minusHours(1).toString());
++        
++        try {
++            test.plusMillis(1);
++            fail();
++        } catch (ArithmeticException ex) {
++            // expected
++        }
++    }
++
++    public void testDateTime_max_fields() {
++        assertEquals(ACTUAL_MAX_YEAR, ISOChronology.getInstanceUTC().year().getMaximumValue() + 1);
++        // ensure time-zone correct in previous year
++        assertEquals("292278992-06-30T00:00:00.000+01:00", new DateTime(292278992, 6, 30, 0, 0).toString());
++        assertEquals("292278992-12-31T00:00:00.000Z", new DateTime(292278992, 12, 31, 0, 0).toString());
++//        assertEquals("292278993-06-30T00:00:00.000+01:00", new DateTime(292278993, 6, 30, 0, 0).toString());
++        assertEquals("292278993-12-31T00:00:00.000Z", new DateTime(292278993, 12, 31, 0, 0).toString());
++        // permitted
++        DateTime a = new DateTime(ACTUAL_MAX_YEAR, 1, 1, 0, 0, 0, 0);
++        assertEquals("292278994-01-01T00:00:00.000Z", a.toString());
++        // permitted
++        DateTime b = new DateTime(ACTUAL_MAX_YEAR, 8, 17, 7, 0, 0, 0);
++        assertEquals("292278994-08-17T07:00:00.000+01:00", b.toString());
++        // permitted
++        DateTime c = new DateTime(ACTUAL_MAX_YEAR, 8, 17, 7, 12, 55, 0);
++        assertEquals("292278994-08-17T07:12:55.000+01:00", c.toString());
++        // permitted
++        DateTime d = new DateTime(ACTUAL_MAX_YEAR, 8, 17, 7, 12, 55, 806);
++        assertEquals(new DateTime(Long.MAX_VALUE - 1 - 3600000), d);
++        assertEquals("292278994-08-17T07:12:55.806+01:00", d.toString());
++        // clamp to max
++        DateTime e = new DateTime(ACTUAL_MAX_YEAR, 8, 17, 7, 12, 55, 807);
++        assertEquals(new DateTime(Long.MAX_VALUE), e);
++        assertEquals("292278994-08-17T07:12:55.807Z", e.toString());
++        // clamp to max
++        DateTime f = new DateTime(ACTUAL_MAX_YEAR, 8, 17, 7, 12, 55, 808);
++        assertEquals(new DateTime(Long.MAX_VALUE), f);
++        assertEquals("292278994-08-17T07:12:55.807Z", f.toString());
++        // clamp to max
++        DateTime g = new DateTime(ACTUAL_MAX_YEAR, 12, 31, 23, 59, 59, 999);
++        assertEquals(new DateTime(Long.MAX_VALUE), g);
++        assertEquals("292278994-08-17T07:12:55.807Z", g.toString());
++    }
++
++    public void testDateTime_max_fieldsUTC() {
++        DateTimeZone.setDefault(DateTimeZone.UTC);
++        assertEquals(ACTUAL_MAX_YEAR, ISOChronology.getInstanceUTC().year().getMaximumValue() + 1);
++        // ensure time-zone correct in previous year
++        assertEquals("292278992-06-30T00:00:00.000Z", new DateTime(292278992, 6, 30, 0, 0).toString());
++        assertEquals("292278992-12-31T00:00:00.000Z", new DateTime(292278992, 12, 31, 0, 0).toString());
++        assertEquals("292278993-06-30T00:00:00.000Z", new DateTime(292278993, 6, 30, 0, 0).toString());
++        assertEquals("292278993-12-31T00:00:00.000Z", new DateTime(292278993, 12, 31, 0, 0).toString());
++        // permitted
++        DateTime a = new DateTime(ACTUAL_MAX_YEAR, 1, 1, 0, 0, 0, 0);
++        assertEquals("292278994-01-01T00:00:00.000Z", a.toString());
++        // permitted
++        DateTime b = new DateTime(ACTUAL_MAX_YEAR, 8, 17, 7, 0, 0, 0);
++        assertEquals("292278994-08-17T07:00:00.000Z", b.toString());
++        // permitted
++        DateTime c = new DateTime(ACTUAL_MAX_YEAR, 8, 17, 7, 12, 55, 0);
++        assertEquals("292278994-08-17T07:12:55.000Z", c.toString());
++        // permitted
++        DateTime d = new DateTime(ACTUAL_MAX_YEAR, 8, 17, 7, 12, 55, 806);
++        assertEquals(new DateTime(Long.MAX_VALUE - 1), d);
++        assertEquals("292278994-08-17T07:12:55.806Z", d.toString());
++        // clamp to max
++        DateTime e = new DateTime(ACTUAL_MAX_YEAR, 8, 17, 7, 12, 55, 807);
++        assertEquals(new DateTime(Long.MAX_VALUE), e);
++        assertEquals("292278994-08-17T07:12:55.807Z", e.toString());
++        // clamp to max
++        DateTime f = new DateTime(ACTUAL_MAX_YEAR, 8, 17, 7, 12, 55, 808);
++        assertEquals(new DateTime(Long.MAX_VALUE), f);
++        assertEquals("292278994-08-17T07:12:55.807Z", f.toString());
++        // clamp to max
++        DateTime g = new DateTime(ACTUAL_MAX_YEAR, 12, 31, 23, 59, 59, 999);
++        assertEquals(new DateTime(Long.MAX_VALUE), g);
++        assertEquals("292278994-08-17T07:12:55.807Z", g.toString());
++    }
++
++    public void testDateTime_max_fieldsNewYork() {
++        DateTimeZone.setDefault(DateTimeZone.forID("America/New_York"));
++        assertEquals(ACTUAL_MAX_YEAR, ISOChronology.getInstanceUTC().year().getMaximumValue() + 1);
++        // ensure time-zone correct in previous year
++        assertEquals("292278992-06-30T00:00:00.000-04:00", new DateTime(292278992, 6, 30, 0, 0).toString());
++        assertEquals("292278992-12-31T00:00:00.000-05:00", new DateTime(292278992, 12, 31, 0, 0).toString());
++//        assertEquals("292278993-06-30T00:00:00.000-04:00", new DateTime(292278993, 6, 30, 0, 0).toString());
++        assertEquals("292278993-12-31T00:00:00.000-05:00", new DateTime(292278993, 12, 31, 0, 0).toString());
++        // permitted
++        DateTime a = new DateTime(ACTUAL_MAX_YEAR, 1, 1, 0, 0, 0, 0);
++        assertEquals("292278994-01-01T00:00:00.000-05:00", a.toString());
++        // permitted
++        DateTime b = new DateTime(ACTUAL_MAX_YEAR, 8, 17, 3, 0, 0, 0);
++        assertEquals("292278994-08-17T03:00:00.000-04:00", b.toString());
++        // permitted
++        DateTime c = new DateTime(ACTUAL_MAX_YEAR, 8, 17, 3, 12, 55, 0);
++        assertEquals("292278994-08-17T03:12:55.000-04:00", c.toString());
++        // permitted
++        DateTime d = new DateTime(ACTUAL_MAX_YEAR, 8, 17, 3, 12, 55, 806);
++        assertEquals(new DateTime(Long.MAX_VALUE - 1), d);
++        assertEquals("292278994-08-17T03:12:55.806-04:00", d.toString());
++        // clamp to max
++        DateTime e = new DateTime(ACTUAL_MAX_YEAR, 8, 17, 3, 12, 55, 807);
++        assertEquals(new DateTime(Long.MAX_VALUE), e);
++        assertEquals("292278994-08-17T07:12:55.807Z", e.toString());
++        // clamp to max
++        DateTime f = new DateTime(ACTUAL_MAX_YEAR, 8, 17, 7, 12, 55, 807);
++        assertEquals(new DateTime(Long.MAX_VALUE), f);
++        assertEquals("292278994-08-17T07:12:55.807Z", f.toString());
++        // clamp to max
++        DateTime g = new DateTime(ACTUAL_MAX_YEAR, 12, 31, 23, 59, 59, 999);
++        assertEquals(new DateTime(Long.MAX_VALUE), g);
++        assertEquals("292278994-08-17T07:12:55.807Z", g.toString());
++    }
++
++    public void testDateTime_max_long() {
++        assertEquals("292278994-08-17T07:12:55.807+01:00", new DateTime(Long.MAX_VALUE - 3600000).toString());
++        assertEquals("292278994-08-17T06:12:55.808Z", new DateTime(Long.MAX_VALUE - 3599999).toString());
++        assertEquals("292278994-08-17T07:11:55.807Z", new DateTime(Long.MAX_VALUE - 60000).toString());
++        assertEquals("292278994-08-17T07:12:55.000Z", new DateTime(Long.MAX_VALUE - 807).toString());
++        assertEquals("292278994-08-17T07:12:55.806Z", new DateTime(Long.MAX_VALUE - 1).toString());
++        assertEquals("292278994-08-17T07:12:55.807Z", new DateTime(Long.MAX_VALUE).toString());
++    }
++
++    public void testPrintParseMax() {
++        DateTime test1 = new DateTime(Long.MAX_VALUE);
++        assertEquals(test1, DateTime.parse(test1.toString()));
++        DateTime test2 = new DateTime(Long.valueOf(Long.MAX_VALUE));
++        assertEquals(test2, DateTime.parse(test2.toString()));
++        assertEquals(test2, test1);
++    }
++
++    //-----------------------------------------------------------------------
++    public void testDateTime_min() throws Throwable {
++        DateTime dt = new DateTime(-292275054, 1, 1, 0, 0);
++        DateTime test = new DateTime(dt.getMillis());
++        assertEquals(dt, test);
++        assertEquals("-292275054-01-01T00:00:00.000-00:01:15", test.toString());
++    }
++
++    public void testDateTime_min_math() throws Throwable {
++        DateTime test = new DateTime(Long.MIN_VALUE);  // always in UTC
++        assertEquals("-292275055-05-16T16:47:04.192Z", test.toString());
++
++        assertEquals(new DateTime(Long.MIN_VALUE + 808, DateTimeZone.UTC), test.plus(808));
++        assertEquals("-292275055-05-16T16:47:05.000Z", test.plus(808).toString());
++        
++        assertEquals(new DateTime(Long.MIN_VALUE + 808, DateTimeZone.UTC), test.plusMillis(808));
++        assertEquals("-292275055-05-16T16:47:05.000Z", test.plusMillis(808).toString());
++        
++        assertEquals(new DateTime(Long.MIN_VALUE + 1000, DateTimeZone.UTC), test.plusSeconds(1));
++        assertEquals("-292275055-05-16T16:47:05.192Z", test.plusSeconds(1).toString());
++        
++        assertEquals(new DateTime(Long.MIN_VALUE + 60000, DateTimeZone.UTC), test.plusMinutes(1));
++        assertEquals("-292275055-05-16T16:48:04.192Z", test.plusMinutes(1).toString());
++        
++        assertEquals(new DateTime(Long.MIN_VALUE + 80000, DateTimeZone.UTC), test.plusSeconds(80));
++        assertEquals("-292275055-05-16T16:48:24.192Z", test.plusSeconds(80).toString());
++        
++        try {
++            test.minusMillis(1);
++            fail();
++        } catch (ArithmeticException ex) {
++            // expected
++        }
++    }
++
++    public void testDateTime_min_fields() {
++        assertEquals(ACTUAL_MIN_YEAR, ISOChronology.getInstanceUTC().year().getMinimumValue() - 1);
++        // ensure previous year
++        assertEquals("-292275053-01-01T00:00:00.000-00:01:15", new DateTime(-292275053, 1, 1, 0, 0).toString());
++        assertEquals("-292275054-01-01T00:00:00.000-00:01:15", new DateTime(-292275054, 1, 1, 0, 0).toString());
++        // permitted
++        DateTime a = new DateTime(ACTUAL_MIN_YEAR, 12, 31, 23, 59, 59, 999);
++        assertEquals("-292275055-12-31T23:59:59.999-00:01:15", a.toString());
++        // permitted
++        DateTime b = new DateTime(ACTUAL_MIN_YEAR, 5, 17, 0, 0, 0, 0);
++        assertEquals("-292275055-05-17T00:00:00.000-00:01:15", b.toString());
++        // permitted
++        DateTime c = new DateTime(ACTUAL_MIN_YEAR, 5, 16, 17, 0, 0, 0);
++        assertEquals("-292275055-05-16T17:00:00.000-00:01:15", c.toString());
++        // permitted
++        DateTime d = new DateTime(ACTUAL_MIN_YEAR, 5, 16, 16, 47, 4, 193);
++        assertEquals("-292275055-05-16T16:47:04.193-00:01:15", d.toString());
++        // clamp to max
++        DateTime e = new DateTime(ACTUAL_MIN_YEAR, 5, 16, 16, 47, 4, 192);
++        assertEquals(new DateTime(Long.MIN_VALUE), e);
++        assertEquals("-292275055-05-16T16:47:04.192Z", e.toString());
++        // clamp to max
++        DateTime f = new DateTime(ACTUAL_MIN_YEAR, 5, 16, 16, 47, 4, 191);
++        assertEquals(new DateTime(Long.MIN_VALUE), f);
++        assertEquals("-292275055-05-16T16:47:04.192Z", f.toString());
++        // clamp to max
++        DateTime g = new DateTime(ACTUAL_MIN_YEAR, 1, 1, 0, 0, 0, 0);
++        assertEquals(new DateTime(Long.MIN_VALUE), g);
++        assertEquals("-292275055-05-16T16:47:04.192Z", g.toString());
++    }
++
++    public void testDateTime_min_long() {
++        assertEquals("-292275055-05-16T16:47:04.192-00:01:15", new DateTime(Long.MIN_VALUE + 75000).toString());
++        assertEquals("-292275055-05-16T16:48:19.191Z", new DateTime(Long.MIN_VALUE + 74999).toString());
++        assertEquals("-292275055-05-16T16:48:04.192Z", new DateTime(Long.MIN_VALUE + 60000).toString());
++        assertEquals("-292275055-05-16T16:47:05.192Z", new DateTime(Long.MIN_VALUE + 1000).toString());
++        assertEquals("-292275055-05-16T16:47:04.193Z", new DateTime(Long.MIN_VALUE + 1).toString());
++        assertEquals("-292275055-05-16T16:47:04.192Z", new DateTime(Long.MIN_VALUE).toString());
++    }
++
++    public void testPrintParseMin() {
++        DateTime test1 = new DateTime(Long.MIN_VALUE);
++        assertEquals(test1, DateTime.parse(test1.toString()));
++        DateTime test2 = new DateTime(Long.valueOf(Long.MIN_VALUE));
++        assertEquals(test2, DateTime.parse(test2.toString()));
++        assertEquals(test2, test1);
++    }
++
++}
+
+From d750c2bc808a0cff07ffeeb09d6af6be20754bdf Mon Sep 17 00:00:00 2001
+From: Kivanc Sunkar <kivancsunkar@gmail.com>
+Date: Wed, 21 Oct 2015 16:37:01 +0300
+Subject: [PATCH 26/28] tzdata updated to 2015g
+
+---
+ RELEASE-NOTES.txt                             |  2 ++
+ pom.xml                                       |  2 +-
+ src/main/java/org/joda/time/tz/src/Readme.txt |  2 +-
+ src/main/java/org/joda/time/tz/src/asia       | 14 ++++----
+ .../java/org/joda/time/tz/src/australasia     | 34 ++++++++++++++++---
+ src/main/java/org/joda/time/tz/src/europe     |  7 ++++
+ .../java/org/joda/time/tz/src/northamerica    | 22 ++++++++++++
+ 7 files changed, 70 insertions(+), 13 deletions(-)
+
+diff --git a/RELEASE-NOTES.txt b/RELEASE-NOTES.txt
+index 8d277ff77..4aef2cd08 100644
+--- a/RELEASE-NOTES.txt
++++ b/RELEASE-NOTES.txt
+@@ -16,6 +16,8 @@ This is the same license as all of Apache, plus other open source projects such
+ 
+ Changes in 2.8.3
+ ================
++- DateTimeZone data updated to version 2015g
++
+ - Faster parsing of time-zone identifiers [#282]
+ 
+ - Added Interval.parseWithOffset(String) [#299, #296]
+diff --git a/pom.xml b/pom.xml
+index 6cca1bce9..14e258772 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -823,6 +823,6 @@
+     <!-- Other properties -->
+     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+-    <tz.database.version>2015f</tz.database.version>
++    <tz.database.version>2015g</tz.database.version>
+   </properties>
+ </project>
+diff --git a/src/main/java/org/joda/time/tz/src/Readme.txt b/src/main/java/org/joda/time/tz/src/Readme.txt
+index 65bc2374d..e68cabb14 100644
+--- a/src/main/java/org/joda/time/tz/src/Readme.txt
++++ b/src/main/java/org/joda/time/tz/src/Readme.txt
+@@ -1,2 +1,2 @@
+ The data files in this directory were obtained from the public IANA time zone database,
+-http://www.iana.org/time-zones, version 2015f.
++http://www.iana.org/time-zones, version 2015g.
+diff --git a/src/main/java/org/joda/time/tz/src/asia b/src/main/java/org/joda/time/tz/src/asia
+index 4f8756b87..5467024db 100644
+--- a/src/main/java/org/joda/time/tz/src/asia
++++ b/src/main/java/org/joda/time/tz/src/asia
+@@ -131,7 +131,8 @@ Zone	Asia/Yerevan	2:58:00 -	LMT	1924 May  2
+ # Azerbaijan
+ # From Rustam Aliyev of the Azerbaijan Internet Forum (2005-10-23):
+ # According to the resolution of Cabinet of Ministers, 1997
+-# Resolution available at: http://aif.az/docs/daylight_res.pdf
++# From Paul Eggert (2015-09-17): It was Resolution No. 21 (1997-03-17).
++# http://code.az/files/daylight_res.pdf
+ # Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
+ Rule	Azer	1997	max	-	Mar	lastSun	 4:00	1:00	S
+ Rule	Azer	1997	max	-	Oct	lastSun	 5:00	0	-
+@@ -1717,11 +1718,12 @@ Rule	ROK	1987	1988	-	Oct	Sun>=8	3:00	0	S
+ # the 8:30 time zone on August 15, one example:
+ # http://www.bbc.com/news/world-asia-33815049
+ #
+-# From Paul Eggert (2015-08-07):
+-# No transition time is specified; assume 00:00.
++# From Paul Eggert (2015-08-15):
++# Bells rang out midnight (00:00) Friday as part of the celebrations.  See:
++# Talmadge E. North Korea celebrates new time zone, 'Pyongyang Time'
++# http://news.yahoo.com/north-korea-celebrates-time-zone-pyongyang-time-164038128.html
+ # There is no common English-language abbreviation for this time zone.
+-# Use %z rather than invent one.  We can't assume %z works everywhere yet,
+-# so for now substitute its output manually.
++# Use KST, as that's what we already use for 1954-1961 in ROK.
+ 
+ # Zone	NAME		GMTOFF	RULES	FORMAT	[UNTIL]
+ Zone	Asia/Seoul	8:27:52	-	LMT	1908 Apr  1
+@@ -1735,7 +1737,7 @@ Zone	Asia/Pyongyang	8:23:00 -	LMT	1908 Apr  1
+ 			8:30	-	KST	1912 Jan  1
+ 			9:00	-	JCST	1937 Oct  1
+ 			9:00	-	JST	1945 Aug 24
+-			9:00	-	KST	2015 Aug 15
++			9:00	-	KST	2015 Aug 15 00:00
+ 			8:30	-	KST
+ 
+ ###############################################################################
+diff --git a/src/main/java/org/joda/time/tz/src/australasia b/src/main/java/org/joda/time/tz/src/australasia
+index 3e2c0b345..5c272db3b 100644
+--- a/src/main/java/org/joda/time/tz/src/australasia
++++ b/src/main/java/org/joda/time/tz/src/australasia
+@@ -335,10 +335,17 @@ Zone	Indian/Cocos	6:27:40	-	LMT	1900
+ # DST will start Nov. 2 this year.
+ # http://www.fiji.gov.fj/Media-Center/Press-Releases/DAYLIGHT-SAVING-STARTS-ON-SUNDAY,-NOVEMBER-2ND.aspx
+ 
+-# From Paul Eggert (2014-10-20):
++# From a government order dated 2015-08-26 and published as Legal Notice No. 77
++# in the Government of Fiji Gazette Supplement No. 24 (2015-08-28),
++# via Ken Rylander (2015-09-02):
++# the daylight saving period is 1 hour in advance of the standard time
++# commencing at 2.00 am on Sunday 1st November, 2015 and ending at
++# 3.00 am on Sunday 17th January, 2016.
++
++# From Paul Eggert (2015-09-01):
+ # For now, guess DST from 02:00 the first Sunday in November to
+-# 03:00 the first Sunday on or after January 18.  Although ad hoc, it
+-# matches this year's plan and seems more likely to match future
++# 03:00 the third Sunday in January.  Although ad hoc, it matches
++# transitions since late 2014 and seems more likely to match future
+ # practice than guessing no DST.
+ 
+ # Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
+@@ -351,7 +358,7 @@ Rule	Fiji	2011	only	-	Mar	Sun>=1	3:00	0	-
+ Rule	Fiji	2012	2013	-	Jan	Sun>=18	3:00	0	-
+ Rule	Fiji	2014	only	-	Jan	Sun>=18	2:00	0	-
+ Rule	Fiji	2014	max	-	Nov	Sun>=1	2:00	1:00	S
+-Rule	Fiji	2015	max	-	Jan	Sun>=18	3:00	0	-
++Rule	Fiji	2015	max	-	Jan	Sun>=15	3:00	0	-
+ # Zone	NAME		GMTOFF	RULES	FORMAT	[UNTIL]
+ Zone	Pacific/Fiji	11:55:44 -	LMT	1915 Oct 26 # Suva
+ 			12:00	Fiji	FJ%sT	# Fiji Time
+@@ -510,7 +517,10 @@ Zone	Pacific/Niue	-11:19:40 -	LMT	1901        # Alofi
+ # Zone	NAME		GMTOFF	RULES	FORMAT	[UNTIL]
+ Zone	Pacific/Norfolk	11:11:52 -	LMT	1901 # Kingston
+ 			11:12	-	NMT	1951 # Norfolk Mean Time
+-			11:30	-	NFT	# Norfolk Time
++			11:30	-	NFT	1974 Oct 27 02:00 # Norfolk T.
++			11:30	1:00	NFST	1975 Mar  2 02:00
++			11:30	-	NFT	2015 Oct  4 02:00
++			11:00	-	NFT
+ 
+ # Palau (Belau)
+ # Zone	NAME		GMTOFF	RULES	FORMAT	[UNTIL]
+@@ -1550,6 +1560,20 @@ Zone	Pacific/Wallis	12:15:20 -	LMT	1901
+ # started DST on June 3.  Possibly DST was observed other years
+ # in Midway, but we have no record of it.
+ 
++# Norfolk
++
++# From Alexander Krivenyshev (2015-09-23):
++# Norfolk Island will change ... from +1130 to +1100:
++# https://www.comlaw.gov.au/Details/F2015L01483/Explanatory%20Statement/Text
++# ... at 12.30 am (by legal time in New South Wales) on 4 October 2015.
++# http://www.norfolkisland.gov.nf/nia/MediaRelease/Media%20Release%20Norfolk%20Island%20Standard%20Time%20Change.pdf
++
++# From Paul Eggert (2015-09-23):
++# Transitions before 2015 are from timeanddate.com, which consulted
++# the Norfolk Island Museum and the Australian Bureau of Meteorology's
++# Norfolk Island station, and found no record of Norfolk observing DST
++# other than in 1974/5.  See:
++# http://www.timeanddate.com/time/australia/norfolk-island.html
+ 
+ # Pitcairn
+ 
+diff --git a/src/main/java/org/joda/time/tz/src/europe b/src/main/java/org/joda/time/tz/src/europe
+index 6b89b6e1f..358a0485f 100644
+--- a/src/main/java/org/joda/time/tz/src/europe
++++ b/src/main/java/org/joda/time/tz/src/europe
+@@ -3150,6 +3150,11 @@ Zone	Europe/Zurich	0:34:08 -	LMT	1853 Jul 16 # See above comment.
+ # http://www.balkaneu.com/eventful-elections-turkey/ 2014-03-30.
+ # I guess the best we can do is document the official time.
+ 
++# From Fatih (2015-09-29):
++# It's officially announced now by the Ministry of Energy.
++# Turkey delays winter time to 8th of November 04:00
++# http://www.aa.com.tr/tr/turkiye/yaz-saati-uygulamasi-8-kasimda-sona-erecek/362217
++
+ # Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
+ Rule	Turkey	1916	only	-	May	 1	0:00	1:00	S
+ Rule	Turkey	1916	only	-	Oct	 1	0:00	0	-
+@@ -3219,6 +3224,8 @@ Zone	Europe/Istanbul	1:55:52 -	LMT	1880
+ 			2:00	-	EET	2011 Mar 28  1:00u
+ 			2:00	EU	EE%sT	2014 Mar 30  1:00u
+ 			2:00	-	EET	2014 Mar 31  1:00u
++			2:00	EU	EE%sT	2015 Oct 25  1:00u
++			2:00	1:00	EEST	2015 Nov  8  1:00u
+ 			2:00	EU	EE%sT
+ Link	Europe/Istanbul	Asia/Istanbul	# Istanbul is in both continents.
+ 
+diff --git a/src/main/java/org/joda/time/tz/src/northamerica b/src/main/java/org/joda/time/tz/src/northamerica
+index 660a92085..7658a45e5 100644
+--- a/src/main/java/org/joda/time/tz/src/northamerica
++++ b/src/main/java/org/joda/time/tz/src/northamerica
+@@ -1826,6 +1826,22 @@ Zone America/Edmonton	-7:33:52 -	LMT	1906 Sep
+ 
+ # The transition dates (and times) are guesses.
+ 
++# From Matt Johnson (2015-09-21):
++# Fort Nelson, BC, Canada will cancel DST this year.  So while previously they
++# were aligned with America/Vancouver, they're now aligned with
++# America/Dawson_Creek.
++# http://www.northernrockies.ca/EN/meta/news/archives/2015/northern-rockies-time-change.html
++#
++# From Tim Parenti (2015-09-23):
++# This requires a new zone for the Northern Rockies Regional Municipality,
++# America/Fort_Nelson.  The resolution of 2014-12-08 was reached following a
++# 2014-11-15 poll with nearly 75% support.  Effectively, the municipality has
++# been on MST (-0700) like Dawson Creek since it advanced its clocks on
++# 2015-03-08.
++#
++# From Paul Eggert (2015-09-23):
++# Shanks says Fort Nelson did not observe DST in 1946, unlike Vancouver.
++
+ # Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
+ Rule	Vanc	1918	only	-	Apr	14	2:00	1:00	D
+ Rule	Vanc	1918	only	-	Oct	27	2:00	0	S
+@@ -1844,6 +1860,12 @@ Zone America/Dawson_Creek -8:00:56 -	LMT	1884
+ 			-8:00	Canada	P%sT	1947
+ 			-8:00	Vanc	P%sT	1972 Aug 30  2:00
+ 			-7:00	-	MST
++Zone America/Fort_Nelson	-8:10:47 -	LMT	1884
++			-8:00	Vanc	P%sT	1946
++			-8:00	-	PST	1947
++			-8:00	Vanc	P%sT	1987
++			-8:00	Canada	P%sT	2015 Mar  8  2:00
++			-7:00	-	MST
+ Zone America/Creston	-7:46:04 -	LMT	1884
+ 			-7:00	-	MST	1916 Oct 1
+ 			-8:00	-	PST	1918 Jun 2
+
+From 0a201881f01bce85efece778345ebd60cf58ba35 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Sat, 24 Oct 2015 09:17:58 +0100
+Subject: [PATCH 27/28] Fix basic parsing where additional plus sign
+
+Based on code by Hari Shankar - https://github.com/hshankar
+Fixes #86
+---
+ RELEASE-NOTES.txt                             |  3 +++
+ .../time/format/DateTimeFormatterBuilder.java | 21 +++++++++---------
+ .../format/TestISODateTimeFormatParsing.java  | 22 +++++++++++++++++++
+ 3 files changed, 36 insertions(+), 10 deletions(-)
+
+diff --git a/RELEASE-NOTES.txt b/RELEASE-NOTES.txt
+index 4aef2cd08..429e6944a 100644
+--- a/RELEASE-NOTES.txt
++++ b/RELEASE-NOTES.txt
+@@ -20,6 +20,9 @@ Changes in 2.8.3
+ 
+ - Faster parsing of time-zone identifiers [#282]
+ 
++- Fix parsing of basic form ISO style where year has unnecessary plus sign [#86]
++  For example, +20151030 will now be correctly parsed as year 2015.
++
+ - Added Interval.parseWithOffset(String) [#299, #296]
+   Provides a way to parse the fixed offset in an interval string
+ 
+diff --git a/src/main/java/org/joda/time/format/DateTimeFormatterBuilder.java b/src/main/java/org/joda/time/format/DateTimeFormatterBuilder.java
+index 10f250258..c5af255c3 100644
+--- a/src/main/java/org/joda/time/format/DateTimeFormatterBuilder.java
++++ b/src/main/java/org/joda/time/format/DateTimeFormatterBuilder.java
+@@ -1304,25 +1304,21 @@ public int parseInto(DateTimeParserBucket bucket, CharSequence text, int positio
+             int limit = Math.min(iMaxParsedDigits, text.length() - position);
+ 
+             boolean negative = false;
++            boolean positive = false;
+             int length = 0;
+             while (length < limit) {
+                 char c = text.charAt(position + length);
+                 if (length == 0 && (c == '-' || c == '+') && iSigned) {
+                     negative = c == '-';
++                    positive = c == '+';
+ 
+                     // Next character must be a digit.
+                     if (length + 1 >= limit || 
+-                        (c = text.charAt(position + length + 1)) < '0' || c > '9')
+-                    {
++                        (c = text.charAt(position + length + 1)) < '0' || c > '9') {
+                         break;
+                     }
++                    length++;
+ 
+-                    if (negative) {
+-                        length++;
+-                    } else {
+-                        // Skip the '+' for parseInt to succeed.
+-                        position++;
+-                    }
+                     // Expand the limit to disregard the sign character.
+                     limit = Math.min(limit + 1, text.length() - position);
+                     continue;
+@@ -1341,10 +1337,15 @@ public int parseInto(DateTimeParserBucket bucket, CharSequence text, int positio
+             if (length >= 9) {
+                 // Since value may exceed integer limits, use stock parser
+                 // which checks for this.
+-                value = Integer.parseInt(text.subSequence(position, position += length).toString());
++                if (positive) {
++                    value = Integer.parseInt(text.subSequence(position + 1, position += length).toString());
++                } else {
++                    value = Integer.parseInt(text.subSequence(position, position += length).toString());
++                }
++//                value = Integer.parseInt(text.subSequence(position, position += length).toString());
+             } else {
+                 int i = position;
+-                if (negative) {
++                if (negative || positive) {
+                     i++;
+                 }
+                 try {
+diff --git a/src/test/java/org/joda/time/format/TestISODateTimeFormatParsing.java b/src/test/java/org/joda/time/format/TestISODateTimeFormatParsing.java
+index 78288f4ac..1b7b06b93 100644
+--- a/src/test/java/org/joda/time/format/TestISODateTimeFormatParsing.java
++++ b/src/test/java/org/joda/time/format/TestISODateTimeFormatParsing.java
+@@ -69,6 +69,7 @@ protected void tearDown() throws Exception {
+     public void test_dateParser() {
+         DateTimeFormatter parser = ISODateTimeFormat.dateParser();
+         assertParse(parser, true, "2006-06-09");
++        assertParse(parser, true, "+2006-06-09");
+         assertParse(parser, true, "2006-W27-3");
+         assertParse(parser, true, "2006-123");
+         assertParse(parser, true, "2006-06-09T+02:00");
+@@ -76,6 +77,7 @@ public void test_dateParser() {
+         assertParse(parser, true, "2006-123T+02:00");
+         
+         assertParse(parser, false, "2006-06-09T10:20:30.040");
++        assertParse(parser, false, "+2006-06-09T10:20:30.040");
+         assertParse(parser, false, "2006-W27-3T10:20:30.040");
+         assertParse(parser, false, "2006-123T10:20:30.040");
+         assertParse(parser, false, "2006-06-09T10:20:30.040+02:00");
+@@ -100,6 +102,7 @@ public void test_localDateParser() {
+         DateTimeFormatter parser = ISODateTimeFormat.localDateParser();
+         assertEquals(DateTimeZone.UTC, parser.getZone());
+         assertParse(parser, true, "2006-06-09");
++        assertParse(parser, true, "+2006-06-09");
+         assertParse(parser, true, "2006-W27-3");
+         assertParse(parser, true, "2006-123");
+         assertParse(parser, false, "2006-06-09T+02:00");
+@@ -133,6 +136,7 @@ public void test_dateElementParser() {
+         assertParse(parser, "2006-06-9", new DateTime(2006, 6, 9, 0, 0, 0, 0));
+         assertParse(parser, "2006-6-09", new DateTime(2006, 6, 9, 0, 0, 0, 0));
+         assertParse(parser, "2006-6-9", new DateTime(2006, 6, 9, 0, 0, 0, 0));
++        assertParse(parser, "+2006-06-09", new DateTime(2006, 6, 9, 0, 0, 0, 0));
+         assertParse(parser, true, "2006-W27-3");
+         assertParse(parser, true, "2006-123");
+         assertParse(parser, false, "2006-06-09T+02:00");
+@@ -361,6 +365,7 @@ public void test_date() {
+         assertParse(parser, "2006-2-04", new DateTime(2006, 2, 4, 0, 0, 0, 0));
+         assertParse(parser, "2006-02-4", new DateTime(2006, 2, 4, 0, 0, 0, 0));
+         assertParse(parser, "2006-2-4", new DateTime(2006, 2, 4, 0, 0, 0, 0));
++        assertParse(parser, "+2006-02-04", new DateTime(2006, 2, 4, 0, 0, 0, 0));
+         assertParse(parser, false, "2006-02-");
+         assertParse(parser, false, "2006-02");
+         assertParse(parser, false, "2006--4");
+@@ -434,6 +439,7 @@ public void test_dateTime() {
+         assertParse(parser, "2006-2-04T10:20:30.400Z", new DateTime(2006, 2, 4, 10, 20, 30, 400));
+         assertParse(parser, "2006-2-4T10:20:30.400Z", new DateTime(2006, 2, 4, 10, 20, 30, 400));
+         assertParse(parser, "2006-02-04T5:6:7.800Z", new DateTime(2006, 2, 4, 5, 6, 7, 800));
++        assertParse(parser, "+2006-02-04T5:6:7.800Z", new DateTime(2006, 2, 4, 5, 6, 7, 800));
+         assertParse(parser, false, "2006-02-T10:20:30.400Z");
+         assertParse(parser, false, "2006-12T10:20:30.400Z");
+         assertParse(parser, false, "2006-1T10:20:30.400Z");
+@@ -456,6 +462,7 @@ public void test_dateTimeNoMillis() {
+         assertParse(parser, "2006-2-04T10:20:30Z", new DateTime(2006, 2, 4, 10, 20, 30, 0));
+         assertParse(parser, "2006-2-4T10:20:30Z", new DateTime(2006, 2, 4, 10, 20, 30, 0));
+         assertParse(parser, "2006-02-04T5:6:7Z", new DateTime(2006, 2, 4, 5, 6, 7, 0));
++        assertParse(parser, "+2006-02-04T5:6:7Z", new DateTime(2006, 2, 4, 5, 6, 7, 0));
+         assertParse(parser, false, "2006-02-T10:20:30Z");
+         assertParse(parser, false, "2006-12T10:20:30Z");
+         assertParse(parser, false, "2006-1T10:20:30Z");
+@@ -475,6 +482,7 @@ public void test_ordinalDate() {
+         assertParse(parser, "2006-123", new DateTime(2006, 1, 1, 0, 0, 0, 0).withDayOfYear(123));
+         assertParse(parser, "2006-12", new DateTime(2006, 1, 1, 0, 0, 0, 0).withDayOfYear(12));
+         assertParse(parser, "2006-1", new DateTime(2006, 1, 1, 0, 0, 0, 0).withDayOfYear(1));
++        assertParse(parser, "+2006-123", new DateTime(2006, 1, 1, 0, 0, 0, 0).withDayOfYear(123));
+         assertParse(parser, false, "2006-");
+         assertParse(parser, false, "2006");
+     }
+@@ -490,6 +498,7 @@ public void test_ordinalDateTime() {
+         assertParse(parser, "2006-12T10:20:30.400Z", new DateTime(2006, 1, 1, 10, 20, 30, 400).withDayOfYear(12));
+         assertParse(parser, "2006-1T10:20:30.400Z", new DateTime(2006, 1, 1, 10, 20, 30, 400).withDayOfYear(1));
+         assertParse(parser, "2006-123T5:6:7.800Z", new DateTime(2006, 1, 1, 5, 6, 7, 800).withDayOfYear(123));
++        assertParse(parser, "+2006-123T5:6:7.800Z", new DateTime(2006, 1, 1, 5, 6, 7, 800).withDayOfYear(123));
+         assertParse(parser, false, "2006-T10:20:30.400Z");
+         assertParse(parser, false, "2006T10:20:30.400Z");
+         assertParse(parser, false, "2006-123T10:20.400Z");
+@@ -506,6 +515,7 @@ public void test_ordinalDateTimeNoMillis() {
+         assertParse(parser, "2006-12T10:20:30Z", new DateTime(2006, 1, 1, 10, 20, 30, 0).withDayOfYear(12));
+         assertParse(parser, "2006-1T10:20:30Z", new DateTime(2006, 1, 1, 10, 20, 30, 0).withDayOfYear(1));
+         assertParse(parser, "2006-123T5:6:7Z", new DateTime(2006, 1, 1, 5, 6, 7, 0).withDayOfYear(123));
++        assertParse(parser, "+2006-123T5:6:7Z", new DateTime(2006, 1, 1, 5, 6, 7, 0).withDayOfYear(123));
+         assertParse(parser, false, "2006-T10:20:30Z");
+         assertParse(parser, false, "2006T10:20:30Z");
+         assertParse(parser, false, "2006-123T10:20Z");
+@@ -519,6 +529,7 @@ public void test_weekDate() {
+         DateTimeFormatter parser = ISODateTimeFormat.weekDate();
+         assertParse(parser, "2006-W27-3", new DateTime(2006, 6, 1, 0, 0, 0, 0).withWeekOfWeekyear(27).withDayOfWeek(3));
+         assertParse(parser, "2006-W2-3", new DateTime(2006, 6, 1, 0, 0, 0, 0).withWeekOfWeekyear(2).withDayOfWeek(3));
++        assertParse(parser, "+2006-W27-3", new DateTime(2006, 6, 1, 0, 0, 0, 0).withWeekOfWeekyear(27).withDayOfWeek(3));
+         assertParse(parser, false, "2006-W-3");
+         assertParse(parser, false, "2006-W27-");
+         assertParse(parser, false, "2006-W27");
+@@ -536,6 +547,7 @@ public void test_weekDateTime() {
+         assertParse(parser, "2006-W27-3T10:20:30.4Z", new DateTime(2006, 6, 1, 10, 20, 30, 400).withWeekOfWeekyear(27).withDayOfWeek(3));
+         assertParse(parser, "2006-W2-3T10:20:30.400Z", new DateTime(2006, 6, 1, 10, 20, 30, 400).withWeekOfWeekyear(2).withDayOfWeek(3));
+         assertParse(parser, "2006-W27-3T5:6:7.800Z", new DateTime(2006, 6, 1, 5, 6, 7, 800).withWeekOfWeekyear(27).withDayOfWeek(3));
++        assertParse(parser, "+2006-W27-3T5:6:7.800Z", new DateTime(2006, 6, 1, 5, 6, 7, 800).withWeekOfWeekyear(27).withDayOfWeek(3));
+         assertParse(parser, false, "2006-W27-T10:20:30.400Z");
+         assertParse(parser, false, "2006-W27T10:20:30.400Z");
+         assertParse(parser, false, "2006-W2T10:20:30.400Z");
+@@ -553,6 +565,7 @@ public void test_weekDateTimeNoMillis() {
+         assertParse(parser, "2006-W27-3T10:20:30Z", new DateTime(2006, 6, 1, 10, 20, 30, 0).withWeekOfWeekyear(27).withDayOfWeek(3));
+         assertParse(parser, "2006-W2-3T10:20:30Z", new DateTime(2006, 6, 1, 10, 20, 30, 0).withWeekOfWeekyear(2).withDayOfWeek(3));
+         assertParse(parser, "2006-W27-3T5:6:7Z", new DateTime(2006, 6, 1, 5, 6, 7, 0).withWeekOfWeekyear(27).withDayOfWeek(3));
++        assertParse(parser, "+2006-W27-3T5:6:7Z", new DateTime(2006, 6, 1, 5, 6, 7, 0).withWeekOfWeekyear(27).withDayOfWeek(3));
+         assertParse(parser, false, "2006-W27-T10:20:30Z");
+         assertParse(parser, false, "2006-W27T10:20:30Z");
+         assertParse(parser, false, "2006-W2T10:20:30Z");
+@@ -569,6 +582,7 @@ public void test_weekDateTimeNoMillis() {
+     public void test_basicDate() {
+         DateTimeFormatter parser = ISODateTimeFormat.basicDate();
+         assertParse(parser, "20060204", new DateTime(2006, 2, 4, 0, 0, 0, 0));
++        assertParse(parser, "+20060204", new DateTime(2006, 2, 4, 0, 0, 0, 0));
+         assertParse(parser, false, "2006024");
+         assertParse(parser, false, "200602");
+         assertParse(parser, false, "20061");
+@@ -637,6 +651,7 @@ public void test_basicDateTime() {
+         assertParse(parser, "20061204T102030.400Z", new DateTime(2006, 12, 4, 10, 20, 30, 400));
+         assertParse(parser, "20061204T102030.40Z", new DateTime(2006, 12, 4, 10, 20, 30, 400));
+         assertParse(parser, "20061204T102030.4Z", new DateTime(2006, 12, 4, 10, 20, 30, 400));
++        assertParse(parser, "+20061204T102030.4Z", new DateTime(2006, 12, 4, 10, 20, 30, 400));
+         assertParse(parser, false, "2006120T102030.400Z");
+         assertParse(parser, false, "200612T102030.400Z");
+         assertParse(parser, false, "20061T102030.400Z");
+@@ -656,6 +671,7 @@ public void test_basicDateTimeNoMillis() {
+         DateTimeZone.setDefault(DateTimeZone.UTC);
+         DateTimeFormatter parser = ISODateTimeFormat.basicDateTimeNoMillis();
+         assertParse(parser, "20061204T102030Z", new DateTime(2006, 12, 4, 10, 20, 30, 0));
++        assertParse(parser, "+20061204T102030Z", new DateTime(2006, 12, 4, 10, 20, 30, 0));
+         assertParse(parser, false, "2006120T102030Z");
+         assertParse(parser, false, "200612T102030Z");
+         assertParse(parser, false, "20061T102030Z");
+@@ -674,6 +690,7 @@ public void test_basicDateTimeNoMillis() {
+     public void test_basicOrdinalDate() {
+         DateTimeFormatter parser = ISODateTimeFormat.basicOrdinalDate();
+         assertParse(parser, "2006123", new DateTime(2006, 1, 1, 0, 0, 0, 0).withDayOfYear(123));
++        assertParse(parser, "+2006123", new DateTime(2006, 1, 1, 0, 0, 0, 0).withDayOfYear(123));
+         assertParse(parser, false, "200612");
+         assertParse(parser, false, "20061");
+         assertParse(parser, false, "2006");
+@@ -687,6 +704,7 @@ public void test_basicOrdinalDateTime() {
+         assertParse(parser, "2006123T102030.400Z", new DateTime(2006, 1, 1, 10, 20, 30, 400).withDayOfYear(123));
+         assertParse(parser, "2006123T102030.40Z", new DateTime(2006, 1, 1, 10, 20, 30, 400).withDayOfYear(123));
+         assertParse(parser, "2006123T102030.4Z", new DateTime(2006, 1, 1, 10, 20, 30, 400).withDayOfYear(123));
++        assertParse(parser, "+2006123T102030.4Z", new DateTime(2006, 1, 1, 10, 20, 30, 400).withDayOfYear(123));
+         assertParse(parser, false, "200612T102030.400Z");
+         assertParse(parser, false, "20061T102030.400Z");
+         assertParse(parser, false, "2006T102030.400Z");
+@@ -705,6 +723,7 @@ public void test_basicOrdinalDateTimeNoMillis() {
+         DateTimeZone.setDefault(DateTimeZone.UTC);
+         DateTimeFormatter parser = ISODateTimeFormat.basicOrdinalDateTimeNoMillis();
+         assertParse(parser, "2006123T102030Z", new DateTime(2006, 1, 1, 10, 20, 30, 0).withDayOfYear(123));
++        assertParse(parser, "+2006123T102030Z", new DateTime(2006, 1, 1, 10, 20, 30, 0).withDayOfYear(123));
+         assertParse(parser, false, "200612T102030Z");
+         assertParse(parser, false, "20061T102030Z");
+         assertParse(parser, false, "2006T102030Z");
+@@ -722,6 +741,7 @@ public void test_basicOrdinalDateTimeNoMillis() {
+     public void test_basicWeekDate() {
+         DateTimeFormatter parser = ISODateTimeFormat.basicWeekDate();
+         assertParse(parser, "2006W273", new DateTime(2006, 6, 1, 0, 0, 0, 0).withWeekOfWeekyear(27).withDayOfWeek(3));
++        assertParse(parser, "+2006W273", new DateTime(2006, 6, 1, 0, 0, 0, 0).withWeekOfWeekyear(27).withDayOfWeek(3));
+         assertParse(parser, false, "2006W27");
+         assertParse(parser, false, "2006W2");
+         assertParse(parser, false, "2006W");
+@@ -735,6 +755,7 @@ public void test_basicWeekDateTime() {
+         assertParse(parser, "2006W273T102030.400Z", new DateTime(2006, 6, 1, 10, 20, 30, 400).withWeekOfWeekyear(27).withDayOfWeek(3));
+         assertParse(parser, "2006W273T102030.40Z", new DateTime(2006, 6, 1, 10, 20, 30, 400).withWeekOfWeekyear(27).withDayOfWeek(3));
+         assertParse(parser, "2006W273T102030.4Z", new DateTime(2006, 6, 1, 10, 20, 30, 400).withWeekOfWeekyear(27).withDayOfWeek(3));
++        assertParse(parser, "+2006W273T102030.4Z", new DateTime(2006, 6, 1, 10, 20, 30, 400).withWeekOfWeekyear(27).withDayOfWeek(3));
+         assertParse(parser, false, "2006W27T102030.400Z");
+         assertParse(parser, false, "2006W2T102030.400Z");
+         assertParse(parser, false, "2006W273T10203.400Z");
+@@ -749,6 +770,7 @@ public void test_basicWeekDateTimeNoMillis() {
+         DateTimeZone.setDefault(DateTimeZone.UTC);
+         DateTimeFormatter parser = ISODateTimeFormat.basicWeekDateTimeNoMillis();
+         assertParse(parser, "2006W273T102030Z", new DateTime(2006, 6, 1, 10, 20, 30, 0).withWeekOfWeekyear(27).withDayOfWeek(3));
++        assertParse(parser, "+2006W273T102030Z", new DateTime(2006, 6, 1, 10, 20, 30, 0).withWeekOfWeekyear(27).withDayOfWeek(3));
+         assertParse(parser, false, "2006W27T102030Z");
+         assertParse(parser, false, "2006W2T102030Z");
+         assertParse(parser, false, "2006W273T10203Z");
+
+From 8f41ec9713568111cf6b81736d97b46aeb281ace Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Sat, 24 Oct 2015 10:12:50 +0100
+Subject: [PATCH 28/28] Release v2.9
+
+---
+ README.md                      | 10 +++-
+ RELEASE-NOTES.txt              | 55 ++++++++++----------
+ pom.xml                        |  2 +-
+ src/conf/MANIFEST.MF           | 20 +++----
+ src/site/markdown/index.md     |  8 +--
+ src/site/xdoc/installation.xml |  2 +-
+ src/site/xdoc/upgradeto290.xml | 95 ++++++++++++++++++++++++++++++++++
+ 7 files changed, 148 insertions(+), 44 deletions(-)
+ create mode 100644 src/site/xdoc/upgradeto290.xml
+
+diff --git a/README.md b/README.md
+index 7a64286b9..0b2ebe56a 100644
+--- a/README.md
++++ b/README.md
+@@ -46,11 +46,17 @@ Various documentation is available:
+ 
+ 
+ ### Releases
+-[Release 2.8.2](http://www.joda.org/joda-time/download.html) is the current latest release.
++[Release 2.9](http://www.joda.org/joda-time/download.html) is the current latest release.
+ This release is considered stable and worthy of the 2.x tag.
+ It depends on JDK 1.5 or later.
+ 
+-Available in the [Maven Central repository](http://search.maven.org/#artifactdetails|joda-time|joda-time|2.8.2|jar)
++Available in the [Maven Central repository](http://search.maven.org/#artifactdetails|joda-time|joda-time|2.9|jar)
++
++    <dependency>
++      <groupId>joda-time</groupId>
++      <artifactId>joda-time</artifactId>
++      <version>2.9</version>
++    </dependency>
+ 
+ 
+ ### Related projects
+diff --git a/RELEASE-NOTES.txt b/RELEASE-NOTES.txt
+index 429e6944a..2e1044dd2 100644
+--- a/RELEASE-NOTES.txt
++++ b/RELEASE-NOTES.txt
+@@ -1,8 +1,8 @@
+-Joda-Time version 2.8.3
+------------------------
++Joda-Time version 2.9
++---------------------
+ 
+ Joda-Time is a date and time handling library that seeks to replace the JDK
+-Date and Calendar classes.
++Date and Calendar classes. For Java SE 8 and later, please use java.time instead.
+ 
+ This release contains enhancements, bug fixes and a time zone update.
+ The release runs on JDK 5 or later.
+@@ -14,20 +14,13 @@ This is the same license as all of Apache, plus other open source projects such
+ ** http://www.joda.org/joda-time/related.html **
+ 
+ 
+-Changes in 2.8.3
+-================
+-- DateTimeZone data updated to version 2015g
+-
++Enhancements since 2.8
++----------------------
+ - Faster parsing of time-zone identifiers [#282]
+ 
+-- Fix parsing of basic form ISO style where year has unnecessary plus sign [#86]
+-  For example, +20151030 will now be correctly parsed as year 2015.
+-
+ - Added Interval.parseWithOffset(String) [#299, #296]
+   Provides a way to parse the fixed offset in an interval string
+ 
+-- Clarify that PeriodFormatterBuilder is in an invalid state once built [#309]
+-
+ - Add DateTimeFormatter methods for StringBuilder [#298]
+ 
+ - Add Russian period translations [#320]
+@@ -36,31 +29,43 @@ Changes in 2.8.3
+ 
+ - Add Czech period translations [#313]
+ 
++- Clarify that PeriodFormatterBuilder is in an invalid state once built [#309]
++
+ - Allow DateTime and Interval to refer to values at Long.MIN_VALUE and Long.MAX_VALUE [#297, #190]
+   A DateTime may be created with any millisecond value, however at the very edges there may be
+-  some undesirable effects, for example alway using UTC instead of the time-zone
+-
+-- Fix overflow bug in intervals [#315]
++  some undesirable effects, for example always using UTC instead of the time-zone
+ 
+ - Better error message for malformed tzdb files [#319]
+ 
+ - Better error message for interval constructor [#321]
+ 
+ 
+-Changes in 2.8.2
+-================
+-- DateTimeZone data updated to version 2015f
++Compatibility with 2.8
++----------------------
++Build system - Yes
+ 
++Binary compatible - Yes
+ 
+-Changes in 2.8.1
+-================
+-See http://www.joda.org/joda-time/upgradeto281.html
++Source compatible - Yes
+ 
++Serialization compatible - Yes
+ 
+-Changes in 2.8.0
+-================
++Data compatible - Yes
++ - DateTimeZone data updated to version 2015g
++
++Semantic compatible - Yes
++
++
++Bug fixes since 2.8
++-------------------
++- Fixed to handle JDK 8u60 [#288, #291]
++  Without this fix, formatting a time-zone will print "+00:00" instead of "GMT" for the GMT time-zone
++
++- Fix parsing of basic form ISO style where year has unnecessary plus sign [#86]
++  For example, +20151030 will now be correctly parsed as year 2015.
++
++- Fix overflow bug in intervals [#315]
+ 
+-See http://www.joda.org/joda-time/upgradeto280.html
+ 
+ 
+ Scala
+@@ -75,7 +80,5 @@ Feedback
+ Feedback is best received using GitHub issues and Pull Requests.
+ https://github.com/JodaOrg/joda-time/
+ 
+-Feedback is also welcomed via the joda-interest mailing list.
+-
+ The Joda team
+ http://www.joda.org/joda-time/
+diff --git a/pom.xml b/pom.xml
+index 14e258772..426b5c798 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -9,7 +9,7 @@
+   <artifactId>joda-time</artifactId>
+   <packaging>jar</packaging>
+   <name>Joda-Time</name>
+-  <version>2.8.3-SNAPSHOT</version>
++  <version>2.9</version>
+   <description>Date and time library to replace JDK date handling</description>
+   <url>http://www.joda.org/joda-time/</url>
+ 
+diff --git a/src/conf/MANIFEST.MF b/src/conf/MANIFEST.MF
+index 8bb584c9d..961a88994 100644
+--- a/src/conf/MANIFEST.MF
++++ b/src/conf/MANIFEST.MF
+@@ -2,22 +2,22 @@ Package: org.joda.time
+ Extension-Name: joda-time
+ Specification-Title: Joda-Time
+ Specification-Vendor: Joda.org
+-Specification-Version: 2.8
++Specification-Version: 2.9
+ Implementation-Vendor: Joda.org
+ Implementation-Title: org.joda.time
+-Implementation-Version: 2.8.2
++Implementation-Version: 2.9
+ Implementation-Vendor-Id: org.joda
+ Bundle-ManifestVersion: 2
+ Bundle-Vendor: Joda.org
+ Bundle-Name: Joda-Time
+ Bundle-SymbolicName: joda-time
+-Bundle-Version: 2.8.2
+-Export-Package: org.joda.time;version=2.8.2,
+- org.joda.time.base;version=2.8.2,
+- org.joda.time.chrono;version=2.8.2,
+- org.joda.time.convert;version=2.8.2,
+- org.joda.time.field;version=2.8.2,
+- org.joda.time.format;version=2.8.2,
+- org.joda.time.tz;version=2.8.2
++Bundle-Version: 2.9
++Export-Package: org.joda.time;version=2.9,
++ org.joda.time.base;version=2.9,
++ org.joda.time.chrono;version=2.9,
++ org.joda.time.convert;version=2.9,
++ org.joda.time.field;version=2.9,
++ org.joda.time.format;version=2.9,
++ org.joda.time.tz;version=2.9
+ Bundle-License: Apache 2.0
+ Bundle-DocURL: http://www.joda.org/joda-time/
+diff --git a/src/site/markdown/index.md b/src/site/markdown/index.md
+index 146077666..f61fca371 100644
+--- a/src/site/markdown/index.md
++++ b/src/site/markdown/index.md
+@@ -125,21 +125,21 @@ Joda-Time is licenced under the business friendly <a href="license.html">Apache
+ 
+ ## <i></i> Releases
+ 
+-[Release 2.8.2](download.html) is the current latest release.
++[Release 2.9](download.html) is the current latest release.
+ This release is considered stable and worthy of the 2.x tag.
+-See the [upgrade notes](upgradeto282.html) for full details.
++See the [upgrade notes](upgradeto290.html) for full details.
+ 
+ Joda-Time requires Java SE 5 or later and has [no dependencies](dependencies.html).
+ There is a *compile-time* dependency on [Joda-Convert](http://www.joda.org/joda-convert/),
+ but this is not required at runtime thanks to the magic of annotations.
+ 
+-Available in [Maven Central](http://search.maven.org/#artifactdetails%7Cjoda-time%7Cjoda-time%7C2.8.2%7Cjar).
++Available in [Maven Central](http://search.maven.org/#artifactdetails%7Cjoda-time%7Cjoda-time%7C2.9%7Cjar).
+ 
+ ```xml
+ <dependency>
+   <groupId>joda-time</groupId>
+   <artifactId>joda-time</artifactId>
+-  <version>2.8.2</version>
++  <version>2.9</version>
+ </dependency>
+ ```
+ 
+diff --git a/src/site/xdoc/installation.xml b/src/site/xdoc/installation.xml
+index 926633875..11bfce05f 100644
+--- a/src/site/xdoc/installation.xml
++++ b/src/site/xdoc/installation.xml
+@@ -3,7 +3,6 @@
+ <document>
+  <properties>
+   <title>Java date and time API - Download and Installation</title>
+-  <author>Al Major</author>
+  </properties>
+ 
+ <body>
+@@ -22,6 +21,7 @@ of the source code suitable for linking to the jar file in IDEs such as Eclipse.
+ <p>
+ The release notes for upgraders can be found here:
+ <ul>
++<li><a href="upgradeto290.html">Version 2.9</a> - upgrade from Version 2.8</li>
+ <li><a href="upgradeto282.html">Version 2.8.2</a> - upgrade from Version 2.8.1</li>
+ <li><a href="upgradeto281.html">Version 2.8.1</a> - upgrade from Version 2.8</li>
+ <li><a href="upgradeto280.html">Version 2.8</a> - upgrade from Version 2.7</li>
+diff --git a/src/site/xdoc/upgradeto290.xml b/src/site/xdoc/upgradeto290.xml
+new file mode 100644
+index 000000000..93ec5bd91
+--- /dev/null
++++ b/src/site/xdoc/upgradeto290.xml
+@@ -0,0 +1,95 @@
++<?xml version="1.0" encoding="ISO-8859-1"?>
++
++<document>
++ <properties>
++  <title>Java date and time API - Upgrade from 2.8 to 2.9</title>
++  <author>Stephen Colebourne</author>
++ </properties>
++
++<body>
++
++<section name="Upgrade">
++<p>
++These are the release notes and advice for upgrading Joda-Time from version 2.8 to version 2.9.
++<source>
++Joda-Time version 2.9
++---------------------
++
++Joda-Time is a date and time handling library that seeks to replace the JDK
++Date and Calendar classes. For Java SE 8 and later, please use java.time instead.
++
++This release contains enhancements, bug fixes and a time zone update.
++The release runs on JDK 5 or later.
++
++Joda-Time is licensed under the business-friendly Apache License Version 2.
++This is the same license as all of Apache, plus other open source projects such as Spring.
++
++**  Please also check out our related projects   **
++** http://www.joda.org/joda-time/related.html **
++
++
++Enhancements since 2.8
++----------------------
++- Faster parsing of time-zone identifiers [#282]
++
++- Added Interval.parseWithOffset(String) [#299, #296]
++  Provides a way to parse the fixed offset in an interval string
++
++- Add DateTimeFormatter methods for StringBuilder [#298]
++
++- Add Russian period translations [#320]
++
++- Add Italian period translations [#312]
++
++- Add Czech period translations [#313]
++
++- Clarify that PeriodFormatterBuilder is in an invalid state once built [#309]
++
++- Allow DateTime and Interval to refer to values at Long.MIN_VALUE and Long.MAX_VALUE [#297, #190]
++  A DateTime may be created with any millisecond value, however at the very edges there may be
++  some undesirable effects, for example always using UTC instead of the time-zone
++
++- Better error message for malformed tzdb files [#319]
++
++- Better error message for interval constructor [#321]
++
++
++Compatibility with 2.8
++----------------------
++Build system - Yes
++
++Binary compatible - Yes
++
++Source compatible - Yes
++
++Serialization compatible - Yes
++
++Data compatible - Yes
++ - DateTimeZone data updated to version 2015g
++
++Semantic compatible - Yes
++
++
++Bug fixes since 2.8
++-------------------
++- Fixed to handle JDK 8u60 [#288, #291]
++  Without this fix, formatting a time-zone will print "+00:00" instead of "GMT" for the GMT time-zone
++
++- Fix parsing of basic form ISO style where year has unnecessary plus sign [#86]
++  For example, +20151030 will now be correctly parsed as year 2015.
++
++- Fix overflow bug in intervals [#315]
++
++
++
++Scala
++-----
++Joda-Time uses annotations from Joda-Convert.
++In the Java programming language, this dependency is optional, however in Scala it is not.
++Scala users must manually add the Joda-Convert v1.2 dependency.
++</source>
++</p>
++</section>
++
++</body>
++</document>

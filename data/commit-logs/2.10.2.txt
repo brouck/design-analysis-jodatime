@@ -1,0 +1,2606 @@
+From 9995064e8334f39847ce43a99d6c1ed121126a0c Mon Sep 17 00:00:00 2001
+From: Anton Qiu <qiuchangtong@gmail.com>
+Date: Mon, 22 Oct 2018 22:10:26 -0700
+Subject: [PATCH 01/16] removed 9th element in init array
+
+---
+ src/main/java/org/joda/time/Period.java | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/main/java/org/joda/time/Period.java b/src/main/java/org/joda/time/Period.java
+index 66afd17fe..b56185163 100644
+--- a/src/main/java/org/joda/time/Period.java
++++ b/src/main/java/org/joda/time/Period.java
+@@ -107,7 +107,7 @@ public static Period parse(String str, PeriodFormatter formatter) {
+      * @return the period
+      */
+     public static Period years(int years) {
+-        return new Period(new int[] {years, 0, 0, 0, 0, 0, 0, 0, 0}, PeriodType.standard());
++        return new Period(new int[] {years, 0, 0, 0, 0, 0, 0, 0}, PeriodType.standard());
+     }
+ 
+     /**
+
+From 0d6b0b7a0c63f7e4d8ee9fed91cec1d29dfe0377 Mon Sep 17 00:00:00 2001
+From: "Stephen Colebourne (CI)" <scolebourne@joda.org>
+Date: Sat, 27 Oct 2018 19:55:16 +0100
+Subject: [PATCH 02/16] Bump version
+
+---
+ pom.xml | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/pom.xml b/pom.xml
+index bc366c913..95e990c77 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -8,7 +8,7 @@
+   <artifactId>joda-time</artifactId>
+   <packaging>jar</packaging>
+   <name>Joda-Time</name>
+-  <version>2.10.1</version>
++  <version>2.10.2-SNAPSHOT</version>
+   <description>Date and time library to replace JDK date handling</description>
+   <url>https://www.joda.org/joda-time/</url>
+ 
+
+From 6a4ee6693216b70d36c8417165e3794b6e273f3c Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Thu, 1 Nov 2018 22:08:39 +0000
+Subject: [PATCH 03/16] Fix DateTime.withTimeAtStartOfDay()
+
+Fix when DST is at midnight
+Fixes #488
+---
+ src/changes/changes.xml                               | 6 ++++++
+ src/main/java/org/joda/time/LocalDate.java            | 2 +-
+ src/test/java/org/joda/time/TestDateTime_Basics.java  | 6 ++++++
+ src/test/java/org/joda/time/TestLocalDate_Basics.java | 7 +++++++
+ 4 files changed, 20 insertions(+), 1 deletion(-)
+
+diff --git a/src/changes/changes.xml b/src/changes/changes.xml
+index e7daaac80..7be3b8cc6 100644
+--- a/src/changes/changes.xml
++++ b/src/changes/changes.xml
+@@ -8,6 +8,12 @@
+   <body>
+ 
+     <!-- types are add, fix, remove, update -->
++    <release version="2.10.2" date="SNAPSHOT" description="v2.10.2">
++      <action dev="jodastephen" type="fix">
++        Fix calculation of DateTime.withTimeAtStartOfDay() when DST is at midnight.
++        Fixes #488.
++      </action>
++    </release>
+     <release version="2.10.1" date="2018-10-27" description="v2.10.1">
+       <action dev="jodastephen" type="update">
+         DateTimeZone data updated to version 2018g.
+diff --git a/src/main/java/org/joda/time/LocalDate.java b/src/main/java/org/joda/time/LocalDate.java
+index 9779fca84..d2acdc611 100644
+--- a/src/main/java/org/joda/time/LocalDate.java
++++ b/src/main/java/org/joda/time/LocalDate.java
+@@ -730,7 +730,7 @@ public DateTime toDateTimeAtStartOfDay(DateTimeZone zone) {
+         long localMillis = getLocalMillis() + 6L * DateTimeConstants.MILLIS_PER_HOUR;
+         long instant = zone.convertLocalToUTC(localMillis, false);
+         instant = chrono.dayOfMonth().roundFloor(instant);
+-        return new DateTime(instant, chrono);
++        return new DateTime(instant, chrono).withEarlierOffsetAtOverlap();
+     }
+ 
+     //-----------------------------------------------------------------------
+diff --git a/src/test/java/org/joda/time/TestDateTime_Basics.java b/src/test/java/org/joda/time/TestDateTime_Basics.java
+index b3798737b..1172ef986 100644
+--- a/src/test/java/org/joda/time/TestDateTime_Basics.java
++++ b/src/test/java/org/joda/time/TestDateTime_Basics.java
+@@ -911,6 +911,12 @@ public void testWithTime_LocalTime() {
+         } catch (IllegalArgumentException ex) {}
+     }
+     
++    public void testWithTimeAtStartOfDay() {
++        DateTime test = new DateTime(2018, 10, 28, 0, 0, DateTimeZone.forID("Atlantic/Azores"));
++        DateTime result = test.withTimeAtStartOfDay();
++        assertEquals(test, result);
++    }
++    
+     @SuppressWarnings("deprecation")
+     public void testWithFields_RPartial() {
+         DateTime test = new DateTime(2004, 5, 6, 7, 8, 9, 0);
+diff --git a/src/test/java/org/joda/time/TestLocalDate_Basics.java b/src/test/java/org/joda/time/TestLocalDate_Basics.java
+index 593cb3618..7fc7cef67 100644
+--- a/src/test/java/org/joda/time/TestLocalDate_Basics.java
++++ b/src/test/java/org/joda/time/TestLocalDate_Basics.java
+@@ -677,6 +677,13 @@ public void testToDateTimeAtStartOfDay_avoidDST() {
+         assertEquals(new DateTime(2007, 4, 1, 1, 0, 0, 0, MOCK_GAZA), test);
+     }
+ 
++    public void testToDateTimeAtStartOfDay_handleMidnightDST() {
++        LocalDate test = new LocalDate(2018, 10, 28);
++        DateTime result = test.toDateTimeAtStartOfDay(DateTimeZone.forID("Atlantic/Azores"));
++        DateTime expected = new DateTime(2018, 10, 28, 0, 0, DateTimeZone.forID("Atlantic/Azores"));
++        assertEquals(expected, result);
++    }
++    
+     //-----------------------------------------------------------------------
+     public void testToDateTimeAtStartOfDay_Zone() {
+         LocalDate base = new LocalDate(2005, 6, 9, COPTIC_PARIS);
+
+From 09929a68b9e2c977530c61a4942ad34f052335d8 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Thu, 1 Nov 2018 22:17:41 +0000
+Subject: [PATCH 04/16] Fix Period.years() factory method
+
+Update after PR
+Fixes #487
+---
+ pom.xml                 | 4 ++++
+ src/changes/changes.xml | 4 ++++
+ 2 files changed, 8 insertions(+)
+
+diff --git a/pom.xml b/pom.xml
+index 95e990c77..d294b3f92 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -242,6 +242,10 @@
+     <contributor>
+       <name>Ryan Propper</name>
+     </contributor>
++    <contributor>
++      <name>Anton Qiu</name>
++      <url>https://github.com/antonqiu</url>
++    </contributor>
+     <contributor>
+       <name>Zhanbolat Raimbekov</name>
+       <url>https://github.com/janbolat</url>
+diff --git a/src/changes/changes.xml b/src/changes/changes.xml
+index 7be3b8cc6..eeec2f818 100644
+--- a/src/changes/changes.xml
++++ b/src/changes/changes.xml
+@@ -13,6 +13,10 @@
+         Fix calculation of DateTime.withTimeAtStartOfDay() when DST is at midnight.
+         Fixes #488.
+       </action>
++      <action dev="antonqiu" type="fix">
++        Fix Period.years() factory method internal implementation.
++        Fixes #487.
++      </action>
+     </release>
+     <release version="2.10.1" date="2018-10-27" description="v2.10.1">
+       <action dev="jodastephen" type="update">
+
+From fe919c4b9646ce7c70bda7c55ef14bb9ad1749df Mon Sep 17 00:00:00 2001
+From: adelviscio <adelviscio@users.noreply.github.com>
+Date: Sun, 18 Nov 2018 18:43:58 -0500
+Subject: [PATCH 05/16] Remove extra whitespace in weekyearOfCentury
+ declaration
+
+---
+ src/main/java/org/joda/time/Chronology.java | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/main/java/org/joda/time/Chronology.java b/src/main/java/org/joda/time/Chronology.java
+index b0126b25c..1e49d229b 100644
+--- a/src/main/java/org/joda/time/Chronology.java
++++ b/src/main/java/org/joda/time/Chronology.java
+@@ -415,7 +415,7 @@ public abstract long getDateTimeMillis(long instant,
+      * 
+      * @return DateTimeField or UnsupportedDateTimeField if unsupported
+      */
+-    public abstract  DateTimeField weekyearOfCentury();
++    public abstract DateTimeField weekyearOfCentury();
+ 
+     // Month
+     //-----------------------------------------------------------------------
+
+From 187dc0500c9e92cc989c7959197d60d837d6ba14 Mon Sep 17 00:00:00 2001
+From: "Stephen Colebourne (CI)" <scolebourne@joda.org>
+Date: Fri, 14 Dec 2018 23:58:14 +0000
+Subject: [PATCH 06/16] Tidelift commercial support and security policy
+
+---
+ README.md                  | 17 +++++++++++------
+ src/changes/changes.xml    |  3 +++
+ src/site/markdown/index.md | 12 +++++++-----
+ 3 files changed, 21 insertions(+), 11 deletions(-)
+
+diff --git a/README.md b/README.md
+index 8f81f509c..284e46c8c 100644
+--- a/README.md
++++ b/README.md
+@@ -71,6 +71,9 @@ Available in the [Maven Central repository](https://search.maven.org/search?q=g:
+ compile 'joda-time:joda-time:2.10.1'
+ ```
+ 
++![Tidelift dependency check](https://tidelift.com/badges/github/JodaOrg/joda-time)
++
++
+ ### Related projects
+ Related projects at GitHub:
+ - https://github.com/JodaOrg/joda-time-hibernate
+@@ -82,12 +85,14 @@ Other related projects:
+ 
+ 
+ ### Support
+-Please use GitHub issues and Pull Requests for support.
+-
+-
+-### History
+-Issue tracking and active development is at GitHub.
+-Historically, the project was at [Sourceforge](https://sourceforge.net/projects/joda-time/).
++Please use [Stack Overflow](https://stackoverflow.com/questions/tagged/jodatime) for general usage questions.
++GitHub [issues](https://github.com/JodaOrg/joda-time/issues) and [pull requests](https://github.com/JodaOrg/joda-time/pulls)
++should be used when you want to help advance the project.
++Commercial support is available via the
++[Tidelift subscription](https://tidelift.com/subscription/pkg/maven-joda-time-joda-time?utm_source=maven-joda-time-joda-time&utm_medium=referral&utm_campaign=readme).
++
++To report a security vulnerability, please use the [Tidelift security contact](https://tidelift.com/security).
++Tidelift will coordinate the fix and disclosure.
+ 
+ 
+ ### Release process
+diff --git a/src/changes/changes.xml b/src/changes/changes.xml
+index eeec2f818..ebebd21be 100644
+--- a/src/changes/changes.xml
++++ b/src/changes/changes.xml
+@@ -17,6 +17,9 @@
+         Fix Period.years() factory method internal implementation.
+         Fixes #487.
+       </action>
++      <action dev="jodastephen" type="add">
++        Add Tidelift commercial support and security policy.
++      </action>
+     </release>
+     <release version="2.10.1" date="2018-10-27" description="v2.10.1">
+       <action dev="jodastephen" type="update">
+diff --git a/src/site/markdown/index.md b/src/site/markdown/index.md
+index d56ecd311..5fd89b75e 100644
+--- a/src/site/markdown/index.md
++++ b/src/site/markdown/index.md
+@@ -165,13 +165,15 @@ the last release to support Java SE 4 and the last v1.x release.
+ 
+ ### Support
+ 
+-Support on bugs, library usage or enhancement requests is available on a best efforts basis.
+-
+-To suggest enhancements or contribute, please [fork the source code](https://github.com/JodaOrg/joda-time)
+-on GitHub and send a Pull Request.
++Please use [Stack Overflow](https://stackoverflow.com/questions/tagged/jodatime) for general usage questions.
++GitHub [issues](https://github.com/JodaOrg/joda-time/issues) and [pull requests](https://github.com/JodaOrg/joda-time/pulls)
++should be used when you want to help advance the project.
++Commercial support is available via the
++[Tidelift subscription](https://tidelift.com/subscription/pkg/maven-joda-time-joda-time?utm_source=maven-joda-time-joda-time&utm_medium=referral&utm_campaign=website).
+ 
+ Note that Joda-Time is considered to be a largely "finished" project.
+ No major enhancements are planned.
+ If using Java SE 8, please migrate to `java.time` (JSR-310).
+ 
+-Alternatively, use GitHub [issues](https://github.com/JodaOrg/joda-time/issues).
++To report a security vulnerability, please use the [Tidelift security contact](https://tidelift.com/security).
++Tidelift will coordinate the fix and disclosure.
+
+From 384d0490d08ea1345cd01ee169d8674db3750a16 Mon Sep 17 00:00:00 2001
+From: Alexander Shopov <ash@kambanaria.org>
+Date: Sun, 13 Jan 2019 13:55:26 +0100
+Subject: [PATCH 07/16] Added Bulgarian translation.
+
+Signed-off-by: Alexander Shopov <ash@kambanaria.org>
+---
+ .../joda/time/format/messages_bg.properties   | 22 +++++++++++++++++++
+ 1 file changed, 22 insertions(+)
+ create mode 100644 src/main/java/org/joda/time/format/messages_bg.properties
+
+diff --git a/src/main/java/org/joda/time/format/messages_bg.properties b/src/main/java/org/joda/time/format/messages_bg.properties
+new file mode 100644
+index 000000000..16d138ff4
+--- /dev/null
++++ b/src/main/java/org/joda/time/format/messages_bg.properties
+@@ -0,0 +1,22 @@
++PeriodFormat.space=\ 
++PeriodFormat.comma=,
++PeriodFormat.commandand=,и 
++PeriodFormat.commaspaceand=, и 
++PeriodFormat.commaspace=, 
++PeriodFormat.spaceandspace=\ и 
++PeriodFormat.year=\ година
++PeriodFormat.years=\ години
++PeriodFormat.month=\ месец
++PeriodFormat.months=\ месеца
++PeriodFormat.week=\ седмица
++PeriodFormat.weeks=\ седмици
++PeriodFormat.day=\ ден
++PeriodFormat.days=\ дни
++PeriodFormat.hour=\ час
++PeriodFormat.hours=\ часа
++PeriodFormat.minute=\ минута
++PeriodFormat.minutes=\ минути
++PeriodFormat.second=\ секунда
++PeriodFormat.seconds=\ секунди
++PeriodFormat.millisecond=\ милисекунда
++PeriodFormat.milliseconds=\ милисекунди
+
+From f4a1096c6ec0ccc798954156e497dda1f227c5ca Mon Sep 17 00:00:00 2001
+From: "Stephen Colebourne (CI)" <scolebourne@joda.org>
+Date: Mon, 14 Jan 2019 23:22:53 +0000
+Subject: [PATCH 08/16] Fixup after PR
+
+Re-encode in ISO-8859-1
+Add test case
+---
+ pom.xml                                       |  4 ++
+ src/changes/changes.xml                       |  4 ++
+ .../joda/time/format/messages_bg.properties   | 38 +++++++++----------
+ .../joda/time/format/TestPeriodFormat.java    | 18 +++++++++
+ 4 files changed, 45 insertions(+), 19 deletions(-)
+
+diff --git a/pom.xml b/pom.xml
+index d294b3f92..358d2f70e 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -264,6 +264,10 @@
+     <contributor>
+       <name>Kandarp Shah</name>
+     </contributor>
++    <contributor>
++      <name>Alexander Shopov</name>
++      <url>https://github.com/alshopov</url>
++    </contributor>
+     <contributor>
+       <name>Francois Staes</name>
+     </contributor>
+diff --git a/src/changes/changes.xml b/src/changes/changes.xml
+index ebebd21be..46c2f16c2 100644
+--- a/src/changes/changes.xml
++++ b/src/changes/changes.xml
+@@ -17,6 +17,10 @@
+         Fix Period.years() factory method internal implementation.
+         Fixes #487.
+       </action>
++      <action dev="alshopov" type="add">
++        Add Bulgarian translation of periods.
++        Fixes #496.
++      </action>
+       <action dev="jodastephen" type="add">
+         Add Tidelift commercial support and security policy.
+       </action>
+diff --git a/src/main/java/org/joda/time/format/messages_bg.properties b/src/main/java/org/joda/time/format/messages_bg.properties
+index 16d138ff4..9fb9bf575 100644
+--- a/src/main/java/org/joda/time/format/messages_bg.properties
++++ b/src/main/java/org/joda/time/format/messages_bg.properties
+@@ -1,22 +1,22 @@
+ PeriodFormat.space=\ 
+ PeriodFormat.comma=,
+-PeriodFormat.commandand=,и 
+-PeriodFormat.commaspaceand=, и 
++PeriodFormat.commandand=,\u0438 
++PeriodFormat.commaspaceand=, \u0438 
+ PeriodFormat.commaspace=, 
+-PeriodFormat.spaceandspace=\ и 
+-PeriodFormat.year=\ година
+-PeriodFormat.years=\ години
+-PeriodFormat.month=\ месец
+-PeriodFormat.months=\ месеца
+-PeriodFormat.week=\ седмица
+-PeriodFormat.weeks=\ седмици
+-PeriodFormat.day=\ ден
+-PeriodFormat.days=\ дни
+-PeriodFormat.hour=\ час
+-PeriodFormat.hours=\ часа
+-PeriodFormat.minute=\ минута
+-PeriodFormat.minutes=\ минути
+-PeriodFormat.second=\ секунда
+-PeriodFormat.seconds=\ секунди
+-PeriodFormat.millisecond=\ милисекунда
+-PeriodFormat.milliseconds=\ милисекунди
++PeriodFormat.spaceandspace=\ \u0438 
++PeriodFormat.year=\ \u0433\u043e\u0434\u0438\u043d\u0430
++PeriodFormat.years=\ \u0433\u043e\u0434\u0438\u043d\u0438
++PeriodFormat.month=\ \u043c\u0435\u0441\u0435\u0446
++PeriodFormat.months=\ \u043c\u0435\u0441\u0435\u0446\u0430
++PeriodFormat.week=\ \u0441\u0435\u0434\u043c\u0438\u0446\u0430
++PeriodFormat.weeks=\ \u0441\u0435\u0434\u043c\u0438\u0446\u0438
++PeriodFormat.day=\ \u0434\u0435\u043d
++PeriodFormat.days=\ \u0434\u043d\u0438
++PeriodFormat.hour=\ \u0447\u0430\u0441
++PeriodFormat.hours=\ \u0447\u0430\u0441\u0430
++PeriodFormat.minute=\ \u043c\u0438\u043d\u0443\u0442\u0430
++PeriodFormat.minutes=\ \u043c\u0438\u043d\u0443\u0442\u0438
++PeriodFormat.second=\ \u0441\u0435\u043a\u0443\u043d\u0434\u0430
++PeriodFormat.seconds=\ \u0441\u0435\u043a\u0443\u043d\u0434\u0438
++PeriodFormat.millisecond=\ \u043c\u0438\u043b\u0438\u0441\u0435\u043a\u0443\u043d\u0434\u0430
++PeriodFormat.milliseconds=\ \u043c\u0438\u043b\u0438\u0441\u0435\u043a\u0443\u043d\u0434\u0438
+diff --git a/src/test/java/org/joda/time/format/TestPeriodFormat.java b/src/test/java/org/joda/time/format/TestPeriodFormat.java
+index 739ea264a..92dd638d2 100644
+--- a/src/test/java/org/joda/time/format/TestPeriodFormat.java
++++ b/src/test/java/org/joda/time/format/TestPeriodFormat.java
+@@ -38,6 +38,8 @@
+     private static final Locale DA = new Locale("da");
+     private static final Locale JA = new Locale("ja");
+     private static final Locale PL = new Locale("pl");
++    private static final Locale BG = new Locale("bg");
++    private static final Locale CS = new Locale("cs");
+ 
+     private Locale originalLocale = null;
+ 
+@@ -571,6 +573,22 @@ public void test_wordBased_pl_regEx() {
+         assertEquals("2225 milisekund", pf.print(Period.millis(2225)));
+     }
+     
++    // -----------------------------------------------------------------------
++    // wordBased(new Locale("bg")
++    // -----------------------------------------------------------------------
++    public void test_wordBased_bg_formatStandard() {
++        Period p = new Period(0, 0, 0, 1, 5, 6, 7, 8);
++        assertEquals("1 ден, 5 часа, 6 минути, 7 секунди и 8 милисекунди", PeriodFormat.wordBased(BG).print(p));
++    }
++
++    // -----------------------------------------------------------------------
++    // wordBased(new Locale("cs")
++    // -----------------------------------------------------------------------
++    public void test_wordBased_cs_formatStandard() {
++        Period p = new Period(0, 0, 0, 1, 5, 6, 7, 8);
++        assertEquals("1 den, 5 hodin, 6 minut, 7 sekund a 8 milisekund", PeriodFormat.wordBased(CS).print(p));
++    }
++
+     //-----------------------------------------------------------------------
+     // Cross check languages
+     //-----------------------------------------------------------------------
+
+From 7f79a8f3f7e167a898de90523a0928bb454970ab Mon Sep 17 00:00:00 2001
+From: "Stephen Colebourne (CI)" <scolebourne@joda.org>
+Date: Sun, 20 Jan 2019 12:10:02 +0000
+Subject: [PATCH 09/16] Enhance release notes link
+
+---
+ pom.xml | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/pom.xml b/pom.xml
+index 358d2f70e..9341f9a1b 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -889,7 +889,7 @@
+             <version>1.1.1</version>
+             <configuration>
+               <releaseName>Release v${project.version}</releaseName>
+-              <description>See the [change notes](https://www.joda.org/joda-time/changes-report.html) for more information.</description>
++              <description>See the [change notes](https://www.joda.org/joda-time/changes-report.html#a${project.version}) for more information.</description>
+               <tag>v${project.version}</tag>
+               <overwriteArtifact>true</overwriteArtifact>
+               <fileSets>
+
+From eeec797b8f0fe7af76b116f1a49f44c663f1fff0 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Tue, 19 Feb 2019 21:23:27 +0000
+Subject: [PATCH 10/16] Update time-zone table
+
+Fixes #403
+---
+ src/site/xdoc/timezones.xml | 144 ++++++++++++++++++++++--------------
+ 1 file changed, 90 insertions(+), 54 deletions(-)
+
+diff --git a/src/site/xdoc/timezones.xml b/src/site/xdoc/timezones.xml
+index 7ea883a5f..ea35b2541 100644
+--- a/src/site/xdoc/timezones.xml
++++ b/src/site/xdoc/timezones.xml
+@@ -12,7 +12,7 @@
+ <section name="Available Time Zones">
+ <p>
+ Time zone data is provided by the public IANA <a href="https://www.iana.org/time-zones">time zone database</a>.
+-The following table shows all the time zones supported by Joda-Time, using version 2013d
++The following table shows all the time zones supported by Joda-Time, using version 2018g
+ of the database.
+ It is also possible to update to a <a href="tz_update.html">later version of the database</a>.
+ This table can be rebuilt by running <code>org.joda.example.time.TimeZoneTable</code>.
+@@ -22,29 +22,27 @@ This table can be rebuilt by running <code>org.joda.example.time.TimeZoneTable</
+ <tr><th align="left">Standard Offset</th><th align="left">Canonical ID</th><th align="left">Aliases</th></tr>
+ <tr><td align="left" valign="top">-12:00</td><td align="left" valign="top">Etc/GMT+12</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-11:00</td><td align="left" valign="top">Etc/GMT+11</td><td align="left" valign="top"></td></tr>
+-<tr><td align="left" valign="top">-11:00</td><td align="left" valign="top">Pacific/Apia</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-11:00</td><td align="left" valign="top">Pacific/Midway</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-11:00</td><td align="left" valign="top">Pacific/Niue</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-11:00</td><td align="left" valign="top">Pacific/Pago_Pago</td><td align="left" valign="top">Pacific/Samoa, US/Samoa</td></tr>
+ <tr><td align="left" valign="top">-10:00</td><td align="left" valign="top">America/Adak</td><td align="left" valign="top">America/Atka, US/Aleutian</td></tr>
+ <tr><td align="left" valign="top">-10:00</td><td align="left" valign="top">Etc/GMT+10</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-10:00</td><td align="left" valign="top">HST</td><td align="left" valign="top"></td></tr>
+-<tr><td align="left" valign="top">-10:00</td><td align="left" valign="top">Pacific/Fakaofo</td><td align="left" valign="top"></td></tr>
+-<tr><td align="left" valign="top">-10:00</td><td align="left" valign="top">Pacific/Honolulu</td><td align="left" valign="top">US/Hawaii</td></tr>
+-<tr><td align="left" valign="top">-10:00</td><td align="left" valign="top">Pacific/Johnston</td><td align="left" valign="top"></td></tr>
++<tr><td align="left" valign="top">-10:00</td><td align="left" valign="top">Pacific/Honolulu</td><td align="left" valign="top">Pacific/Johnston, US/Hawaii</td></tr>
+ <tr><td align="left" valign="top">-10:00</td><td align="left" valign="top">Pacific/Rarotonga</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-10:00</td><td align="left" valign="top">Pacific/Tahiti</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-09:30</td><td align="left" valign="top">Pacific/Marquesas</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-09:00</td><td align="left" valign="top">America/Anchorage</td><td align="left" valign="top">US/Alaska</td></tr>
+ <tr><td align="left" valign="top">-09:00</td><td align="left" valign="top">America/Juneau</td><td align="left" valign="top"></td></tr>
++<tr><td align="left" valign="top">-09:00</td><td align="left" valign="top">America/Metlakatla</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-09:00</td><td align="left" valign="top">America/Nome</td><td align="left" valign="top"></td></tr>
++<tr><td align="left" valign="top">-09:00</td><td align="left" valign="top">America/Sitka</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-09:00</td><td align="left" valign="top">America/Yakutat</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-09:00</td><td align="left" valign="top">Etc/GMT+9</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-09:00</td><td align="left" valign="top">Pacific/Gambier</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-08:00</td><td align="left" valign="top">America/Dawson</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-08:00</td><td align="left" valign="top">America/Los_Angeles</td><td align="left" valign="top">US/Pacific, US/Pacific-New</td></tr>
+-<tr><td align="left" valign="top">-08:00</td><td align="left" valign="top">America/Santa_Isabel</td><td align="left" valign="top"></td></tr>
+-<tr><td align="left" valign="top">-08:00</td><td align="left" valign="top">America/Tijuana</td><td align="left" valign="top">America/Ensenada, Mexico/BajaNorte</td></tr>
++<tr><td align="left" valign="top">-08:00</td><td align="left" valign="top">America/Tijuana</td><td align="left" valign="top">America/Ensenada, America/Santa_Isabel, Mexico/BajaNorte</td></tr>
+ <tr><td align="left" valign="top">-08:00</td><td align="left" valign="top">America/Vancouver</td><td align="left" valign="top">Canada/Pacific</td></tr>
+ <tr><td align="left" valign="top">-08:00</td><td align="left" valign="top">America/Whitehorse</td><td align="left" valign="top">Canada/Yukon</td></tr>
+ <tr><td align="left" valign="top">-08:00</td><td align="left" valign="top">Etc/GMT+8</td><td align="left" valign="top"></td></tr>
+@@ -53,9 +51,11 @@ This table can be rebuilt by running <code>org.joda.example.time.TimeZoneTable</
+ <tr><td align="left" valign="top">-07:00</td><td align="left" valign="top">America/Boise</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-07:00</td><td align="left" valign="top">America/Cambridge_Bay</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-07:00</td><td align="left" valign="top">America/Chihuahua</td><td align="left" valign="top"></td></tr>
++<tr><td align="left" valign="top">-07:00</td><td align="left" valign="top">America/Creston</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-07:00</td><td align="left" valign="top">America/Dawson_Creek</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-07:00</td><td align="left" valign="top">America/Denver</td><td align="left" valign="top">America/Shiprock, Navajo, US/Mountain</td></tr>
+ <tr><td align="left" valign="top">-07:00</td><td align="left" valign="top">America/Edmonton</td><td align="left" valign="top">Canada/Mountain</td></tr>
++<tr><td align="left" valign="top">-07:00</td><td align="left" valign="top">America/Fort_Nelson</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-07:00</td><td align="left" valign="top">America/Hermosillo</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-07:00</td><td align="left" valign="top">America/Inuvik</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-07:00</td><td align="left" valign="top">America/Mazatlan</td><td align="left" valign="top">Mexico/BajaSur</td></tr>
+@@ -67,7 +67,6 @@ This table can be rebuilt by running <code>org.joda.example.time.TimeZoneTable</
+ <tr><td align="left" valign="top">-07:00</td><td align="left" valign="top">MST7MDT</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-06:00</td><td align="left" valign="top">America/Bahia_Banderas</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-06:00</td><td align="left" valign="top">America/Belize</td><td align="left" valign="top"></td></tr>
+-<tr><td align="left" valign="top">-06:00</td><td align="left" valign="top">America/Cancun</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-06:00</td><td align="left" valign="top">America/Chicago</td><td align="left" valign="top">US/Central</td></tr>
+ <tr><td align="left" valign="top">-06:00</td><td align="left" valign="top">America/Costa_Rica</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-06:00</td><td align="left" valign="top">America/El_Salvador</td><td align="left" valign="top"></td></tr>
+@@ -80,11 +79,13 @@ This table can be rebuilt by running <code>org.joda.example.time.TimeZoneTable</
+ <tr><td align="left" valign="top">-06:00</td><td align="left" valign="top">America/Merida</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-06:00</td><td align="left" valign="top">America/Mexico_City</td><td align="left" valign="top">Mexico/General</td></tr>
+ <tr><td align="left" valign="top">-06:00</td><td align="left" valign="top">America/Monterrey</td><td align="left" valign="top"></td></tr>
++<tr><td align="left" valign="top">-06:00</td><td align="left" valign="top">America/North_Dakota/Beulah</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-06:00</td><td align="left" valign="top">America/North_Dakota/Center</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-06:00</td><td align="left" valign="top">America/North_Dakota/New_Salem</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-06:00</td><td align="left" valign="top">America/Rainy_River</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-06:00</td><td align="left" valign="top">America/Rankin_Inlet</td><td align="left" valign="top"></td></tr>
+-<tr><td align="left" valign="top">-06:00</td><td align="left" valign="top">America/Regina</td><td align="left" valign="top">Canada/East-Saskatchewan, Canada/Saskatchewan</td></tr>
++<tr><td align="left" valign="top">-06:00</td><td align="left" valign="top">America/Regina</td><td align="left" valign="top">Canada/Saskatchewan</td></tr>
++<tr><td align="left" valign="top">-06:00</td><td align="left" valign="top">America/Resolute</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-06:00</td><td align="left" valign="top">America/Swift_Current</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-06:00</td><td align="left" valign="top">America/Tegucigalpa</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-06:00</td><td align="left" valign="top">America/Winnipeg</td><td align="left" valign="top">Canada/Central</td></tr>
+@@ -94,8 +95,10 @@ This table can be rebuilt by running <code>org.joda.example.time.TimeZoneTable</
+ <tr><td align="left" valign="top">-06:00</td><td align="left" valign="top">Pacific/Galapagos</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-05:00</td><td align="left" valign="top">America/Atikokan</td><td align="left" valign="top">America/Coral_Harbour</td></tr>
+ <tr><td align="left" valign="top">-05:00</td><td align="left" valign="top">America/Bogota</td><td align="left" valign="top"></td></tr>
++<tr><td align="left" valign="top">-05:00</td><td align="left" valign="top">America/Cancun</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-05:00</td><td align="left" valign="top">America/Cayman</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-05:00</td><td align="left" valign="top">America/Detroit</td><td align="left" valign="top">US/Michigan</td></tr>
++<tr><td align="left" valign="top">-05:00</td><td align="left" valign="top">America/Eirunepe</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-05:00</td><td align="left" valign="top">America/Grand_Turk</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-05:00</td><td align="left" valign="top">America/Guayaquil</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-05:00</td><td align="left" valign="top">America/Havana</td><td align="left" valign="top">Cuba</td></tr>
+@@ -110,59 +113,57 @@ This table can be rebuilt by running <code>org.joda.example.time.TimeZoneTable</
+ <tr><td align="left" valign="top">-05:00</td><td align="left" valign="top">America/Kentucky/Louisville</td><td align="left" valign="top">America/Louisville</td></tr>
+ <tr><td align="left" valign="top">-05:00</td><td align="left" valign="top">America/Kentucky/Monticello</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-05:00</td><td align="left" valign="top">America/Lima</td><td align="left" valign="top"></td></tr>
+-<tr><td align="left" valign="top">-05:00</td><td align="left" valign="top">America/Montreal</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-05:00</td><td align="left" valign="top">America/Nassau</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-05:00</td><td align="left" valign="top">America/New_York</td><td align="left" valign="top">US/Eastern</td></tr>
+ <tr><td align="left" valign="top">-05:00</td><td align="left" valign="top">America/Nipigon</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-05:00</td><td align="left" valign="top">America/Panama</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-05:00</td><td align="left" valign="top">America/Pangnirtung</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-05:00</td><td align="left" valign="top">America/Port-au-Prince</td><td align="left" valign="top"></td></tr>
+-<tr><td align="left" valign="top">-05:00</td><td align="left" valign="top">America/Resolute</td><td align="left" valign="top"></td></tr>
++<tr><td align="left" valign="top">-05:00</td><td align="left" valign="top">America/Rio_Branco</td><td align="left" valign="top">America/Porto_Acre, Brazil/Acre</td></tr>
+ <tr><td align="left" valign="top">-05:00</td><td align="left" valign="top">America/Thunder_Bay</td><td align="left" valign="top"></td></tr>
+-<tr><td align="left" valign="top">-05:00</td><td align="left" valign="top">America/Toronto</td><td align="left" valign="top">Canada/Eastern</td></tr>
++<tr><td align="left" valign="top">-05:00</td><td align="left" valign="top">America/Toronto</td><td align="left" valign="top">America/Montreal, Canada/Eastern</td></tr>
+ <tr><td align="left" valign="top">-05:00</td><td align="left" valign="top">EST</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-05:00</td><td align="left" valign="top">EST5EDT</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-05:00</td><td align="left" valign="top">Etc/GMT+5</td><td align="left" valign="top"></td></tr>
+-<tr><td align="left" valign="top">-04:30</td><td align="left" valign="top">America/Caracas</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-04:00</td><td align="left" valign="top">America/Anguilla</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-04:00</td><td align="left" valign="top">America/Antigua</td><td align="left" valign="top"></td></tr>
+-<tr><td align="left" valign="top">-03:00</td><td align="left" valign="top">America/Argentina/San_Luis</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-04:00</td><td align="left" valign="top">America/Aruba</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-04:00</td><td align="left" valign="top">America/Asuncion</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-04:00</td><td align="left" valign="top">America/Barbados</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-04:00</td><td align="left" valign="top">America/Blanc-Sablon</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-04:00</td><td align="left" valign="top">America/Boa_Vista</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-04:00</td><td align="left" valign="top">America/Campo_Grande</td><td align="left" valign="top"></td></tr>
++<tr><td align="left" valign="top">-04:00</td><td align="left" valign="top">America/Caracas</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-04:00</td><td align="left" valign="top">America/Cuiaba</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-04:00</td><td align="left" valign="top">America/Curacao</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-04:00</td><td align="left" valign="top">America/Dominica</td><td align="left" valign="top"></td></tr>
+-<tr><td align="left" valign="top">-04:00</td><td align="left" valign="top">America/Eirunepe</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-04:00</td><td align="left" valign="top">America/Glace_Bay</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-04:00</td><td align="left" valign="top">America/Goose_Bay</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-04:00</td><td align="left" valign="top">America/Grenada</td><td align="left" valign="top"></td></tr>
+-<tr><td align="left" valign="top">-04:00</td><td align="left" valign="top">America/Guadeloupe</td><td align="left" valign="top">America/Marigot, America/St_Barthelemy</td></tr>
++<tr><td align="left" valign="top">-04:00</td><td align="left" valign="top">America/Guadeloupe</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-04:00</td><td align="left" valign="top">America/Guyana</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-04:00</td><td align="left" valign="top">America/Halifax</td><td align="left" valign="top">Canada/Atlantic</td></tr>
++<tr><td align="left" valign="top">-04:00</td><td align="left" valign="top">America/Kralendijk</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-04:00</td><td align="left" valign="top">America/La_Paz</td><td align="left" valign="top"></td></tr>
++<tr><td align="left" valign="top">-04:00</td><td align="left" valign="top">America/Lower_Princes</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-04:00</td><td align="left" valign="top">America/Manaus</td><td align="left" valign="top">Brazil/West</td></tr>
++<tr><td align="left" valign="top">-04:00</td><td align="left" valign="top">America/Marigot</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-04:00</td><td align="left" valign="top">America/Martinique</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-04:00</td><td align="left" valign="top">America/Moncton</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-04:00</td><td align="left" valign="top">America/Montserrat</td><td align="left" valign="top"></td></tr>
+-<tr><td align="left" valign="top">-04:00</td><td align="left" valign="top">America/Port_of_Spain</td><td align="left" valign="top"></td></tr>
++<tr><td align="left" valign="top">-04:00</td><td align="left" valign="top">America/Port_of_Spain</td><td align="left" valign="top">America/Virgin</td></tr>
+ <tr><td align="left" valign="top">-04:00</td><td align="left" valign="top">America/Porto_Velho</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-04:00</td><td align="left" valign="top">America/Puerto_Rico</td><td align="left" valign="top"></td></tr>
+-<tr><td align="left" valign="top">-04:00</td><td align="left" valign="top">America/Rio_Branco</td><td align="left" valign="top">America/Porto_Acre, Brazil/Acre</td></tr>
+ <tr><td align="left" valign="top">-04:00</td><td align="left" valign="top">America/Santiago</td><td align="left" valign="top">Chile/Continental</td></tr>
+ <tr><td align="left" valign="top">-04:00</td><td align="left" valign="top">America/Santo_Domingo</td><td align="left" valign="top"></td></tr>
++<tr><td align="left" valign="top">-04:00</td><td align="left" valign="top">America/St_Barthelemy</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-04:00</td><td align="left" valign="top">America/St_Kitts</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-04:00</td><td align="left" valign="top">America/St_Lucia</td><td align="left" valign="top"></td></tr>
+-<tr><td align="left" valign="top">-04:00</td><td align="left" valign="top">America/St_Thomas</td><td align="left" valign="top">America/Virgin</td></tr>
++<tr><td align="left" valign="top">-04:00</td><td align="left" valign="top">America/St_Thomas</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-04:00</td><td align="left" valign="top">America/St_Vincent</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-04:00</td><td align="left" valign="top">America/Thule</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-04:00</td><td align="left" valign="top">America/Tortola</td><td align="left" valign="top"></td></tr>
+-<tr><td align="left" valign="top">-04:00</td><td align="left" valign="top">Antarctica/Palmer</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-04:00</td><td align="left" valign="top">Atlantic/Bermuda</td><td align="left" valign="top"></td></tr>
+-<tr><td align="left" valign="top">-04:00</td><td align="left" valign="top">Atlantic/Stanley</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-04:00</td><td align="left" valign="top">Etc/GMT+4</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-03:30</td><td align="left" valign="top">America/St_Johns</td><td align="left" valign="top">Canada/Newfoundland</td></tr>
+ <tr><td align="left" valign="top">-03:00</td><td align="left" valign="top">America/Araguaina</td><td align="left" valign="top"></td></tr>
+@@ -175,6 +176,7 @@ This table can be rebuilt by running <code>org.joda.example.time.TimeZoneTable</
+ <tr><td align="left" valign="top">-03:00</td><td align="left" valign="top">America/Argentina/Rio_Gallegos</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-03:00</td><td align="left" valign="top">America/Argentina/Salta</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-03:00</td><td align="left" valign="top">America/Argentina/San_Juan</td><td align="left" valign="top"></td></tr>
++<tr><td align="left" valign="top">-03:00</td><td align="left" valign="top">America/Argentina/San_Luis</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-03:00</td><td align="left" valign="top">America/Argentina/Tucuman</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-03:00</td><td align="left" valign="top">America/Argentina/Ushuaia</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-03:00</td><td align="left" valign="top">America/Bahia</td><td align="left" valign="top"></td></tr>
+@@ -186,10 +188,13 @@ This table can be rebuilt by running <code>org.joda.example.time.TimeZoneTable</
+ <tr><td align="left" valign="top">-03:00</td><td align="left" valign="top">America/Miquelon</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-03:00</td><td align="left" valign="top">America/Montevideo</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-03:00</td><td align="left" valign="top">America/Paramaribo</td><td align="left" valign="top"></td></tr>
++<tr><td align="left" valign="top">-03:00</td><td align="left" valign="top">America/Punta_Arenas</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-03:00</td><td align="left" valign="top">America/Recife</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-03:00</td><td align="left" valign="top">America/Santarem</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-03:00</td><td align="left" valign="top">America/Sao_Paulo</td><td align="left" valign="top">Brazil/East</td></tr>
++<tr><td align="left" valign="top">-03:00</td><td align="left" valign="top">Antarctica/Palmer</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-03:00</td><td align="left" valign="top">Antarctica/Rothera</td><td align="left" valign="top"></td></tr>
++<tr><td align="left" valign="top">-03:00</td><td align="left" valign="top">Atlantic/Stanley</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-03:00</td><td align="left" valign="top">Etc/GMT+3</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-02:00</td><td align="left" valign="top">America/Noronha</td><td align="left" valign="top">Brazil/DeNoronha</td></tr>
+ <tr><td align="left" valign="top">-02:00</td><td align="left" valign="top">Atlantic/South_Georgia</td><td align="left" valign="top"></td></tr>
+@@ -198,9 +203,9 @@ This table can be rebuilt by running <code>org.joda.example.time.TimeZoneTable</
+ <tr><td align="left" valign="top">-01:00</td><td align="left" valign="top">Atlantic/Azores</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-01:00</td><td align="left" valign="top">Atlantic/Cape_Verde</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">-01:00</td><td align="left" valign="top">Etc/GMT+1</td><td align="left" valign="top"></td></tr>
+-<tr><td align="left" valign="top">+00:00</td><td align="left" valign="top">Africa/Abidjan</td><td align="left" valign="top"></td></tr>
++<tr><td align="left" valign="top">+00:00</td><td align="left" valign="top">Africa/Abidjan</td><td align="left" valign="top">Africa/Timbuktu</td></tr>
+ <tr><td align="left" valign="top">+00:00</td><td align="left" valign="top">Africa/Accra</td><td align="left" valign="top"></td></tr>
+-<tr><td align="left" valign="top">+00:00</td><td align="left" valign="top">Africa/Bamako</td><td align="left" valign="top">Africa/Timbuktu</td></tr>
++<tr><td align="left" valign="top">+00:00</td><td align="left" valign="top">Africa/Bamako</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+00:00</td><td align="left" valign="top">Africa/Banjul</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+00:00</td><td align="left" valign="top">Africa/Bissau</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+00:00</td><td align="left" valign="top">Africa/Casablanca</td><td align="left" valign="top"></td></tr>
+@@ -212,8 +217,8 @@ This table can be rebuilt by running <code>org.joda.example.time.TimeZoneTable</
+ <tr><td align="left" valign="top">+00:00</td><td align="left" valign="top">Africa/Monrovia</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+00:00</td><td align="left" valign="top">Africa/Nouakchott</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+00:00</td><td align="left" valign="top">Africa/Ouagadougou</td><td align="left" valign="top"></td></tr>
+-<tr><td align="left" valign="top">+00:00</td><td align="left" valign="top">Africa/Sao_Tome</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+00:00</td><td align="left" valign="top">America/Danmarkshavn</td><td align="left" valign="top"></td></tr>
++<tr><td align="left" valign="top">+00:00</td><td align="left" valign="top">Antarctica/Troll</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+00:00</td><td align="left" valign="top">Atlantic/Canary</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+00:00</td><td align="left" valign="top">Atlantic/Faroe</td><td align="left" valign="top">Atlantic/Faeroe</td></tr>
+ <tr><td align="left" valign="top">+00:00</td><td align="left" valign="top">Atlantic/Madeira</td><td align="left" valign="top"></td></tr>
+@@ -223,8 +228,11 @@ This table can be rebuilt by running <code>org.joda.example.time.TimeZoneTable</
+ <tr><td align="left" valign="top">+00:00</td><td align="left" valign="top">Etc/UCT</td><td align="left" valign="top">UCT</td></tr>
+ <tr><td align="left" valign="top">+00:00</td><td align="left" valign="top">Etc/UTC</td><td align="left" valign="top">Etc/Universal, Etc/Zulu, Universal, Zulu</td></tr>
+ <tr><td align="left" valign="top">+00:00</td><td align="left" valign="top">Europe/Dublin</td><td align="left" valign="top">Eire</td></tr>
++<tr><td align="left" valign="top">+00:00</td><td align="left" valign="top">Europe/Guernsey</td><td align="left" valign="top"></td></tr>
++<tr><td align="left" valign="top">+00:00</td><td align="left" valign="top">Europe/Isle_of_Man</td><td align="left" valign="top"></td></tr>
++<tr><td align="left" valign="top">+00:00</td><td align="left" valign="top">Europe/Jersey</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+00:00</td><td align="left" valign="top">Europe/Lisbon</td><td align="left" valign="top">Portugal</td></tr>
+-<tr><td align="left" valign="top">+00:00</td><td align="left" valign="top">Europe/London</td><td align="left" valign="top">Europe/Belfast, Europe/Guernsey, Europe/Isle_of_Man, Europe/Jersey, GB, GB-Eire</td></tr>
++<tr><td align="left" valign="top">+00:00</td><td align="left" valign="top">Europe/London</td><td align="left" valign="top">Europe/Belfast, GB, GB-Eire</td></tr>
+ <tr><td align="left" valign="top">+00:00</td><td align="left" valign="top">UTC</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+00:00</td><td align="left" valign="top">WET</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+01:00</td><td align="left" valign="top">Africa/Algiers</td><td align="left" valign="top"></td></tr>
+@@ -240,31 +248,42 @@ This table can be rebuilt by running <code>org.joda.example.time.TimeZoneTable</
+ <tr><td align="left" valign="top">+01:00</td><td align="left" valign="top">Africa/Ndjamena</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+01:00</td><td align="left" valign="top">Africa/Niamey</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+01:00</td><td align="left" valign="top">Africa/Porto-Novo</td><td align="left" valign="top"></td></tr>
++<tr><td align="left" valign="top">+01:00</td><td align="left" valign="top">Africa/Sao_Tome</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+01:00</td><td align="left" valign="top">Africa/Tunis</td><td align="left" valign="top"></td></tr>
+-<tr><td align="left" valign="top">+01:00</td><td align="left" valign="top">Africa/Windhoek</td><td align="left" valign="top"></td></tr>
++<tr><td align="left" valign="top">+02:00</td><td align="left" valign="top">Africa/Windhoek</td><td align="left" valign="top"></td></tr>
++<tr><td align="left" valign="top">+01:00</td><td align="left" valign="top">Arctic/Longyearbyen</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+01:00</td><td align="left" valign="top">CET</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+01:00</td><td align="left" valign="top">Etc/GMT-1</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+01:00</td><td align="left" valign="top">Europe/Amsterdam</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+01:00</td><td align="left" valign="top">Europe/Andorra</td><td align="left" valign="top"></td></tr>
+-<tr><td align="left" valign="top">+01:00</td><td align="left" valign="top">Europe/Belgrade</td><td align="left" valign="top">Europe/Ljubljana, Europe/Podgorica, Europe/Sarajevo, Europe/Skopje, Europe/Zagreb</td></tr>
++<tr><td align="left" valign="top">+01:00</td><td align="left" valign="top">Europe/Belgrade</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+01:00</td><td align="left" valign="top">Europe/Berlin</td><td align="left" valign="top"></td></tr>
++<tr><td align="left" valign="top">+01:00</td><td align="left" valign="top">Europe/Bratislava</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+01:00</td><td align="left" valign="top">Europe/Brussels</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+01:00</td><td align="left" valign="top">Europe/Budapest</td><td align="left" valign="top"></td></tr>
++<tr><td align="left" valign="top">+01:00</td><td align="left" valign="top">Europe/Busingen</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+01:00</td><td align="left" valign="top">Europe/Copenhagen</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+01:00</td><td align="left" valign="top">Europe/Gibraltar</td><td align="left" valign="top"></td></tr>
++<tr><td align="left" valign="top">+01:00</td><td align="left" valign="top">Europe/Ljubljana</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+01:00</td><td align="left" valign="top">Europe/Luxembourg</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+01:00</td><td align="left" valign="top">Europe/Madrid</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+01:00</td><td align="left" valign="top">Europe/Malta</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+01:00</td><td align="left" valign="top">Europe/Monaco</td><td align="left" valign="top"></td></tr>
+-<tr><td align="left" valign="top">+01:00</td><td align="left" valign="top">Europe/Oslo</td><td align="left" valign="top">Arctic/Longyearbyen, Atlantic/Jan_Mayen</td></tr>
++<tr><td align="left" valign="top">+01:00</td><td align="left" valign="top">Europe/Oslo</td><td align="left" valign="top">Atlantic/Jan_Mayen</td></tr>
+ <tr><td align="left" valign="top">+01:00</td><td align="left" valign="top">Europe/Paris</td><td align="left" valign="top"></td></tr>
+-<tr><td align="left" valign="top">+01:00</td><td align="left" valign="top">Europe/Prague</td><td align="left" valign="top">Europe/Bratislava</td></tr>
+-<tr><td align="left" valign="top">+01:00</td><td align="left" valign="top">Europe/Rome</td><td align="left" valign="top">Europe/San_Marino, Europe/Vatican</td></tr>
++<tr><td align="left" valign="top">+01:00</td><td align="left" valign="top">Europe/Podgorica</td><td align="left" valign="top"></td></tr>
++<tr><td align="left" valign="top">+01:00</td><td align="left" valign="top">Europe/Prague</td><td align="left" valign="top"></td></tr>
++<tr><td align="left" valign="top">+01:00</td><td align="left" valign="top">Europe/Rome</td><td align="left" valign="top"></td></tr>
++<tr><td align="left" valign="top">+01:00</td><td align="left" valign="top">Europe/San_Marino</td><td align="left" valign="top"></td></tr>
++<tr><td align="left" valign="top">+01:00</td><td align="left" valign="top">Europe/Sarajevo</td><td align="left" valign="top"></td></tr>
++<tr><td align="left" valign="top">+01:00</td><td align="left" valign="top">Europe/Skopje</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+01:00</td><td align="left" valign="top">Europe/Stockholm</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+01:00</td><td align="left" valign="top">Europe/Tirane</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+01:00</td><td align="left" valign="top">Europe/Vaduz</td><td align="left" valign="top"></td></tr>
++<tr><td align="left" valign="top">+01:00</td><td align="left" valign="top">Europe/Vatican</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+01:00</td><td align="left" valign="top">Europe/Vienna</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+01:00</td><td align="left" valign="top">Europe/Warsaw</td><td align="left" valign="top">Poland</td></tr>
++<tr><td align="left" valign="top">+01:00</td><td align="left" valign="top">Europe/Zagreb</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+01:00</td><td align="left" valign="top">Europe/Zurich</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+01:00</td><td align="left" valign="top">MET</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+02:00</td><td align="left" valign="top">Africa/Blantyre</td><td align="left" valign="top"></td></tr>
+@@ -273,6 +292,7 @@ This table can be rebuilt by running <code>org.joda.example.time.TimeZoneTable</
+ <tr><td align="left" valign="top">+02:00</td><td align="left" valign="top">Africa/Gaborone</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+02:00</td><td align="left" valign="top">Africa/Harare</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+02:00</td><td align="left" valign="top">Africa/Johannesburg</td><td align="left" valign="top"></td></tr>
++<tr><td align="left" valign="top">+02:00</td><td align="left" valign="top">Africa/Khartoum</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+02:00</td><td align="left" valign="top">Africa/Kigali</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+02:00</td><td align="left" valign="top">Africa/Lubumbashi</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+02:00</td><td align="left" valign="top">Africa/Lusaka</td><td align="left" valign="top"></td></tr>
+@@ -283,45 +303,49 @@ This table can be rebuilt by running <code>org.joda.example.time.TimeZoneTable</
+ <tr><td align="left" valign="top">+02:00</td><td align="left" valign="top">Asia/Amman</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+02:00</td><td align="left" valign="top">Asia/Beirut</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+02:00</td><td align="left" valign="top">Asia/Damascus</td><td align="left" valign="top"></td></tr>
++<tr><td align="left" valign="top">+02:00</td><td align="left" valign="top">Asia/Famagusta</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+02:00</td><td align="left" valign="top">Asia/Gaza</td><td align="left" valign="top"></td></tr>
++<tr><td align="left" valign="top">+02:00</td><td align="left" valign="top">Asia/Hebron</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+02:00</td><td align="left" valign="top">Asia/Jerusalem</td><td align="left" valign="top">Asia/Tel_Aviv, Israel</td></tr>
+-<tr><td align="left" valign="top">+02:00</td><td align="left" valign="top">Asia/Nicosia</td><td align="left" valign="top">Europe/Nicosia</td></tr>
++<tr><td align="left" valign="top">+02:00</td><td align="left" valign="top">Asia/Nicosia</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+02:00</td><td align="left" valign="top">EET</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+02:00</td><td align="left" valign="top">Etc/GMT-2</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+02:00</td><td align="left" valign="top">Europe/Athens</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+02:00</td><td align="left" valign="top">Europe/Bucharest</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+02:00</td><td align="left" valign="top">Europe/Chisinau</td><td align="left" valign="top">Europe/Tiraspol</td></tr>
+-<tr><td align="left" valign="top">+02:00</td><td align="left" valign="top">Europe/Helsinki</td><td align="left" valign="top">Europe/Mariehamn</td></tr>
+-<tr><td align="left" valign="top">+02:00</td><td align="left" valign="top">Europe/Istanbul</td><td align="left" valign="top">Asia/Istanbul, Turkey</td></tr>
++<tr><td align="left" valign="top">+02:00</td><td align="left" valign="top">Europe/Helsinki</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+02:00</td><td align="left" valign="top">Europe/Kaliningrad</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+02:00</td><td align="left" valign="top">Europe/Kiev</td><td align="left" valign="top"></td></tr>
+-<tr><td align="left" valign="top">+02:00</td><td align="left" valign="top">Europe/Minsk</td><td align="left" valign="top"></td></tr>
++<tr><td align="left" valign="top">+02:00</td><td align="left" valign="top">Europe/Mariehamn</td><td align="left" valign="top"></td></tr>
++<tr><td align="left" valign="top">+02:00</td><td align="left" valign="top">Europe/Nicosia</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+02:00</td><td align="left" valign="top">Europe/Riga</td><td align="left" valign="top"></td></tr>
+-<tr><td align="left" valign="top">+02:00</td><td align="left" valign="top">Europe/Simferopol</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+02:00</td><td align="left" valign="top">Europe/Sofia</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+02:00</td><td align="left" valign="top">Europe/Tallinn</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+02:00</td><td align="left" valign="top">Europe/Uzhgorod</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+02:00</td><td align="left" valign="top">Europe/Vilnius</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+02:00</td><td align="left" valign="top">Europe/Zaporozhye</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+03:00</td><td align="left" valign="top">Africa/Addis_Ababa</td><td align="left" valign="top"></td></tr>
+-<tr><td align="left" valign="top">+03:00</td><td align="left" valign="top">Africa/Asmara</td><td align="left" valign="top">Africa/Asmera</td></tr>
++<tr><td align="left" valign="top">+03:00</td><td align="left" valign="top">Africa/Asmara</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+03:00</td><td align="left" valign="top">Africa/Dar_es_Salaam</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+03:00</td><td align="left" valign="top">Africa/Djibouti</td><td align="left" valign="top"></td></tr>
++<tr><td align="left" valign="top">+03:00</td><td align="left" valign="top">Africa/Juba</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+03:00</td><td align="left" valign="top">Africa/Kampala</td><td align="left" valign="top"></td></tr>
+-<tr><td align="left" valign="top">+03:00</td><td align="left" valign="top">Africa/Khartoum</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+03:00</td><td align="left" valign="top">Africa/Mogadishu</td><td align="left" valign="top"></td></tr>
+-<tr><td align="left" valign="top">+03:00</td><td align="left" valign="top">Africa/Nairobi</td><td align="left" valign="top"></td></tr>
++<tr><td align="left" valign="top">+03:00</td><td align="left" valign="top">Africa/Nairobi</td><td align="left" valign="top">Africa/Asmera</td></tr>
+ <tr><td align="left" valign="top">+03:00</td><td align="left" valign="top">Antarctica/Syowa</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+03:00</td><td align="left" valign="top">Asia/Aden</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+03:00</td><td align="left" valign="top">Asia/Baghdad</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+03:00</td><td align="left" valign="top">Asia/Bahrain</td><td align="left" valign="top"></td></tr>
++<tr><td align="left" valign="top">+03:00</td><td align="left" valign="top">Asia/Istanbul</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+03:00</td><td align="left" valign="top">Asia/Kuwait</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+03:00</td><td align="left" valign="top">Asia/Qatar</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+03:00</td><td align="left" valign="top">Asia/Riyadh</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+03:00</td><td align="left" valign="top">Etc/GMT-3</td><td align="left" valign="top"></td></tr>
++<tr><td align="left" valign="top">+03:00</td><td align="left" valign="top">Europe/Istanbul</td><td align="left" valign="top">Turkey</td></tr>
++<tr><td align="left" valign="top">+03:00</td><td align="left" valign="top">Europe/Kirov</td><td align="left" valign="top"></td></tr>
++<tr><td align="left" valign="top">+03:00</td><td align="left" valign="top">Europe/Minsk</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+03:00</td><td align="left" valign="top">Europe/Moscow</td><td align="left" valign="top">W-SU</td></tr>
+-<tr><td align="left" valign="top">+03:00</td><td align="left" valign="top">Europe/Samara</td><td align="left" valign="top"></td></tr>
+-<tr><td align="left" valign="top">+03:00</td><td align="left" valign="top">Europe/Volgograd</td><td align="left" valign="top"></td></tr>
++<tr><td align="left" valign="top">+03:00</td><td align="left" valign="top">Europe/Simferopol</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+03:00</td><td align="left" valign="top">Indian/Antananarivo</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+03:00</td><td align="left" valign="top">Indian/Comoro</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+03:00</td><td align="left" valign="top">Indian/Mayotte</td><td align="left" valign="top"></td></tr>
+@@ -332,6 +356,11 @@ This table can be rebuilt by running <code>org.joda.example.time.TimeZoneTable</
+ <tr><td align="left" valign="top">+04:00</td><td align="left" valign="top">Asia/Tbilisi</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+04:00</td><td align="left" valign="top">Asia/Yerevan</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+04:00</td><td align="left" valign="top">Etc/GMT-4</td><td align="left" valign="top"></td></tr>
++<tr><td align="left" valign="top">+04:00</td><td align="left" valign="top">Europe/Astrakhan</td><td align="left" valign="top"></td></tr>
++<tr><td align="left" valign="top">+04:00</td><td align="left" valign="top">Europe/Samara</td><td align="left" valign="top"></td></tr>
++<tr><td align="left" valign="top">+04:00</td><td align="left" valign="top">Europe/Saratov</td><td align="left" valign="top"></td></tr>
++<tr><td align="left" valign="top">+04:00</td><td align="left" valign="top">Europe/Ulyanovsk</td><td align="left" valign="top"></td></tr>
++<tr><td align="left" valign="top">+04:00</td><td align="left" valign="top">Europe/Volgograd</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+04:00</td><td align="left" valign="top">Indian/Mahe</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+04:00</td><td align="left" valign="top">Indian/Mauritius</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+04:00</td><td align="left" valign="top">Indian/Reunion</td><td align="left" valign="top"></td></tr>
+@@ -340,6 +369,7 @@ This table can be rebuilt by running <code>org.joda.example.time.TimeZoneTable</
+ <tr><td align="left" valign="top">+05:00</td><td align="left" valign="top">Asia/Aqtau</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+05:00</td><td align="left" valign="top">Asia/Aqtobe</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+05:00</td><td align="left" valign="top">Asia/Ashgabat</td><td align="left" valign="top">Asia/Ashkhabad</td></tr>
++<tr><td align="left" valign="top">+05:00</td><td align="left" valign="top">Asia/Atyrau</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+05:00</td><td align="left" valign="top">Asia/Dushanbe</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+05:00</td><td align="left" valign="top">Asia/Karachi</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+05:00</td><td align="left" valign="top">Asia/Oral</td><td align="left" valign="top"></td></tr>
+@@ -356,49 +386,50 @@ This table can be rebuilt by running <code>org.joda.example.time.TimeZoneTable</
+ <tr><td align="left" valign="top">+06:00</td><td align="left" valign="top">Asia/Almaty</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+06:00</td><td align="left" valign="top">Asia/Bishkek</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+06:00</td><td align="left" valign="top">Asia/Dhaka</td><td align="left" valign="top">Asia/Dacca</td></tr>
+-<tr><td align="left" valign="top">+06:00</td><td align="left" valign="top">Asia/Novokuznetsk</td><td align="left" valign="top"></td></tr>
+-<tr><td align="left" valign="top">+06:00</td><td align="left" valign="top">Asia/Novosibirsk</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+06:00</td><td align="left" valign="top">Asia/Omsk</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+06:00</td><td align="left" valign="top">Asia/Qyzylorda</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+06:00</td><td align="left" valign="top">Asia/Thimphu</td><td align="left" valign="top">Asia/Thimbu</td></tr>
++<tr><td align="left" valign="top">+06:00</td><td align="left" valign="top">Asia/Urumqi</td><td align="left" valign="top">Asia/Kashgar</td></tr>
+ <tr><td align="left" valign="top">+06:00</td><td align="left" valign="top">Etc/GMT-6</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+06:00</td><td align="left" valign="top">Indian/Chagos</td><td align="left" valign="top"></td></tr>
+-<tr><td align="left" valign="top">+06:30</td><td align="left" valign="top">Asia/Rangoon</td><td align="left" valign="top"></td></tr>
++<tr><td align="left" valign="top">+06:30</td><td align="left" valign="top">Asia/Yangon</td><td align="left" valign="top">Asia/Rangoon</td></tr>
+ <tr><td align="left" valign="top">+06:30</td><td align="left" valign="top">Indian/Cocos</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+07:00</td><td align="left" valign="top">Antarctica/Davis</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+07:00</td><td align="left" valign="top">Asia/Bangkok</td><td align="left" valign="top"></td></tr>
++<tr><td align="left" valign="top">+07:00</td><td align="left" valign="top">Asia/Barnaul</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+07:00</td><td align="left" valign="top">Asia/Ho_Chi_Minh</td><td align="left" valign="top">Asia/Saigon</td></tr>
+ <tr><td align="left" valign="top">+07:00</td><td align="left" valign="top">Asia/Hovd</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+07:00</td><td align="left" valign="top">Asia/Jakarta</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+07:00</td><td align="left" valign="top">Asia/Krasnoyarsk</td><td align="left" valign="top"></td></tr>
++<tr><td align="left" valign="top">+07:00</td><td align="left" valign="top">Asia/Novokuznetsk</td><td align="left" valign="top"></td></tr>
++<tr><td align="left" valign="top">+07:00</td><td align="left" valign="top">Asia/Novosibirsk</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+07:00</td><td align="left" valign="top">Asia/Phnom_Penh</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+07:00</td><td align="left" valign="top">Asia/Pontianak</td><td align="left" valign="top"></td></tr>
++<tr><td align="left" valign="top">+07:00</td><td align="left" valign="top">Asia/Tomsk</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+07:00</td><td align="left" valign="top">Asia/Vientiane</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+07:00</td><td align="left" valign="top">Etc/GMT-7</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+07:00</td><td align="left" valign="top">Indian/Christmas</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+08:00</td><td align="left" valign="top">Antarctica/Casey</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+08:00</td><td align="left" valign="top">Asia/Brunei</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+08:00</td><td align="left" valign="top">Asia/Choibalsan</td><td align="left" valign="top"></td></tr>
+-<tr><td align="left" valign="top">+08:00</td><td align="left" valign="top">Asia/Chongqing</td><td align="left" valign="top">Asia/Chungking</td></tr>
+-<tr><td align="left" valign="top">+08:00</td><td align="left" valign="top">Asia/Harbin</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+08:00</td><td align="left" valign="top">Asia/Hong_Kong</td><td align="left" valign="top">Hongkong</td></tr>
+ <tr><td align="left" valign="top">+08:00</td><td align="left" valign="top">Asia/Irkutsk</td><td align="left" valign="top"></td></tr>
+-<tr><td align="left" valign="top">+08:00</td><td align="left" valign="top">Asia/Kashgar</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+08:00</td><td align="left" valign="top">Asia/Kuala_Lumpur</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+08:00</td><td align="left" valign="top">Asia/Kuching</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+08:00</td><td align="left" valign="top">Asia/Macau</td><td align="left" valign="top">Asia/Macao</td></tr>
+ <tr><td align="left" valign="top">+08:00</td><td align="left" valign="top">Asia/Makassar</td><td align="left" valign="top">Asia/Ujung_Pandang</td></tr>
+ <tr><td align="left" valign="top">+08:00</td><td align="left" valign="top">Asia/Manila</td><td align="left" valign="top"></td></tr>
+-<tr><td align="left" valign="top">+08:00</td><td align="left" valign="top">Asia/Shanghai</td><td align="left" valign="top">PRC</td></tr>
++<tr><td align="left" valign="top">+08:00</td><td align="left" valign="top">Asia/Shanghai</td><td align="left" valign="top">Asia/Chongqing, Asia/Chungking, Asia/Harbin, PRC</td></tr>
+ <tr><td align="left" valign="top">+08:00</td><td align="left" valign="top">Asia/Singapore</td><td align="left" valign="top">Singapore</td></tr>
+ <tr><td align="left" valign="top">+08:00</td><td align="left" valign="top">Asia/Taipei</td><td align="left" valign="top">ROC</td></tr>
+ <tr><td align="left" valign="top">+08:00</td><td align="left" valign="top">Asia/Ulaanbaatar</td><td align="left" valign="top">Asia/Ulan_Bator</td></tr>
+-<tr><td align="left" valign="top">+08:00</td><td align="left" valign="top">Asia/Urumqi</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+08:00</td><td align="left" valign="top">Australia/Perth</td><td align="left" valign="top">Australia/West</td></tr>
+ <tr><td align="left" valign="top">+08:00</td><td align="left" valign="top">Etc/GMT-8</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+08:45</td><td align="left" valign="top">Australia/Eucla</td><td align="left" valign="top"></td></tr>
++<tr><td align="left" valign="top">+09:00</td><td align="left" valign="top">Asia/Chita</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+09:00</td><td align="left" valign="top">Asia/Dili</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+09:00</td><td align="left" valign="top">Asia/Jayapura</td><td align="left" valign="top"></td></tr>
++<tr><td align="left" valign="top">+09:00</td><td align="left" valign="top">Asia/Khandyga</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+09:00</td><td align="left" valign="top">Asia/Pyongyang</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+09:00</td><td align="left" valign="top">Asia/Seoul</td><td align="left" valign="top">ROK</td></tr>
+ <tr><td align="left" valign="top">+09:00</td><td align="left" valign="top">Asia/Tokyo</td><td align="left" valign="top">Japan</td></tr>
+@@ -409,7 +440,7 @@ This table can be rebuilt by running <code>org.joda.example.time.TimeZoneTable</
+ <tr><td align="left" valign="top">+09:30</td><td align="left" valign="top">Australia/Broken_Hill</td><td align="left" valign="top">Australia/Yancowinna</td></tr>
+ <tr><td align="left" valign="top">+09:30</td><td align="left" valign="top">Australia/Darwin</td><td align="left" valign="top">Australia/North</td></tr>
+ <tr><td align="left" valign="top">+10:00</td><td align="left" valign="top">Antarctica/DumontDUrville</td><td align="left" valign="top"></td></tr>
+-<tr><td align="left" valign="top">+10:00</td><td align="left" valign="top">Asia/Sakhalin</td><td align="left" valign="top"></td></tr>
++<tr><td align="left" valign="top">+10:00</td><td align="left" valign="top">Asia/Ust-Nera</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+10:00</td><td align="left" valign="top">Asia/Vladivostok</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+10:00</td><td align="left" valign="top">Australia/Brisbane</td><td align="left" valign="top">Australia/Queensland</td></tr>
+ <tr><td align="left" valign="top">+10:00</td><td align="left" valign="top">Australia/Currie</td><td align="left" valign="top"></td></tr>
+@@ -424,19 +455,22 @@ This table can be rebuilt by running <code>org.joda.example.time.TimeZoneTable</
+ <tr><td align="left" valign="top">+10:00</td><td align="left" valign="top">Pacific/Saipan</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+10:30</td><td align="left" valign="top">Australia/Lord_Howe</td><td align="left" valign="top">Australia/LHI</td></tr>
+ <tr><td align="left" valign="top">+11:00</td><td align="left" valign="top">Antarctica/Macquarie</td><td align="left" valign="top"></td></tr>
+-<tr><td align="left" valign="top">+11:00</td><td align="left" valign="top">Asia/Anadyr</td><td align="left" valign="top"></td></tr>
+-<tr><td align="left" valign="top">+11:00</td><td align="left" valign="top">Asia/Kamchatka</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+11:00</td><td align="left" valign="top">Asia/Magadan</td><td align="left" valign="top"></td></tr>
++<tr><td align="left" valign="top">+11:00</td><td align="left" valign="top">Asia/Sakhalin</td><td align="left" valign="top"></td></tr>
++<tr><td align="left" valign="top">+11:00</td><td align="left" valign="top">Asia/Srednekolymsk</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+11:00</td><td align="left" valign="top">Etc/GMT-11</td><td align="left" valign="top"></td></tr>
++<tr><td align="left" valign="top">+11:00</td><td align="left" valign="top">Pacific/Bougainville</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+11:00</td><td align="left" valign="top">Pacific/Efate</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+11:00</td><td align="left" valign="top">Pacific/Guadalcanal</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+11:00</td><td align="left" valign="top">Pacific/Kosrae</td><td align="left" valign="top"></td></tr>
++<tr><td align="left" valign="top">+11:00</td><td align="left" valign="top">Pacific/Norfolk</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+11:00</td><td align="left" valign="top">Pacific/Noumea</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+11:00</td><td align="left" valign="top">Pacific/Pohnpei</td><td align="left" valign="top">Pacific/Ponape</td></tr>
+-<tr><td align="left" valign="top">+11:30</td><td align="left" valign="top">Pacific/Norfolk</td><td align="left" valign="top"></td></tr>
+-<tr><td align="left" valign="top">+12:00</td><td align="left" valign="top">Antarctica/McMurdo</td><td align="left" valign="top">Antarctica/South_Pole</td></tr>
++<tr><td align="left" valign="top">+12:00</td><td align="left" valign="top">Antarctica/McMurdo</td><td align="left" valign="top"></td></tr>
++<tr><td align="left" valign="top">+12:00</td><td align="left" valign="top">Asia/Anadyr</td><td align="left" valign="top"></td></tr>
++<tr><td align="left" valign="top">+12:00</td><td align="left" valign="top">Asia/Kamchatka</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+12:00</td><td align="left" valign="top">Etc/GMT-12</td><td align="left" valign="top"></td></tr>
+-<tr><td align="left" valign="top">+12:00</td><td align="left" valign="top">Pacific/Auckland</td><td align="left" valign="top">NZ</td></tr>
++<tr><td align="left" valign="top">+12:00</td><td align="left" valign="top">Pacific/Auckland</td><td align="left" valign="top">Antarctica/South_Pole, NZ</td></tr>
+ <tr><td align="left" valign="top">+12:00</td><td align="left" valign="top">Pacific/Fiji</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+12:00</td><td align="left" valign="top">Pacific/Funafuti</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+12:00</td><td align="left" valign="top">Pacific/Kwajalein</td><td align="left" valign="top">Kwajalein</td></tr>
+@@ -447,7 +481,9 @@ This table can be rebuilt by running <code>org.joda.example.time.TimeZoneTable</
+ <tr><td align="left" valign="top">+12:00</td><td align="left" valign="top">Pacific/Wallis</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+12:45</td><td align="left" valign="top">Pacific/Chatham</td><td align="left" valign="top">NZ-CHAT</td></tr>
+ <tr><td align="left" valign="top">+13:00</td><td align="left" valign="top">Etc/GMT-13</td><td align="left" valign="top"></td></tr>
++<tr><td align="left" valign="top">+13:00</td><td align="left" valign="top">Pacific/Apia</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+13:00</td><td align="left" valign="top">Pacific/Enderbury</td><td align="left" valign="top"></td></tr>
++<tr><td align="left" valign="top">+13:00</td><td align="left" valign="top">Pacific/Fakaofo</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+13:00</td><td align="left" valign="top">Pacific/Tongatapu</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+14:00</td><td align="left" valign="top">Etc/GMT-14</td><td align="left" valign="top"></td></tr>
+ <tr><td align="left" valign="top">+14:00</td><td align="left" valign="top">Pacific/Kiritimati</td><td align="left" valign="top"></td></tr>
+
+From bd79f1c4245e79b3c2c56d7b04fde2a6e191fa42 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Tue, 19 Feb 2019 21:27:28 +0000
+Subject: [PATCH 11/16] Update issue templates to reflect project status
+
+---
+ .github/issue_template.md        | 5 ++---
+ .github/pull_request_template.md | 2 +-
+ 2 files changed, 3 insertions(+), 4 deletions(-)
+
+diff --git a/.github/issue_template.md b/.github/issue_template.md
+index e836de66b..359100679 100644
+--- a/.github/issue_template.md
++++ b/.github/issue_template.md
+@@ -1,14 +1,13 @@
+ The Joda-Time project has been running for many years now, and the codebase is stable.
+ Java SE 8 contains a new date and time library that is the successor to Joda-Time.
+-As such Joda-Time is primarily in maintainence mode and there are few things worthy of being raised as an issue.
++As such Joda-Time is primarily in maintenance mode and there are few things worthy of being raised as an issue.
+ 
+ **As a general rule, you should raise a question at Stack Overflow, not here.**
+ 
+ Before raising an issue, please check the [FAQs](http://www.joda.org/joda-time/faq.html).
+ Please also search Stack Overflow and the issue history at GitHub.
+ In particular, if the issue is Android specific, you are unlikely to get any assistance here.
+-Please bear in mind that I've worked on Joda-Time in my spare time, unpaid, for over 15 years.
+-As such, issue response time is likely to be slow.
++Please bear in mind that I work on Joda-Time in my spare time, so there is no guarantee on response time.
+ 
+ In the unlikely event you still think you've found an issue, please delete the text above and describe the problem as follows:
+ 
+diff --git a/.github/pull_request_template.md b/.github/pull_request_template.md
+index ba55980da..1b352a79b 100644
+--- a/.github/pull_request_template.md
++++ b/.github/pull_request_template.md
+@@ -1,6 +1,6 @@
+ The Joda-Time project has been running for many years now, and the codebase is stable.
+ Java SE 8 contains a new date and time library that is the successor to Joda-Time.
+-As such Joda-Time is primarily in maintainence mode and few pull requests are likely to be merged.
++As such Joda-Time is primarily in maintenance mode and few pull requests are likely to be merged.
+ 
+ **As a general rule, most enhancement PRs will now be rejected.**
+ 
+
+From d97a3c884cdb06b98438da896e72921d44003174 Mon Sep 17 00:00:00 2001
+From: Niklas Fiekas <niklas.fiekas@backscattering.de>
+Date: Thu, 9 May 2019 14:14:44 +0200
+Subject: [PATCH 12/16] Fix property file encoding (fixes #503)
+
+---
+ .../joda/time/format/messages_cs.properties   |  6 +--
+ .../joda/time/format/messages_ja.properties   | 44 +++++++++----------
+ 2 files changed, 25 insertions(+), 25 deletions(-)
+
+diff --git a/src/main/java/org/joda/time/format/messages_cs.properties b/src/main/java/org/joda/time/format/messages_cs.properties
+index 4b729a294..9a548b784 100644
+--- a/src/main/java/org/joda/time/format/messages_cs.properties
++++ b/src/main/java/org/joda/time/format/messages_cs.properties
+@@ -8,11 +8,11 @@ PeriodFormat.regex.separator=%
+ PeriodFormat.years.regex=^1$%[0-9]*(?<!1)[2-4]$%[0-9]*
+ PeriodFormat.years.list=\ rok%\ roky%\ let
+ PeriodFormat.months.regex=^1$%[0-9]*(?<!1)[2-4]$%[0-9]*
+-PeriodFormat.months.list=\ měsíc%\ měsíce%\ měsíců
++PeriodFormat.months.list=\ m\u011Bs\u00EDc%\ m\u011Bs\u00EDce%\ m\u011Bs\u00EDc\u016F
+ PeriodFormat.weeks.regex=^1$%[0-9]*(?<!1)[2-4]$%[0-9]*
+-PeriodFormat.weeks.list=\ týden%\ týdny%\ týdnů
++PeriodFormat.weeks.list=\ t\u00FDden%\ t\u00FDdny%\ t\u00FDdn\u016F
+ PeriodFormat.days.regex=^1$%[0-9]*(?<!1)[2-4]$%[0-9]*
+-PeriodFormat.days.list=\ den%\ dny%\ dnů
++PeriodFormat.days.list=\ den%\ dny%\ dn\u016F
+ PeriodFormat.hours.regex=^1$%[0-9]*(?<!1)[2-4]$%[0-9]*
+ PeriodFormat.hours.list=\ hodina%\ hodiny%\ hodin
+ PeriodFormat.minutes.regex=^1$%[0-9]*(?<!1)[2-4]$%[0-9]*
+diff --git a/src/main/java/org/joda/time/format/messages_ja.properties b/src/main/java/org/joda/time/format/messages_ja.properties
+index 1def961df..bb6cfb6f3 100644
+--- a/src/main/java/org/joda/time/format/messages_ja.properties
++++ b/src/main/java/org/joda/time/format/messages_ja.properties
+@@ -1,22 +1,22 @@
+-PeriodFormat.space=
+-PeriodFormat.comma=
+-PeriodFormat.commandand=
+-PeriodFormat.commaspaceand=
+-PeriodFormat.commaspace=
+-PeriodFormat.spaceandspace=
+-PeriodFormat.year=\u5E74
+-PeriodFormat.years=\u5E74
+-PeriodFormat.month=\u304B\u6708
+-PeriodFormat.months=\u304B\u6708
+-PeriodFormat.week=\u9031\u9593
+-PeriodFormat.weeks=\u9031\u9593
+-PeriodFormat.day=\u65E5
+-PeriodFormat.days=\u65E5
+-PeriodFormat.hour=\u6642\u9593
+-PeriodFormat.hours=\u6642\u9593
+-PeriodFormat.minute=\u5206
+-PeriodFormat.minutes=\u5206
+-PeriodFormat.second=\u79D2
+-PeriodFormat.seconds=\u79D2
+-PeriodFormat.millisecond=\u30DF\u30EA\u79D2
+-PeriodFormat.milliseconds=\u30DF\u30EA\u79D2
++PeriodFormat.space=
++PeriodFormat.comma=
++PeriodFormat.commandand=
++PeriodFormat.commaspaceand=
++PeriodFormat.commaspace=
++PeriodFormat.spaceandspace=
++PeriodFormat.year=\u5E74
++PeriodFormat.years=\u5E74
++PeriodFormat.month=\u304B\u6708
++PeriodFormat.months=\u304B\u6708
++PeriodFormat.week=\u9031\u9593
++PeriodFormat.weeks=\u9031\u9593
++PeriodFormat.day=\u65E5
++PeriodFormat.days=\u65E5
++PeriodFormat.hour=\u6642\u9593
++PeriodFormat.hours=\u6642\u9593
++PeriodFormat.minute=\u5206
++PeriodFormat.minutes=\u5206
++PeriodFormat.second=\u79D2
++PeriodFormat.seconds=\u79D2
++PeriodFormat.millisecond=\u30DF\u30EA\u79D2
++PeriodFormat.milliseconds=\u30DF\u30EA\u79D2
+
+From 7d06d45afb5faa173a645fe657bb23350db0ce09 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Thu, 9 May 2019 14:05:06 +0100
+Subject: [PATCH 13/16] Fix Czech translation of periods
+
+Fixes #504
+---
+ pom.xml                 | 4 ++++
+ src/changes/changes.xml | 4 ++++
+ 2 files changed, 8 insertions(+)
+
+diff --git a/pom.xml b/pom.xml
+index 9341f9a1b..d9559922f 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -109,6 +109,10 @@
+     <contributor>
+       <name>Gwyn Evans</name>
+     </contributor>
++    <contributor>
++      <name>Niklas Fiekas</name>
++      <url>https://github.com/niklasf</url>
++    </contributor>
+     <contributor>
+       <name>John Fletcher</name>
+     </contributor>
+diff --git a/src/changes/changes.xml b/src/changes/changes.xml
+index 46c2f16c2..0223a45f7 100644
+--- a/src/changes/changes.xml
++++ b/src/changes/changes.xml
+@@ -21,6 +21,10 @@
+         Add Bulgarian translation of periods.
+         Fixes #496.
+       </action>
++      <action dev="niklasf" type="fix">
++        Fix Czech translation of periods.
++        Fixes #504.
++      </action>
+       <action dev="jodastephen" type="add">
+         Add Tidelift commercial support and security policy.
+       </action>
+
+From 25d9469600d5f58cc8721d23f1f8ae09b566b3cb Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Thu, 9 May 2019 14:17:07 +0100
+Subject: [PATCH 14/16] Update tzdb to v2019a
+
+---
+ pom.xml                                       |   2 +-
+ src/changes/changes.xml                       |   3 +
+ src/main/java/org/joda/time/tz/src/Readme.txt |   2 +-
+ src/main/java/org/joda/time/tz/src/africa     | 107 +++-
+ src/main/java/org/joda/time/tz/src/asia       | 481 +++++++++++++-----
+ .../java/org/joda/time/tz/src/australasia     | 281 ++++++++--
+ src/main/java/org/joda/time/tz/src/backward   |   3 +-
+ src/main/java/org/joda/time/tz/src/etcetera   |   1 -
+ src/main/java/org/joda/time/tz/src/europe     |   4 +-
+ .../java/org/joda/time/tz/src/northamerica    |  38 ++
+ 10 files changed, 761 insertions(+), 161 deletions(-)
+
+diff --git a/pom.xml b/pom.xml
+index d9559922f..e0fe3acca 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -1019,6 +1019,6 @@
+     <!-- Other properties -->
+     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+-    <tz.database.version>2018g</tz.database.version>
++    <tz.database.version>2019a</tz.database.version>
+   </properties>
+ </project>
+diff --git a/src/changes/changes.xml b/src/changes/changes.xml
+index 0223a45f7..22ee75d70 100644
+--- a/src/changes/changes.xml
++++ b/src/changes/changes.xml
+@@ -9,6 +9,9 @@
+ 
+     <!-- types are add, fix, remove, update -->
+     <release version="2.10.2" date="SNAPSHOT" description="v2.10.2">
++      <action dev="jodastephen" type="update">
++        DateTimeZone data updated to version 2019a.
++      </action>
+       <action dev="jodastephen" type="fix">
+         Fix calculation of DateTime.withTimeAtStartOfDay() when DST is at midnight.
+         Fixes #488.
+diff --git a/src/main/java/org/joda/time/tz/src/Readme.txt b/src/main/java/org/joda/time/tz/src/Readme.txt
+index 768bf8159..a3c88180e 100644
+--- a/src/main/java/org/joda/time/tz/src/Readme.txt
++++ b/src/main/java/org/joda/time/tz/src/Readme.txt
+@@ -1,2 +1,2 @@
+ The data files in this directory were obtained from the public IANA time zone database,
+-https://www.iana.org/time-zones, version 2018g.
++https://www.iana.org/time-zones, version 2019a.
+diff --git a/src/main/java/org/joda/time/tz/src/africa b/src/main/java/org/joda/time/tz/src/africa
+index a26b91bc1..a58c11c18 100644
+--- a/src/main/java/org/joda/time/tz/src/africa
++++ b/src/main/java/org/joda/time/tz/src/africa
+@@ -364,6 +364,11 @@ Zone	Africa/Cairo	2:05:09 -	LMT	1900 Oct
+ # See Africa/Lagos.
+ 
+ # Eritrea
++# See Africa/Nairobi.
++
++# Eswatini (formerly Swaziland)
++# See Africa/Johannesburg.
++
+ # Ethiopia
+ # See Africa/Nairobi.
+ #
+@@ -847,8 +852,41 @@ Zone Indian/Mauritius	3:50:00 -	LMT	1907 # Port Louis
+ # From Mohamed Essedik Najd (2018-10-26):
+ # Today, a Moroccan government council approved the perpetual addition
+ # of 60 minutes to the regular Moroccan timezone.
+-# From Brian Inglis (2018-10-26):
+-# http://www.maroc.ma/fr/actualites/le-conseil-de-gouvernement-adopte-un-projet-de-decret-relatif-lheure-legale-stipulant-le
++# From Matt Johnson (2018-10-28):
++# http://www.sgg.gov.ma/Portals/1/BO/2018/BO_6720-bis_Ar.pdf
++#
++# From Maamar Abdelkader (2018-11-01):
++# We usually move clocks back the previous week end and come back to the +1
++# the week end after....  The government does not announce yet the decision
++# about this temporary change.  But it s 99% sure that it will be the case,
++# as in previous years.  An unofficial survey was done these days, showing
++# that 64% of asked peopke are ok for moving from +1 to +0 during Ramadan.
++# https://leconomiste.com/article/1035870-enquete-l-economiste-sunergia-64-des-marocains-plebiscitent-le-gmt-pendant-ramadan
++#
++# From Paul Eggert (2018-11-01):
++# For now, guess that Morocco will fall back at 03:00 the last Sunday
++# before Ramadan, and spring forward at 02:00 the first Sunday after
++# Ramadan, as this has been the practice since 2012.  To implement this,
++# transition dates for 2019 through 2037 were determined by running the
++# following program under GNU Emacs 26.1.
++# (let ((islamic-year 1440))
++#   (require 'cal-islam)
++#   (while (< islamic-year 1460)
++#     (let ((a (calendar-islamic-to-absolute (list 9 1 islamic-year)))
++#           (b (calendar-islamic-to-absolute (list 10 1 islamic-year)))
++#           (sunday 0))
++#       (while (/= sunday (mod (setq a (1- a)) 7)))
++#       (while (/= sunday (mod b 7))
++#         (setq b (1+ b)))
++#       (setq a (calendar-gregorian-from-absolute a))
++#       (setq b (calendar-gregorian-from-absolute b))
++#       (insert
++#        (format
++#         (concat "Rule\tMorocco\t%d\tonly\t-\t%s\t%2d\t 3:00\t-1:00\t-\n"
++#                 "Rule\tMorocco\t%d\tonly\t-\t%s\t%2d\t 2:00\t0\t-\n")
++#         (car (cdr (cdr a))) (calendar-month-name (car a) t) (car (cdr a))
++#         (car (cdr (cdr b))) (calendar-month-name (car b) t) (car (cdr b)))))
++#     (setq islamic-year (+ 1 islamic-year))))
+ 
+ # RULE	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
+ Rule	Morocco	1939	only	-	Sep	12	 0:00	1:00	-
+@@ -892,13 +930,53 @@ Rule	Morocco	2017	only	-	May	21	 3:00	0	-
+ Rule	Morocco	2017	only	-	Jul	 2	 2:00	1:00	-
+ Rule	Morocco	2018	only	-	May	13	 3:00	0	-
+ Rule	Morocco	2018	only	-	Jun	17	 2:00	1:00	-
++Rule	Morocco	2019	only	-	May	 5	 3:00	-1:00	-
++Rule	Morocco	2019	only	-	Jun	 9	 2:00	0	-
++Rule	Morocco	2020	only	-	Apr	19	 3:00	-1:00	-
++Rule	Morocco	2020	only	-	May	24	 2:00	0	-
++Rule	Morocco	2021	only	-	Apr	11	 3:00	-1:00	-
++Rule	Morocco	2021	only	-	May	16	 2:00	0	-
++Rule	Morocco	2022	only	-	Mar	27	 3:00	-1:00	-
++Rule	Morocco	2022	only	-	May	 8	 2:00	0	-
++Rule	Morocco	2023	only	-	Mar	19	 3:00	-1:00	-
++Rule	Morocco	2023	only	-	Apr	23	 2:00	0	-
++Rule	Morocco	2024	only	-	Mar	10	 3:00	-1:00	-
++Rule	Morocco	2024	only	-	Apr	14	 2:00	0	-
++Rule	Morocco	2025	only	-	Feb	23	 3:00	-1:00	-
++Rule	Morocco	2025	only	-	Apr	 6	 2:00	0	-
++Rule	Morocco	2026	only	-	Feb	15	 3:00	-1:00	-
++Rule	Morocco	2026	only	-	Mar	22	 2:00	0	-
++Rule	Morocco	2027	only	-	Feb	 7	 3:00	-1:00	-
++Rule	Morocco	2027	only	-	Mar	14	 2:00	0	-
++Rule	Morocco	2028	only	-	Jan	23	 3:00	-1:00	-
++Rule	Morocco	2028	only	-	Feb	27	 2:00	0	-
++Rule	Morocco	2029	only	-	Jan	14	 3:00	-1:00	-
++Rule	Morocco	2029	only	-	Feb	18	 2:00	0	-
++Rule	Morocco	2029	only	-	Dec	30	 3:00	-1:00	-
++Rule	Morocco	2030	only	-	Feb	10	 2:00	0	-
++Rule	Morocco	2030	only	-	Dec	22	 3:00	-1:00	-
++Rule	Morocco	2031	only	-	Jan	26	 2:00	0	-
++Rule	Morocco	2031	only	-	Dec	14	 3:00	-1:00	-
++Rule	Morocco	2032	only	-	Jan	18	 2:00	0	-
++Rule	Morocco	2032	only	-	Nov	28	 3:00	-1:00	-
++Rule	Morocco	2033	only	-	Jan	 9	 2:00	0	-
++Rule	Morocco	2033	only	-	Nov	20	 3:00	-1:00	-
++Rule	Morocco	2033	only	-	Dec	25	 2:00	0	-
++Rule	Morocco	2034	only	-	Nov	 5	 3:00	-1:00	-
++Rule	Morocco	2034	only	-	Dec	17	 2:00	0	-
++Rule	Morocco	2035	only	-	Oct	28	 3:00	-1:00	-
++Rule	Morocco	2035	only	-	Dec	 2	 2:00	0	-
++Rule	Morocco	2036	only	-	Oct	19	 3:00	-1:00	-
++Rule	Morocco	2036	only	-	Nov	23	 2:00	0	-
++Rule	Morocco	2037	only	-	Oct	 4	 3:00	-1:00	-
++Rule	Morocco	2037	only	-	Nov	15	 2:00	0	-
+ 
+ # Zone	NAME		GMTOFF	RULES	FORMAT	[UNTIL]
+ Zone Africa/Casablanca	-0:30:20 -	LMT	1913 Oct 26
+ 			 0:00	Morocco	+00/+01	1984 Mar 16
+ 			 1:00	-	+01	1986
+-			 0:00	Morocco	+00/+01	2018 Oct 27
+-			 1:00	-	+01
++			 0:00	Morocco	+00/+01	2018 Oct 28  3:00
++			 1:00	Morocco	+01/+00
+ 
+ # Western Sahara
+ #
+@@ -913,8 +991,8 @@ Zone Africa/Casablanca	-0:30:20 -	LMT	1913 Oct 26
+ 
+ Zone Africa/El_Aaiun	-0:52:48 -	LMT	1934 Jan # El Aaiún
+ 			-1:00	-	-01	1976 Apr 14
+-			 0:00	Morocco	+00/+01	2018 Oct 27
+-			 1:00	-	+01
++			 0:00	Morocco	+00/+01	2018 Oct 28  3:00
++			 1:00	Morocco	+01/+00
+ 
+ # Mozambique
+ #
+@@ -1071,10 +1149,20 @@ Zone	Indian/Reunion	3:41:52 -	LMT	1911 Jun # Saint-Denis
+ # the switch is from 01:00 to 02:00 ... [Decree No. 25/2017]
+ # http://www.mnec.gov.st/index.php/publicacoes/documentos/file/90-decreto-lei-n-25-2017
+ 
++# From Vadim Nasardinov (2018-12-29):
++# São Tomé and Príncipe is about to do the following on Jan 1, 2019:
++# https://www.stp-press.st/2018/12/05/governo-jesus-ja-decidiu-repor-hora-legal-sao-tomense/
++#
++# From Michael Deckers (2018-12-30):
++# https://www.legis-palop.org/download.jsp?idFile=102818
++# ... [The legal time of the country, which coincides with universal
++# coordinated time, will be restituted at 2 o'clock on day 1 of January, 2019.]
++
+ Zone	Africa/Sao_Tome	 0:26:56 -	LMT	1884
+ 			-0:36:45 -	LMT	1912 Jan  1 00:00u # Lisbon MT
+ 			 0:00	-	GMT	2018 Jan  1 01:00
+-			 1:00	-	WAT
++			 1:00	-	WAT	2019 Jan  1 02:00
++			 0:00	-	GMT
+ 
+ # Senegal
+ # See Africa/Abidjan.
+@@ -1105,7 +1193,7 @@ Zone Africa/Johannesburg 1:52:00 -	LMT	1892 Feb 8
+ 			1:30	-	SAST	1903 Mar
+ 			2:00	SA	SAST
+ Link Africa/Johannesburg Africa/Maseru	   # Lesotho
+-Link Africa/Johannesburg Africa/Mbabane    # Swaziland
++Link Africa/Johannesburg Africa/Mbabane    # Eswatini
+ #
+ # Marion and Prince Edward Is
+ # scientific station since 1947
+@@ -1147,9 +1235,6 @@ Zone	Africa/Juba	2:06:28 -	LMT	1931
+ 			2:00	Sudan	CA%sT	2000 Jan 15 12:00
+ 			3:00	-	EAT
+ 
+-# Swaziland
+-# See Africa/Johannesburg.
+-
+ # Tanzania
+ # See Africa/Nairobi.
+ 
+diff --git a/src/main/java/org/joda/time/tz/src/asia b/src/main/java/org/joda/time/tz/src/asia
+index 48b4c6529..d790da5bf 100644
+--- a/src/main/java/org/joda/time/tz/src/asia
++++ b/src/main/java/org/joda/time/tz/src/asia
+@@ -586,12 +586,82 @@ Zone	Asia/Urumqi	5:50:20	-	LMT	1928
+ # obtained from
+ # http://www.hko.gov.hk/gts/time/Summertime.htm
+ 
+-# From Arthur David Olson (2009-10-28):
++# From Phake Nick (2018-10-27):
++# According to Singaporean newspaper
++# http://eresources.nlb.gov.sg/newspapers/Digitised/Article/singfreepresswk19041102-1.2.37
++# the day that Hong Kong start using GMT+8 should be Oct 30, 1904.
++#
++# From Paul Eggert (2018-11-17):
++# Hong Kong had a time ball near the Marine Police Station, Tsim Sha Tsui.
++# "The ball was raised manually each day and dropped at exactly 1pm
++# (except on Sundays and Government holidays)."
++# Dyson AD. From Time Ball to Atomic Clock. Hong Kong Government. 1983.
++# <https://www.hko.gov.hk/publica/gen_pub/timeball_atomic_clock.pdf>
++# "From 1904 October 30 the time-ball at Hong Kong has been dropped by order
++# of the Governor of the Colony at 17h 0m 0s G.M.T., which is 23m 18s.14 in
++# advance of 1h 0m 0s of Hong Kong mean time."
++# Hollis HP. Universal Time, Longitudes, and Geodesy. Mon Not R Astron Soc.
++# 1905-02-10;65(4):405-6. https://doi.org/10.1093/mnras/65.4.382
++#
++# From Joseph Myers (2018-11-18):
++# An astronomer before 1925 referring to GMT would have been using the old
++# astronomical convention where the day started at noon, not midnight.
++#
++# From Steve Allen (2018-11-17):
++# Meteorological Observations made at the Hongkong Observatory in the year 1904
++# page 4 <https://books.google.com/books?id=kgw5AQAAMAAJ&pg=RA4-PA4>
++# ... the log of drop times in Table II shows that on Sunday 1904-10-30 the
++# ball was dropped.  So that looks like a special case drop for the sake
++# of broadcasting the new local time.
++#
++# From Phake Nick (2018-11-18):
++# According to The Hong Kong Weekly Press, 1904-10-29, p.324, the
++# governor of Hong Kong at the time stated that "We are further desired to
++# make it known that the change will be effected by firing the gun and by the
++# dropping of the Ball at 23min. 18sec. before one."
++# From Paul Eggert (2018-11-18):
++# See <https://mmis.hkpl.gov.hk> for this; unfortunately Flash is required.
++
++# From Phake Nick (2018-10-26):
++# I went to check microfilm records stored at Hong Kong Public Library....
++# on September 30 1941, according to Ta Kung Pao (Hong Kong edition), it was
++# stated that fallback would occur on the next day (the 1st)'s "03:00 am (Hong
++# Kong Time 04:00 am)" and the clock will fall back for a half hour. (03:00
++# probably refer to the time commonly used in mainland China at the time given
++# the paper's background) ... the sunrise/sunset time given by South China
++# Morning Post for October 1st was indeed moved by half an hour compares to
++# before.  After that, in December, the battle to capture Hong Kong started and
++# the library doesn't seems to have any record stored about press during that
++# period of time.  Some media resumed publication soon after that within the
++# same month, but there were not much information about time there.  Later they
++# started including a radio program guide when they restored radio service,
++# explicitly mentioning it use Tokyo standard time, and later added a note
++# saying it's half an hour ahead of the old Hong Kong standard time, and it
++# also seems to indicate that Hong Kong was not using GMT+8 when it was
++# captured by Japan.
++#
++# Image of related sections on newspaper:
++# * 1941-09-30, Ta Kung Pao (Hong Kong), "Winter Time start tomorrow".
++#   https://i.imgur.com/6waY51Z.jpg (Chinese)
++# * 1941-09-29, South China Morning Post, Information on sunrise/sunset
++#   time and other things for September 30 and October 1.
++#   https://i.imgur.com/kCiUR78.jpg
++# * 1942-02-05. The Hong Kong News, Radio Program Guide.
++#   https://i.imgur.com/eVvDMzS.jpg
++# * 1941-06-14. Hong Kong Daily Press, Daylight Saving from 3am Tomorrow.
++#   https://i.imgur.com/05KkvtC.png
++# * 1941-09-30, Hong Kong Daily Press, Winter Time Warning.
++#   https://i.imgur.com/dge4kFJ.png
++# Also, the Liberation day of Hong Kong after WWII which British rule
++# over the territory resumed was August 30, 1945, which I think should
++# be the termination date for the use of JST in the territory....
++
++# From Paul Eggert (2018-11-17):
+ # Here are the dates given at
+-# http://www.hko.gov.hk/gts/time/Summertime.htm
+-# as of 2009-10-28:
++# https://www.hko.gov.hk/gts/time/Summertime.htm
++# as of 2014-06-19:
+ # Year        Period
+-# 1941        1 Apr to 30 Sep
++# 1941        15 Jun to 30 Sep
+ # 1942        Whole year
+ # 1943        Whole year
+ # 1944        Whole year
+@@ -602,7 +672,7 @@ Zone	Asia/Urumqi	5:50:20	-	LMT	1928
+ # 1949        3 Apr to 30 Oct
+ # 1950        2 Apr to 29 Oct
+ # 1951        1 Apr to 28 Oct
+-# 1952        6 Apr to 25 Oct
++# 1952        6 Apr to 2 Nov
+ # 1953        5 Apr to 1 Nov
+ # 1954        21 Mar to 31 Oct
+ # 1955        20 Mar to 6 Nov
+@@ -631,25 +701,25 @@ Zone	Asia/Urumqi	5:50:20	-	LMT	1928
+ # 1978        Nil
+ # 1979        13 May to 21 Oct
+ # 1980 to Now Nil
+-# The page does not give start or end times of day.
+-# The page does not give a start date for 1942.
+-# The page does not givw an end date for 1945.
+-# The Japanese occupation of Hong Kong began on 1941-12-25.
+-# The Japanese surrender of Hong Kong was signed 1945-09-15.
+-# For lack of anything better, use start of those days as the transition times.
++# The page does not give times of day for transitions,
++# or dates for the 1942 and 1945 transitions.
++# The Japanese occupation of Hong Kong began 1941-12-25.
++# The Japanese surrender of Hong Kong was signed 1945-09-16; see:
++# Heaver S. The days after the Pacific war ended: unsettling times
++# in Hong Kong. Post Magazine. 2016-06-13.
++# https://www.scmp.com/magazines/post-magazine/article/1852990/days-after-pacific-war-ended-unsettling-times-hong-kong
++# For lack of anything better, use start of those days as the
++# transition times.
+ 
+ # Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
+-Rule	HK	1941	only	-	Apr	1	3:30	1:00	S
+-Rule	HK	1941	only	-	Sep	30	3:30	0	-
+ Rule	HK	1946	only	-	Apr	20	3:30	1:00	S
+ Rule	HK	1946	only	-	Dec	1	3:30	0	-
+ Rule	HK	1947	only	-	Apr	13	3:30	1:00	S
+ Rule	HK	1947	only	-	Dec	30	3:30	0	-
+ Rule	HK	1948	only	-	May	2	3:30	1:00	S
+ Rule	HK	1948	1951	-	Oct	lastSun	3:30	0	-
+-Rule	HK	1952	only	-	Oct	25	3:30	0	-
++Rule	HK	1952	1953	-	Nov	Sun>=1	3:30	0	-
+ Rule	HK	1949	1953	-	Apr	Sun>=1	3:30	1:00	S
+-Rule	HK	1953	only	-	Nov	1	3:30	0	-
+ Rule	HK	1954	1964	-	Mar	Sun>=18	3:30	1:00	S
+ Rule	HK	1954	only	-	Oct	31	3:30	0	-
+ Rule	HK	1955	1964	-	Nov	Sun>=1	3:30	0	-
+@@ -659,9 +729,11 @@ Rule	HK	1973	only	-	Dec	30	3:30	1:00	S
+ Rule	HK	1979	only	-	May	Sun>=8	3:30	1:00	S
+ Rule	HK	1979	only	-	Oct	Sun>=16	3:30	0	-
+ # Zone	NAME		GMTOFF	RULES	FORMAT	[UNTIL]
+-Zone	Asia/Hong_Kong	7:36:42 -	LMT	1904 Oct 30
+-			8:00	HK	HK%sT	1941 Dec 25
+-			9:00	-	JST	1945 Sep 15
++Zone	Asia/Hong_Kong	7:36:42 -	LMT	1904 Oct 30  0:36:42
++			8:00	-	HKT	1941 Jun 15  3:30
++			8:00	1:00	HKST	1941 Oct  1  4:00
++			8:30	-	HKT	1941 Dec 25
++			9:00	-	JST	1945 Sep 16
+ 			8:00	HK	HK%sT
+ 
+ ###############################################################################
+@@ -1057,6 +1129,16 @@ Zone	Asia/Dili	8:22:20 -	LMT	1912 Jan  1
+ 
+ # India
+ 
++# British astronomer Henry Park Hollis disliked India Standard Time's offset:
++# "A new time system has been proposed for India, Further India, and Burmah.
++# The scheme suggested is that the times of the meridians 5½ and 6½ hours
++# east of Greenwich should be adopted in these territories.  No reason is
++# given why hourly meridians five hours and six hours east should not be
++# chosen; a plan which would bring the time of India into harmony with
++# that of almost the whole of the civilised world."
++# Hollis HP. Universal Time, Longitudes, and Geodesy. Mon Not R Astron Soc.
++# 1905-02-10;65(4):405-6. https://doi.org/10.1093/mnras/65.4.382
++
+ # From Ian P. Beacock, in "A brief history of (modern) time", The Atlantic
+ # https://www.theatlantic.com/technology/archive/2015/12/the-creation-of-modern-time/421419/
+ # (2015-12-22):
+@@ -1227,12 +1309,65 @@ Zone Asia/Jayapura	9:22:48 -	LMT	1932 Nov
+ # leap year calculation involved.  There has never been any serious
+ # plan to change that law....
+ #
+-# From Paul Eggert (2006-03-22):
++# From Paul Eggert (2018-11-30):
+ # Go with Shanks & Pottenger before Sept. 1991, and with Pournader thereafter.
+-# I used Ed Reingold's cal-persia in GNU Emacs 21.2 to check Persian dates,
+-# stopping after 2037 when 32-bit time_t's overflow.
+-# That cal-persia used Birashk's approximation, which disagrees with the solar
+-# calendar predictions for the year 2025, so I corrected those dates by hand.
++# I used the following code in GNU Emacs 26.1 to generate the "Rule Iran"
++# lines from 2008 through 2087.  Emacs 26.1 uses Ed Reingold's
++# cal-persia implementation of Birashk's approximation, which in the
++# 2008-2087 range disagrees with the the astronomical Persian calendar
++# for Persian years 1404 (Gregorian 2025) and 1437 (Gregorian 2058),
++# so the following code special-case those years.  See Table 15.1, page 264, of:
++# Edward M. Reingold and Nachum Dershowitz, Calendrical Calculations:
++# The Ultimate Edition, Cambridge University Press (2018).
++# https://www.cambridge.org/fr/academic/subjects/computer-science/computing-general-interest/calendrical-calculations-ultimate-edition-4th-edition
++# Page 258, footnote 2, of this book says there is some dispute over what will
++# happen in 2091 (and some other years after that), so this code
++# stops in 2087, as 2088 and 2089 agree with the "max" rule below.
++# (cl-loop
++#  initially (require 'cal-persia)
++#  with first-persian-year = 1387
++#  with last-persian-year = 1466
++#  ;; Exceptional years in the above range,
++#  ;; from Reingold & Dershowitz Table 15.1, page 264:
++#  with exceptional-persian-years = '(1404 1437)
++#  with range-start = nil
++#  for persian-year from first-persian-year to last-persian-year
++#  do
++#  (let*
++#      ((exceptional-year-offset
++#        (if (member persian-year exceptional-persian-years) 1 0))
++#       (beg-dst-absolute
++#        (+ (calendar-persian-to-absolute (list 1 1 persian-year))
++#           exceptional-year-offset))
++#       (end-dst-absolute
++#        (+ (calendar-persian-to-absolute (list 6 30 persian-year))
++#           exceptional-year-offset))
++#       (next-year-beg-dst-absolute
++#        (+ (calendar-persian-to-absolute (list 1 1 (1+ persian-year)))
++#           (if (member (1+ persian-year) exceptional-persian-years) 1 0)))
++#       (beg-dst (calendar-gregorian-from-absolute beg-dst-absolute))
++#       (end-dst (calendar-gregorian-from-absolute end-dst-absolute))
++#       (next-year-beg-dst (calendar-gregorian-from-absolute
++#                           next-year-beg-dst-absolute))
++#       (year (calendar-extract-year beg-dst))
++#       (range-end (if range-start year "only")))
++#    (setq range-start (or range-start year))
++#    (when (or (/= (calendar-extract-day beg-dst)
++#                  (calendar-extract-day next-year-beg-dst))
++#              (= persian-year last-persian-year))
++#      (insert
++#       (format
++#        "Rule\tIran\t%d\t%s\t-\t%s\t%2d\t24:00\t1:00\t-\n"
++#        range-start range-end
++#        (calendar-month-name (calendar-extract-month beg-dst) t)
++#        (calendar-extract-day beg-dst)))
++#      (insert
++#       (format
++#        "Rule\tIran\t%d\t%s\t-\t%s\t%2d\t24:00\t0\t-\n"
++#        range-start range-end
++#        (calendar-month-name (calendar-extract-month end-dst) t)
++#        (calendar-extract-day end-dst)))
++#      (setq range-start nil))))
+ #
+ # From Oscar van Vlijmen (2005-03-30), writing about future
+ # discrepancies between cal-persia and the Iranian calendar:
+@@ -1267,61 +1402,113 @@ Zone Asia/Jayapura	9:22:48 -	LMT	1932 Nov
+ # thirtieth day of Shahrivar.
+ #
+ # Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
+-Rule	Iran	1978	1980	-	Mar	21	0:00	1:00	-
+-Rule	Iran	1978	only	-	Oct	21	0:00	0	-
+-Rule	Iran	1979	only	-	Sep	19	0:00	0	-
+-Rule	Iran	1980	only	-	Sep	23	0:00	0	-
+-Rule	Iran	1991	only	-	May	 3	0:00	1:00	-
+-Rule	Iran	1992	1995	-	Mar	22	0:00	1:00	-
+-Rule	Iran	1991	1995	-	Sep	22	0:00	0	-
+-Rule	Iran	1996	only	-	Mar	21	0:00	1:00	-
+-Rule	Iran	1996	only	-	Sep	21	0:00	0	-
+-Rule	Iran	1997	1999	-	Mar	22	0:00	1:00	-
+-Rule	Iran	1997	1999	-	Sep	22	0:00	0	-
+-Rule	Iran	2000	only	-	Mar	21	0:00	1:00	-
+-Rule	Iran	2000	only	-	Sep	21	0:00	0	-
+-Rule	Iran	2001	2003	-	Mar	22	0:00	1:00	-
+-Rule	Iran	2001	2003	-	Sep	22	0:00	0	-
+-Rule	Iran	2004	only	-	Mar	21	0:00	1:00	-
+-Rule	Iran	2004	only	-	Sep	21	0:00	0	-
+-Rule	Iran	2005	only	-	Mar	22	0:00	1:00	-
+-Rule	Iran	2005	only	-	Sep	22	0:00	0	-
+-Rule	Iran	2008	only	-	Mar	21	0:00	1:00	-
+-Rule	Iran	2008	only	-	Sep	21	0:00	0	-
+-Rule	Iran	2009	2011	-	Mar	22	0:00	1:00	-
+-Rule	Iran	2009	2011	-	Sep	22	0:00	0	-
+-Rule	Iran	2012	only	-	Mar	21	0:00	1:00	-
+-Rule	Iran	2012	only	-	Sep	21	0:00	0	-
+-Rule	Iran	2013	2015	-	Mar	22	0:00	1:00	-
+-Rule	Iran	2013	2015	-	Sep	22	0:00	0	-
+-Rule	Iran	2016	only	-	Mar	21	0:00	1:00	-
+-Rule	Iran	2016	only	-	Sep	21	0:00	0	-
+-Rule	Iran	2017	2019	-	Mar	22	0:00	1:00	-
+-Rule	Iran	2017	2019	-	Sep	22	0:00	0	-
+-Rule	Iran	2020	only	-	Mar	21	0:00	1:00	-
+-Rule	Iran	2020	only	-	Sep	21	0:00	0	-
+-Rule	Iran	2021	2023	-	Mar	22	0:00	1:00	-
+-Rule	Iran	2021	2023	-	Sep	22	0:00	0	-
+-Rule	Iran	2024	only	-	Mar	21	0:00	1:00	-
+-Rule	Iran	2024	only	-	Sep	21	0:00	0	-
+-Rule	Iran	2025	2027	-	Mar	22	0:00	1:00	-
+-Rule	Iran	2025	2027	-	Sep	22	0:00	0	-
+-Rule	Iran	2028	2029	-	Mar	21	0:00	1:00	-
+-Rule	Iran	2028	2029	-	Sep	21	0:00	0	-
+-Rule	Iran	2030	2031	-	Mar	22	0:00	1:00	-
+-Rule	Iran	2030	2031	-	Sep	22	0:00	0	-
+-Rule	Iran	2032	2033	-	Mar	21	0:00	1:00	-
+-Rule	Iran	2032	2033	-	Sep	21	0:00	0	-
+-Rule	Iran	2034	2035	-	Mar	22	0:00	1:00	-
+-Rule	Iran	2034	2035	-	Sep	22	0:00	0	-
+-#
+-# The following rules are approximations starting in the year 2038.
+-# These are the best post-2037 approximations available, given the
+-# restrictions of a single rule using a Gregorian-based data format.
++Rule	Iran	1978	1980	-	Mar	20	24:00	1:00	-
++Rule	Iran	1978	only	-	Oct	20	24:00	0	-
++Rule	Iran	1979	only	-	Sep	18	24:00	0	-
++Rule	Iran	1980	only	-	Sep	22	24:00	0	-
++Rule	Iran	1991	only	-	May	 2	24:00	1:00	-
++Rule	Iran	1992	1995	-	Mar	21	24:00	1:00	-
++Rule	Iran	1991	1995	-	Sep	21	24:00	0	-
++Rule	Iran	1996	only	-	Mar	20	24:00	1:00	-
++Rule	Iran	1996	only	-	Sep	20	24:00	0	-
++Rule	Iran	1997	1999	-	Mar	21	24:00	1:00	-
++Rule	Iran	1997	1999	-	Sep	21	24:00	0	-
++Rule	Iran	2000	only	-	Mar	20	24:00	1:00	-
++Rule	Iran	2000	only	-	Sep	20	24:00	0	-
++Rule	Iran	2001	2003	-	Mar	21	24:00	1:00	-
++Rule	Iran	2001	2003	-	Sep	21	24:00	0	-
++Rule	Iran	2004	only	-	Mar	20	24:00	1:00	-
++Rule	Iran	2004	only	-	Sep	20	24:00	0	-
++Rule	Iran	2005	only	-	Mar	21	24:00	1:00	-
++Rule	Iran	2005	only	-	Sep	21	24:00	0	-
++Rule	Iran	2008	only	-	Mar	20	24:00	1:00	-
++Rule	Iran	2008	only	-	Sep	20	24:00	0	-
++Rule	Iran	2009	2011	-	Mar	21	24:00	1:00	-
++Rule	Iran	2009	2011	-	Sep	21	24:00	0	-
++Rule	Iran	2012	only	-	Mar	20	24:00	1:00	-
++Rule	Iran	2012	only	-	Sep	20	24:00	0	-
++Rule	Iran	2013	2015	-	Mar	21	24:00	1:00	-
++Rule	Iran	2013	2015	-	Sep	21	24:00	0	-
++Rule	Iran	2016	only	-	Mar	20	24:00	1:00	-
++Rule	Iran	2016	only	-	Sep	20	24:00	0	-
++Rule	Iran	2017	2019	-	Mar	21	24:00	1:00	-
++Rule	Iran	2017	2019	-	Sep	21	24:00	0	-
++Rule	Iran	2020	only	-	Mar	20	24:00	1:00	-
++Rule	Iran	2020	only	-	Sep	20	24:00	0	-
++Rule	Iran	2021	2023	-	Mar	21	24:00	1:00	-
++Rule	Iran	2021	2023	-	Sep	21	24:00	0	-
++Rule	Iran	2024	only	-	Mar	20	24:00	1:00	-
++Rule	Iran	2024	only	-	Sep	20	24:00	0	-
++Rule	Iran	2025	2027	-	Mar	21	24:00	1:00	-
++Rule	Iran	2025	2027	-	Sep	21	24:00	0	-
++Rule	Iran	2028	2029	-	Mar	20	24:00	1:00	-
++Rule	Iran	2028	2029	-	Sep	20	24:00	0	-
++Rule	Iran	2030	2031	-	Mar	21	24:00	1:00	-
++Rule	Iran	2030	2031	-	Sep	21	24:00	0	-
++Rule	Iran	2032	2033	-	Mar	20	24:00	1:00	-
++Rule	Iran	2032	2033	-	Sep	20	24:00	0	-
++Rule	Iran	2034	2035	-	Mar	21	24:00	1:00	-
++Rule	Iran	2034	2035	-	Sep	21	24:00	0	-
++Rule	Iran	2036	2037	-	Mar	20	24:00	1:00	-
++Rule	Iran	2036	2037	-	Sep	20	24:00	0	-
++Rule	Iran	2038	2039	-	Mar	21	24:00	1:00	-
++Rule	Iran	2038	2039	-	Sep	21	24:00	0	-
++Rule	Iran	2040	2041	-	Mar	20	24:00	1:00	-
++Rule	Iran	2040	2041	-	Sep	20	24:00	0	-
++Rule	Iran	2042	2043	-	Mar	21	24:00	1:00	-
++Rule	Iran	2042	2043	-	Sep	21	24:00	0	-
++Rule	Iran	2044	2045	-	Mar	20	24:00	1:00	-
++Rule	Iran	2044	2045	-	Sep	20	24:00	0	-
++Rule	Iran	2046	2047	-	Mar	21	24:00	1:00	-
++Rule	Iran	2046	2047	-	Sep	21	24:00	0	-
++Rule	Iran	2048	2049	-	Mar	20	24:00	1:00	-
++Rule	Iran	2048	2049	-	Sep	20	24:00	0	-
++Rule	Iran	2050	2051	-	Mar	21	24:00	1:00	-
++Rule	Iran	2050	2051	-	Sep	21	24:00	0	-
++Rule	Iran	2052	2053	-	Mar	20	24:00	1:00	-
++Rule	Iran	2052	2053	-	Sep	20	24:00	0	-
++Rule	Iran	2054	2055	-	Mar	21	24:00	1:00	-
++Rule	Iran	2054	2055	-	Sep	21	24:00	0	-
++Rule	Iran	2056	2057	-	Mar	20	24:00	1:00	-
++Rule	Iran	2056	2057	-	Sep	20	24:00	0	-
++Rule	Iran	2058	2059	-	Mar	21	24:00	1:00	-
++Rule	Iran	2058	2059	-	Sep	21	24:00	0	-
++Rule	Iran	2060	2062	-	Mar	20	24:00	1:00	-
++Rule	Iran	2060	2062	-	Sep	20	24:00	0	-
++Rule	Iran	2063	only	-	Mar	21	24:00	1:00	-
++Rule	Iran	2063	only	-	Sep	21	24:00	0	-
++Rule	Iran	2064	2066	-	Mar	20	24:00	1:00	-
++Rule	Iran	2064	2066	-	Sep	20	24:00	0	-
++Rule	Iran	2067	only	-	Mar	21	24:00	1:00	-
++Rule	Iran	2067	only	-	Sep	21	24:00	0	-
++Rule	Iran	2068	2070	-	Mar	20	24:00	1:00	-
++Rule	Iran	2068	2070	-	Sep	20	24:00	0	-
++Rule	Iran	2071	only	-	Mar	21	24:00	1:00	-
++Rule	Iran	2071	only	-	Sep	21	24:00	0	-
++Rule	Iran	2072	2074	-	Mar	20	24:00	1:00	-
++Rule	Iran	2072	2074	-	Sep	20	24:00	0	-
++Rule	Iran	2075	only	-	Mar	21	24:00	1:00	-
++Rule	Iran	2075	only	-	Sep	21	24:00	0	-
++Rule	Iran	2076	2078	-	Mar	20	24:00	1:00	-
++Rule	Iran	2076	2078	-	Sep	20	24:00	0	-
++Rule	Iran	2079	only	-	Mar	21	24:00	1:00	-
++Rule	Iran	2079	only	-	Sep	21	24:00	0	-
++Rule	Iran	2080	2082	-	Mar	20	24:00	1:00	-
++Rule	Iran	2080	2082	-	Sep	20	24:00	0	-
++Rule	Iran	2083	only	-	Mar	21	24:00	1:00	-
++Rule	Iran	2083	only	-	Sep	21	24:00	0	-
++Rule	Iran	2084	2086	-	Mar	20	24:00	1:00	-
++Rule	Iran	2084	2086	-	Sep	20	24:00	0	-
++Rule	Iran	2087	only	-	Mar	21	24:00	1:00	-
++Rule	Iran	2087	only	-	Sep	21	24:00	0	-
++#
++# The following rules are approximations starting in the year 2088.
++# These are the best post-2088 approximations available, given the
++# restrictions of a single rule using ordinary Gregorian dates.
+ # At some point this table will need to be extended, though quite
+ # possibly Iran will change the rules first.
+-Rule	Iran	2036	max	-	Mar	21	0:00	1:00	-
+-Rule	Iran	2036	max	-	Sep	21	0:00	0	-
++Rule	Iran	2088	max	-	Mar	20	24:00	1:00	-
++Rule	Iran	2088	max	-	Sep	20	24:00	0	-
+ 
+ # Zone	NAME		GMTOFF	RULES	FORMAT	[UNTIL]
+ Zone	Asia/Tehran	3:25:44	-	LMT	1916
+@@ -1433,6 +1620,24 @@ Rule	Zion	1974	only	-	Jul	 7	0:00	1:00	D
+ Rule	Zion	1974	only	-	Oct	13	0:00	0	S
+ Rule	Zion	1975	only	-	Apr	20	0:00	1:00	D
+ Rule	Zion	1975	only	-	Aug	31	0:00	0	S
++
++# From Alois Treindl (2019-03-06):
++# http://www.moin.gov.il/Documents/שעון קיץ/clock-50-years-7-2014.pdf
++# From Isaac Starkman (2019-03-06):
++# Summer time was in that period in 1980 and 1984, see
++# https://www.ynet.co.il/articles/0,7340,L-3951073,00.html
++# You can of course read it in translation.
++# I checked the local newspapers for that years.
++# It started on midnight and end at 01.00 am.
++# From Paul Eggert (2019-03-06):
++# Also see this thread about the moin.gov.il URL:
++# https://mm.icann.org/pipermail/tz/2018-November/027194.html
++Rule	Zion	1980	only	-	Aug	 2	0:00	1:00	D
++Rule	Zion	1980	only	-	Sep	13	1:00	0	S
++Rule	Zion	1984	only	-	May	 5	0:00	1:00	D
++Rule	Zion	1984	only	-	Aug	25	1:00	0	S
++
++# From Shanks & Pottenger:
+ Rule	Zion	1985	only	-	Apr	14	0:00	1:00	D
+ Rule	Zion	1985	only	-	Sep	15	0:00	0	S
+ Rule	Zion	1986	only	-	May	18	0:00	1:00	D
+@@ -1691,7 +1896,9 @@ Rule	Japan	1950	1951	-	May	Sat>=1	24:00	1:00	D
+ # Zone	NAME		GMTOFF	RULES	FORMAT	[UNTIL]
+ Zone	Asia/Tokyo	9:18:59	-	LMT	1887 Dec 31 15:00u
+ 			9:00	Japan	J%sT
+-# Since 1938, all Japanese possessions have been like Asia/Tokyo.
++# Since 1938, all Japanese possessions have been like Asia/Tokyo,
++# except that Truk (Chuuk), Ponape (Pohnpei), and Jaluit (Kosrae) did not
++# switch from +10 to +09 until 1941-04-01; see the 'australasia' file.
+ 
+ # Jordan
+ #
+@@ -1981,8 +2188,10 @@ Zone	Asia/Amman	2:23:44 -	LMT	1931
+ # and in Byalokoz) lists Ural river (plus 10 versts on its left bank) in
+ # the third time belt (before 1930 this means +03).
+ 
+-# From Paul Eggert (2016-12-06):
+-# The tables below reflect Golosunov's remarks, with exceptions as noted.
++# From Alexander Konzurovski (2018-12-20):
++# Qyzyolrda Region (Asia/Qyzylorda) is changing its time zone from
++# UTC+6 to UTC+5 effective December 21st, 2018. The legal document is
++# located here: http://adilet.zan.kz/rus/docs/P1800000817 (russian language).
+ 
+ # Zone	NAME		GMTOFF	RULES	FORMAT	[UNTIL]
+ #
+@@ -1996,8 +2205,6 @@ Zone	Asia/Almaty	5:07:48 -	LMT	1924 May  2 # or Alma-Ata
+ 			6:00 RussiaAsia	+06/+07	2004 Oct 31  2:00s
+ 			6:00	-	+06
+ # Qyzylorda (aka Kyzylorda, Kizilorda, Kzyl-Orda, etc.) (KZ-KZY)
+-# This currently includes Qostanay (aka Kostanay, Kustanay) (KZ-KUS);
+-# see comments below.
+ Zone	Asia/Qyzylorda	4:21:52 -	LMT	1924 May  2
+ 			4:00	-	+04	1930 Jun 21
+ 			5:00	-	+05	1981 Apr  1
+@@ -2008,21 +2215,22 @@ Zone	Asia/Qyzylorda	4:21:52 -	LMT	1924 May  2
+ 			5:00 RussiaAsia	+05/+06	1992 Jan 19  2:00s
+ 			6:00 RussiaAsia	+06/+07	1992 Mar 29  2:00s
+ 			5:00 RussiaAsia	+05/+06	2004 Oct 31  2:00s
+-			6:00	-	+06
+-# The following zone is like Asia/Qyzylorda except for being one
+-# hour earlier from 1991-09-29 to 1992-03-29.  The 1991/2 rules for
+-# Qostanay are unclear partly because of the 1997 Turgai
+-# reorganization, so this zone is commented out for now.
+-#Zone	Asia/Qostanay	4:14:20 -	LMT	1924 May  2
+-#			4:00	-	+04	1930 Jun 21
+-#			5:00	-	+05	1981 Apr  1
+-#			5:00	1:00	+06	1981 Oct  1
+-#			6:00	-	+06	1982 Apr  1
+-#			5:00 RussiaAsia	+05/+06	1991 Mar 31  2:00s
+-#			4:00 RussiaAsia	+04/+05	1992 Jan 19  2:00s
+-#			5:00 RussiaAsia	+05/+06	2004 Oct 31  2:00s
+-#			6:00	-	+06
++			6:00	-	+06	2018 Dec 21  0:00
++			5:00	-	+05
+ #
++# Qostanay (aka Kostanay, Kustanay) (KZ-KUS)
++# The 1991/2 rules are unclear partly because of the 1997 Turgai
++# reorganization.
++Zone	Asia/Qostanay	4:14:28 -	LMT	1924 May  2
++			4:00	-	+04	1930 Jun 21
++			5:00	-	+05	1981 Apr  1
++			5:00	1:00	+06	1981 Oct  1
++			6:00	-	+06	1982 Apr  1
++			5:00 RussiaAsia	+05/+06	1991 Mar 31  2:00s
++			4:00 RussiaAsia	+04/+05	1992 Jan 19  2:00s
++			5:00 RussiaAsia	+05/+06	2004 Oct 31  2:00s
++			6:00	-	+06
++
+ # Aqtöbe (aka Aktobe, formerly Aktyubinsk) (KZ-AKT)
+ Zone	Asia/Aqtobe	3:48:40	-	LMT	1924 May  2
+ 			4:00	-	+04	1930 Jun 21
+@@ -2116,21 +2324,43 @@ Zone	Asia/Bishkek	4:58:24 -	LMT	1924 May  2
+ # started at June 1 in that year.  For another example, the article in
+ # 1988 said that DST started at 2:00 AM in that year.
+ 
++# From Phake Nick (2018-10-27):
++# 1. According to official announcement from Korean government, the DST end
++# date in South Korea should be
++# 1955-09-08 without specifying time
++# http://theme.archives.go.kr/next/common/viewEbook.do?singleData=N&archiveEventId=0027977557
++# 1956-09-29 without specifying time
++# http://theme.archives.go.kr/next/common/viewEbook.do?singleData=N&archiveEventId=0027978341
++# 1957-09-21 24 o'clock
++# http://theme.archives.go.kr/next/common/viewEbook.do?singleData=N&archiveEventId=0027979690#3
++# 1958-09-20 24 o'clock
++# http://theme.archives.go.kr/next/common/viewEbook.do?singleData=N&archiveEventId=0027981189
++# 1959-09-19 24 o'clock
++# http://theme.archives.go.kr/next/common/viewEbook.do?singleData=N&archiveEventId=0027982974#2
++# 1960-09-17 24 o'clock
++# http://theme.archives.go.kr/next/common/viewEbook.do?singleData=N&archiveEventId=0028044104
++# ...
++# 2.... https://namu.wiki/w/대한민국%20표준시 ... [says]
++# when Korea was using GMT+8:30 as standard time, the international
++# aviation/marine/meteorological industry in the country refused to
++# follow and continued to use GMT+9:00 for interoperability.
++
++
+ # Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
+-Rule	ROK	1948	only	-	Jun	 1	0:00	1:00	D
+-Rule	ROK	1948	only	-	Sep	13	0:00	0	S
+-Rule	ROK	1949	only	-	Apr	 3	0:00	1:00	D
+-Rule	ROK	1949	1951	-	Sep	Sun>=8	0:00	0	S
+-Rule	ROK	1950	only	-	Apr	 1	0:00	1:00	D
+-Rule	ROK	1951	only	-	May	 6	0:00	1:00	D
+-Rule	ROK	1955	only	-	May	 5	0:00	1:00	D
+-Rule	ROK	1955	only	-	Sep	 9	0:00	0	S
+-Rule	ROK	1956	only	-	May	20	0:00	1:00	D
+-Rule	ROK	1956	only	-	Sep	30	0:00	0	S
+-Rule	ROK	1957	1960	-	May	Sun>=1	0:00	1:00	D
+-Rule	ROK	1957	1960	-	Sep	Sun>=18	0:00	0	S
+-Rule	ROK	1987	1988	-	May	Sun>=8	2:00	1:00	D
+-Rule	ROK	1987	1988	-	Oct	Sun>=8	3:00	0	S
++Rule	ROK	1948	only	-	Jun	 1	 0:00	1:00	D
++Rule	ROK	1948	only	-	Sep	12	24:00	0	S
++Rule	ROK	1949	only	-	Apr	 3	 0:00	1:00	D
++Rule	ROK	1949	1951	-	Sep	Sat>=7	24:00	0	S
++Rule	ROK	1950	only	-	Apr	 1	 0:00	1:00	D
++Rule	ROK	1951	only	-	May	 6	 0:00	1:00	D
++Rule	ROK	1955	only	-	May	 5	 0:00	1:00	D
++Rule	ROK	1955	only	-	Sep	 8	24:00	0	S
++Rule	ROK	1956	only	-	May	20	 0:00	1:00	D
++Rule	ROK	1956	only	-	Sep	29	24:00	0	S
++Rule	ROK	1957	1960	-	May	Sun>=1	 0:00	1:00	D
++Rule	ROK	1957	1960	-	Sep	Sat>=17	24:00	0	S
++Rule	ROK	1987	1988	-	May	Sun>=8	 2:00	1:00	D
++Rule	ROK	1987	1988	-	Oct	Sun>=8	 3:00	0	S
+ 
+ # From Paul Eggert (2016-08-23):
+ # The Korean Wikipedia entry gives the following sources for UT offsets:
+@@ -2859,9 +3089,15 @@ Zone	Asia/Karachi	4:28:12 -	LMT	1907
+ # the official website, though the decree did not specify the exact
+ # time of the time shift.
+ # http://www.palestinecabinet.gov.ps/Website/AR/NDecrees/ViewFile.ashx?ID=e7a42ab7-ee23-435a-b9c8-a4f7e81f3817
++
++# From Even Scharning (2019-03-23):
++# DST in Palestine will start on 30 March this year, not 23 March as the time
++# zone database predicted.
++# https://ramallah.news/post/123610
+ #
+-# From Paul Eggert (2018-03-16):
+-# For 2016 on, predict spring transitions on March's fourth Saturday at 01:00.
++# From Tim Parenti (2019-03-23):
++# Combining this with the rules observed since 2016, adjust our spring
++# transition guess to Mar Sat>=24.
+ 
+ # Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
+ Rule EgyptAsia	1957	only	-	May	10	0:00	1:00	S
+@@ -2892,7 +3128,7 @@ Rule Palestine	2012	only	-	Sep	21	1:00	0	-
+ Rule Palestine	2013	only	-	Sep	Fri>=21	0:00	0	-
+ Rule Palestine	2014	2015	-	Oct	Fri>=21	0:00	0	-
+ Rule Palestine	2015	only	-	Mar	lastFri	24:00	1:00	S
+-Rule Palestine	2016	max	-	Mar	Sat>=22	1:00	1:00	S
++Rule Palestine	2016	max	-	Mar	Sat>=24	1:00	1:00	S
+ Rule Palestine	2016	max	-	Oct	lastSat	1:00	0	-
+ 
+ # Zone	NAME		GMTOFF	RULES	FORMAT	[UNTIL]
+@@ -2920,6 +3156,11 @@ Zone	Asia/Hebron	2:20:23	-	LMT	1900 Oct
+ # no information
+ 
+ # Philippines
++
++# From Paul Eggert (2018-11-18):
++# The Spanish initially used American (west-of-Greenwich) time.
++# It is unknown what time Manila kept when the British occupied it from
++# 1762-10-06 through 1764-04; for now assume it kept American time.
+ # On 1844-08-16, Narciso Clavería, governor-general of the
+ # Philippines, issued a proclamation announcing that 1844-12-30 was to
+ # be immediately followed by 1845-01-01; see R.H. van Gent's
+@@ -3005,8 +3246,8 @@ Link Asia/Qatar Asia/Bahrain
+ # going to run on Higgins Time.' And so, until last year, it did."  See:
+ # Antar E. Dinner at When? Saudi Aramco World, 1969 March/April. 2-3.
+ # http://archive.aramcoworld.com/issue/196902/dinner.at.when.htm
+-# newspapers.com says a similar story about Higgins was published in the Port
+-# Angeles (WA) Evening News, 1965-03-10, page 5, but I lack access to the text.
++# Also see: Antar EN. Arabian flying is confusing.
++# Port Angeles (WA) Evening News. 1965-03-10. page 3.
+ #
+ # The TZ database cannot represent quasi-solar time; airline time is the best
+ # we can do.  The 1946 foreign air news digest of the U.S. Civil Aeronautics
+@@ -3379,5 +3620,17 @@ Zone Asia/Ho_Chi_Minh	7:06:40 -	LMT	1906 Jul  1
+ 			8:00	-	+08	1975 Jun 13
+ 			7:00	-	+07
+ 
++# From Paul Eggert (2019-02-19):
++#
++# The Ho Chi Minh entry suffices for most purposes as it agrees with all of
++# Vietnam since 1975-06-13.  Presumably clocks often changed in south Vietnam
++# in the early 1970s as locations changed hands during the war; however the
++# details are unknown and would likely be too voluminous for this database.
++#
++# For timestamps in north Vietnam back to 1970 (the tzdb cutoff),
++# use Asia/Bangkok; see the VN entries in the file zone1970.tab.
++# For timestamps before 1970, see Asia/Hanoi in the file 'backzone'.
++
++
+ # Yemen
+ # See Asia/Riyadh.
+diff --git a/src/main/java/org/joda/time/tz/src/australasia b/src/main/java/org/joda/time/tz/src/australasia
+index 87ba620d9..dfe73d3f9 100644
+--- a/src/main/java/org/joda/time/tz/src/australasia
++++ b/src/main/java/org/joda/time/tz/src/australasia
+@@ -402,10 +402,44 @@ Zone	Pacific/Tahiti	 -9:58:16 -	LMT	1912 Oct # Papeete
+ # it is uninhabited.
+ 
+ # Guam
++
++# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# http://guamlegislature.com/Public_Laws_5th/PL05-025.pdf
++# http://documents.guam.gov/wp-content/uploads/E.O.-59-7-Guam-Daylight-Savings-Time-May-6-1959.pdf
++Rule	Guam	1959	only	-	Jun	27	2:00	1:00	D
++# http://documents.guam.gov/wp-content/uploads/E.O.-61-5-Revocation-of-Daylight-Saving-Time-and-Restoratio.pdf
++Rule	Guam	1961	only	-	Jan	29	2:00	0	S
++# http://documents.guam.gov/wp-content/uploads/E.O.-67-13-Guam-Daylight-Savings-Time.pdf
++Rule	Guam	1967	only	-	Sep	 1	2:00	1:00	D
++# http://documents.guam.gov/wp-content/uploads/E.O.-69-2-Repeal-of-Guam-Daylight-Saving-Time.pdf
++Rule	Guam	1969	only	-	Jan	26	0:01	0	S
++# http://documents.guam.gov/wp-content/uploads/E.O.-69-10-Guam-Daylight-Saving-Time.pdf
++Rule	Guam	1969	only	-	Jun	22	2:00	1:00	D
++Rule	Guam	1969	only	-	Aug	31	2:00	0	S
++# http://documents.guam.gov/wp-content/uploads/E.O.-70-10-Guam-Daylight-Saving-Time.pdf
++# http://documents.guam.gov/wp-content/uploads/E.O.-70-30-End-of-Guam-Daylight-Saving-Time.pdf
++# http://documents.guam.gov/wp-content/uploads/E.O.-71-5-Guam-Daylight-Savings-Time.pdf
++Rule	Guam	1970	1971	-	Apr	lastSun	2:00	1:00	D
++Rule	Guam	1970	1971	-	Sep	Sun>=1	2:00	0	S
++# http://documents.guam.gov/wp-content/uploads/E.O.-73-28.-Guam-Day-light-Saving-Time.pdf
++Rule	Guam	1973	only	-	Dec	16	2:00	1:00	D
++# http://documents.guam.gov/wp-content/uploads/E.O.-74-7-Guam-Daylight-Savings-Time-Rescinded.pdf
++Rule	Guam	1974	only	-	Feb	24	2:00	0	S
++# http://documents.guam.gov/wp-content/uploads/E.O.-76-13-Daylight-Savings-Time.pdf
++Rule	Guam	1976	only	-	May	26	2:00	1:00	D
++# http://documents.guam.gov/wp-content/uploads/E.O.-76-25-Revocation-of-E.O.-76-13.pdf
++Rule	Guam	1976	only	-	Aug	22	2:01	0	S
++# http://documents.guam.gov/wp-content/uploads/E.O.-77-4-Daylight-Savings-Time.pdf
++Rule	Guam	1977	only	-	Apr	24	2:00	1:00	D
++# http://documents.guam.gov/wp-content/uploads/E.O.-77-18-Guam-Standard-Time.pdf
++Rule	Guam	1977	only	-	Aug	28	2:00	0	S
++
+ # Zone	NAME		GMTOFF	RULES	FORMAT	[UNTIL]
+ Zone	Pacific/Guam	-14:21:00 -	LMT	1844 Dec 31
+ 			 9:39:00 -	LMT	1901        # Agana
+-			10:00	-	GST	2000 Dec 23 # Guam
++			10:00	-	GST	1941 Dec 10 # Guam
++			 9:00	-	+09	1944 Jul 31
++			10:00	Guam	G%sT	2000 Dec 23
+ 			10:00	-	ChST	# Chamorro Standard Time
+ Link Pacific/Guam Pacific/Saipan # N Mariana Is
+ 
+@@ -427,31 +461,56 @@ Zone Pacific/Kiritimati	-10:29:20 -	LMT	1901
+ 
+ # Marshall Is
+ # Zone	NAME		GMTOFF	RULES	FORMAT	[UNTIL]
+-Zone Pacific/Majuro	11:24:48 -	LMT	1901
+-			11:00	-	+11	1969 Oct
+-			12:00	-	+12
+-Zone Pacific/Kwajalein	11:09:20 -	LMT	1901
+-			11:00	-	+11	1969 Oct
+-			-12:00	-	-12	1993 Aug 20
+-			12:00	-	+12
++Zone Pacific/Majuro	 11:24:48 -	LMT	1901
++			 11:00	-	+11	1914 Oct
++			  9:00	-	+09	1919 Feb  1
++			 11:00	-	+11	1937
++			 10:00	-	+10	1941 Apr  1
++			  9:00	-	+09	1944 Jan 30
++			 11:00	-	+11	1969 Oct
++			 12:00	-	+12
++Zone Pacific/Kwajalein	 11:09:20 -	LMT	1901
++			 11:00	-	+11	1937
++			 10:00	-	+10	1941 Apr  1
++			  9:00	-	+09	1944 Feb  6
++			 11:00	-	+11	1969 Oct
++			-12:00	-	-12	1993 Aug 20 24:00
++			 12:00	-	+12
+ 
+ # Micronesia
+ # Zone	NAME		GMTOFF	RULES	FORMAT	[UNTIL]
+-Zone Pacific/Chuuk	10:07:08 -	LMT	1901
+-			10:00	-	+10
+-Zone Pacific/Pohnpei	10:32:52 -	LMT	1901 # Kolonia
+-			11:00	-	+11
+-Zone Pacific/Kosrae	10:51:56 -	LMT	1901
+-			11:00	-	+11	1969 Oct
+-			12:00	-	+12	1999
+-			11:00	-	+11
++Zone Pacific/Chuuk	-13:52:52 -	LMT	1844 Dec 31
++			 10:07:08 -	LMT	1901
++			 10:00	-	+10	1914 Oct
++			  9:00	-	+09	1919 Feb  1
++			 10:00	-	+10	1941 Apr  1
++			  9:00	-	+09	1945 Aug
++			 10:00	-	+10
++Zone Pacific/Pohnpei	-13:27:08 -	LMT	1844 Dec 31	# Kolonia
++			 10:32:52 -	LMT	1901
++			 11:00	-	+11	1914 Oct
++			  9:00	-	+09	1919 Feb  1
++			 11:00	-	+11	1937
++			 10:00	-	+10	1941 Apr  1
++			  9:00	-	+09	1945 Aug
++			 11:00	-	+11
++Zone Pacific/Kosrae	-13:08:04 -	LMT	1844 Dec 31
++			 10:51:56 -	LMT	1901
++			 11:00	-	+11	1914 Oct
++			  9:00	-	+09	1919 Feb  1
++			 11:00	-	+11	1937
++			 10:00	-	+10	1941 Apr  1
++			  9:00	-	+09	1945 Aug
++			 11:00	-	+11	1969 Oct
++			 12:00	-	+12	1999
++			 11:00	-	+11
+ 
+ # Nauru
+ # Zone	NAME		GMTOFF	RULES	FORMAT	[UNTIL]
+ Zone	Pacific/Nauru	11:07:40 -	LMT	1921 Jan 15 # Uaobe
+-			11:30	-	+1130	1942 Mar 15
+-			9:00	-	+09	1944 Aug 15
+-			11:30	-	+1130	1979 May
++			11:30	-	+1130	1942 Aug 29
++			 9:00	-	+09	1945 Sep  8
++			11:30	-	+1130	1979 Feb 10  2:00
+ 			12:00	-	+12
+ 
+ # New Caledonia
+@@ -552,8 +611,9 @@ Zone	Pacific/Norfolk	11:11:52 -	LMT	1901 # Kingston
+ 
+ # Palau (Belau)
+ # Zone	NAME		GMTOFF	RULES	FORMAT	[UNTIL]
+-Zone Pacific/Palau	8:57:56 -	LMT	1901 # Koror
+-			9:00	-	+09
++Zone Pacific/Palau	-15:02:04 -	LMT	1844 Dec 31	# Koror
++			  8:57:56 -	LMT	1901
++			  9:00	-	+09
+ 
+ # Papua New Guinea
+ # Zone	NAME		GMTOFF	RULES	FORMAT	[UNTIL]
+@@ -815,7 +875,7 @@ Zone	Pacific/Wallis	12:15:20 -	LMT	1901
+ # tz@iana.org for general use in the future).  For more, please see
+ # the file CONTRIBUTING in the tz distribution.
+ 
+-# From Paul Eggert (2017-02-10):
++# From Paul Eggert (2018-11-18):
+ #
+ # Unless otherwise specified, the source for data through 1990 is:
+ # Thomas G. Shanks and Rique Pottenger, The International Atlas (6th edition),
+@@ -840,6 +900,7 @@ Zone	Pacific/Wallis	12:15:20 -	LMT	1901
+ # A reliable and entertaining source about time zones is
+ # Derek Howse, Greenwich time and longitude, Philip Wilson Publishers (1997).
+ #
++# I invented the abbreviation marked "*".
+ # The following abbreviations are from other sources.
+ # Corrections are welcome!
+ #		std	dst
+@@ -847,7 +908,7 @@ Zone	Pacific/Wallis	12:15:20 -	LMT	1901
+ #	  8:00	AWST	AWDT	Western Australia
+ #	  9:30	ACST	ACDT	Central Australia
+ #	 10:00	AEST	AEDT	Eastern Australia
+-#	 10:00	GST		Guam through 2000
++#	 10:00	GST	GDT*	Guam through 2000
+ #	 10:00	ChST		Chamorro
+ #	 11:30	NZMT	NZST	New Zealand through 1945
+ #	 12:00	NZST	NZDT	New Zealand 1946-present
+@@ -1546,28 +1607,70 @@ Zone	Pacific/Wallis	12:15:20 -	LMT	1901
+ 
+ # Kwajalein
+ 
+-# In comp.risks 14.87 (26 August 1993), Peter Neumann writes:
+-# I wonder what happened in Kwajalein, where there was NO Friday,
+-# 1993-08-20.  Thursday night at midnight Kwajalein switched sides with
+-# respect to the International Date Line, to rejoin its fellow islands,
+-# going from 11:59 p.m. Thursday to 12:00 m. Saturday in a blink.
++# From an AP article (1993-08-22):
++# "The nearly 3,000 Americans living on this remote Pacific atoll have a good
++# excuse for not remembering Saturday night: there wasn't one.  Residents were
++# going to bed Friday night and waking up Sunday morning because at midnight
++# -- 8 A.M. Eastern daylight time on Saturday -- Kwajalein was jumping from
++# one side of the international date line to the other."
++# "In Marshall Islands, Friday is followed by Sunday", NY Times. 1993-08-22.
++# https://www.nytimes.com/1993/08/22/world/in-marshall-islands-friday-is-followed-by-sunday.html
++
++# From Phake Nick (2018-10-27):
++# <https://wiki.suikawiki.org/n/南洋群島の標準時> ... pointed out that
++# currently tzdata say Pacific/Kwajalein switched from GMT+11 to GMT-12 in
++# 1969 October without explanation, however an 1993 article from NYT say it
++# synchorized its day with US mainland about 40 years ago and thus the switch
++# should occur at around 1950s instead.
++#
++# From Paul Eggert (2018-11-18):
++# The NYT (actually, AP) article is vague and possibly wrong about this.
++# The article says the earlier switch was "40 years ago when the United States
++# Army established a missile test range here".  However, the Kwajalein Test
++# Center was established on 1960-10-01 and was run by the US Navy.  It was
++# transferred to the US Army on 1964-07-01.  See "Seize the High Ground"
++# <https://history.army.mil/html/books/070/70-88-1/cmhPub_70-88-1.pdf>.
++# Given that Shanks was right on the money about the 1993 change, I'm inclined
++# to take Shanks's word for the 1969 change unless we find better evidence.
+ 
+ 
+ # N Mariana Is, Guam
+ 
++# From Phake Nick (2018-10-27):
++# Guam Island was briefly annexed by Japan during ... year 1941-1944 ...
++# however there are no detailed information about what time it use during that
++# period.  It would probably be reasonable to assume Guam use GMT+9 during
++# that period of time like the surrounding area.
++
++# From Paul Eggert (2018-11-18):
+ # Howse writes (p 153) "The Spaniards, on the other hand, reached the
+ # Philippines and the Ladrones from America," and implies that the Ladrones
+ # (now called the Marianas) kept American date for quite some time.
+ # For now, we assume the Ladrones switched at the same time as the Philippines;
+ # see Asia/Manila.
+-
++#
++# Use 1941-12-10 and 1944-07-31 for Guam WWII transitions, as the rough start
++# and end of Japanese control of Agana.  We don't know whether the Northern
++# Marianas followed Guam's DST rules from 1959 through 1977; for now, assume
++# they did as that avoids the need for a separate zone due to our 1970 cutoff.
++#
+ # US Public Law 106-564 (2000-12-23) made UT +10 the official standard time,
+ # under the name "Chamorro Standard Time".  There is no official abbreviation,
+ # but Congressman Robert A. Underwood, author of the bill that became law,
+ # wrote in a press release (2000-12-27) that he will seek the use of "ChST".
+ 
++# See also the commentary for Micronesia.
+ 
+-# Micronesia
++
++# Marshall Is
++# See the commentary for Micronesia.
++
++
++# Micronesia (and nearby)
++
++# From Paul Eggert (2018-11-18):
++# Like the Ladrones (see Guam commentary), assume the Spanish East Indies
++# kept American time until the Philippines switched at the end of 1844.
+ 
+ # Alan Eugene Davis writes (1996-03-16),
+ # "I am certain, having lived there for the past decade, that 'Truk'
+@@ -1583,6 +1686,95 @@ Zone	Pacific/Wallis	12:15:20 -	LMT	1901
+ # that Truk and Yap are UT +10, and Ponape and Kosrae are +11.
+ # We don't know when Kosrae switched from +12; assume January 1 for now.
+ 
++# From Phake Nick (2018-10-27):
++#
++# From a Japanese wiki site https://wiki.suikawiki.org/n/南洋群島の標準時
++# ...
++# For "Southern Islands" (modern region of Mariana + Palau + Federation of
++# Micronesia + Marshall Islands):
++#
++# A 1906 Japanese magazine shown the Caroline Islands and Mariana Islands
++# who was occupied by Germany at the time as GMT+10, together with the like
++# of German New Guinea.  However there is a marking saying it have not been
++# implemented (yet).  No further information after that were found.
++#
++# Japan invaded those islands in 1914, and records shows that they were
++# instructed to use JST at the time.
++#
++# 1915 January telecommunication record on the Jaluit Atoll shows they use
++# the meridian of 170E as standard time (GMT+11:20), which is similar to the
++# longitude of the atoll.
++# 1915 February record say the 170E standard time is to be used until
++# February 9 noon, and after February 9 noon they are to use JST.
++# However these are time used within the Japanese Military at the time and
++# probably does not reflect the time used by local resident at the time (that
++# is if they keep their own time back then)
++#
++# In January 1919 the occupying force issued a command that split the area
++# into three different timezone with meridian of 135E, 150E, 165E (JST+0, +1,
++# +2), and the command was to become effective from February 1 of the same
++# year.  Despite the target of the command is still only for the occupying
++# force itself, further publication have described the time as the standard
++# time for the occupied area and thus it can probably be seen as such.
++#  * Area that use meridian of 135E: Palau and Yap civil administration area
++#    (Southern Islands Western Standard Time)
++#  * Area that use meridian of 150E: Truk (Chuuk) and Saipan civil
++#    administration area (Southern Islands Central Standard Time)
++#  * Area that use meridian of 165E: Ponape (Pohnpei) and Jaluit civil
++#    administration area (Southern Islands Eastern Standard Time).
++#  * In the next few years Japanese occupation of those islands have been
++#    formalized via League of Nation Mandate (South Pacific Mandate) and formal
++#    governance structure have been established, these district [become
++#    subprefectures] and timezone classification have been inherited as standard
++#    time of the area.
++#  * Saipan subprefecture include Mariana islands (exclude Guam which was
++#    occupied by America at the time), Palau and Yap subprefecture rule the
++#    Western Caroline Islands with 137E longitude as border, Truk and Ponape
++#    subprefecture rule the Eastern Caroline Islands with 154E as border, Ponape
++#    subprefecture also rule part of Marshall Islands to the west of 164E
++#    starting from (1918?) and Jaluit subprefecture rule the rest of the
++#    Marshall Islands.
++#
++# And then in year 1937, an announcement was made to change the time in the
++# area into 2 timezones:
++#  * Area that use meridian of 135E: area administered by Palau, Yap and
++#    Saipan subprefecture (Southern Islands Western Standard Time)
++#  * Area that use meridian of 150E: area administered by Truk (Chuuk),
++#    Ponape (Pohnpei) and Jaluit subprefecture (Southern Islands Eastern
++#    Standard Time)
++#
++# Another announcement issued in 1941 say that on April 1 that year,
++# standard time of the Southern Islands would be changed to use the meridian
++# of 135E (GMT+9), and thus abolishing timezone different within the area.
++#
++# Then Pacific theater of WWII started and Japan slowly lose control on the
++# island.  The webpage I linked above contain no information during this
++# period of time....
++#
++# After the end of WWII, in 1946 February, a document written by the
++# (former?) Japanese military personnel describe there are 3 hours time
++# different between Caroline islands time/Wake island time and the Chungking
++# time, which would mean the time being used there at the time was GMT+10.
++#
++# After that, the area become Trust Territories of the Pacific Islands
++# under American administration from year 1947.  The site listed some
++# American/International books/maps/publications about time used in those
++# area during this period of time but they doesn't seems to be reliable
++# information so it would be the best if someone know where can more reliable
++# information can be found.
++#
++#
++# From Paul Eggert (2018-11-18):
++#
++# For the above, use vague dates like "1914" and "1945" for transitions that
++# plausibly exist but for which the details are not known.  The information
++# for Wake is too sketchy to act on.
++#
++# The 1906 GMT+10 info about German-controlled islands might not have been
++# done, so omit it from the data for now.
++#
++# The Jaluit info governs Kwajalein.
++
+ 
+ # Midway
+ 
+@@ -1600,6 +1792,29 @@ Zone	Pacific/Wallis	12:15:20 -	LMT	1901
+ # started DST on June 3.  Possibly DST was observed other years
+ # in Midway, but we have no record of it.
+ 
++# Nauru
++
++# From Phake Nick (2018-10-31):
++# Currently, the tz database say Nauru use LMT until 1921, and then
++# switched to GMT+11:30 for the next two decades.
++# However, a number of timezone map published in America/Japan back then
++# showed its timezone as GMT+11 per https://wiki.suikawiki.org/n/ナウルの標準時
++# And it would also be nice if the 1921 transition date could be sourced.
++# ...
++# The "Nauru Standard Time Act 1978 Time Change"
++# http://ronlaw.gov.nr/nauru_lpms/files/gazettes/4b23a17d2030150404db7a5fa5872f52.pdf#page=3
++# based on "Nauru Standard Time Act 1978 Time Change"
++# http://www.paclii.org/nr/legis/num_act/nsta1978207/ defined that "Nauru
++# Alternative Time" (GMT+12) should be in effect from 1979 Feb.
++#
++# From Paul Eggert (2018-11-19):
++# The 1921-01-15 introduction of standard time is in Shanks; it is also in
++# "Standard Time Throughout the World", US National Bureau of Standards (1935),
++# page 3, which does not give the UT offset.  In response to a comment by
++# Phake Nick I set the Nauru time of occupation by Japan to
++# 1942-08-29/1945-09-08 by using dates from:
++# https://en.wikipedia.org/wiki/Japanese_occupation_of_Nauru
++
+ # Norfolk
+ 
+ # From Alexander Krivenyshev (2015-09-23):
+@@ -1615,6 +1830,9 @@ Zone	Pacific/Wallis	12:15:20 -	LMT	1901
+ # other than in 1974/5.  See:
+ # https://www.timeanddate.com/time/australia/norfolk-island.html
+ 
++# Palau
++# See commentary for Micronesia.
++
+ # Pitcairn
+ 
+ # From Rives McDow (1999-11-08):
+@@ -1779,6 +1997,9 @@ Zone	Pacific/Wallis	12:15:20 -	LMT	1901
+ # From Paul Eggert (2003-03-23):
+ # We have no other report of DST in Wake Island, so omit this info for now.
+ 
++# See also the commentary for Micronesia.
++
++
+ ###############################################################################
+ 
+ # The International Date Line
+diff --git a/src/main/java/org/joda/time/tz/src/backward b/src/main/java/org/joda/time/tz/src/backward
+index 51e10f4ce..b4ae3cf9d 100644
+--- a/src/main/java/org/joda/time/tz/src/backward
++++ b/src/main/java/org/joda/time/tz/src/backward
+@@ -77,6 +77,7 @@ Link	Pacific/Easter		Chile/EasterIsland
+ Link	America/Havana		Cuba
+ Link	Africa/Cairo		Egypt
+ Link	Europe/Dublin		Eire
++Link	Etc/UTC			Etc/UCT
+ Link	Europe/London		Europe/Belfast
+ Link	Europe/Chisinau		Europe/Tiraspol
+ Link	Europe/London		GB
+@@ -111,7 +112,7 @@ Link	Asia/Taipei		ROC
+ Link	Asia/Seoul		ROK
+ Link	Asia/Singapore		Singapore
+ Link	Europe/Istanbul		Turkey
+-Link	Etc/UCT			UCT
++Link	Etc/UTC			UCT
+ Link	America/Anchorage	US/Alaska
+ Link	America/Adak		US/Aleutian
+ Link	America/Phoenix		US/Arizona
+diff --git a/src/main/java/org/joda/time/tz/src/etcetera b/src/main/java/org/joda/time/tz/src/etcetera
+index 91ded935c..a1606bde8 100644
+--- a/src/main/java/org/joda/time/tz/src/etcetera
++++ b/src/main/java/org/joda/time/tz/src/etcetera
+@@ -19,7 +19,6 @@
+ 
+ Zone	Etc/GMT		0	-	GMT
+ Zone	Etc/UTC		0	-	UTC
+-Zone	Etc/UCT		0	-	UCT
+ 
+ # The following link uses older naming conventions,
+ # but it belongs here, not in the file 'backward',
+diff --git a/src/main/java/org/joda/time/tz/src/europe b/src/main/java/org/joda/time/tz/src/europe
+index 587f7b03c..b735a48d7 100644
+--- a/src/main/java/org/joda/time/tz/src/europe
++++ b/src/main/java/org/joda/time/tz/src/europe
+@@ -1855,7 +1855,7 @@ Zone Europe/Luxembourg	0:24:36 -	LMT	1904 Jun
+ 			1:00	Belgium	CE%sT	1977
+ 			1:00	EU	CE%sT
+ 
+-# Macedonia
++# North Macedonia
+ # See Europe/Belgrade.
+ 
+ # Malta
+@@ -3359,7 +3359,7 @@ Zone	Europe/Belgrade	1:22:00	-	LMT	1884
+ Link Europe/Belgrade Europe/Ljubljana	# Slovenia
+ Link Europe/Belgrade Europe/Podgorica	# Montenegro
+ Link Europe/Belgrade Europe/Sarajevo	# Bosnia and Herzegovina
+-Link Europe/Belgrade Europe/Skopje	# Macedonia
++Link Europe/Belgrade Europe/Skopje	# North Macedonia
+ Link Europe/Belgrade Europe/Zagreb	# Croatia
+ 
+ # Slovakia
+diff --git a/src/main/java/org/joda/time/tz/src/northamerica b/src/main/java/org/joda/time/tz/src/northamerica
+index 9d5bad2f7..eee8de0fb 100644
+--- a/src/main/java/org/joda/time/tz/src/northamerica
++++ b/src/main/java/org/joda/time/tz/src/northamerica
+@@ -599,6 +599,26 @@ Zone America/Los_Angeles -7:52:58 -	LMT	1883 Nov 18 12:07:02
+ # between AKST and AKDT from now on....
+ # https://www.krbd.org/2015/10/30/annette-island-times-they-are-a-changing/
+ 
++# From Ryan Stanley (2018-11-06):
++# The Metlakatla community in Alaska has decided not to change its
++# clock back an hour starting on November 4th, 2018 (day before yesterday).
++# They will be gmtoff=-28800 year-round.
++# https://www.facebook.com/141055983004923/photos/pb.141055983004923.-2207520000.1541465673./569081370202380/
++
++# From Paul Eggert (2018-12-16):
++# In a 2018-12-11 special election, Metlakatla voted to go back to
++# Alaska time (including daylight saving time) starting next year.
++# https://www.krbd.org/2018/12/12/metlakatla-to-follow-alaska-standard-time-allow-liquor-sales/
++#
++# From Ryan Stanley (2019-01-11):
++# The community will be changing back on the 20th of this month...
++# From Tim Parenti (2019-01-11):
++# Per an announcement on the Metlakatla community's official Facebook page, the
++# "fall back" will be on Sunday 2019-01-20 at 02:00:
++# https://www.facebook.com/141055983004923/photos/607150969728753/
++# So they won't be waiting for Alaska to join them on 2019-03-10, but will
++# rather change their clocks twice in seven weeks.
++
+ # Zone	NAME		GMTOFF	RULES	FORMAT	[UNTIL]
+ Zone America/Juneau	 15:02:19 -	LMT	1867 Oct 19 15:33:32
+ 			 -8:57:41 -	LMT	1900 Aug 20 12:00
+@@ -625,6 +645,8 @@ Zone America/Metlakatla	 15:13:42 -	LMT	1867 Oct 19 15:44:55
+ 			 -8:00	-	PST	1969
+ 			 -8:00	US	P%sT	1983 Oct 30  2:00
+ 			 -8:00	-	PST	2015 Nov  1  2:00
++			 -9:00	US	AK%sT	2018 Nov  4  2:00
++			 -8:00	-	PST	2019 Jan 20  2:00
+ 			 -9:00	US	AK%sT
+ Zone America/Yakutat	 14:41:05 -	LMT	1867 Oct 19 15:12:18
+ 			 -9:18:55 -	LMT	1900 Aug 20 12:00
+@@ -785,6 +807,22 @@ Zone America/Boise	-7:44:49 -	LMT	1883 Nov 18 12:15:11
+ # For a map of Indiana's time zone regions, see:
+ # https://en.wikipedia.org/wiki/Time_in_Indiana
+ #
++# From Paul Eggert (2018-11-30):
++# A brief but entertaining history of time in Indiana describes a 1949 debate
++# in the Indiana House where city legislators (who favored "fast time")
++# tussled with farm legislators (who didn't) over a bill to outlaw DST:
++#  "Lacking enough votes, the city faction tries to filibuster until time runs
++#   out on the session at midnight, but rural champion Rep. Herbert Copeland,
++#   R-Madison, leans over the gallery railing and forces the official clock
++#   back to 9 p.m., breaking it in the process.  The clock sticks on 9 as the
++#   debate rages on into the night.  The filibuster finally dies out and the
++#   bill passes, while outside the chamber, clocks read 3:30 a.m.  In the end,
++#   it doesn't matter which side won.  The law has no enforcement powers and
++#   is simply ignored by fast-time communities."
++# How Indiana went from 'God's time' to split zones and daylight-saving.
++# Indianapolis Star. 2018-11-27 14:58 -05.
++# https://www.indystar.com/story/news/politics/2018/11/27/indianapolis-indiana-time-zone-history-central-eastern-daylight-savings-time/2126300002/
++#
+ # From Paul Eggert (2007-08-17):
+ # Since 1970, most of Indiana has been like America/Indiana/Indianapolis,
+ # with the following exceptions:
+
+From 8815f5246b603c5d6d98164967c145ac672f7ddf Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Thu, 9 May 2019 14:19:10 +0100
+Subject: [PATCH 15/16] Compiler should not be verbose
+
+---
+ pom.xml | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/pom.xml b/pom.xml
+index e0fe3acca..2a5e5cc76 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -1006,7 +1006,7 @@
+     <maven.compiler.source>1.5</maven.compiler.source>
+     <maven.compiler.target>1.5</maven.compiler.target>
+     <maven.compiler.fork>true</maven.compiler.fork>
+-    <maven.compiler.verbose>true</maven.compiler.verbose>
++    <maven.compiler.verbose>false</maven.compiler.verbose>
+     <maven.compiler.optimize>true</maven.compiler.optimize>
+     <maven.compiler.debug>true</maven.compiler.debug>
+     <maven.compiler.debuglevel>lines,source</maven.compiler.debuglevel>
+
+From cd58bd7f397682cbd889940096a9d9a4fccbbad4 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Thu, 9 May 2019 14:39:04 +0100
+Subject: [PATCH 16/16] Release v2.10.2
+
+---
+ README.md                  |  6 +++---
+ pom.xml                    |  2 +-
+ src/changes/changes.xml    |  2 +-
+ src/conf/MANIFEST.MF       | 18 +++++++++---------
+ src/site/markdown/index.md |  4 ++--
+ 5 files changed, 16 insertions(+), 16 deletions(-)
+
+diff --git a/README.md b/README.md
+index 284e46c8c..872035f8f 100644
+--- a/README.md
++++ b/README.md
+@@ -51,7 +51,7 @@ Various documentation is available:
+ 
+ 
+ ### Releases
+-[Release 2.10.1](https://www.joda.org/joda-time/download.html) is the current latest release.
++[Release 2.10.2](https://www.joda.org/joda-time/download.html) is the current latest release.
+ This release is considered stable and worthy of the 2.x tag.
+ It depends on JDK 1.5 or later.
+ 
+@@ -62,13 +62,13 @@ Available in the [Maven Central repository](https://search.maven.org/search?q=g:
+ <dependency>
+   <groupId>joda-time</groupId>
+   <artifactId>joda-time</artifactId>
+-  <version>2.10.1</version>
++  <version>2.10.2</version>
+ </dependency>
+ ```
+ 
+ **Gradle configuration:**
+ ```groovy
+-compile 'joda-time:joda-time:2.10.1'
++compile 'joda-time:joda-time:2.10.2'
+ ```
+ 
+ ![Tidelift dependency check](https://tidelift.com/badges/github/JodaOrg/joda-time)
+diff --git a/pom.xml b/pom.xml
+index 2a5e5cc76..4990a6009 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -8,7 +8,7 @@
+   <artifactId>joda-time</artifactId>
+   <packaging>jar</packaging>
+   <name>Joda-Time</name>
+-  <version>2.10.2-SNAPSHOT</version>
++  <version>2.10.2</version>
+   <description>Date and time library to replace JDK date handling</description>
+   <url>https://www.joda.org/joda-time/</url>
+ 
+diff --git a/src/changes/changes.xml b/src/changes/changes.xml
+index 22ee75d70..22efc8534 100644
+--- a/src/changes/changes.xml
++++ b/src/changes/changes.xml
+@@ -8,7 +8,7 @@
+   <body>
+ 
+     <!-- types are add, fix, remove, update -->
+-    <release version="2.10.2" date="SNAPSHOT" description="v2.10.2">
++    <release version="2.10.2" date="2019-05-09" description="v2.10.2">
+       <action dev="jodastephen" type="update">
+         DateTimeZone data updated to version 2019a.
+       </action>
+diff --git a/src/conf/MANIFEST.MF b/src/conf/MANIFEST.MF
+index 1f121a5f9..6d4bc6333 100644
+--- a/src/conf/MANIFEST.MF
++++ b/src/conf/MANIFEST.MF
+@@ -5,19 +5,19 @@ Specification-Vendor: Joda.org
+ Specification-Version: 2.10
+ Implementation-Vendor: Joda.org
+ Implementation-Title: org.joda.time
+-Implementation-Version: 2.10.1
++Implementation-Version: 2.10.2
+ Implementation-Vendor-Id: org.joda
+ Bundle-ManifestVersion: 2
+ Bundle-Vendor: Joda.org
+ Bundle-Name: Joda-Time
+ Bundle-SymbolicName: joda-time
+-Bundle-Version: 2.10.1
+-Export-Package: org.joda.time;version=2.10.1,
+- org.joda.time.base;version=2.10.1,
+- org.joda.time.chrono;version=2.10.1,
+- org.joda.time.convert;version=2.10.1,
+- org.joda.time.field;version=2.10.1,
+- org.joda.time.format;version=2.10.1,
+- org.joda.time.tz;version=2.10.1
++Bundle-Version: 2.10.2
++Export-Package: org.joda.time;version=2.10.2,
++ org.joda.time.base;version=2.10.2,
++ org.joda.time.chrono;version=2.10.2,
++ org.joda.time.convert;version=2.10.2,
++ org.joda.time.field;version=2.10.2,
++ org.joda.time.format;version=2.10.2,
++ org.joda.time.tz;version=2.10.2
+ Bundle-License: Apache 2.0
+ Bundle-DocURL: https://www.joda.org/joda-time/
+diff --git a/src/site/markdown/index.md b/src/site/markdown/index.md
+index 5fd89b75e..ee3ad4b07 100644
+--- a/src/site/markdown/index.md
++++ b/src/site/markdown/index.md
+@@ -130,7 +130,7 @@ Joda-Time is licenced under the business friendly <a href="licenses.html">Apache
+ 
+ ## <i></i> Releases
+ 
+-[Release 2.10.1](download.html) is the current latest release.
++[Release 2.10.2](download.html) is the current latest release.
+ This release is considered stable and worthy of the 2.x tag.
+ See the [change notes](changes-report.html) for full details.
+ 
+@@ -144,7 +144,7 @@ Available in [Maven Central](https://search.maven.org/search?q=g:joda-time%20AND
+ <dependency>
+   <groupId>joda-time</groupId>
+   <artifactId>joda-time</artifactId>
+-  <version>2.10.1</version>
++  <version>2.10.2</version>
+ </dependency>
+ ```
+ 

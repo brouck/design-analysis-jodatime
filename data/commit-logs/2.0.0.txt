@@ -1,0 +1,4170 @@
+From 67f1a30fc0fceda751b6347b2b16a5081878ac1e Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Tue, 21 Jun 2011 12:38:00 +0100
+Subject: [PATCH 01/21] Rework fix to ensure immutable classes by using
+ volatile instance variables
+
+Original fix relied on a reflection hack that isn't guaranteed to work
+---
+ RELEASE-NOTES.txt                             |  10 +-
+ .../java/org/joda/time/base/BaseDateTime.java |  18 +--
+ .../java/org/joda/time/base/BaseDuration.java |   8 +-
+ .../java/org/joda/time/base/BaseInterval.java |  17 +--
+ .../joda/time/base/BaseSingleFieldPeriod.java |   8 +-
+ .../org/joda/time/base/MutableHelper.java     | 105 ------------------
+ src/site/xdoc/upgradeto200.xml                |  10 +-
+ 7 files changed, 27 insertions(+), 149 deletions(-)
+ delete mode 100644 src/main/java/org/joda/time/base/MutableHelper.java
+
+diff --git a/RELEASE-NOTES.txt b/RELEASE-NOTES.txt
+index 9a97b476e..fcbec0910 100644
+--- a/RELEASE-NOTES.txt
++++ b/RELEASE-NOTES.txt
+@@ -32,6 +32,11 @@ Enhancements since 1.6
+ - Move to Java 5, with generics
+   See compatability notes.
+ 
++- Appropriate Java Memory Model settings
++  The fields in the Base* classes, such as BaseDateTime and BaseDuration have been made volatile/final.
++  This was necessary to comply with the Java Memory Model to ensure correct immutable behaviour.
++  There should be no adverse effect from this change.
++
+ - Add YearMonth, useful for credit card dates [1863090]
+ 
+ - Add MonthDay, useful for birth dates without year
+@@ -140,11 +145,6 @@ This minor source incompatibility for a very few users was deemed to be the best
+ difficult options that generics offers.
+ As mentioned above, erasure ensures that this source incompatibility is *not* a binary compatibility.
+ 
+-The fields in the Base* classes, such as BaseDateTime and BaseDuration have been made final.
+-This was necessary to comply with the Java Memory Model to ensure correct immutable behaviour
+-The setters have been altered to set the variable via reflection (which can avoid the final field restriction).
+-This may have an adverse effect on performance of mutable classes (use the immutable classes instead).
+-
+ Note that not all deprecated elements have been removed.
+ Some methods and classes have been retained simply because the potential pain of binary incompatability
+ is greater than the gain of removing the deprecations.
+diff --git a/src/main/java/org/joda/time/base/BaseDateTime.java b/src/main/java/org/joda/time/base/BaseDateTime.java
+index 2864ffe0d..ccb73cfbc 100644
+--- a/src/main/java/org/joda/time/base/BaseDateTime.java
++++ b/src/main/java/org/joda/time/base/BaseDateTime.java
+@@ -48,9 +48,9 @@
+     private static final long serialVersionUID = -6728882245981L;
+ 
+     /** The millis from 1970-01-01T00:00:00Z */
+-    private final long iMillis;
++    private volatile long iMillis;
+     /** The chronology to use */
+-    private final Chronology iChronology;
++    private volatile Chronology iChronology;
+ 
+     //-----------------------------------------------------------------------
+     /**
+@@ -310,16 +310,11 @@ public Chronology getChronology() {
+      * <p>
+      * All changes to the millisecond field occurs via this method.
+      * Override and block this method to make a subclass immutable.
+-     * <p>
+-     * In version 2.0 and later, this method uses reflection. This is because the
+-     * instance variable has been changed to be final to satisfy the Java Memory Model.
+-     * This only impacts subclasses that are mutable.
+      *
+      * @param instant  the milliseconds since 1970-01-01T00:00:00Z to set the datetime to
+      */
+     protected void setMillis(long instant) {
+-        instant = checkInstant(instant, iChronology);
+-        MutableHelper.setDateTimeMillis(this, instant);
++        iMillis = checkInstant(instant, iChronology);
+     }
+ 
+     /**
+@@ -327,16 +322,11 @@ protected void setMillis(long instant) {
+      * <p>
+      * All changes to the chronology field occurs via this method.
+      * Override and block this method to make a subclass immutable.
+-     * <p>
+-     * In version 2.0 and later, this method uses reflection. This is because the
+-     * instance variable has been changed to be final to satisfy the Java Memory Model.
+-     * This only impacts subclasses that are mutable.
+      *
+      * @param chronology  the chronology to set
+      */
+     protected void setChronology(Chronology chronology) {
+-        chronology = checkChronology(chronology);
+-        MutableHelper.setDateTimeChrono(this, chronology);
++        iChronology = checkChronology(chronology);
+     }
+ 
+ }
+diff --git a/src/main/java/org/joda/time/base/BaseDuration.java b/src/main/java/org/joda/time/base/BaseDuration.java
+index f028b3222..69359f5eb 100644
+--- a/src/main/java/org/joda/time/base/BaseDuration.java
++++ b/src/main/java/org/joda/time/base/BaseDuration.java
+@@ -50,7 +50,7 @@
+     private static final long serialVersionUID = 2581698638990L;
+ 
+     /** The duration length */
+-    private final long iMillis;
++    private volatile long iMillis;
+ 
+     /**
+      * Creates a duration from the given millisecond duration.
+@@ -118,15 +118,11 @@ public long getMillis() {
+     //-----------------------------------------------------------------------
+     /**
+      * Sets the length of this duration in milliseconds.
+-     * <p>
+-     * In version 2.0 and later, this method uses reflection. This is because the
+-     * instance variable has been changed to be final to satisfy the Java Memory Model.
+-     * This only impacts subclasses that are mutable.
+      * 
+      * @param duration  the new length of the duration
+      */
+     protected void setMillis(long duration) {
+-        MutableHelper.setDurationMillis(this, duration);
++        iMillis = duration;
+     }
+ 
+     //-----------------------------------------------------------------------
+diff --git a/src/main/java/org/joda/time/base/BaseInterval.java b/src/main/java/org/joda/time/base/BaseInterval.java
+index a2782a2a3..6cb5abe50 100644
+--- a/src/main/java/org/joda/time/base/BaseInterval.java
++++ b/src/main/java/org/joda/time/base/BaseInterval.java
+@@ -20,6 +20,7 @@
+ import org.joda.time.Chronology;
+ import org.joda.time.DateTimeUtils;
+ import org.joda.time.MutableInterval;
++import org.joda.time.ReadWritableInterval;
+ import org.joda.time.ReadableDuration;
+ import org.joda.time.ReadableInstant;
+ import org.joda.time.ReadableInterval;
+@@ -52,11 +53,11 @@
+     private static final long serialVersionUID = 576586928732749278L;
+ 
+     /** The chronology of the interval */
+-    private final Chronology iChronology;
++    private volatile Chronology iChronology;
+     /** The start of the interval */
+-    private final long iStartMillis;
++    private volatile long iStartMillis;
+     /** The end of the interval */
+-    private final long iEndMillis;
++    private volatile long iEndMillis;
+ 
+     /**
+      * Constructs an interval from a start and end instant.
+@@ -192,6 +193,8 @@ protected BaseInterval(Object interval, Chronology chrono) {
+             iChronology = (chrono != null ? chrono : input.getChronology());
+             iStartMillis = input.getStartMillis();
+             iEndMillis = input.getEndMillis();
++        } else if (this instanceof ReadWritableInterval) {
++            converter.setInto((ReadWritableInterval) this, interval, chrono);
+         } else {
+             MutableInterval mi = new MutableInterval();
+             converter.setInto(mi, interval, chrono);
+@@ -235,10 +238,6 @@ public long getEndMillis() {
+     //-----------------------------------------------------------------------
+     /**
+      * Sets this interval from two millisecond instants and a chronology.
+-     * <p>
+-     * In version 2.0 and later, this method uses reflection. This is because the
+-     * instance variable has been changed to be final to satisfy the Java Memory Model.
+-     * This only impacts subclasses that are mutable.
+      *
+      * @param startInstant  the start of the time interval
+      * @param endInstant  the start of the time interval
+@@ -247,7 +246,9 @@ public long getEndMillis() {
+      */
+     protected void setInterval(long startInstant, long endInstant, Chronology chrono) {
+         checkInterval(startInstant, endInstant);
+-        MutableHelper.setInterval(this, startInstant, endInstant, DateTimeUtils.getChronology(chrono));
++        iStartMillis = startInstant;
++        iEndMillis = endInstant;
++        iChronology = DateTimeUtils.getChronology(chrono);
+     }
+ 
+ }
+diff --git a/src/main/java/org/joda/time/base/BaseSingleFieldPeriod.java b/src/main/java/org/joda/time/base/BaseSingleFieldPeriod.java
+index aec2d02fe..79283b5b2 100644
+--- a/src/main/java/org/joda/time/base/BaseSingleFieldPeriod.java
++++ b/src/main/java/org/joda/time/base/BaseSingleFieldPeriod.java
+@@ -50,7 +50,7 @@
+     private static final long serialVersionUID = 9386874258972L;
+ 
+     /** The period in the units of this period. */
+-    private final int iPeriod;
++    private volatile int iPeriod;
+ 
+     //-----------------------------------------------------------------------
+     /**
+@@ -169,15 +169,11 @@ protected int getValue() {
+     /**
+      * Sets the amount of this period.
+      * To make a subclass immutable you must declare it final, or block this method.
+-     * <p>
+-     * In version 2.0 and later, this method uses reflection. This is because the
+-     * instance variable has been changed to be final to satisfy the Java Memory Model.
+-     * This only impacts subclasses that are mutable.
+      *
+      * @param value  the period value
+      */
+     protected void setValue(int value) {
+-        MutableHelper.setSingleFieldPeriodValue(this, value);
++        iPeriod = value;
+     }
+ 
+     //-----------------------------------------------------------------------
+diff --git a/src/main/java/org/joda/time/base/MutableHelper.java b/src/main/java/org/joda/time/base/MutableHelper.java
+deleted file mode 100644
+index 8e1e976a1..000000000
+--- a/src/main/java/org/joda/time/base/MutableHelper.java
++++ /dev/null
+@@ -1,105 +0,0 @@
+-/*
+- *  Copyright 2001-2011 Stephen Colebourne
+- *
+- *  Licensed under the Apache License, Version 2.0 (the "License");
+- *  you may not use this file except in compliance with the License.
+- *  You may obtain a copy of the License at
+- *
+- *      http://www.apache.org/licenses/LICENSE-2.0
+- *
+- *  Unless required by applicable law or agreed to in writing, software
+- *  distributed under the License is distributed on an "AS IS" BASIS,
+- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+- *  See the License for the specific language governing permissions and
+- *  limitations under the License.
+- */
+-package org.joda.time.base;
+-
+-import java.lang.reflect.Field;
+-
+-import org.joda.time.Chronology;
+-
+-/**
+- * Helper to handle mutable classes that are hard to deal with now there is
+- * the Java Memory Model.
+- *
+- * @author Stephen Colebourne
+- * @since 2.0
+- */
+-final class MutableHelper {
+-
+-    private static final Field DATE_TIME_MILLIS;
+-    private static final Field DATE_TIME_CHRONO;
+-    private static final Field DURATION_MILLIS;
+-    private static final Field SINGLE_FIELD_PERIOD;
+-    private static final Field INTERVAL_START;
+-    private static final Field INTERVAL_END;
+-    private static final Field INTERVAL_CHRONO;
+-    static {
+-        try {
+-            DATE_TIME_MILLIS = BaseDateTime.class.getDeclaredField("iMillis");
+-            DATE_TIME_MILLIS.setAccessible(true);
+-            DATE_TIME_CHRONO = BaseDateTime.class.getDeclaredField("iChronology");
+-            DATE_TIME_CHRONO.setAccessible(true);
+-            DURATION_MILLIS = BaseDuration.class.getDeclaredField("iMillis");
+-            DURATION_MILLIS.setAccessible(true);
+-            SINGLE_FIELD_PERIOD = BaseSingleFieldPeriod.class.getDeclaredField("iPeriod");
+-            SINGLE_FIELD_PERIOD.setAccessible(true);
+-            INTERVAL_START = BaseInterval.class.getDeclaredField("iStartMillis");
+-            INTERVAL_START.setAccessible(true);
+-            INTERVAL_END = BaseInterval.class.getDeclaredField("iEndMillis");
+-            INTERVAL_END.setAccessible(true);
+-            INTERVAL_CHRONO = BaseInterval.class.getDeclaredField("iChronology");
+-            INTERVAL_CHRONO.setAccessible(true);
+-            
+-        } catch (Exception ex) {
+-            throw new RuntimeException("Joda-Time mutable classes require reflection", ex);
+-        }
+-    }
+-
+-    private MutableHelper() {
+-    }
+-
+-    static void setDateTimeMillis(BaseDateTime target, long instant) {
+-        try {
+-            DATE_TIME_MILLIS.set(target, instant);
+-        } catch (Exception ex) {
+-            throw new RuntimeException("Joda-Time mutable classes require reflection", ex);
+-        }
+-    }
+-
+-    static void setDateTimeChrono(BaseDateTime target, Chronology chrono) {
+-        try {
+-            DATE_TIME_CHRONO.set(target, chrono);
+-        } catch (Exception ex) {
+-            throw new RuntimeException("Joda-Time mutable classes require reflection", ex);
+-        }
+-    }
+-
+-    static void setDurationMillis(BaseDuration target, long duration) {
+-        try {
+-            DURATION_MILLIS.set(target, duration);
+-        } catch (Exception ex) {
+-            throw new RuntimeException("Joda-Time mutable classes require reflection", ex);
+-        }
+-    }
+-
+-    static void setSingleFieldPeriodValue(BaseSingleFieldPeriod target, int value) {
+-        try {
+-            SINGLE_FIELD_PERIOD.set(target, value);
+-        } catch (Exception ex) {
+-            throw new RuntimeException("Joda-Time mutable classes require reflection", ex);
+-        }
+-    }
+-
+-    static void setInterval(BaseInterval target, long startMillis, long endMillis, Chronology chrono) {
+-        try {
+-            INTERVAL_START.set(target, startMillis);
+-            INTERVAL_END.set(target, endMillis);
+-            INTERVAL_CHRONO.set(target, chrono);
+-        } catch (Exception ex) {
+-            throw new RuntimeException("Joda-Time mutable classes require reflection", ex);
+-        }
+-    }
+-
+-}
+diff --git a/src/site/xdoc/upgradeto200.xml b/src/site/xdoc/upgradeto200.xml
+index 0502835f6..f55612890 100644
+--- a/src/site/xdoc/upgradeto200.xml
++++ b/src/site/xdoc/upgradeto200.xml
+@@ -47,6 +47,11 @@ Enhancements since 1.6
+ - Move to Java 5, with generics
+   See compatability notes.
+ 
++- Appropriate Java Memory Model settings
++  The fields in the Base* classes, such as BaseDateTime and BaseDuration have been made volatile/final.
++  This was necessary to comply with the Java Memory Model to ensure correct immutable behaviour.
++  There should be no adverse effect from this change.
++
+ - Add YearMonth, useful for credit card dates [1863090]
+ 
+ - Add MonthDay, useful for birth dates without year
+@@ -155,11 +160,6 @@ This minor source incompatibility for a very few users was deemed to be the best
+ difficult options that generics offers.
+ As mentioned above, erasure ensures that this source incompatibility is *not* a binary compatibility.
+ 
+-The fields in the Base* classes, such as BaseDateTime and BaseDuration have been made final.
+-This was necessary to comply with the Java Memory Model to ensure correct immutable behaviour
+-The setters have been altered to set the variable via reflection (which can avoid the final field restriction).
+-This may have an adverse effect on performance of mutable classes (use the immutable classes instead).
+-
+ Note that not all deprecated elements have been removed.
+ Some methods and classes have been retained simply because the potential pain of binary incompatability
+ is greater than the gain of removing the deprecations.
+
+From 05df0f4615c0e863478d5c747e94429073c55af2 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Thu, 23 Jun 2011 08:11:42 +0100
+Subject: [PATCH 02/21] Make compile on Java 5 rather than Java 6
+
+---
+ src/main/java/org/joda/time/base/BasePeriod.java | 2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/src/main/java/org/joda/time/base/BasePeriod.java b/src/main/java/org/joda/time/base/BasePeriod.java
+index e7aeb94a4..9802dcb4e 100644
+--- a/src/main/java/org/joda/time/base/BasePeriod.java
++++ b/src/main/java/org/joda/time/base/BasePeriod.java
+@@ -55,11 +55,9 @@
+     private static final long serialVersionUID = -2110953284060001145L;
+     /** Serialization version */
+     private static final ReadablePeriod DUMMY_PERIOD = new AbstractPeriod() {
+-        @Override
+         public int getValue(int index) {
+             return 0;
+         }
+-        @Override
+         public PeriodType getPeriodType() {
+             return PeriodType.time();
+         }
+
+From c9322762864990de42572d00b6d7e53b1758496c Mon Sep 17 00:00:00 2001
+From: Dave Brosius <dbrosius@mebigfatguy.com>
+Date: Thu, 14 Jul 2011 23:34:03 -0400
+Subject: [PATCH 03/21] npe guard
+
+---
+ src/main/java/org/joda/time/format/PeriodFormatterBuilder.java | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/main/java/org/joda/time/format/PeriodFormatterBuilder.java b/src/main/java/org/joda/time/format/PeriodFormatterBuilder.java
+index 78abf6609..ee017370d 100644
+--- a/src/main/java/org/joda/time/format/PeriodFormatterBuilder.java
++++ b/src/main/java/org/joda/time/format/PeriodFormatterBuilder.java
+@@ -1719,7 +1719,7 @@ public int parseInto(
+                         periodStr.regionMatches
+                         (true, position, parsedForm, 0, parsedForm.length())) {
+                         
+-                        position += parsedForm.length();
++                        position += (parsedForm == null) ? 0 : parsedForm.length();
+                         found = true;
+                         break;
+                     }
+
+From d6f06ab1e8a0b8dc4ccfa65f19685862cd874685 Mon Sep 17 00:00:00 2001
+From: Dave Brosius <dbrosius@mebigfatguy.com>
+Date: Thu, 14 Jul 2011 23:48:37 -0400
+Subject: [PATCH 04/21] push code down to inner block where it's actually used
+
+---
+ src/main/java/org/joda/time/tz/DateTimeZoneBuilder.java | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/main/java/org/joda/time/tz/DateTimeZoneBuilder.java b/src/main/java/org/joda/time/tz/DateTimeZoneBuilder.java
+index ead4b2b76..ab4731bbf 100644
+--- a/src/main/java/org/joda/time/tz/DateTimeZoneBuilder.java
++++ b/src/main/java/org/joda/time/tz/DateTimeZoneBuilder.java
+@@ -249,9 +249,9 @@ public DateTimeZoneBuilder addCutover(int year,
+                                           boolean advanceDayOfWeek,
+                                           int millisOfDay)
+     {
+-        OfYear ofYear = new OfYear
+-            (mode, monthOfYear, dayOfMonth, dayOfWeek, advanceDayOfWeek, millisOfDay);
+         if (iRuleSets.size() > 0) {
++            OfYear ofYear = new OfYear
++                (mode, monthOfYear, dayOfMonth, dayOfWeek, advanceDayOfWeek, millisOfDay);
+             RuleSet lastRuleSet = iRuleSets.get(iRuleSets.size() - 1);
+             lastRuleSet.setUpperLimit(year, ofYear);
+         }
+
+From 9d991bcfd898a7b06239dbe1788774ba5106562b Mon Sep 17 00:00:00 2001
+From: Dave Brosius <dbrosius@mebigfatguy.com>
+Date: Thu, 14 Jul 2011 23:56:12 -0400
+Subject: [PATCH 05/21] use the Integer cache where possible
+
+---
+ .../org/joda/time/chrono/BaseChronology.java     | 16 ++++++++--------
+ .../java/org/joda/time/chrono/GJChronology.java  |  4 ++--
+ .../org/joda/time/chrono/GJLocaleSymbols.java    |  2 +-
+ .../org/joda/time/chrono/JulianChronology.java   |  2 +-
+ .../org/joda/time/chrono/ZonedChronology.java    |  2 +-
+ .../java/org/joda/time/field/FieldUtils.java     | 12 ++++++------
+ .../org/joda/time/format/DateTimeFormatter.java  |  2 +-
+ .../time/format/DateTimeFormatterBuilder.java    |  2 +-
+ 8 files changed, 21 insertions(+), 21 deletions(-)
+
+diff --git a/src/main/java/org/joda/time/chrono/BaseChronology.java b/src/main/java/org/joda/time/chrono/BaseChronology.java
+index ac43706df..cd9f61836 100644
+--- a/src/main/java/org/joda/time/chrono/BaseChronology.java
++++ b/src/main/java/org/joda/time/chrono/BaseChronology.java
+@@ -186,13 +186,13 @@ public void validate(ReadablePartial partial, int[] values) {
+             DateTimeField field = partial.getField(i);
+             if (value < field.getMinimumValue()) {
+                 throw new IllegalFieldValueException
+-                    (field.getType(), new Integer(value),
+-                     new Integer(field.getMinimumValue()), null);
++                    (field.getType(), Integer.valueOf(value),
++                     Integer.valueOf(field.getMinimumValue()), null);
+             }
+             if (value > field.getMaximumValue()) {
+                 throw new IllegalFieldValueException
+-                    (field.getType(), new Integer(value),
+-                     null, new Integer(field.getMaximumValue()));
++                    (field.getType(), Integer.valueOf(value),
++                     null, Integer.valueOf(field.getMaximumValue()));
+             }
+         }
+         // check values in specific range, catching really odd cases like 30th Feb
+@@ -201,13 +201,13 @@ public void validate(ReadablePartial partial, int[] values) {
+             DateTimeField field = partial.getField(i);
+             if (value < field.getMinimumValue(partial, values)) {
+                 throw new IllegalFieldValueException
+-                    (field.getType(), new Integer(value),
+-                     new Integer(field.getMinimumValue(partial, values)), null);
++                    (field.getType(), Integer.valueOf(value),
++                     Integer.valueOf(field.getMinimumValue(partial, values)), null);
+             }
+             if (value > field.getMaximumValue(partial, values)) {
+                 throw new IllegalFieldValueException
+-                    (field.getType(), new Integer(value),
+-                     null, new Integer(field.getMaximumValue(partial, values)));
++                    (field.getType(), Integer.valueOf(value),
++                     null, Integer.valueOf(field.getMaximumValue(partial, values)));
+             }
+         }
+     }
+diff --git a/src/main/java/org/joda/time/chrono/GJChronology.java b/src/main/java/org/joda/time/chrono/GJChronology.java
+index a9efdd064..6131f14f5 100644
+--- a/src/main/java/org/joda/time/chrono/GJChronology.java
++++ b/src/main/java/org/joda/time/chrono/GJChronology.java
+@@ -704,7 +704,7 @@ public long set(long instant, int value) {
+                     // Verify that new value stuck.
+                     if (get(instant) != value) {
+                         throw new IllegalFieldValueException
+-                            (iGregorianField.getType(), new Integer(value), null, null);
++                            (iGregorianField.getType(), Integer.valueOf(value), null, null);
+                     }
+                 }
+             } else {
+@@ -717,7 +717,7 @@ public long set(long instant, int value) {
+                     // Verify that new value stuck.
+                     if (get(instant) != value) {
+                        throw new IllegalFieldValueException
+-                            (iJulianField.getType(), new Integer(value), null, null);
++                            (iJulianField.getType(), Integer.valueOf(value), null, null);
+                     }
+                 }
+             }
+diff --git a/src/main/java/org/joda/time/chrono/GJLocaleSymbols.java b/src/main/java/org/joda/time/chrono/GJLocaleSymbols.java
+index 5a22ecde3..2c8fa154f 100644
+--- a/src/main/java/org/joda/time/chrono/GJLocaleSymbols.java
++++ b/src/main/java/org/joda/time/chrono/GJLocaleSymbols.java
+@@ -140,7 +140,7 @@ private GJLocaleSymbols(Locale locale) {
+ 
+         Integer[] integers = new Integer[13];
+         for (int i=0; i<13; i++) {
+-            integers[i] = new Integer(i);
++            integers[i] = Integer.valueOf(i);
+         }
+ 
+         iParseEras = new TreeMap<String, Integer>(String.CASE_INSENSITIVE_ORDER);
+diff --git a/src/main/java/org/joda/time/chrono/JulianChronology.java b/src/main/java/org/joda/time/chrono/JulianChronology.java
+index 2970cf75a..3433e1951 100644
+--- a/src/main/java/org/joda/time/chrono/JulianChronology.java
++++ b/src/main/java/org/joda/time/chrono/JulianChronology.java
+@@ -78,7 +78,7 @@ static int adjustYearForSet(int year) {
+         if (year <= 0) {
+             if (year == 0) {
+                 throw new IllegalFieldValueException
+-                    (DateTimeFieldType.year(), new Integer(year), null, null);
++                    (DateTimeFieldType.year(), Integer.valueOf(year), null, null);
+             }
+             year++;
+         }
+diff --git a/src/main/java/org/joda/time/chrono/ZonedChronology.java b/src/main/java/org/joda/time/chrono/ZonedChronology.java
+index 819f64e33..f0f022252 100644
+--- a/src/main/java/org/joda/time/chrono/ZonedChronology.java
++++ b/src/main/java/org/joda/time/chrono/ZonedChronology.java
+@@ -466,7 +466,7 @@ public long set(long instant, int value) {
+             localInstant = iField.set(localInstant, value);
+             long result = iZone.convertLocalToUTC(localInstant, false, instant);
+             if (get(result) != value) {
+-                throw new IllegalFieldValueException(iField.getType(), new Integer(value),
++                throw new IllegalFieldValueException(iField.getType(), Integer.valueOf(value),
+                     "Illegal instant due to time zone offset transition: " +
+                     DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSS").print(new Instant(localInstant)) +
+                     " (" + iZone.getID() + ")");
+diff --git a/src/main/java/org/joda/time/field/FieldUtils.java b/src/main/java/org/joda/time/field/FieldUtils.java
+index d203e6694..bc0eee622 100644
+--- a/src/main/java/org/joda/time/field/FieldUtils.java
++++ b/src/main/java/org/joda/time/field/FieldUtils.java
+@@ -213,8 +213,8 @@ public static void verifyValueBounds(DateTimeField field,
+                                          int value, int lowerBound, int upperBound) {
+         if ((value < lowerBound) || (value > upperBound)) {
+             throw new IllegalFieldValueException
+-                (field.getType(), new Integer(value),
+-                 new Integer(lowerBound), new Integer(upperBound));
++                (field.getType(), Integer.valueOf(value),
++                 Integer.valueOf(lowerBound), Integer.valueOf(upperBound));
+         }
+     }
+ 
+@@ -231,8 +231,8 @@ public static void verifyValueBounds(DateTimeFieldType fieldType,
+                                          int value, int lowerBound, int upperBound) {
+         if ((value < lowerBound) || (value > upperBound)) {
+             throw new IllegalFieldValueException
+-                (fieldType, new Integer(value),
+-                 new Integer(lowerBound), new Integer(upperBound));
++                (fieldType, Integer.valueOf(value),
++                 Integer.valueOf(lowerBound), Integer.valueOf(upperBound));
+         }
+     }
+ 
+@@ -248,8 +248,8 @@ public static void verifyValueBounds(String fieldName,
+                                          int value, int lowerBound, int upperBound) {
+         if ((value < lowerBound) || (value > upperBound)) {
+             throw new IllegalFieldValueException
+-                (fieldName, new Integer(value),
+-                 new Integer(lowerBound), new Integer(upperBound));
++                (fieldName, Integer.valueOf(value),
++                 Integer.valueOf(lowerBound), Integer.valueOf(upperBound));
+         }
+     }
+ 
+diff --git a/src/main/java/org/joda/time/format/DateTimeFormatter.java b/src/main/java/org/joda/time/format/DateTimeFormatter.java
+index c1e1d9b7a..acb1d31fe 100644
+--- a/src/main/java/org/joda/time/format/DateTimeFormatter.java
++++ b/src/main/java/org/joda/time/format/DateTimeFormatter.java
+@@ -399,7 +399,7 @@ public DateTimeFormatter withPivotYear(Integer pivotYear) {
+      * @since 1.1
+      */
+     public DateTimeFormatter withPivotYear(int pivotYear) {
+-        return withPivotYear(new Integer(pivotYear));
++        return withPivotYear(Integer.valueOf(pivotYear));
+     }
+ 
+     /**
+diff --git a/src/main/java/org/joda/time/format/DateTimeFormatterBuilder.java b/src/main/java/org/joda/time/format/DateTimeFormatterBuilder.java
+index cd8272e42..631f06efd 100644
+--- a/src/main/java/org/joda/time/format/DateTimeFormatterBuilder.java
++++ b/src/main/java/org/joda/time/format/DateTimeFormatterBuilder.java
+@@ -1796,7 +1796,7 @@ public int parseInto(DateTimeParserBucket bucket, String text, int position) {
+                         validValues.add("ce");
+                         maxLength = 3;
+                     }
+-                    array = new Object[] {validValues, new Integer(maxLength)};
++                    array = new Object[] {validValues, Integer.valueOf(maxLength)};
+                     innerMap.put(iFieldType, array);
+                 } else {
+                     validValues = (Set<String>) array[0];
+
+From 56ce9bafec77d1c8631d6260fda269b2454d1b3a Mon Sep 17 00:00:00 2001
+From: Dave Brosius <dbrosius@mebigfatguy.com>
+Date: Thu, 14 Jul 2011 23:57:15 -0400
+Subject: [PATCH 06/21] use the Integer cache where possible
+
+---
+ src/main/java/org/joda/time/field/SkipDateTimeField.java | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/main/java/org/joda/time/field/SkipDateTimeField.java b/src/main/java/org/joda/time/field/SkipDateTimeField.java
+index 49aa8fd05..b14e7cfda 100644
+--- a/src/main/java/org/joda/time/field/SkipDateTimeField.java
++++ b/src/main/java/org/joda/time/field/SkipDateTimeField.java
+@@ -89,7 +89,7 @@ public long set(long millis, int value) {
+         if (value <= iSkip) {
+             if (value == iSkip) {
+                 throw new IllegalFieldValueException
+-                    (DateTimeFieldType.year(), new Integer(value), null, null);
++                    (DateTimeFieldType.year(), Integer.valueOf(value), null, null);
+             }
+             value++;
+         }
+
+From ae451955a5d85da384e50864577e851784f524eb Mon Sep 17 00:00:00 2001
+From: Dave Brosius <dbrosius@mebigfatguy.com>
+Date: Fri, 15 Jul 2011 00:05:39 -0400
+Subject: [PATCH 07/21] add equals/hashCode methods for classes that implements
+ compareTo
+
+---
+ .../org/joda/time/field/DelegatedDurationField.java  | 12 ++++++++++++
+ .../org/joda/time/field/MillisDurationField.java     | 12 ++++++++++++
+ 2 files changed, 24 insertions(+)
+
+diff --git a/src/main/java/org/joda/time/field/DelegatedDurationField.java b/src/main/java/org/joda/time/field/DelegatedDurationField.java
+index 0948859d6..d15dcf897 100644
+--- a/src/main/java/org/joda/time/field/DelegatedDurationField.java
++++ b/src/main/java/org/joda/time/field/DelegatedDurationField.java
+@@ -150,6 +150,18 @@ public int compareTo(DurationField durationField) {
+         return iField.compareTo(durationField);
+     }
+ 
++    public boolean equals(Object o) {
++        if (o instanceof DelegatedDurationField) {
++            return iField.equals(((DelegatedDurationField) o).iField);
++        }
++
++        return false;
++    }
++
++    public int hashCode() {
++        return iField.hashCode() ^ iType.hashCode();
++    }
++
+     public String toString() {
+         return (iType == null) ? iField.toString() :
+             ("DurationField[" + iType + ']');
+diff --git a/src/main/java/org/joda/time/field/MillisDurationField.java b/src/main/java/org/joda/time/field/MillisDurationField.java
+index 163d8f22e..2bf8a7cb5 100644
+--- a/src/main/java/org/joda/time/field/MillisDurationField.java
++++ b/src/main/java/org/joda/time/field/MillisDurationField.java
+@@ -144,6 +144,18 @@ public int compareTo(DurationField otherField) {
+         }
+     }
+ 
++    public boolean equals(Object o) {
++        if (o instanceof MillisDurationField) {
++            return getUnitMillis() == ((MillisDurationField) o).getUnitMillis();
++        }
++
++        return false;
++    }
++
++    public int hashCode() {
++        return (int)getUnitMillis();
++    }
++
+     /**
+      * Get a suitable debug string.
+      * 
+
+From 6b1b998c82879495a0587fc0559314e9605061bc Mon Sep 17 00:00:00 2001
+From: Dave Brosius <dbrosius@mebigfatguy.com>
+Date: Fri, 15 Jul 2011 00:12:10 -0400
+Subject: [PATCH 08/21] make sure streams get closed when exception occurs
+
+---
+ .../org/joda/time/tz/ZoneInfoCompiler.java    | 20 ++++++++++++-------
+ 1 file changed, 13 insertions(+), 7 deletions(-)
+
+diff --git a/src/main/java/org/joda/time/tz/ZoneInfoCompiler.java b/src/main/java/org/joda/time/tz/ZoneInfoCompiler.java
+index a057c304f..08a77bc0b 100644
+--- a/src/main/java/org/joda/time/tz/ZoneInfoCompiler.java
++++ b/src/main/java/org/joda/time/tz/ZoneInfoCompiler.java
+@@ -401,8 +401,11 @@ public ZoneInfoCompiler() {
+                         file.getParentFile().mkdirs();
+                     }
+                     OutputStream out = new FileOutputStream(file);
+-                    builder.writeTo(zone.iName, out);
+-                    out.close();
++                    try {
++                        builder.writeTo(zone.iName, out);
++                    } finally {
++                        out.close();
++                    }
+ 
+                     // Test if it can be read back.
+                     InputStream in = new FileInputStream(file);
+@@ -442,11 +445,14 @@ public ZoneInfoCompiler() {
+ 
+             OutputStream out = new FileOutputStream(file);
+             DataOutputStream dout = new DataOutputStream(out);
+-            // Sort and filter out any duplicates that match case.
+-            Map<String, DateTimeZone> zimap = new TreeMap<String, DateTimeZone>(String.CASE_INSENSITIVE_ORDER);
+-            zimap.putAll(map);
+-            writeZoneInfoMap(dout, zimap);
+-            dout.close();
++            try {
++                // Sort and filter out any duplicates that match case.
++                Map<String, DateTimeZone> zimap = new TreeMap<String, DateTimeZone>(String.CASE_INSENSITIVE_ORDER);
++                zimap.putAll(map);
++                writeZoneInfoMap(dout, zimap);
++            } finally {
++                dout.close();
++            }
+         }
+ 
+         return map;
+
+From 53eadfbd0ec9d6b4a02dae38730b77b14000c1f3 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Sat, 30 Jul 2011 12:47:21 +0100
+Subject: [PATCH 09/21] Support parsing of date-time zone IDs like
+ Europe/London
+
+---
+ RELEASE-NOTES.txt                             |   6 +
+ .../joda/time/format/DateTimeFormatter.java   |  33 +++-
+ .../time/format/DateTimeFormatterBuilder.java |  64 ++++++-
+ .../time/format/DateTimeParserBucket.java     |  38 ++---
+ src/site/xdoc/upgradeto200.xml                |   6 +
+ .../format/TestDateTimeFormatterBuilder.java  | 160 +++++++++++++++++-
+ 6 files changed, 271 insertions(+), 36 deletions(-)
+
+diff --git a/RELEASE-NOTES.txt b/RELEASE-NOTES.txt
+index fcbec0910..0b469d41b 100644
+--- a/RELEASE-NOTES.txt
++++ b/RELEASE-NOTES.txt
+@@ -70,6 +70,8 @@ Enhancements since 1.6
+ 
+ - Allow 'Z' and 'ZZ' in format patterns to parse 'Z' as '+00:00' [2827359]
+ 
++- Support parsing of date-time zone IDs like Europe/London
++
+ - Add DateTimeFormatter.withZoneUTC()
+   Provides easy way to set UTC, which is often required for parsing
+ 
+@@ -177,6 +179,10 @@ This affects the constructor of DateTime and other methods.
+ Previously, DateTimeZone.getMillisKeepLocal used DateTimeZone.getOffsetFromLocal, now it uses
+ DateTimeZone.convertUTCToLocal and DateTimeZone.convertLocalToUTC retaining the offset where possible
+ 
++Previously, the internals of DateTimeParserBucket linked the parsed offset and zone.
++This has now changed so that they are independent to allow the parsing of time-zone IDs.
++If you implemented the DateTimeParser interface (unlikely), you should re-test your logic.
++
+ Previously, some parses of mixed weekyear and month formats would yield a result about a year out
+ Now, most (but not all) of these give a more appropriate result
+ 
+diff --git a/src/main/java/org/joda/time/format/DateTimeFormatter.java b/src/main/java/org/joda/time/format/DateTimeFormatter.java
+index c1e1d9b7a..d1424a33a 100644
+--- a/src/main/java/org/joda/time/format/DateTimeFormatter.java
++++ b/src/main/java/org/joda/time/format/DateTimeFormatter.java
+@@ -1,5 +1,5 @@
+ /*
+- *  Copyright 2001-2009 Stephen Colebourne
++ *  Copyright 2001-2011 Stephen Colebourne
+  *
+  *  Licensed under the Apache License, Version 2.0 (the "License");
+  *  you may not use this file except in compliance with the License.
+@@ -704,12 +704,17 @@ public int parseInto(ReadWritableInstant instant, String text, int position) {
+             instantLocal, chrono, iLocale, iPivotYear, iDefaultYear);
+         int newPos = parser.parseInto(bucket, text, position);
+         instant.setMillis(bucket.computeMillis(false, text));
+-        if (iOffsetParsed && bucket.getZone() == null) {
++        if (iOffsetParsed && bucket.getOffset() != null) {
+             int parsedOffset = bucket.getOffset();
+             DateTimeZone parsedZone = DateTimeZone.forOffsetMillis(parsedOffset);
+             chrono = chrono.withZone(parsedZone);
++        } else if (bucket.getZone() != null) {
++            chrono = chrono.withZone(bucket.getZone());
+         }
+         instant.setChronology(chrono);
++        if (iZone != null) {
++            instant.setZone(iZone);
++        }
+         return newPos;
+     }
+ 
+@@ -800,10 +805,12 @@ public LocalDateTime parseLocalDateTime(String text) {
+         if (newPos >= 0) {
+             if (newPos >= text.length()) {
+                 long millis = bucket.computeMillis(true, text);
+-                if (bucket.getZone() == null) {  // treat withOffsetParsed() as being true
++                if (bucket.getOffset() != null) {  // treat withOffsetParsed() as being true
+                     int parsedOffset = bucket.getOffset();
+                     DateTimeZone parsedZone = DateTimeZone.forOffsetMillis(parsedOffset);
+                     chrono = chrono.withZone(parsedZone);
++                } else if (bucket.getZone() != null) {
++                    chrono = chrono.withZone(bucket.getZone());
+                 }
+                 return new LocalDateTime(millis, chrono);
+             }
+@@ -839,12 +846,18 @@ public DateTime parseDateTime(String text) {
+         if (newPos >= 0) {
+             if (newPos >= text.length()) {
+                 long millis = bucket.computeMillis(true, text);
+-                if (iOffsetParsed && bucket.getZone() == null) {
++                if (iOffsetParsed && bucket.getOffset() != null) {
+                     int parsedOffset = bucket.getOffset();
+                     DateTimeZone parsedZone = DateTimeZone.forOffsetMillis(parsedOffset);
+                     chrono = chrono.withZone(parsedZone);
++                } else if (bucket.getZone() != null) {
++                    chrono = chrono.withZone(bucket.getZone());
+                 }
+-                return new DateTime(millis, chrono);
++                DateTime dt = new DateTime(millis, chrono);
++                if (iZone != null) {
++                    dt = dt.withZone(iZone);
++                }
++                return dt;
+             }
+         } else {
+             newPos = ~newPos;
+@@ -878,12 +891,18 @@ public MutableDateTime parseMutableDateTime(String text) {
+         if (newPos >= 0) {
+             if (newPos >= text.length()) {
+                 long millis = bucket.computeMillis(true, text);
+-                if (iOffsetParsed && bucket.getZone() == null) {
++                if (iOffsetParsed && bucket.getOffset() != null) {
+                     int parsedOffset = bucket.getOffset();
+                     DateTimeZone parsedZone = DateTimeZone.forOffsetMillis(parsedOffset);
+                     chrono = chrono.withZone(parsedZone);
++                } else if (bucket.getZone() != null) {
++                    chrono = chrono.withZone(bucket.getZone());
++                }
++                MutableDateTime dt = new MutableDateTime(millis, chrono);
++                if (iZone != null) {
++                    dt.setZone(iZone);
+                 }
+-                return new MutableDateTime(millis, chrono);
++                return dt;
+             }
+         } else {
+             newPos = ~newPos;
+diff --git a/src/main/java/org/joda/time/format/DateTimeFormatterBuilder.java b/src/main/java/org/joda/time/format/DateTimeFormatterBuilder.java
+index cd8272e42..98a8d211f 100644
+--- a/src/main/java/org/joda/time/format/DateTimeFormatterBuilder.java
++++ b/src/main/java/org/joda/time/format/DateTimeFormatterBuilder.java
+@@ -1,5 +1,5 @@
+ /*
+- *  Copyright 2001-2009 Stephen Colebourne
++ *  Copyright 2001-2011 Stephen Colebourne
+  *
+  *  Licensed under the Apache License, Version 2.0 (the "License");
+  *  you may not use this file except in compliance with the License.
+@@ -993,12 +993,12 @@ public DateTimeFormatterBuilder appendTimeZoneShortName() {
+ 
+     /**
+      * Instructs the printer to emit the identifier of the time zone.
+-     * This field cannot currently be parsed.
++     * From version 2.0, this field can be parsed.
+      *
+      * @return this DateTimeFormatterBuilder, for chaining
+      */
+     public DateTimeFormatterBuilder appendTimeZoneId() {
+-        return append0(new TimeZoneName(TimeZoneName.ID), null);
++        return append0(TimeZoneId.INSTANCE, TimeZoneId.INSTANCE);
+     }
+ 
+     /**
+@@ -2402,7 +2402,6 @@ private int digitCount(String text, int position, int amount) {
+ 
+         static final int LONG_NAME = 0;
+         static final int SHORT_NAME = 1;
+-        static final int ID = 2;
+ 
+         private final int iType;
+ 
+@@ -2436,8 +2435,6 @@ private String print(long instant, DateTimeZone displayZone, Locale locale) {
+                     return displayZone.getName(instant, locale);
+                 case SHORT_NAME:
+                     return displayZone.getShortName(instant, locale);
+-                case ID:
+-                    return displayZone.getID();
+             }
+             return "";
+         }
+@@ -2451,6 +2448,61 @@ public void printTo(Writer out, ReadablePartial partial, Locale locale) throws I
+         }
+     }
+ 
++    //-----------------------------------------------------------------------
++    static enum TimeZoneId
++            implements DateTimePrinter, DateTimeParser {
++
++        INSTANCE;
++        static final Set<String> ALL_IDS = DateTimeZone.getAvailableIDs();
++        static final int MAX_LENGTH;
++        static {
++            int max = 0;
++            for (String id : ALL_IDS) {
++                max = Math.max(max, id.length());
++            }
++            MAX_LENGTH = max;
++        }
++
++        public int estimatePrintedLength() {
++            return MAX_LENGTH;
++        }
++
++        public void printTo(
++                StringBuffer buf, long instant, Chronology chrono,
++                int displayOffset, DateTimeZone displayZone, Locale locale) {
++            buf.append(displayZone != null ? displayZone.getID() : "");
++        }
++
++        public void printTo(
++                Writer out, long instant, Chronology chrono,
++                int displayOffset, DateTimeZone displayZone, Locale locale) throws IOException {
++            out.write(displayZone != null ? displayZone.getID() : "");
++        }
++
++        public void printTo(StringBuffer buf, ReadablePartial partial, Locale locale) {
++            // no zone info
++        }
++
++        public void printTo(Writer out, ReadablePartial partial, Locale locale) throws IOException {
++            // no zone info
++        }
++
++        public int estimateParsedLength() {
++            return MAX_LENGTH;
++        }
++
++        public int parseInto(DateTimeParserBucket bucket, String text, int position) {
++            String str = text.substring(position);
++            for (String id : ALL_IDS) {
++                if (str.startsWith(id)) {
++                    bucket.setZone(DateTimeZone.forID(id));
++                    return position + id.length();
++                }
++            }
++            return ~position;
++        }
++    }
++
+     //-----------------------------------------------------------------------
+     static class Composite
+             implements DateTimePrinter, DateTimeParser {
+diff --git a/src/main/java/org/joda/time/format/DateTimeParserBucket.java b/src/main/java/org/joda/time/format/DateTimeParserBucket.java
+index 7c37fc1f3..f4ebf54be 100644
+--- a/src/main/java/org/joda/time/format/DateTimeParserBucket.java
++++ b/src/main/java/org/joda/time/format/DateTimeParserBucket.java
+@@ -60,7 +60,7 @@
+     
+     // TimeZone to switch to in computeMillis. If null, use offset.
+     private DateTimeZone iZone;
+-    private int iOffset;
++    private Integer iOffset;
+     /** The locale to use for parsing. */
+     private Locale iLocale;
+     /** Used for parsing two-digit years. */
+@@ -118,9 +118,9 @@ public DateTimeParserBucket(long instantLocal, Chronology chrono,
+         super();
+         chrono = DateTimeUtils.getChronology(chrono);
+         iMillis = instantLocal;
++        iZone = chrono.getZone();
+         iChrono = chrono.withUTC();
+         iLocale = (locale == null ? Locale.getDefault() : locale);
+-        setZone(chrono.getZone());
+         iPivotYear = pivotYear;
+         iDefaultYear = defaultYear;
+     }
+@@ -145,42 +145,36 @@ public Locale getLocale() {
+ 
+     //-----------------------------------------------------------------------
+     /**
+-     * Returns the time zone used by computeMillis, or null if an offset is
+-     * used instead.
++     * Returns the time zone used by computeMillis.
+      */
+     public DateTimeZone getZone() {
+         return iZone;
+     }
+-    
++
+     /**
+-     * Set a time zone to be used when computeMillis is called, which
+-     * overrides any set time zone offset.
++     * Set a time zone to be used when computeMillis is called.
+      *
+-     * @param zone the date time zone to operate in, or null if UTC
++     * @param zone the date time zone to operate in, not null
+      */
+     public void setZone(DateTimeZone zone) {
+         iSavedState = null;
+-        iZone = zone == DateTimeZone.UTC ? null : zone;
+-        iOffset = 0;
++        iZone = zone;
+     }
+-    
++
+     //-----------------------------------------------------------------------
+     /**
+-     * Returns the time zone offset in milliseconds used by computeMillis,
+-     * unless getZone doesn't return null.
++     * Returns the time zone offset in milliseconds used by computeMillis.
+      */
+-    public int getOffset() {
++    public Integer getOffset() {
+         return iOffset;
+     }
+-    
++
+     /**
+-     * Set a time zone offset to be used when computeMillis is called, which
+-     * overrides the time zone.
++     * Set a time zone offset to be used when computeMillis is called.
+      */
+-    public void setOffset(int offset) {
++    public void setOffset(Integer offset) {
+         iSavedState = null;
+         iOffset = offset;
+-        iZone = null;
+     }
+ 
+     //-----------------------------------------------------------------------
+@@ -364,9 +358,9 @@ public long computeMillis(boolean resetFields, String text) {
+             throw e;
+         }
+         
+-        if (iZone == null) {
++        if (iOffset != null) {
+             millis -= iOffset;
+-        } else {
++        } else if (iZone != null) {
+             int offset = iZone.getOffsetFromLocal(millis);
+             millis -= offset;
+             if (offset != iZone.getOffset(millis)) {
+@@ -416,7 +410,7 @@ private static void sort(SavedField[] array, int high) {
+ 
+     class SavedState {
+         final DateTimeZone iZone;
+-        final int iOffset;
++        final Integer iOffset;
+         final SavedField[] iSavedFields;
+         final int iSavedFieldsCount;
+         
+diff --git a/src/site/xdoc/upgradeto200.xml b/src/site/xdoc/upgradeto200.xml
+index f55612890..513c360be 100644
+--- a/src/site/xdoc/upgradeto200.xml
++++ b/src/site/xdoc/upgradeto200.xml
+@@ -85,6 +85,8 @@ Enhancements since 1.6
+ 
+ - Allow 'Z' and 'ZZ' in format patterns to parse 'Z' as '+00:00' [2827359]
+ 
++- Support parsing of date-time zone IDs like Europe/London
++
+ - Add DateTimeFormatter.withZoneUTC()
+   Provides easy way to set UTC, which is often required for parsing
+ 
+@@ -192,6 +194,10 @@ This affects the constructor of DateTime and other methods.
+ Previously, DateTimeZone.getMillisKeepLocal used DateTimeZone.getOffsetFromLocal, now it uses
+ DateTimeZone.convertUTCToLocal and DateTimeZone.convertLocalToUTC retaining the offset where possible
+ 
++Previously, the internals of DateTimeParserBucket linked the parsed offset and zone.
++This has now changed so that they are independent to allow the parsing of time-zone IDs.
++If you implemented the DateTimeParser interface (unlikely), you should re-test your logic.
++
+ Previously, some parses of mixed weekyear and month formats would yield a result about a year out
+ Now, most (but not all) of these give a more appropriate result
+ 
+diff --git a/src/test/java/org/joda/time/format/TestDateTimeFormatterBuilder.java b/src/test/java/org/joda/time/format/TestDateTimeFormatterBuilder.java
+index 8de549023..ef67e6d79 100644
+--- a/src/test/java/org/joda/time/format/TestDateTimeFormatterBuilder.java
++++ b/src/test/java/org/joda/time/format/TestDateTimeFormatterBuilder.java
+@@ -1,5 +1,5 @@
+ /*
+- *  Copyright 2001-2005 Stephen Colebourne
++ *  Copyright 2001-2011 Stephen Colebourne
+  *
+  *  Licensed under the Apache License, Version 2.0 (the "License");
+  *  you may not use this file except in compliance with the License.
+@@ -20,6 +20,8 @@
+ 
+ import org.joda.time.DateTime;
+ import org.joda.time.DateTimeFieldType;
++import org.joda.time.DateTimeZone;
++import org.joda.time.LocalDateTime;
+ 
+ /**
+  * This class is a Junit unit test for DateTimeFormatterBuilder.
+@@ -205,4 +207,160 @@ public void test_appendFixedSignedDecimal() {
+         } catch (IllegalArgumentException e) {
+         }
+     }
++
++    //-----------------------------------------------------------------------
++    public void test_appendTimeZoneId() {
++        DateTimeFormatterBuilder bld = new DateTimeFormatterBuilder();
++        bld.appendTimeZoneId();
++        DateTimeFormatter f = bld.toFormatter();
++        
++        DateTimeZone zone = DateTimeZone.forID("Asia/Tokyo");
++        assertEquals("Asia/Tokyo", f.print(new DateTime(2007, 3, 4, 0, 0, 0, zone)));
++        assertEquals(zone, f.parseDateTime("Asia/Tokyo").getZone());
++        try {
++            f.parseDateTime("Nonsense");
++            fail();
++        } catch (IllegalArgumentException e) {
++        }
++    }
++
++    public void test_printParseZoneTokyo() {
++        DateTimeFormatterBuilder bld = new DateTimeFormatterBuilder()
++            .appendPattern("yyyy-MM-dd HH:mm ").appendTimeZoneId();
++        DateTimeFormatter f = bld.toFormatter();
++        
++        DateTimeZone zone = DateTimeZone.forID("Asia/Tokyo");
++        DateTime dt = new DateTime(2007, 3, 4, 12, 30, 0, zone);
++        assertEquals("2007-03-04 12:30 Asia/Tokyo", f.print(dt));
++        assertEquals(dt, f.parseDateTime("2007-03-04 12:30 Asia/Tokyo"));
++    }
++
++    public void test_printParseZoneParis() {
++        DateTimeFormatterBuilder bld = new DateTimeFormatterBuilder()
++            .appendPattern("yyyy-MM-dd HH:mm ").appendTimeZoneId();
++        DateTimeFormatter f = bld.toFormatter();
++        
++        DateTimeZone zone = DateTimeZone.forID("Europe/Paris");
++        DateTime dt = new DateTime(2007, 3, 4, 12, 30, 0, zone);
++        assertEquals("2007-03-04 12:30 Europe/Paris", f.print(dt));
++        assertEquals(dt, f.parseDateTime("2007-03-04 12:30 Europe/Paris"));
++        assertEquals(dt, f.withOffsetParsed().parseDateTime("2007-03-04 12:30 Europe/Paris"));
++    }
++
++    public void test_printParseOffset() {
++        DateTimeFormatterBuilder bld = new DateTimeFormatterBuilder()
++            .appendPattern("yyyy-MM-dd HH:mm ").appendTimeZoneOffset("Z", true, 2, 2);
++        DateTimeFormatter f = bld.toFormatter();
++        
++        DateTimeZone zone = DateTimeZone.forID("Asia/Tokyo");
++        DateTime dt = new DateTime(2007, 3, 4, 12, 30, 0, zone);
++        assertEquals("2007-03-04 12:30 +09:00", f.print(dt));
++        assertEquals(dt.withZone(DateTimeZone.getDefault()), f.parseDateTime("2007-03-04 12:30 +09:00"));
++        assertEquals(dt, f.withZone(zone).parseDateTime("2007-03-04 12:30 +09:00"));
++        assertEquals(dt.withZone(DateTimeZone.forOffsetHours(9)), f.withOffsetParsed().parseDateTime("2007-03-04 12:30 +09:00"));
++    }
++
++    public void test_printParseOffsetAndZone() {
++        DateTimeFormatterBuilder bld = new DateTimeFormatterBuilder()
++            .appendPattern("yyyy-MM-dd HH:mm ").appendTimeZoneOffset("Z", true, 2, 2).appendLiteral(' ').appendTimeZoneId();
++        DateTimeFormatter f = bld.toFormatter();
++        
++        DateTimeZone zone = DateTimeZone.forID("Asia/Tokyo");
++        DateTimeZone paris = DateTimeZone.forID("Europe/Paris");
++        DateTime dt = new DateTime(2007, 3, 4, 12, 30, 0, zone);
++        assertEquals("2007-03-04 12:30 +09:00 Asia/Tokyo", f.print(dt));
++        assertEquals(dt, f.withZone(zone).parseDateTime("2007-03-04 12:30 +09:00 Asia/Tokyo"));
++        assertEquals(dt.withZone(paris), f.withZone(paris).parseDateTime("2007-03-04 12:30 +09:00 Asia/Tokyo"));
++        assertEquals(dt.withZone(DateTimeZone.forOffsetHours(9)), f.withOffsetParsed().parseDateTime("2007-03-04 12:30 +09:00 Asia/Tokyo"));
++    }
++
++    public void test_parseWrongOffset() {
++        DateTimeFormatterBuilder bld = new DateTimeFormatterBuilder()
++            .appendPattern("yyyy-MM-dd HH:mm ").appendTimeZoneOffset("Z", true, 2, 2);
++        DateTimeFormatter f = bld.toFormatter();
++        
++        DateTimeZone zone = DateTimeZone.forID("Asia/Tokyo");
++        DateTime expected = new DateTime(2007, 3, 4, 12, 30, 0, DateTimeZone.forOffsetHours(7));
++        // parses offset time then adjusts to requested zone
++        assertEquals(expected.withZone(zone), f.withZone(zone).parseDateTime("2007-03-04 12:30 +07:00"));
++        // parses offset time returning offset zone
++        assertEquals(expected, f.withOffsetParsed().parseDateTime("2007-03-04 12:30 +07:00"));
++        // parses offset time then converts to default zone
++        assertEquals(expected.withZone(DateTimeZone.getDefault()), f.parseDateTime("2007-03-04 12:30 +07:00"));
++    }
++
++    public void test_parseWrongOffsetAndZone() {
++        DateTimeFormatterBuilder bld = new DateTimeFormatterBuilder()
++            .appendPattern("yyyy-MM-dd HH:mm ").appendTimeZoneOffset("Z", true, 2, 2).appendLiteral(' ').appendTimeZoneId();
++        DateTimeFormatter f = bld.toFormatter();
++        
++        DateTimeZone zone = DateTimeZone.forID("Asia/Tokyo");
++        DateTime expected = new DateTime(2007, 3, 4, 12, 30, 0, DateTimeZone.forOffsetHours(7));
++        // parses offset time then adjusts to parsed zone
++        assertEquals(expected.withZone(zone), f.parseDateTime("2007-03-04 12:30 +07:00 Asia/Tokyo"));
++        // parses offset time then adjusts to requested zone
++        assertEquals(expected.withZone(zone), f.withZone(zone).parseDateTime("2007-03-04 12:30 +07:00 Asia/Tokyo"));
++        // parses offset time returning offset zone (ignores zone)
++        assertEquals(expected, f.withOffsetParsed().parseDateTime("2007-03-04 12:30 +07:00 Asia/Tokyo"));
++    }
++
++    //-----------------------------------------------------------------------
++    public void test_localPrintParseZoneTokyo() {
++        DateTimeFormatterBuilder bld = new DateTimeFormatterBuilder()
++            .appendPattern("yyyy-MM-dd HH:mm ").appendTimeZoneId();
++        DateTimeFormatter f = bld.toFormatter();
++        
++        DateTimeZone zone = DateTimeZone.forID("Asia/Tokyo");
++        DateTime dt = new DateTime(2007, 3, 4, 12, 30, 0, zone);
++        assertEquals("2007-03-04 12:30 Asia/Tokyo", f.print(dt));
++        
++        LocalDateTime expected = new LocalDateTime(2007, 3, 4, 12, 30);
++        assertEquals(expected, f.parseLocalDateTime("2007-03-04 12:30 Asia/Tokyo"));
++    }
++
++    public void test_localPrintParseOffset() {
++        DateTimeFormatterBuilder bld = new DateTimeFormatterBuilder()
++            .appendPattern("yyyy-MM-dd HH:mm ").appendTimeZoneOffset("Z", true, 2, 2);
++        DateTimeFormatter f = bld.toFormatter();
++        
++        DateTimeZone zone = DateTimeZone.forID("Asia/Tokyo");
++        DateTime dt = new DateTime(2007, 3, 4, 12, 30, 0, zone);
++        assertEquals("2007-03-04 12:30 +09:00", f.print(dt));
++        
++        LocalDateTime expected = new LocalDateTime(2007, 3, 4, 12, 30);
++        assertEquals(expected, f.parseLocalDateTime("2007-03-04 12:30 +09:00"));
++        assertEquals(expected, f.withZone(zone).parseLocalDateTime("2007-03-04 12:30 +09:00"));
++        assertEquals(expected, f.withOffsetParsed().parseLocalDateTime("2007-03-04 12:30 +09:00"));
++    }
++
++    public void test_localPrintParseOffsetAndZone() {
++        DateTimeFormatterBuilder bld = new DateTimeFormatterBuilder()
++            .appendPattern("yyyy-MM-dd HH:mm ").appendTimeZoneOffset("Z", true, 2, 2).appendLiteral(' ').appendTimeZoneId();
++        DateTimeFormatter f = bld.toFormatter();
++        
++        DateTimeZone zone = DateTimeZone.forID("Asia/Tokyo");
++        DateTimeZone paris = DateTimeZone.forID("Europe/Paris");
++        DateTime dt = new DateTime(2007, 3, 4, 12, 30, 0, zone);
++        assertEquals("2007-03-04 12:30 +09:00 Asia/Tokyo", f.print(dt));
++        
++        LocalDateTime expected = new LocalDateTime(2007, 3, 4, 12, 30);
++        assertEquals(expected, f.withZone(zone).parseLocalDateTime("2007-03-04 12:30 +09:00 Asia/Tokyo"));
++        assertEquals(expected, f.withZone(paris).parseLocalDateTime("2007-03-04 12:30 +09:00 Asia/Tokyo"));
++    }
++
++    public void test_localParseWrongOffsetAndZone() {
++        DateTimeFormatterBuilder bld = new DateTimeFormatterBuilder()
++            .appendPattern("yyyy-MM-dd HH:mm ").appendTimeZoneOffset("Z", true, 2, 2).appendLiteral(' ').appendTimeZoneId();
++        DateTimeFormatter f = bld.toFormatter();
++        
++        DateTimeZone zone = DateTimeZone.forID("Asia/Tokyo");
++        LocalDateTime expected = new LocalDateTime(2007, 3, 4, 12, 30);
++        // parses offset time then adjusts to parsed zone
++        assertEquals(expected, f.parseLocalDateTime("2007-03-04 12:30 +07:00 Asia/Tokyo"));
++        // parses offset time then adjusts to requested zone
++        assertEquals(expected, f.withZone(zone).parseLocalDateTime("2007-03-04 12:30 +07:00 Asia/Tokyo"));
++        // parses offset time returning offset zone (ignores zone)
++        assertEquals(expected, f.withOffsetParsed().parseLocalDateTime("2007-03-04 12:30 +07:00 Asia/Tokyo"));
++    }
++
+ }
+
+From 80486e850b962655154d7f1b8eed3b89782fbbcd Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Sat, 30 Jul 2011 13:29:42 +0100
+Subject: [PATCH 10/21] Support parsing of date-time zone names like BST or
+ British Summer Time
+
+New API where caller must pas in the lookup table
+---
+ RELEASE-NOTES.txt                             |   5 +
+ .../time/format/DateTimeFormatterBuilder.java |  66 +++++++--
+ src/site/xdoc/upgradeto200.xml                |   5 +
+ .../format/TestDateTimeFormatterBuilder.java  | 137 ++++++++++++++----
+ 4 files changed, 171 insertions(+), 42 deletions(-)
+
+diff --git a/RELEASE-NOTES.txt b/RELEASE-NOTES.txt
+index 0b469d41b..5712e83c8 100644
+--- a/RELEASE-NOTES.txt
++++ b/RELEASE-NOTES.txt
+@@ -72,6 +72,11 @@ Enhancements since 1.6
+ 
+ - Support parsing of date-time zone IDs like Europe/London
+ 
++- Support parsing of date-time zone names like "EST" and "British Summer Time"
++  These names are not unique, so the new API methods on the builder require you
++  to pass in a map listing all the names you want to be able to parse.
++  The existing method is unaltered and does not permit parsing.
++
+ - Add DateTimeFormatter.withZoneUTC()
+   Provides easy way to set UTC, which is often required for parsing
+ 
+diff --git a/src/main/java/org/joda/time/format/DateTimeFormatterBuilder.java b/src/main/java/org/joda/time/format/DateTimeFormatterBuilder.java
+index 98a8d211f..3eb825137 100644
+--- a/src/main/java/org/joda/time/format/DateTimeFormatterBuilder.java
++++ b/src/main/java/org/joda/time/format/DateTimeFormatterBuilder.java
+@@ -970,25 +970,54 @@ public DateTimeFormatterBuilder appendEraText() {
+     }
+ 
+     /**
+-     * Instructs the printer to emit a locale-specific time zone name. A
+-     * parser cannot be created from this builder if a time zone name is
+-     * appended.
++     * Instructs the printer to emit a locale-specific time zone name.
++     * Using this method prevents parsing, because time zone names are not unique.
++     * See {@link #appendTimeZoneName(Map)}.
+      *
+      * @return this DateTimeFormatterBuilder, for chaining
+      */
+     public DateTimeFormatterBuilder appendTimeZoneName() {
+-        return append0(new TimeZoneName(TimeZoneName.LONG_NAME), null);
++        return append0(new TimeZoneName(TimeZoneName.LONG_NAME, null), null);
+     }
+ 
+     /**
+-     * Instructs the printer to emit a short locale-specific time zone
+-     * name. A parser cannot be created from this builder if time zone
+-     * name is appended.
++     * Instructs the printer to emit a locale-specific time zone name, providing a lookup for parsing.
++     * Time zone names are not unique, thus the API forces you to supply the lookup.
++     * The names are searched in the order of the map, thus it is strongly recommended
++     * to use a {@code LinkedHashMap} or similar.
++     *
++     * @param parseLookup  the table of names, not null
++     * @return this DateTimeFormatterBuilder, for chaining
++     */
++    public DateTimeFormatterBuilder appendTimeZoneName(Map<String, DateTimeZone> parseLookup) {
++        TimeZoneName pp = new TimeZoneName(TimeZoneName.LONG_NAME, parseLookup);
++        return append0(pp, pp);
++    }
++
++    /**
++     * Instructs the printer to emit a short locale-specific time zone name.
++     * Using this method prevents parsing, because time zone names are not unique.
++     * See {@link #appendTimeZoneShortName(Map)}.
+      *
+      * @return this DateTimeFormatterBuilder, for chaining
+      */
+     public DateTimeFormatterBuilder appendTimeZoneShortName() {
+-        return append0(new TimeZoneName(TimeZoneName.SHORT_NAME), null);
++        return append0(new TimeZoneName(TimeZoneName.SHORT_NAME, null), null);
++    }
++
++    /**
++     * Instructs the printer to emit a short locale-specific time zone
++     * name, providing a lookup for parsing.
++     * Time zone names are not unique, thus the API forces you to supply the lookup.
++     * The names are searched in the order of the map, thus it is strongly recommended
++     * to use a {@code LinkedHashMap} or similar.
++     *
++     * @param parseLookup  the table of names, not null
++     * @return this DateTimeFormatterBuilder, for chaining
++     */
++    public DateTimeFormatterBuilder appendTimeZoneShortName(Map<String, DateTimeZone> parseLookup) {
++        TimeZoneName pp = new TimeZoneName(TimeZoneName.SHORT_NAME, parseLookup);
++        return append0(pp, pp);
+     }
+ 
+     /**
+@@ -2398,16 +2427,18 @@ private int digitCount(String text, int position, int amount) {
+ 
+     //-----------------------------------------------------------------------
+     static class TimeZoneName
+-            implements DateTimePrinter {
++            implements DateTimePrinter, DateTimeParser {
+ 
+         static final int LONG_NAME = 0;
+         static final int SHORT_NAME = 1;
+ 
++        private final Map<String, DateTimeZone> iParseLookup;
+         private final int iType;
+ 
+-        TimeZoneName(int type) {
++        TimeZoneName(int type, Map<String, DateTimeZone> parseLookup) {
+             super();
+             iType = type;
++            iParseLookup = parseLookup;
+         }
+ 
+         public int estimatePrintedLength() {
+@@ -2446,6 +2477,21 @@ public void printTo(StringBuffer buf, ReadablePartial partial, Locale locale) {
+         public void printTo(Writer out, ReadablePartial partial, Locale locale) throws IOException {
+             // no zone info
+         }
++
++        public int estimateParsedLength() {
++            return (iType == SHORT_NAME ? 4 : 20);
++        }
++
++        public int parseInto(DateTimeParserBucket bucket, String text, int position) {
++            String str = text.substring(position);
++            for (String name : iParseLookup.keySet()) {
++                if (str.startsWith(name)) {
++                    bucket.setZone(iParseLookup.get(name));
++                    return position + name.length();
++                }
++            }
++            return ~position;
++        }
+     }
+ 
+     //-----------------------------------------------------------------------
+diff --git a/src/site/xdoc/upgradeto200.xml b/src/site/xdoc/upgradeto200.xml
+index 513c360be..5d65d7866 100644
+--- a/src/site/xdoc/upgradeto200.xml
++++ b/src/site/xdoc/upgradeto200.xml
+@@ -87,6 +87,11 @@ Enhancements since 1.6
+ 
+ - Support parsing of date-time zone IDs like Europe/London
+ 
++- Support parsing of date-time zone names like "EST" and "British Summer Time"
++  These names are not unique, so the new API methods on the builder require you
++  to pass in a map listing all the names you want to be able to parse.
++  The existing method is unaltered and does not permit parsing.
++
+ - Add DateTimeFormatter.withZoneUTC()
+   Provides easy way to set UTC, which is often required for parsing
+ 
+diff --git a/src/test/java/org/joda/time/format/TestDateTimeFormatterBuilder.java b/src/test/java/org/joda/time/format/TestDateTimeFormatterBuilder.java
+index ef67e6d79..31aa53c04 100644
+--- a/src/test/java/org/joda/time/format/TestDateTimeFormatterBuilder.java
++++ b/src/test/java/org/joda/time/format/TestDateTimeFormatterBuilder.java
+@@ -15,6 +15,10 @@
+  */
+ package org.joda.time.format;
+ 
++import java.util.LinkedHashMap;
++import java.util.Locale;
++import java.util.Map;
++
+ import junit.framework.TestCase;
+ import junit.framework.TestSuite;
+ 
+@@ -31,6 +35,10 @@
+  */
+ public class TestDateTimeFormatterBuilder extends TestCase {
+ 
++    private static final DateTimeZone LONDON = DateTimeZone.forID("Europe/London");
++    private static final DateTimeZone PARIS = DateTimeZone.forID("Europe/Paris");
++    private static final DateTimeZone TOKYO = DateTimeZone.forID("Asia/Tokyo");
++
+     public static void main(String[] args) {
+         junit.textui.TestRunner.run(suite());
+     }
+@@ -214,9 +222,8 @@ public void test_appendTimeZoneId() {
+         bld.appendTimeZoneId();
+         DateTimeFormatter f = bld.toFormatter();
+         
+-        DateTimeZone zone = DateTimeZone.forID("Asia/Tokyo");
+-        assertEquals("Asia/Tokyo", f.print(new DateTime(2007, 3, 4, 0, 0, 0, zone)));
+-        assertEquals(zone, f.parseDateTime("Asia/Tokyo").getZone());
++        assertEquals("Asia/Tokyo", f.print(new DateTime(2007, 3, 4, 0, 0, 0, TOKYO)));
++        assertEquals(TOKYO, f.parseDateTime("Asia/Tokyo").getZone());
+         try {
+             f.parseDateTime("Nonsense");
+             fail();
+@@ -229,8 +236,7 @@ public void test_printParseZoneTokyo() {
+             .appendPattern("yyyy-MM-dd HH:mm ").appendTimeZoneId();
+         DateTimeFormatter f = bld.toFormatter();
+         
+-        DateTimeZone zone = DateTimeZone.forID("Asia/Tokyo");
+-        DateTime dt = new DateTime(2007, 3, 4, 12, 30, 0, zone);
++        DateTime dt = new DateTime(2007, 3, 4, 12, 30, 0, TOKYO);
+         assertEquals("2007-03-04 12:30 Asia/Tokyo", f.print(dt));
+         assertEquals(dt, f.parseDateTime("2007-03-04 12:30 Asia/Tokyo"));
+     }
+@@ -240,8 +246,7 @@ public void test_printParseZoneParis() {
+             .appendPattern("yyyy-MM-dd HH:mm ").appendTimeZoneId();
+         DateTimeFormatter f = bld.toFormatter();
+         
+-        DateTimeZone zone = DateTimeZone.forID("Europe/Paris");
+-        DateTime dt = new DateTime(2007, 3, 4, 12, 30, 0, zone);
++        DateTime dt = new DateTime(2007, 3, 4, 12, 30, 0, PARIS);
+         assertEquals("2007-03-04 12:30 Europe/Paris", f.print(dt));
+         assertEquals(dt, f.parseDateTime("2007-03-04 12:30 Europe/Paris"));
+         assertEquals(dt, f.withOffsetParsed().parseDateTime("2007-03-04 12:30 Europe/Paris"));
+@@ -252,11 +257,10 @@ public void test_printParseOffset() {
+             .appendPattern("yyyy-MM-dd HH:mm ").appendTimeZoneOffset("Z", true, 2, 2);
+         DateTimeFormatter f = bld.toFormatter();
+         
+-        DateTimeZone zone = DateTimeZone.forID("Asia/Tokyo");
+-        DateTime dt = new DateTime(2007, 3, 4, 12, 30, 0, zone);
++        DateTime dt = new DateTime(2007, 3, 4, 12, 30, 0, TOKYO);
+         assertEquals("2007-03-04 12:30 +09:00", f.print(dt));
+         assertEquals(dt.withZone(DateTimeZone.getDefault()), f.parseDateTime("2007-03-04 12:30 +09:00"));
+-        assertEquals(dt, f.withZone(zone).parseDateTime("2007-03-04 12:30 +09:00"));
++        assertEquals(dt, f.withZone(TOKYO).parseDateTime("2007-03-04 12:30 +09:00"));
+         assertEquals(dt.withZone(DateTimeZone.forOffsetHours(9)), f.withOffsetParsed().parseDateTime("2007-03-04 12:30 +09:00"));
+     }
+ 
+@@ -265,12 +269,10 @@ public void test_printParseOffsetAndZone() {
+             .appendPattern("yyyy-MM-dd HH:mm ").appendTimeZoneOffset("Z", true, 2, 2).appendLiteral(' ').appendTimeZoneId();
+         DateTimeFormatter f = bld.toFormatter();
+         
+-        DateTimeZone zone = DateTimeZone.forID("Asia/Tokyo");
+-        DateTimeZone paris = DateTimeZone.forID("Europe/Paris");
+-        DateTime dt = new DateTime(2007, 3, 4, 12, 30, 0, zone);
++        DateTime dt = new DateTime(2007, 3, 4, 12, 30, 0, TOKYO);
+         assertEquals("2007-03-04 12:30 +09:00 Asia/Tokyo", f.print(dt));
+-        assertEquals(dt, f.withZone(zone).parseDateTime("2007-03-04 12:30 +09:00 Asia/Tokyo"));
+-        assertEquals(dt.withZone(paris), f.withZone(paris).parseDateTime("2007-03-04 12:30 +09:00 Asia/Tokyo"));
++        assertEquals(dt, f.withZone(TOKYO).parseDateTime("2007-03-04 12:30 +09:00 Asia/Tokyo"));
++        assertEquals(dt.withZone(PARIS), f.withZone(PARIS).parseDateTime("2007-03-04 12:30 +09:00 Asia/Tokyo"));
+         assertEquals(dt.withZone(DateTimeZone.forOffsetHours(9)), f.withOffsetParsed().parseDateTime("2007-03-04 12:30 +09:00 Asia/Tokyo"));
+     }
+ 
+@@ -279,10 +281,9 @@ public void test_parseWrongOffset() {
+             .appendPattern("yyyy-MM-dd HH:mm ").appendTimeZoneOffset("Z", true, 2, 2);
+         DateTimeFormatter f = bld.toFormatter();
+         
+-        DateTimeZone zone = DateTimeZone.forID("Asia/Tokyo");
+         DateTime expected = new DateTime(2007, 3, 4, 12, 30, 0, DateTimeZone.forOffsetHours(7));
+         // parses offset time then adjusts to requested zone
+-        assertEquals(expected.withZone(zone), f.withZone(zone).parseDateTime("2007-03-04 12:30 +07:00"));
++        assertEquals(expected.withZone(TOKYO), f.withZone(TOKYO).parseDateTime("2007-03-04 12:30 +07:00"));
+         // parses offset time returning offset zone
+         assertEquals(expected, f.withOffsetParsed().parseDateTime("2007-03-04 12:30 +07:00"));
+         // parses offset time then converts to default zone
+@@ -294,12 +295,11 @@ public void test_parseWrongOffsetAndZone() {
+             .appendPattern("yyyy-MM-dd HH:mm ").appendTimeZoneOffset("Z", true, 2, 2).appendLiteral(' ').appendTimeZoneId();
+         DateTimeFormatter f = bld.toFormatter();
+         
+-        DateTimeZone zone = DateTimeZone.forID("Asia/Tokyo");
+         DateTime expected = new DateTime(2007, 3, 4, 12, 30, 0, DateTimeZone.forOffsetHours(7));
+         // parses offset time then adjusts to parsed zone
+-        assertEquals(expected.withZone(zone), f.parseDateTime("2007-03-04 12:30 +07:00 Asia/Tokyo"));
++        assertEquals(expected.withZone(TOKYO), f.parseDateTime("2007-03-04 12:30 +07:00 Asia/Tokyo"));
+         // parses offset time then adjusts to requested zone
+-        assertEquals(expected.withZone(zone), f.withZone(zone).parseDateTime("2007-03-04 12:30 +07:00 Asia/Tokyo"));
++        assertEquals(expected.withZone(TOKYO), f.withZone(TOKYO).parseDateTime("2007-03-04 12:30 +07:00 Asia/Tokyo"));
+         // parses offset time returning offset zone (ignores zone)
+         assertEquals(expected, f.withOffsetParsed().parseDateTime("2007-03-04 12:30 +07:00 Asia/Tokyo"));
+     }
+@@ -310,8 +310,7 @@ public void test_localPrintParseZoneTokyo() {
+             .appendPattern("yyyy-MM-dd HH:mm ").appendTimeZoneId();
+         DateTimeFormatter f = bld.toFormatter();
+         
+-        DateTimeZone zone = DateTimeZone.forID("Asia/Tokyo");
+-        DateTime dt = new DateTime(2007, 3, 4, 12, 30, 0, zone);
++        DateTime dt = new DateTime(2007, 3, 4, 12, 30, 0, TOKYO);
+         assertEquals("2007-03-04 12:30 Asia/Tokyo", f.print(dt));
+         
+         LocalDateTime expected = new LocalDateTime(2007, 3, 4, 12, 30);
+@@ -323,13 +322,12 @@ public void test_localPrintParseOffset() {
+             .appendPattern("yyyy-MM-dd HH:mm ").appendTimeZoneOffset("Z", true, 2, 2);
+         DateTimeFormatter f = bld.toFormatter();
+         
+-        DateTimeZone zone = DateTimeZone.forID("Asia/Tokyo");
+-        DateTime dt = new DateTime(2007, 3, 4, 12, 30, 0, zone);
++        DateTime dt = new DateTime(2007, 3, 4, 12, 30, 0, TOKYO);
+         assertEquals("2007-03-04 12:30 +09:00", f.print(dt));
+         
+         LocalDateTime expected = new LocalDateTime(2007, 3, 4, 12, 30);
+         assertEquals(expected, f.parseLocalDateTime("2007-03-04 12:30 +09:00"));
+-        assertEquals(expected, f.withZone(zone).parseLocalDateTime("2007-03-04 12:30 +09:00"));
++        assertEquals(expected, f.withZone(TOKYO).parseLocalDateTime("2007-03-04 12:30 +09:00"));
+         assertEquals(expected, f.withOffsetParsed().parseLocalDateTime("2007-03-04 12:30 +09:00"));
+     }
+ 
+@@ -338,14 +336,12 @@ public void test_localPrintParseOffsetAndZone() {
+             .appendPattern("yyyy-MM-dd HH:mm ").appendTimeZoneOffset("Z", true, 2, 2).appendLiteral(' ').appendTimeZoneId();
+         DateTimeFormatter f = bld.toFormatter();
+         
+-        DateTimeZone zone = DateTimeZone.forID("Asia/Tokyo");
+-        DateTimeZone paris = DateTimeZone.forID("Europe/Paris");
+-        DateTime dt = new DateTime(2007, 3, 4, 12, 30, 0, zone);
++        DateTime dt = new DateTime(2007, 3, 4, 12, 30, 0, TOKYO);
+         assertEquals("2007-03-04 12:30 +09:00 Asia/Tokyo", f.print(dt));
+         
+         LocalDateTime expected = new LocalDateTime(2007, 3, 4, 12, 30);
+-        assertEquals(expected, f.withZone(zone).parseLocalDateTime("2007-03-04 12:30 +09:00 Asia/Tokyo"));
+-        assertEquals(expected, f.withZone(paris).parseLocalDateTime("2007-03-04 12:30 +09:00 Asia/Tokyo"));
++        assertEquals(expected, f.withZone(TOKYO).parseLocalDateTime("2007-03-04 12:30 +09:00 Asia/Tokyo"));
++        assertEquals(expected, f.withZone(PARIS).parseLocalDateTime("2007-03-04 12:30 +09:00 Asia/Tokyo"));
+     }
+ 
+     public void test_localParseWrongOffsetAndZone() {
+@@ -353,14 +349,91 @@ public void test_localParseWrongOffsetAndZone() {
+             .appendPattern("yyyy-MM-dd HH:mm ").appendTimeZoneOffset("Z", true, 2, 2).appendLiteral(' ').appendTimeZoneId();
+         DateTimeFormatter f = bld.toFormatter();
+         
+-        DateTimeZone zone = DateTimeZone.forID("Asia/Tokyo");
+         LocalDateTime expected = new LocalDateTime(2007, 3, 4, 12, 30);
+         // parses offset time then adjusts to parsed zone
+         assertEquals(expected, f.parseLocalDateTime("2007-03-04 12:30 +07:00 Asia/Tokyo"));
+         // parses offset time then adjusts to requested zone
+-        assertEquals(expected, f.withZone(zone).parseLocalDateTime("2007-03-04 12:30 +07:00 Asia/Tokyo"));
++        assertEquals(expected, f.withZone(TOKYO).parseLocalDateTime("2007-03-04 12:30 +07:00 Asia/Tokyo"));
+         // parses offset time returning offset zone (ignores zone)
+         assertEquals(expected, f.withOffsetParsed().parseLocalDateTime("2007-03-04 12:30 +07:00 Asia/Tokyo"));
+     }
+ 
++    //-----------------------------------------------------------------------
++    public void test_printParseShortName() {
++        DateTimeFormatterBuilder bld = new DateTimeFormatterBuilder()
++            .appendPattern("yyyy-MM-dd HH:mm ").appendTimeZoneShortName();
++        DateTimeFormatter f = bld.toFormatter().withLocale(Locale.ENGLISH);
++        
++        DateTime dt1 = new DateTime(2011, 1, 4, 12, 30, 0, LONDON);
++        assertEquals("2011-01-04 12:30 GMT", f.print(dt1));
++        DateTime dt2 = new DateTime(2011, 7, 4, 12, 30, 0, LONDON);
++        assertEquals("2011-07-04 12:30 BST", f.print(dt2));
++        try {
++            f.parseDateTime("2007-03-04 12:30 GMT");
++            fail();
++        } catch (IllegalArgumentException e) {
++        }
++    }
++
++    public void test_printParseShortNameWithLookup() {
++        Map<String, DateTimeZone> lookup = new LinkedHashMap<String, DateTimeZone>();
++        lookup.put("GMT", LONDON);
++        lookup.put("BST", LONDON);
++        DateTimeFormatterBuilder bld = new DateTimeFormatterBuilder()
++            .appendPattern("yyyy-MM-dd HH:mm ").appendTimeZoneShortName(lookup);
++        DateTimeFormatter f = bld.toFormatter().withLocale(Locale.ENGLISH);
++        
++        DateTime dt1 = new DateTime(2011, 1, 4, 12, 30, 0, LONDON);
++        assertEquals("2011-01-04 12:30 GMT", f.print(dt1));
++        DateTime dt2 = new DateTime(2011, 7, 4, 12, 30, 0, LONDON);
++        assertEquals("2011-07-04 12:30 BST", f.print(dt2));
++        
++        assertEquals(dt1, f.parseDateTime("2011-01-04 12:30 GMT"));
++        assertEquals(dt2, f.parseDateTime("2011-07-04 12:30 BST"));
++        try {
++            f.parseDateTime("2007-03-04 12:30 EST");
++            fail();
++        } catch (IllegalArgumentException e) {
++        }
++    }
++
++    //-----------------------------------------------------------------------
++    public void test_printParseLongName() {
++        DateTimeFormatterBuilder bld = new DateTimeFormatterBuilder()
++            .appendPattern("yyyy-MM-dd HH:mm ").appendTimeZoneName();
++        DateTimeFormatter f = bld.toFormatter().withLocale(Locale.ENGLISH);
++        
++        DateTime dt1 = new DateTime(2011, 1, 4, 12, 30, 0, LONDON);
++        assertEquals("2011-01-04 12:30 Greenwich Mean Time", f.print(dt1));
++        DateTime dt2 = new DateTime(2011, 7, 4, 12, 30, 0, LONDON);
++        assertEquals("2011-07-04 12:30 British Summer Time", f.print(dt2));
++        try {
++            f.parseDateTime("2007-03-04 12:30 GMT");
++            fail();
++        } catch (IllegalArgumentException e) {
++        }
++    }
++
++    public void test_printParseLongNameWithLookup() {
++        Map<String, DateTimeZone> lookup = new LinkedHashMap<String, DateTimeZone>();
++        lookup.put("Greenwich Mean Time", LONDON);
++        lookup.put("British Summer Time", LONDON);
++        DateTimeFormatterBuilder bld = new DateTimeFormatterBuilder()
++            .appendPattern("yyyy-MM-dd HH:mm ").appendTimeZoneName(lookup);
++        DateTimeFormatter f = bld.toFormatter().withLocale(Locale.ENGLISH);
++        
++        DateTime dt1 = new DateTime(2011, 1, 4, 12, 30, 0, LONDON);
++        assertEquals("2011-01-04 12:30 Greenwich Mean Time", f.print(dt1));
++        DateTime dt2 = new DateTime(2011, 7, 4, 12, 30, 0, LONDON);
++        assertEquals("2011-07-04 12:30 British Summer Time", f.print(dt2));
++        
++        assertEquals(dt1, f.parseDateTime("2011-01-04 12:30 Greenwich Mean Time"));
++        assertEquals(dt2, f.parseDateTime("2011-07-04 12:30 British Summer Time"));
++        try {
++            f.parseDateTime("2007-03-04 12:30 EST");
++            fail();
++        } catch (IllegalArgumentException e) {
++        }
++    }
++
+ }
+
+From d88831b659b3f709786ee3343bf80a178fd5b82a Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Sat, 30 Jul 2011 13:47:26 +0100
+Subject: [PATCH 11/21] Minor tweaks to code from Dave Brosius
+
+---
+ pom.xml                                                  | 3 +++
+ .../java/org/joda/time/field/DelegatedDurationField.java | 7 +++----
+ .../java/org/joda/time/field/MillisDurationField.java    | 9 ++++-----
+ .../org/joda/time/format/PeriodFormatterBuilder.java     | 2 +-
+ 4 files changed, 11 insertions(+), 10 deletions(-)
+
+diff --git a/pom.xml b/pom.xml
+index 4469407e9..4428c122b 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -50,6 +50,9 @@
+     <contributor>
+       <name>Fredrik Borgh</name>
+     </contributor>
++    <contributor>
++      <name>Dave Brosius</name>
++    </contributor>
+     <contributor>
+       <name>Jeroen van Erp</name>
+     </contributor>
+diff --git a/src/main/java/org/joda/time/field/DelegatedDurationField.java b/src/main/java/org/joda/time/field/DelegatedDurationField.java
+index d15dcf897..d0b8c5445 100644
+--- a/src/main/java/org/joda/time/field/DelegatedDurationField.java
++++ b/src/main/java/org/joda/time/field/DelegatedDurationField.java
+@@ -150,11 +150,10 @@ public int compareTo(DurationField durationField) {
+         return iField.compareTo(durationField);
+     }
+ 
+-    public boolean equals(Object o) {
+-        if (o instanceof DelegatedDurationField) {
+-            return iField.equals(((DelegatedDurationField) o).iField);
++    public boolean equals(Object obj) {
++        if (obj instanceof DelegatedDurationField) {
++            return iField.equals(((DelegatedDurationField) obj).iField);
+         }
+-
+         return false;
+     }
+ 
+diff --git a/src/main/java/org/joda/time/field/MillisDurationField.java b/src/main/java/org/joda/time/field/MillisDurationField.java
+index 2bf8a7cb5..f77fb4b97 100644
+--- a/src/main/java/org/joda/time/field/MillisDurationField.java
++++ b/src/main/java/org/joda/time/field/MillisDurationField.java
+@@ -144,16 +144,15 @@ public int compareTo(DurationField otherField) {
+         }
+     }
+ 
+-    public boolean equals(Object o) {
+-        if (o instanceof MillisDurationField) {
+-            return getUnitMillis() == ((MillisDurationField) o).getUnitMillis();
++    public boolean equals(Object obj) {
++        if (obj instanceof MillisDurationField) {
++            return getUnitMillis() == ((MillisDurationField) obj).getUnitMillis();
+         }
+-
+         return false;
+     }
+ 
+     public int hashCode() {
+-        return (int)getUnitMillis();
++        return (int) getUnitMillis();
+     }
+ 
+     /**
+diff --git a/src/main/java/org/joda/time/format/PeriodFormatterBuilder.java b/src/main/java/org/joda/time/format/PeriodFormatterBuilder.java
+index ee017370d..2471fce9e 100644
+--- a/src/main/java/org/joda/time/format/PeriodFormatterBuilder.java
++++ b/src/main/java/org/joda/time/format/PeriodFormatterBuilder.java
+@@ -1719,7 +1719,7 @@ public int parseInto(
+                         periodStr.regionMatches
+                         (true, position, parsedForm, 0, parsedForm.length())) {
+                         
+-                        position += (parsedForm == null) ? 0 : parsedForm.length();
++                        position += (parsedForm == null ? 0 : parsedForm.length());
+                         found = true;
+                         break;
+                     }
+
+From 2c5adef4066e04c58dcef1903c11b36a1b58b09f Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Sat, 30 Jul 2011 18:41:22 +0100
+Subject: [PATCH 12/21] Add static now() methods to major classes
+
+---
+ RELEASE-NOTES.txt                             |  4 ++
+ src/main/java/org/joda/time/DateMidnight.java | 49 ++++++++++++++++++
+ src/main/java/org/joda/time/DateTime.java     | 46 +++++++++++++++++
+ src/main/java/org/joda/time/Instant.java      | 13 +++++
+ src/main/java/org/joda/time/LocalDate.java    | 46 +++++++++++++++++
+ .../java/org/joda/time/LocalDateTime.java     | 49 ++++++++++++++++++
+ src/main/java/org/joda/time/LocalTime.java    | 49 ++++++++++++++++++
+ src/main/java/org/joda/time/MonthDay.java     | 49 ++++++++++++++++++
+ .../java/org/joda/time/MutableDateTime.java   | 46 +++++++++++++++++
+ src/main/java/org/joda/time/YearMonth.java    | 49 ++++++++++++++++++
+ src/site/xdoc/upgradeto200.xml                |  4 ++
+ .../time/TestDateMidnight_Constructors.java   | 51 +++++++++++++++++++
+ .../joda/time/TestDateTime_Constructors.java  | 48 +++++++++++++++++
+ .../joda/time/TestInstant_Constructors.java   | 10 ++++
+ .../time/TestLocalDateTime_Constructors.java  |  4 ++
+ .../joda/time/TestLocalDate_Constructors.java |  4 ++
+ .../joda/time/TestLocalTime_Constructors.java |  4 ++
+ .../joda/time/TestMonthDay_Constructors.java  |  4 ++
+ .../TestMutableDateTime_Constructors.java     | 48 +++++++++++++++++
+ .../joda/time/TestYearMonth_Constructors.java |  4 ++
+ 20 files changed, 581 insertions(+)
+
+diff --git a/RELEASE-NOTES.txt b/RELEASE-NOTES.txt
+index 5712e83c8..31e6173d4 100644
+--- a/RELEASE-NOTES.txt
++++ b/RELEASE-NOTES.txt
+@@ -49,6 +49,10 @@ Enhancements since 1.6
+   Currently supported (via online translators) are English, German, Dutch,
+   French, Spanish and Portuguese. Corrections and additional languages welcome.
+ 
++- Static now() methods available on all major types [3134566]
++  These should be used instead of the constructors when creating the current date/time
++  Unlike the constructors, these methods validate any argument to ensure it is non-null
++
+ - Static parse() methods available on all major types
+   These allow the formatter to be controlled
+   They do not always parse the same formats as the constructor taking an object
+diff --git a/src/main/java/org/joda/time/DateMidnight.java b/src/main/java/org/joda/time/DateMidnight.java
+index 58ef03030..2a2d72443 100644
+--- a/src/main/java/org/joda/time/DateMidnight.java
++++ b/src/main/java/org/joda/time/DateMidnight.java
+@@ -75,6 +75,51 @@
+     /** Serialization lock */
+     private static final long serialVersionUID = 156371964018738L;
+ 
++    //-----------------------------------------------------------------------
++    /**
++     * Obtains a {@code DateMidnight} set to the current system millisecond time
++     * using <code>ISOChronology</code> in the default time zone.
++     * The constructed object will have a local time of midnight.
++     * 
++     * @return the current date, not null
++     * @since 2.0
++     */
++    public static DateMidnight now() {
++        return new DateMidnight();
++    }
++
++    /**
++     * Obtains a {@code DateMidnight} set to the current system millisecond time
++     * using <code>ISOChronology</code> in the specified time zone.
++     * The constructed object will have a local time of midnight.
++     *
++     * @param zone  the time zone, not null
++     * @return the current date, not null
++     * @since 2.0
++     */
++    public static DateMidnight now(DateTimeZone zone) {
++        if (zone == null) {
++            throw new NullPointerException("Zone must not be null");
++        }
++        return new DateMidnight(zone);
++    }
++
++    /**
++     * Obtains a {@code DateMidnight} set to the current system millisecond time
++     * using the specified chronology.
++     * The constructed object will have a local time of midnight.
++     *
++     * @param chronology  the chronology, not null
++     * @return the current date, not null
++     * @since 2.0
++     */
++    public static DateMidnight now(Chronology chronology) {
++        if (chronology == null) {
++            throw new NullPointerException("Chronology must not be null");
++        }
++        return new DateMidnight(chronology);
++    }
++
+     //-----------------------------------------------------------------------
+     /**
+      * Parses a {@code DateMidnight} from the specified string.
+@@ -105,6 +150,8 @@ public static DateMidnight parse(String str, DateTimeFormatter formatter) {
+      * Constructs an instance set to the current system millisecond time
+      * using <code>ISOChronology</code> in the default time zone.
+      * The constructed object will have a local time of midnight.
++     * 
++     * @see #now()
+      */
+     public DateMidnight() {
+         super();
+@@ -118,6 +165,7 @@ public DateMidnight() {
+      * If the specified time zone is null, the default zone is used.
+      *
+      * @param zone  the time zone, null means default zone
++     * @see #now(DateTimeZone)
+      */
+     public DateMidnight(DateTimeZone zone) {
+         super(zone);
+@@ -132,6 +180,7 @@ public DateMidnight(DateTimeZone zone) {
+      * in the default time zone is used.
+      *
+      * @param chronology  the chronology, null means ISOChronology in default zone
++     * @see #now(Chronology)
+      */
+     public DateMidnight(Chronology chronology) {
+         super(chronology);
+diff --git a/src/main/java/org/joda/time/DateTime.java b/src/main/java/org/joda/time/DateTime.java
+index 12eb000c3..75797dc22 100644
+--- a/src/main/java/org/joda/time/DateTime.java
++++ b/src/main/java/org/joda/time/DateTime.java
+@@ -77,6 +77,48 @@
+     /** Serialization lock */
+     private static final long serialVersionUID = -5171125899451703815L;
+ 
++    //-----------------------------------------------------------------------
++    /**
++     * Obtains a {@code DateTime} set to the current system millisecond time
++     * using <code>ISOChronology</code> in the default time zone.
++     * 
++     * @return the current date-time, not null
++     * @since 2.0
++     */
++    public static DateTime now() {
++        return new DateTime();
++    }
++
++    /**
++     * Obtains a {@code DateTime} set to the current system millisecond time
++     * using <code>ISOChronology</code> in the specified time zone.
++     *
++     * @param zone  the time zone, not null
++     * @return the current date-time, not null
++     * @since 2.0
++     */
++    public static DateTime now(DateTimeZone zone) {
++        if (zone == null) {
++            throw new NullPointerException("Zone must not be null");
++        }
++        return new DateTime(zone);
++    }
++
++    /**
++     * Obtains a {@code DateTime} set to the current system millisecond time
++     * using the specified chronology.
++     *
++     * @param chronology  the chronology, not null
++     * @return the current date-time, not null
++     * @since 2.0
++     */
++    public static DateTime now(Chronology chronology) {
++        if (chronology == null) {
++            throw new NullPointerException("Chronology must not be null");
++        }
++        return new DateTime(chronology);
++    }
++
+     //-----------------------------------------------------------------------
+     /**
+      * Parses a {@code DateTime} from the specified string.
+@@ -106,6 +148,8 @@ public static DateTime parse(String str, DateTimeFormatter formatter) {
+     /**
+      * Constructs an instance set to the current system millisecond time
+      * using <code>ISOChronology</code> in the default time zone.
++     * 
++     * @see #now()
+      */
+     public DateTime() {
+         super();
+@@ -118,6 +162,7 @@ public DateTime() {
+      * If the specified time zone is null, the default zone is used.
+      *
+      * @param zone  the time zone, null means default zone
++     * @see #now(DateTimeZone)
+      */
+     public DateTime(DateTimeZone zone) {
+         super(zone);
+@@ -131,6 +176,7 @@ public DateTime(DateTimeZone zone) {
+      * in the default time zone is used.
+      *
+      * @param chronology  the chronology, null means ISOChronology in default zone
++     * @see #now(Chronology)
+      */
+     public DateTime(Chronology chronology) {
+         super(chronology);
+diff --git a/src/main/java/org/joda/time/Instant.java b/src/main/java/org/joda/time/Instant.java
+index 8db918966..4ec1206b2 100644
+--- a/src/main/java/org/joda/time/Instant.java
++++ b/src/main/java/org/joda/time/Instant.java
+@@ -62,6 +62,17 @@
+     /** The millis from 1970-01-01T00:00:00Z */
+     private final long iMillis;
+ 
++    //-----------------------------------------------------------------------
++    /**
++     * Obtains an {@code Instant} set to the current system millisecond time.
++     * 
++     * @return the current instant, not null
++     * @since 2.0
++     */
++    public static Instant now() {
++        return new Instant();
++    }
++
+     //-----------------------------------------------------------------------
+     /**
+      * Parses a {@code Instant} from the specified string.
+@@ -90,6 +101,8 @@ public static Instant parse(String str, DateTimeFormatter formatter) {
+     //-----------------------------------------------------------------------
+     /**
+      * Constructs an instance set to the current system millisecond time.
++     * 
++     * @see #now()
+      */
+     public Instant() {
+         super();
+diff --git a/src/main/java/org/joda/time/LocalDate.java b/src/main/java/org/joda/time/LocalDate.java
+index cd48a286e..8656c3733 100644
+--- a/src/main/java/org/joda/time/LocalDate.java
++++ b/src/main/java/org/joda/time/LocalDate.java
+@@ -111,6 +111,48 @@
+     /** The cached hash code. */
+     private transient volatile int iHash;
+ 
++    //-----------------------------------------------------------------------
++    /**
++     * Obtains a {@code LocalDate} set to the current system millisecond time
++     * using <code>ISOChronology</code> in the default time zone.
++     * 
++     * @return the current date-time, not null
++     * @since 2.0
++     */
++    public static LocalDate now() {
++        return new LocalDate();
++    }
++
++    /**
++     * Obtains a {@code LocalDate} set to the current system millisecond time
++     * using <code>ISOChronology</code> in the specified time zone.
++     *
++     * @param zone  the time zone, not null
++     * @return the current date-time, not null
++     * @since 2.0
++     */
++    public static LocalDate now(DateTimeZone zone) {
++        if (zone == null) {
++            throw new NullPointerException("Zone must not be null");
++        }
++        return new LocalDate(zone);
++    }
++
++    /**
++     * Obtains a {@code LocalDate} set to the current system millisecond time
++     * using the specified chronology.
++     *
++     * @param chronology  the chronology, not null
++     * @return the current date-time, not null
++     * @since 2.0
++     */
++    public static LocalDate now(Chronology chronology) {
++        if (chronology == null) {
++            throw new NullPointerException("Chronology must not be null");
++        }
++        return new LocalDate(chronology);
++    }
++
+     //-----------------------------------------------------------------------
+     /**
+      * Parses a {@code LocalDate} from the specified string.
+@@ -209,6 +251,8 @@ public static LocalDate fromDateFields(Date date) {
+      * ISO chronology in the default zone.
+      * <p>
+      * Once the constructor is completed, the zone is no longer used.
++     * 
++     * @see #now()
+      */
+     public LocalDate() {
+         this(DateTimeUtils.currentTimeMillis(), ISOChronology.getInstance());
+@@ -222,6 +266,7 @@ public LocalDate() {
+      * Once the constructor is completed, the zone is no longer used.
+      *
+      * @param zone  the time zone, null means default zone
++     * @see #now(DateTimeZone)
+      */
+     public LocalDate(DateTimeZone zone) {
+         this(DateTimeUtils.currentTimeMillis(), ISOChronology.getInstance(zone));
+@@ -235,6 +280,7 @@ public LocalDate(DateTimeZone zone) {
+      * Once the constructor is completed, the zone is no longer used.
+      *
+      * @param chronology  the chronology, null means ISOChronology in default zone
++     * @see #now(Chronology)
+      */
+     public LocalDate(Chronology chronology) {
+         this(DateTimeUtils.currentTimeMillis(), chronology);
+diff --git a/src/main/java/org/joda/time/LocalDateTime.java b/src/main/java/org/joda/time/LocalDateTime.java
+index 77fdd8b30..fb6dcbb70 100644
+--- a/src/main/java/org/joda/time/LocalDateTime.java
++++ b/src/main/java/org/joda/time/LocalDateTime.java
+@@ -97,6 +97,51 @@
+     /** The chronology to use in UTC */
+     private final Chronology iChronology;
+ 
++    //-----------------------------------------------------------------------
++    /**
++     * Obtains a {@code LocalDateTime} set to the current system millisecond time
++     * using <code>ISOChronology</code> in the default time zone.
++     * The resulting object does not use the zone.
++     * 
++     * @return the current date, not null
++     * @since 2.0
++     */
++    public static LocalDateTime now() {
++        return new LocalDateTime();
++    }
++
++    /**
++     * Obtains a {@code LocalDateTime} set to the current system millisecond time
++     * using <code>ISOChronology</code> in the specified time zone.
++     * The resulting object does not use the zone.
++     *
++     * @param zone  the time zone, not null
++     * @return the current date, not null
++     * @since 2.0
++     */
++    public static LocalDateTime now(DateTimeZone zone) {
++        if (zone == null) {
++            throw new NullPointerException("Zone must not be null");
++        }
++        return new LocalDateTime(zone);
++    }
++
++    /**
++     * Obtains a {@code LocalDateTime} set to the current system millisecond time
++     * using the specified chronology.
++     * The resulting object does not use the zone.
++     *
++     * @param chronology  the chronology, not null
++     * @return the current date, not null
++     * @since 2.0
++     */
++    public static LocalDateTime now(Chronology chronology) {
++        if (chronology == null) {
++            throw new NullPointerException("Chronology must not be null");
++        }
++        return new LocalDateTime(chronology);
++    }
++
+     //-----------------------------------------------------------------------
+     /**
+      * Parses a {@code LocalDateTime} from the specified string.
+@@ -203,6 +248,8 @@ public static LocalDateTime fromDateFields(Date date) {
+      * ISO chronology in the default zone.
+      * <p>
+      * Once the constructor is completed, the zone is no longer used.
++     * 
++     * @see #now()
+      */
+     public LocalDateTime() {
+         this(DateTimeUtils.currentTimeMillis(), ISOChronology.getInstance());
+@@ -216,6 +263,7 @@ public LocalDateTime() {
+      * Once the constructor is completed, the zone is no longer used.
+      *
+      * @param zone  the time zone, null means default zone
++     * @see #now(DateTimeZone)
+      */
+     public LocalDateTime(DateTimeZone zone) {
+         this(DateTimeUtils.currentTimeMillis(), ISOChronology.getInstance(zone));
+@@ -229,6 +277,7 @@ public LocalDateTime(DateTimeZone zone) {
+      * Once the constructor is completed, the zone is no longer used.
+      *
+      * @param chronology  the chronology, null means ISOChronology in default zone
++     * @see #now(Chronology)
+      */
+     public LocalDateTime(Chronology chronology) {
+         this(DateTimeUtils.currentTimeMillis(), chronology);
+diff --git a/src/main/java/org/joda/time/LocalTime.java b/src/main/java/org/joda/time/LocalTime.java
+index 35a31214d..b12a6c46a 100644
+--- a/src/main/java/org/joda/time/LocalTime.java
++++ b/src/main/java/org/joda/time/LocalTime.java
+@@ -105,6 +105,51 @@
+     /** The chronology to use, in UTC */
+     private final Chronology iChronology;
+ 
++    //-----------------------------------------------------------------------
++    /**
++     * Obtains a {@code LocalTime} set to the current system millisecond time
++     * using <code>ISOChronology</code> in the default time zone.
++     * The resulting object does not use the zone.
++     * 
++     * @return the current time, not null
++     * @since 2.0
++     */
++    public static LocalTime now() {
++        return new LocalTime();
++    }
++
++    /**
++     * Obtains a {@code LocalTime} set to the current system millisecond time
++     * using <code>ISOChronology</code> in the specified time zone.
++     * The resulting object does not use the zone.
++     *
++     * @param zone  the time zone, not null
++     * @return the current time, not null
++     * @since 2.0
++     */
++    public static LocalTime now(DateTimeZone zone) {
++        if (zone == null) {
++            throw new NullPointerException("Zone must not be null");
++        }
++        return new LocalTime(zone);
++    }
++
++    /**
++     * Obtains a {@code LocalTime} set to the current system millisecond time
++     * using the specified chronology.
++     * The resulting object does not use the zone.
++     *
++     * @param chronology  the chronology, not null
++     * @return the current time, not null
++     * @since 2.0
++     */
++    public static LocalTime now(Chronology chronology) {
++        if (chronology == null) {
++            throw new NullPointerException("Chronology must not be null");
++        }
++        return new LocalTime(chronology);
++    }
++
+     //-----------------------------------------------------------------------
+     /**
+      * Parses a {@code LocalTime} from the specified string.
+@@ -236,6 +281,8 @@ public static LocalTime fromDateFields(Date date) {
+      * ISO chronology in the default zone.
+      * <p>
+      * Once the constructor is completed, the zone is no longer used.
++     * 
++     * @see #now()
+      */
+     public LocalTime() {
+         this(DateTimeUtils.currentTimeMillis(), ISOChronology.getInstance());
+@@ -249,6 +296,7 @@ public LocalTime() {
+      * Once the constructor is completed, the zone is no longer used.
+      *
+      * @param zone  the time zone, null means default zone
++     * @see #now(DateTimeZone)
+      */
+     public LocalTime(DateTimeZone zone) {
+         this(DateTimeUtils.currentTimeMillis(), ISOChronology.getInstance(zone));
+@@ -262,6 +310,7 @@ public LocalTime(DateTimeZone zone) {
+      * Once the constructor is completed, the zone is no longer used.
+      *
+      * @param chronology  the chronology, null means ISOChronology in default zone
++     * @see #now(Chronology)
+      */
+     public LocalTime(Chronology chronology) {
+         this(DateTimeUtils.currentTimeMillis(), chronology);
+diff --git a/src/main/java/org/joda/time/MonthDay.java b/src/main/java/org/joda/time/MonthDay.java
+index b61b6a096..c7dd59b69 100644
+--- a/src/main/java/org/joda/time/MonthDay.java
++++ b/src/main/java/org/joda/time/MonthDay.java
+@@ -90,6 +90,51 @@
+     /** The index of the day field in the field array */
+     public static final int DAY_OF_MONTH = 1;
+ 
++    //-----------------------------------------------------------------------
++    /**
++     * Obtains a {@code MonthDay} set to the current system millisecond time
++     * using <code>ISOChronology</code> in the default time zone.
++     * The resulting object does not use the zone.
++     * 
++     * @return the current month-day, not null
++     * @since 2.0
++     */
++    public static MonthDay now() {
++        return new MonthDay();
++    }
++
++    /**
++     * Obtains a {@code MonthDay} set to the current system millisecond time
++     * using <code>ISOChronology</code> in the specified time zone.
++     * The resulting object does not use the zone.
++     *
++     * @param zone  the time zone, not null
++     * @return the current month-day, not null
++     * @since 2.0
++     */
++    public static MonthDay now(DateTimeZone zone) {
++        if (zone == null) {
++            throw new NullPointerException("Zone must not be null");
++        }
++        return new MonthDay(zone);
++    }
++
++    /**
++     * Obtains a {@code MonthDay} set to the current system millisecond time
++     * using the specified chronology.
++     * The resulting object does not use the zone.
++     *
++     * @param chronology  the chronology, not null
++     * @return the current month-day, not null
++     * @since 2.0
++     */
++    public static MonthDay now(Chronology chronology) {
++        if (chronology == null) {
++            throw new NullPointerException("Chronology must not be null");
++        }
++        return new MonthDay(chronology);
++    }
++
+     //-----------------------------------------------------------------------
+     /**
+      * Parses a {@code MonthDay} from the specified string.
+@@ -169,6 +214,8 @@ public static MonthDay fromDateFields(Date date) {
+      * The constructor uses the default time zone, resulting in the local time
+      * being initialised. Once the constructor is complete, all further calculations
+      * are performed without reference to a time-zone (by switching to UTC).
++     * 
++     * @see #now()
+      */
+     public MonthDay() {
+         super();
+@@ -183,6 +230,7 @@ public MonthDay() {
+      * are performed without reference to a time-zone (by switching to UTC).
+      * 
+      * @param zone  the zone to use, null means default zone
++     * @see #now(DateTimeZone)
+      */
+     public MonthDay(DateTimeZone zone) {
+         super(ISOChronology.getInstance(zone));
+@@ -197,6 +245,7 @@ public MonthDay(DateTimeZone zone) {
+      * without reference to a time-zone (by switching to UTC).
+      *
+      * @param chronology  the chronology, null means ISOChronology in the default zone
++     * @see #now(Chronology)
+      */
+     public MonthDay(Chronology chronology) {
+         super(chronology);
+diff --git a/src/main/java/org/joda/time/MutableDateTime.java b/src/main/java/org/joda/time/MutableDateTime.java
+index e13940b02..811f3d02d 100644
+--- a/src/main/java/org/joda/time/MutableDateTime.java
++++ b/src/main/java/org/joda/time/MutableDateTime.java
+@@ -94,6 +94,48 @@
+     /** The mode of rounding */
+     private int iRoundingMode;
+ 
++    //-----------------------------------------------------------------------
++    /**
++     * Obtains a {@code MutableDateTime} set to the current system millisecond time
++     * using <code>ISOChronology</code> in the default time zone.
++     * 
++     * @return the current date-time, not null
++     * @since 2.0
++     */
++    public static MutableDateTime now() {
++        return new MutableDateTime();
++    }
++
++    /**
++     * Obtains a {@code MutableDateTime} set to the current system millisecond time
++     * using <code>ISOChronology</code> in the specified time zone.
++     *
++     * @param zone  the time zone, not null
++     * @return the current date-time, not null
++     * @since 2.0
++     */
++    public static MutableDateTime now(DateTimeZone zone) {
++        if (zone == null) {
++            throw new NullPointerException("Zone must not be null");
++        }
++        return new MutableDateTime(zone);
++    }
++
++    /**
++     * Obtains a {@code MutableDateTime} set to the current system millisecond time
++     * using the specified chronology.
++     *
++     * @param chronology  the chronology, not null
++     * @return the current date-time, not null
++     * @since 2.0
++     */
++    public static MutableDateTime now(Chronology chronology) {
++        if (chronology == null) {
++            throw new NullPointerException("Chronology must not be null");
++        }
++        return new MutableDateTime(chronology);
++    }
++
+     //-----------------------------------------------------------------------
+     /**
+      * Parses a {@code MutableDateTime} from the specified string.
+@@ -123,6 +165,8 @@ public static MutableDateTime parse(String str, DateTimeFormatter formatter) {
+     /**
+      * Constructs an instance set to the current system millisecond time
+      * using <code>ISOChronology</code> in the default time zone.
++     * 
++     * @see #now()
+      */
+     public MutableDateTime() {
+         super();
+@@ -135,6 +179,7 @@ public MutableDateTime() {
+      * If the specified time zone is null, the default zone is used.
+      *
+      * @param zone  the time zone, null means default zone
++     * @see #now(DateTimeZone)
+      */
+     public MutableDateTime(DateTimeZone zone) {
+         super(zone);
+@@ -148,6 +193,7 @@ public MutableDateTime(DateTimeZone zone) {
+      * in the default time zone is used.
+      *
+      * @param chronology  the chronology, null means ISOChronology in default zone
++     * @see #now(Chronology)
+      */
+     public MutableDateTime(Chronology chronology) {
+         super(chronology);
+diff --git a/src/main/java/org/joda/time/YearMonth.java b/src/main/java/org/joda/time/YearMonth.java
+index d185a3018..3d4fd4eb5 100644
+--- a/src/main/java/org/joda/time/YearMonth.java
++++ b/src/main/java/org/joda/time/YearMonth.java
+@@ -82,6 +82,51 @@
+     /** The index of the monthOfYear field in the field array */
+     public static final int MONTH_OF_YEAR = 1;
+ 
++    //-----------------------------------------------------------------------
++    /**
++     * Obtains a {@code YearMonth} set to the current system millisecond time
++     * using <code>ISOChronology</code> in the default time zone.
++     * The resulting object does not use the zone.
++     * 
++     * @return the current year-month, not null
++     * @since 2.0
++     */
++    public static YearMonth now() {
++        return new YearMonth();
++    }
++
++    /**
++     * Obtains a {@code YearMonth} set to the current system millisecond time
++     * using <code>ISOChronology</code> in the specified time zone.
++     * The resulting object does not use the zone.
++     *
++     * @param zone  the time zone, not null
++     * @return the current year-month, not null
++     * @since 2.0
++     */
++    public static YearMonth now(DateTimeZone zone) {
++        if (zone == null) {
++            throw new NullPointerException("Zone must not be null");
++        }
++        return new YearMonth(zone);
++    }
++
++    /**
++     * Obtains a {@code YearMonth} set to the current system millisecond time
++     * using the specified chronology.
++     * The resulting object does not use the zone.
++     *
++     * @param chronology  the chronology, not null
++     * @return the current year-month, not null
++     * @since 2.0
++     */
++    public static YearMonth now(Chronology chronology) {
++        if (chronology == null) {
++            throw new NullPointerException("Chronology must not be null");
++        }
++        return new YearMonth(chronology);
++    }
++
+     //-----------------------------------------------------------------------
+     /**
+      * Parses a {@code YearMonth} from the specified string.
+@@ -161,6 +206,8 @@ public static YearMonth fromDateFields(Date date) {
+      * The constructor uses the default time zone, resulting in the local time
+      * being initialised. Once the constructor is complete, all further calculations
+      * are performed without reference to a time-zone (by switching to UTC).
++     * 
++     * @see #now()
+      */
+     public YearMonth() {
+         super();
+@@ -175,6 +222,7 @@ public YearMonth() {
+      * are performed without reference to a time-zone (by switching to UTC).
+      * 
+      * @param zone  the zone to use, null means default zone
++     * @see #now(DateTimeZone)
+      */
+     public YearMonth(DateTimeZone zone) {
+         super(ISOChronology.getInstance(zone));
+@@ -189,6 +237,7 @@ public YearMonth(DateTimeZone zone) {
+      * without reference to a time-zone (by switching to UTC).
+      *
+      * @param chronology  the chronology, null means ISOChronology in the default zone
++     * @see #now(Chronology)
+      */
+     public YearMonth(Chronology chronology) {
+         super(chronology);
+diff --git a/src/site/xdoc/upgradeto200.xml b/src/site/xdoc/upgradeto200.xml
+index 5d65d7866..b00f5d2b3 100644
+--- a/src/site/xdoc/upgradeto200.xml
++++ b/src/site/xdoc/upgradeto200.xml
+@@ -64,6 +64,10 @@ Enhancements since 1.6
+   Currently supported (via online translators) are English, German, Dutch,
+   French, Spanish and Portuguese. Corrections and additional languages welcome.
+ 
++- Static now() methods available on all major types [3134566]
++  These should be used instead of the constructors when creating the current date/time
++  Unlike the constructors, these methods validate any argument to ensure it is non-null
++
+ - Static parse() methods available on all major types
+   These allow the formatter to be controlled
+   They do not always parse the same formats as the constructor taking an object
+diff --git a/src/test/java/org/joda/time/TestDateMidnight_Constructors.java b/src/test/java/org/joda/time/TestDateMidnight_Constructors.java
+index 2f812f89f..f7c19a29a 100644
+--- a/src/test/java/org/joda/time/TestDateMidnight_Constructors.java
++++ b/src/test/java/org/joda/time/TestDateMidnight_Constructors.java
+@@ -117,6 +117,57 @@ public void testTest() {
+         assertEquals("2003-05-06T14:28:00.000Z", new Instant(TEST_TIME2_UTC).toString());
+     }
+ 
++    //-----------------------------------------------------------------------
++    /**
++     * Test now ()
++     */
++    public void test_now() throws Throwable {
++        DateMidnight test = DateMidnight.now();
++        assertEquals(ISOChronology.getInstance(), test.getChronology());
++        assertEquals(TEST_TIME_NOW_LONDON, test.getMillis());
++        assertEquals(2002, test.getYear());
++        assertEquals(6, test.getMonthOfYear());
++        assertEquals(9, test.getDayOfMonth());
++    }
++
++    /**
++     * Test now (DateTimeZone)
++     */
++    public void test_now_DateTimeZone() throws Throwable {
++        DateMidnight test = DateMidnight.now(PARIS);
++        assertEquals(ISOChronology.getInstance(PARIS), test.getChronology());
++        assertEquals(TEST_TIME_NOW_PARIS, test.getMillis());
++    }
++
++    /**
++     * Test now (DateTimeZone=null)
++     */
++    public void test_now_nullDateTimeZone() throws Throwable {
++        try {
++            DateMidnight.now((DateTimeZone) null);
++            fail();
++        } catch (NullPointerException ex) {}
++    }
++
++    /**
++     * Test now (Chronology)
++     */
++    public void test_now_Chronology() throws Throwable {
++        DateMidnight test = DateMidnight.now(GregorianChronology.getInstance());
++        assertEquals(GregorianChronology.getInstance(), test.getChronology());
++        assertEquals(TEST_TIME_NOW_LONDON, test.getMillis());
++    }
++
++    /**
++     * Test now (Chronology=null)
++     */
++    public void test_now_nullChronology() throws Throwable {
++        try {
++            DateMidnight.now((Chronology) null);
++            fail();
++        } catch (NullPointerException ex) {}
++    }
++
+     //-----------------------------------------------------------------------
+     public void testParse_noFormatter() throws Throwable {
+         assertEquals(new DateMidnight(2010, 6, 30, ISOChronology.getInstance(LONDON)), DateMidnight.parse("2010-06-30"));
+diff --git a/src/test/java/org/joda/time/TestDateTime_Constructors.java b/src/test/java/org/joda/time/TestDateTime_Constructors.java
+index 2bd780e3c..72ffdab09 100644
+--- a/src/test/java/org/joda/time/TestDateTime_Constructors.java
++++ b/src/test/java/org/joda/time/TestDateTime_Constructors.java
+@@ -104,6 +104,54 @@ public void testTest() {
+         assertEquals("2003-05-06T14:28:00.000Z", new Instant(TEST_TIME2).toString());
+     }
+ 
++    //-----------------------------------------------------------------------
++    /**
++     * Test now ()
++     */
++    public void test_now() throws Throwable {
++        DateTime test = DateTime.now();
++        assertEquals(ISOChronology.getInstance(), test.getChronology());
++        assertEquals(TEST_TIME_NOW, test.getMillis());
++    }
++
++    /**
++     * Test now (DateTimeZone)
++     */
++    public void test_now_DateTimeZone() throws Throwable {
++        DateTime test = DateTime.now(PARIS);
++        assertEquals(ISOChronology.getInstance(PARIS), test.getChronology());
++        assertEquals(TEST_TIME_NOW, test.getMillis());
++    }
++
++    /**
++     * Test now (DateTimeZone=null)
++     */
++    public void test_now_nullDateTimeZone() throws Throwable {
++        try {
++            DateTime.now((DateTimeZone) null);
++            fail();
++        } catch (NullPointerException ex) {}
++    }
++
++    /**
++     * Test now (Chronology)
++     */
++    public void test_now_Chronology() throws Throwable {
++        DateTime test = DateTime.now(GregorianChronology.getInstance());
++        assertEquals(GregorianChronology.getInstance(), test.getChronology());
++        assertEquals(TEST_TIME_NOW, test.getMillis());
++    }
++
++    /**
++     * Test now (Chronology=null)
++     */
++    public void test_now_nullChronology() throws Throwable {
++        try {
++            DateTime.now((Chronology) null);
++            fail();
++        } catch (NullPointerException ex) {}
++    }
++
+     //-----------------------------------------------------------------------
+     public void testParse_noFormatter() throws Throwable {
+         assertEquals(new DateTime(2010, 6, 30, 1, 20, ISOChronology.getInstance(DateTimeZone.forOffsetHours(2))), DateTime.parse("2010-06-30T01:20+02:00"));
+diff --git a/src/test/java/org/joda/time/TestInstant_Constructors.java b/src/test/java/org/joda/time/TestInstant_Constructors.java
+index da3691575..bee832ce6 100644
+--- a/src/test/java/org/joda/time/TestInstant_Constructors.java
++++ b/src/test/java/org/joda/time/TestInstant_Constructors.java
+@@ -85,6 +85,16 @@ protected void tearDown() throws Exception {
+         zone = null;
+     }
+ 
++    //-----------------------------------------------------------------------
++    /**
++     * Test now ()
++     */
++    public void test_now() throws Throwable {
++        Instant test = Instant.now();
++        assertEquals(ISOChronology.getInstanceUTC(), test.getChronology());
++        assertEquals(TEST_TIME_NOW, test.getMillis());
++    }
++
+     //-----------------------------------------------------------------------
+     public void testParse_noFormatter() throws Throwable {
+         assertEquals(new DateTime(2010, 6, 30, 0, 20, ISOChronology.getInstance(LONDON)).toInstant(), Instant.parse("2010-06-30T01:20+02:00"));
+diff --git a/src/test/java/org/joda/time/TestLocalDateTime_Constructors.java b/src/test/java/org/joda/time/TestLocalDateTime_Constructors.java
+index 00f292584..853e1e682 100644
+--- a/src/test/java/org/joda/time/TestLocalDateTime_Constructors.java
++++ b/src/test/java/org/joda/time/TestLocalDateTime_Constructors.java
+@@ -136,6 +136,7 @@ public void testConstructor() throws Throwable {
+         assertEquals(20, test.getMinuteOfHour());
+         assertEquals(30, test.getSecondOfMinute());
+         assertEquals(40, test.getMillisOfSecond());
++        assertEquals(test, LocalDateTime.now());
+     }
+ 
+     //-----------------------------------------------------------------------
+@@ -153,6 +154,7 @@ public void testConstructor_DateTimeZone() throws Throwable {
+         assertEquals(59, test.getMinuteOfHour());
+         assertEquals(0, test.getSecondOfMinute());
+         assertEquals(0, test.getMillisOfSecond());
++        assertEquals(test, LocalDateTime.now(LONDON));
+         
+         test = new LocalDateTime(PARIS);
+         assertEquals(ISO_UTC, test.getChronology());
+@@ -163,6 +165,7 @@ public void testConstructor_DateTimeZone() throws Throwable {
+         assertEquals(59, test.getMinuteOfHour());
+         assertEquals(0, test.getSecondOfMinute());
+         assertEquals(0, test.getMillisOfSecond());
++        assertEquals(test, LocalDateTime.now(PARIS));
+     }
+ 
+     public void testConstructor_nullDateTimeZone() throws Throwable {
+@@ -188,6 +191,7 @@ public void testConstructor_Chronology() throws Throwable {
+         assertEquals(20, test.getMinuteOfHour());
+         assertEquals(30, test.getSecondOfMinute());
+         assertEquals(40, test.getMillisOfSecond());
++        assertEquals(test, LocalDateTime.now(GREGORIAN_PARIS));
+     }
+ 
+     public void testConstructor_nullChronology() throws Throwable {
+diff --git a/src/test/java/org/joda/time/TestLocalDate_Constructors.java b/src/test/java/org/joda/time/TestLocalDate_Constructors.java
+index 288f8fe2d..acd703c93 100644
+--- a/src/test/java/org/joda/time/TestLocalDate_Constructors.java
++++ b/src/test/java/org/joda/time/TestLocalDate_Constructors.java
+@@ -124,6 +124,7 @@ public void testConstructor() throws Throwable {
+         assertEquals(1970, test.getYear());
+         assertEquals(6, test.getMonthOfYear());
+         assertEquals(9, test.getDayOfMonth());
++        assertEquals(test, LocalDate.now());
+     }
+ 
+     public void testConstructor_DateTimeZone() throws Throwable {
+@@ -136,12 +137,14 @@ public void testConstructor_DateTimeZone() throws Throwable {
+         assertEquals(2005, test.getYear());
+         assertEquals(6, test.getMonthOfYear());
+         assertEquals(8, test.getDayOfMonth());
++        assertEquals(test, LocalDate.now(LONDON));
+         
+         test = new LocalDate(PARIS);
+         assertEquals(ISO_UTC, test.getChronology());
+         assertEquals(2005, test.getYear());
+         assertEquals(6, test.getMonthOfYear());
+         assertEquals(9, test.getDayOfMonth());
++        assertEquals(test, LocalDate.now(PARIS));
+     }
+ 
+     public void testConstructor_nullDateTimeZone() throws Throwable {
+@@ -162,6 +165,7 @@ public void testConstructor_Chronology() throws Throwable {
+         assertEquals(1970, test.getYear());
+         assertEquals(6, test.getMonthOfYear());
+         assertEquals(9, test.getDayOfMonth());
++        assertEquals(test, LocalDate.now(GREGORIAN_PARIS));
+     }
+ 
+     public void testConstructor_nullChronology() throws Throwable {
+diff --git a/src/test/java/org/joda/time/TestLocalTime_Constructors.java b/src/test/java/org/joda/time/TestLocalTime_Constructors.java
+index cababf4c6..3bb5b3994 100644
+--- a/src/test/java/org/joda/time/TestLocalTime_Constructors.java
++++ b/src/test/java/org/joda/time/TestLocalTime_Constructors.java
+@@ -190,6 +190,7 @@ public void testConstructor() throws Throwable {
+         assertEquals(20, test.getMinuteOfHour());
+         assertEquals(30, test.getSecondOfMinute());
+         assertEquals(40, test.getMillisOfSecond());
++        assertEquals(test, LocalTime.now());
+     }
+ 
+     //-----------------------------------------------------------------------
+@@ -204,6 +205,7 @@ public void testConstructor_DateTimeZone() throws Throwable {
+         assertEquals(59, test.getMinuteOfHour());
+         assertEquals(30, test.getSecondOfMinute());
+         assertEquals(40, test.getMillisOfSecond());
++        assertEquals(test, LocalTime.now(LONDON));
+         
+         test = new LocalTime(PARIS);
+         assertEquals(ISO_UTC, test.getChronology());
+@@ -211,6 +213,7 @@ public void testConstructor_DateTimeZone() throws Throwable {
+         assertEquals(59, test.getMinuteOfHour());
+         assertEquals(30, test.getSecondOfMinute());
+         assertEquals(40, test.getMillisOfSecond());
++        assertEquals(test, LocalTime.now(PARIS));
+     }
+ 
+     public void testConstructor_nullDateTimeZone() throws Throwable {
+@@ -234,6 +237,7 @@ public void testConstructor_Chronology() throws Throwable {
+         assertEquals(20, test.getMinuteOfHour());
+         assertEquals(30, test.getSecondOfMinute());
+         assertEquals(40, test.getMillisOfSecond());
++        assertEquals(test, LocalTime.now(JULIAN_LONDON));
+     }
+ 
+     public void testConstructor_nullChronology() throws Throwable {
+diff --git a/src/test/java/org/joda/time/TestMonthDay_Constructors.java b/src/test/java/org/joda/time/TestMonthDay_Constructors.java
+index 495c9ff8d..7080d83c1 100644
+--- a/src/test/java/org/joda/time/TestMonthDay_Constructors.java
++++ b/src/test/java/org/joda/time/TestMonthDay_Constructors.java
+@@ -123,6 +123,7 @@ public void testConstructor() throws Throwable {
+         assertEquals(ISO_UTC, test.getChronology());
+         assertEquals(6, test.getMonthOfYear());
+         assertEquals(9, test.getDayOfMonth());
++        assertEquals(test, MonthDay.now());
+     }
+ 
+     /**
+@@ -137,11 +138,13 @@ public void testConstructor_DateTimeZone() throws Throwable {
+         assertEquals(ISO_UTC, test.getChronology());
+         assertEquals(6, test.getMonthOfYear());
+         assertEquals(30, test.getDayOfMonth());
++        assertEquals(test, MonthDay.now(LONDON));
+         
+         test = new MonthDay(PARIS);
+         assertEquals(ISO_UTC, test.getChronology());
+         assertEquals(7, test.getMonthOfYear());
+         assertEquals(1, test.getDayOfMonth());
++        assertEquals(test, MonthDay.now(PARIS));
+     }
+ 
+     /**
+@@ -166,6 +169,7 @@ public void testConstructor_Chronology() throws Throwable {
+         assertEquals(GREGORIAN_UTC, test.getChronology());
+         assertEquals(6, test.getMonthOfYear());
+         assertEquals(9, test.getDayOfMonth());
++        assertEquals(test, MonthDay.now(GREGORIAN_PARIS));
+     }
+ 
+     /**
+diff --git a/src/test/java/org/joda/time/TestMutableDateTime_Constructors.java b/src/test/java/org/joda/time/TestMutableDateTime_Constructors.java
+index 26e4c1dd1..bd5f189d6 100644
+--- a/src/test/java/org/joda/time/TestMutableDateTime_Constructors.java
++++ b/src/test/java/org/joda/time/TestMutableDateTime_Constructors.java
+@@ -104,6 +104,54 @@ public void testTest() {
+         assertEquals("2003-05-06T14:28:00.000Z", new Instant(TEST_TIME2).toString());
+     }
+ 
++    //-----------------------------------------------------------------------
++    /**
++     * Test now ()
++     */
++    public void test_now() throws Throwable {
++        MutableDateTime test = MutableDateTime.now();
++        assertEquals(ISOChronology.getInstance(), test.getChronology());
++        assertEquals(TEST_TIME_NOW, test.getMillis());
++    }
++
++    /**
++     * Test now (DateTimeZone)
++     */
++    public void test_now_DateTimeZone() throws Throwable {
++        MutableDateTime test = MutableDateTime.now(PARIS);
++        assertEquals(ISOChronology.getInstance(PARIS), test.getChronology());
++        assertEquals(TEST_TIME_NOW, test.getMillis());
++    }
++
++    /**
++     * Test now (DateTimeZone=null)
++     */
++    public void test_now_nullDateTimeZone() throws Throwable {
++        try {
++            MutableDateTime.now((DateTimeZone) null);
++            fail();
++        } catch (NullPointerException ex) {}
++    }
++
++    /**
++     * Test now (Chronology)
++     */
++    public void test_now_Chronology() throws Throwable {
++        MutableDateTime test = MutableDateTime.now(GregorianChronology.getInstance());
++        assertEquals(GregorianChronology.getInstance(), test.getChronology());
++        assertEquals(TEST_TIME_NOW, test.getMillis());
++    }
++
++    /**
++     * Test now (Chronology=null)
++     */
++    public void test_now_nullChronology() throws Throwable {
++        try {
++            MutableDateTime.now((Chronology) null);
++            fail();
++        } catch (NullPointerException ex) {}
++    }
++
+     //-----------------------------------------------------------------------
+     public void testParse_noFormatter() throws Throwable {
+         assertEquals(new MutableDateTime(2010, 6, 30, 1, 20, 0, 0, ISOChronology.getInstance(DateTimeZone.forOffsetHours(2))), MutableDateTime.parse("2010-06-30T01:20+02:00"));
+diff --git a/src/test/java/org/joda/time/TestYearMonth_Constructors.java b/src/test/java/org/joda/time/TestYearMonth_Constructors.java
+index 0de2ff8cc..34364fb49 100644
+--- a/src/test/java/org/joda/time/TestYearMonth_Constructors.java
++++ b/src/test/java/org/joda/time/TestYearMonth_Constructors.java
+@@ -123,6 +123,7 @@ public void testConstructor() throws Throwable {
+         assertEquals(ISO_UTC, test.getChronology());
+         assertEquals(1970, test.getYear());
+         assertEquals(6, test.getMonthOfYear());
++        assertEquals(test, YearMonth.now());
+     }
+ 
+     /**
+@@ -137,11 +138,13 @@ public void testConstructor_DateTimeZone() throws Throwable {
+         assertEquals(ISO_UTC, test.getChronology());
+         assertEquals(2005, test.getYear());
+         assertEquals(6, test.getMonthOfYear());
++        assertEquals(test, YearMonth.now(LONDON));
+         
+         test = new YearMonth(PARIS);
+         assertEquals(ISO_UTC, test.getChronology());
+         assertEquals(2005, test.getYear());
+         assertEquals(7, test.getMonthOfYear());
++        assertEquals(test, YearMonth.now(PARIS));
+     }
+ 
+     /**
+@@ -166,6 +169,7 @@ public void testConstructor_Chronology() throws Throwable {
+         assertEquals(GREGORIAN_UTC, test.getChronology());
+         assertEquals(1970, test.getYear());
+         assertEquals(6, test.getMonthOfYear());
++        assertEquals(test, YearMonth.now(GREGORIAN_PARIS));
+     }
+ 
+     /**
+
+From fc896e3aa6a931255a6713ddabfe0bc6ddc34da0 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Sat, 30 Jul 2011 19:05:26 +0100
+Subject: [PATCH 13/21] Prepare for v2.0
+
+---
+ pom.xml                        |  2 +-
+ src/site/site.xml              |  2 +-
+ src/site/xdoc/index.xml        | 43 ++++++++++++++++------------------
+ src/site/xdoc/installation.xml |  2 +-
+ 4 files changed, 23 insertions(+), 26 deletions(-)
+
+diff --git a/pom.xml b/pom.xml
+index 4428c122b..9779c8ab6 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -8,7 +8,7 @@
+   <artifactId>joda-time</artifactId>
+   <packaging>jar</packaging>
+   <name>Joda time</name>
+-  <version>2.0-RC1</version>
++  <version>2.0</version>
+   <description>Date and time library to replace JDK date handling</description>
+   <url>http://joda-time.sourceforge.net</url>
+   <issueManagement>
+diff --git a/src/site/site.xml b/src/site/site.xml
+index d749a6a30..857949015 100644
+--- a/src/site/site.xml
++++ b/src/site/site.xml
+@@ -28,7 +28,7 @@
+       <item name="Related projects" href="related.html"/>
+       <item name="Javadoc (Release)" href="api-release/index.html"/>
+       <item name="License" href="license.html"/>
+-      <item name="Download" href="https://sourceforge.net/projects/joda-time/files/joda-time/1.6.2/"/>
++      <item name="Download" href="https://sourceforge.net/projects/joda-time/files/joda-time/2.0/"/>
+     </menu>
+ 
+     <menu name="Key concepts">
+diff --git a/src/site/xdoc/index.xml b/src/site/xdoc/index.xml
+index 0959f0730..fcdced1e7 100644
+--- a/src/site/xdoc/index.xml
++++ b/src/site/xdoc/index.xml
+@@ -54,9 +54,8 @@ public boolean isJoinedInLastThreeMonths(<a href="api-release/org/joda/time/Date
+   return last3Months.contains(datetimeJoined);
+ }
+ -->
+-Version 1.6.2 was released on 2010-09-14 -
+-<!--Version 2.0 was released on 2011-XX-XX - -->
+-<a href="https://sourceforge.net/projects/joda-time/files/joda-time/1.6.2/">Download now</a>
++Version 2.0 was released on 2011-07-30 -
++<a href="https://sourceforge.net/projects/joda-time/files/joda-time/2.0/">Download now</a>
+ </p>
+ </section>
+ 
+@@ -140,37 +139,35 @@ Various documentation is available:
+ 
+ <section name="Releases">
+ <p>
+-<a href="https://sourceforge.net/projects/joda-time/files/joda-time/1.6.2/">Release 1.6.2</a>
++<a href="https://sourceforge.net/projects/joda-time/files/joda-time/2.0/">Release 2.0</a>
+ is the current latest release.
+-This release is considered stable and worthy of the 1.x tag.
+-It has extensive testing suites and has been used in production.
+-We now recommend JDK 1.4 or later, and have performed no testing on earlier JDKs.
+-</p>
+-<p>
+-We will support the 1.x product line using standard Java mechanisms.
+-The main public API will remain backwards compatible for both source and binary.
+-The version number will change to 2.0 to indicate a change in compatibility.
+-</p>
+-
+-<p>
+-<a href="https://sourceforge.net/projects/joda-time/files/joda-time/2.0-RC1/">Release 2.0-RC1</a>
+-is also available (not from maven central).
+-This release candidate is the proposed new release of Joda-Time.
+-<!-- This release is considered stable and worthy of the 2.x tag.
+-It has extensive testing suites and has been used in production at many companies.-->
++This release is an evolution of the 1.x codebase, not a major rewrite.
++It is considered stable and worthy of the 2.x tag.
+ </p>
+ <p>
+-Version 2.0 is essentially compatible with version 1.x.
++Version 2.0 is almost completely source and binary compatible with version 1.x.
+ Key changes include the use of JDK 1.5 or later, generics, and the removal of some (but not all)
+-deprecated methods. See the <a href="upgradeto200.html">upgrade notes</a>.
+-Applications should be able to drop version 2.0 in place of an earlier version without any problems
++deprecated methods. See the <a href="upgradeto200.html">upgrade notes</a> for full details
++including information on the corner cases that are not compatible.
++Applications should be able to drop version 2.0 in place of an earlier version without any issues
+ providing they are using JDK 1.5 or later and are not using one of the deprecated methods.
++Please let us know if a corner case hits you, especially if Joda-Time is a dependency of another
++open source project.
+ </p>
+ <p>
+ We will support the 2.x product line using standard Java mechanisms.
+ The main public API will remain backwards compatible for both source and binary in the 2.x stream.
+ The version number will change to 3.0 to indicate a significant change in compatibility.
+ </p>
++
++<p>
++<a href="https://sourceforge.net/projects/joda-time/files/joda-time/1.6.2/">Release 1.6.2</a>
++is the previous release.
++It is compatible with JDK 1.4.
++Given that v2.0 is essentially compatible with v1.6.2, there are no current plans for further
++releases in the v1.x product line.
++</p>
++
+ </section>
+ 
+ <section name="Support">
+diff --git a/src/site/xdoc/installation.xml b/src/site/xdoc/installation.xml
+index ccced3a30..09166c76d 100644
+--- a/src/site/xdoc/installation.xml
++++ b/src/site/xdoc/installation.xml
+@@ -22,7 +22,7 @@ of the source code suitable for linking to the jar file in IDEs such as Eclipse.
+ <p>
+ The release notes for upgraders can be found here:
+ <ul>
+-<!--li><a href="upgradeto200.html">Version 1.6 to Version 2.0</a></li-->
++<li><a href="upgradeto200.html">Version 1.6 to Version 2.0</a></li>
+ <li><a href="upgradeto162.html">Version 1.6 to Version 1.6.2</a></li>
+ <li><a href="upgradeto161.html">Version 1.6 to Version 1.6.1</a></li>
+ <li><a href="upgradeto160.html">Version 1.5 to Version 1.6</a></li>
+
+From f64399f338330f5441efd34220a5f7f589f927b8 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Sat, 30 Jul 2011 19:10:39 +0100
+Subject: [PATCH 14/21] Time zone database 2011h
+
+---
+ RELEASE-NOTES.txt                             |  2 +-
+ src/main/java/org/joda/time/tz/src/Readme.txt |  2 +-
+ src/main/java/org/joda/time/tz/src/antarctica | 14 +---
+ src/main/java/org/joda/time/tz/src/asia       |  6 +-
+ src/main/java/org/joda/time/tz/src/europe     | 70 ++++++++++++++-----
+ .../java/org/joda/time/tz/src/southamerica    | 10 ++-
+ src/site/xdoc/upgradeto200.xml                |  2 +-
+ 7 files changed, 71 insertions(+), 35 deletions(-)
+
+diff --git a/RELEASE-NOTES.txt b/RELEASE-NOTES.txt
+index 31e6173d4..6c4650faa 100644
+--- a/RELEASE-NOTES.txt
++++ b/RELEASE-NOTES.txt
+@@ -163,7 +163,7 @@ is greater than the gain of removing the deprecations.
+ Serialization compatible - Yes
+ 
+ Data compatible - Yes, except
+-  - DateTimeZone data updated to version 2011g
++  - DateTimeZone data updated to version 2011h
+ 
+ Semantic compatible - Yes, except
+ Previously, DateTimeZone.forID matched time zone names case-insensitively, now it is case-sensitive
+diff --git a/src/main/java/org/joda/time/tz/src/Readme.txt b/src/main/java/org/joda/time/tz/src/Readme.txt
+index 062e80c48..c35405ac3 100644
+--- a/src/main/java/org/joda/time/tz/src/Readme.txt
++++ b/src/main/java/org/joda/time/tz/src/Readme.txt
+@@ -1,2 +1,2 @@
+ The data files in this directory were obtained from the public tz database,
+-http://www.twinsun.com/tz/tz-link.htm, version 2011g.
++http://www.twinsun.com/tz/tz-link.htm, version 2011h.
+diff --git a/src/main/java/org/joda/time/tz/src/antarctica b/src/main/java/org/joda/time/tz/src/antarctica
+index 629b2d7b8..d19fbde0f 100644
+--- a/src/main/java/org/joda/time/tz/src/antarctica
++++ b/src/main/java/org/joda/time/tz/src/antarctica
+@@ -1,5 +1,5 @@
+ # <pre>
+-# @(#)antarctica	8.8
++# @(#)antarctica	8.9
+ # This file is in the public domain, so clarified as of
+ # 2009-05-17 by Arthur David Olson.
+ 
+@@ -19,18 +19,6 @@
+ # I made up all time zone abbreviations mentioned here; corrections welcome!
+ # FORMAT is `zzz' and GMTOFF is 0 for locations while uninhabited.
+ 
+-# These rules are stolen from the `europe' file.
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
+-Rule	RussAQ	1981	1984	-	Apr	 1	 0:00	1:00	S
+-Rule	RussAQ	1981	1983	-	Oct	 1	 0:00	0	-
+-Rule	RussAQ	1984	1991	-	Sep	lastSun	 2:00s	0	-
+-Rule	RussAQ	1985	1991	-	Mar	lastSun	 2:00s	1:00	S
+-Rule	RussAQ	1992	only	-	Mar	lastSat	 23:00	1:00	S
+-Rule	RussAQ	1992	only	-	Sep	lastSat	 23:00	0	-
+-Rule	RussAQ	1993	max	-	Mar	lastSun	 2:00s	1:00	S
+-Rule	RussAQ	1993	1995	-	Sep	lastSun	 2:00s	0	-
+-Rule	RussAQ	1996	max	-	Oct	lastSun	 2:00s	0	-
+-
+ # These rules are stolen from the `southamerica' file.
+ # Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
+ Rule	ArgAQ	1964	1966	-	Mar	 1	0:00	0	-
+diff --git a/src/main/java/org/joda/time/tz/src/asia b/src/main/java/org/joda/time/tz/src/asia
+index d415ba801..1fc61f0b4 100644
+--- a/src/main/java/org/joda/time/tz/src/asia
++++ b/src/main/java/org/joda/time/tz/src/asia
+@@ -1,4 +1,4 @@
+-# @(#)asia	8.64
++# @(#)asia	8.65
+ # This file is in the public domain, so clarified as of
+ # 2009-05-17 by Arthur David Olson.
+ 
+@@ -77,6 +77,10 @@ Rule RussiaAsia	1993	max	-	Mar	lastSun	 2:00s	1:00	S
+ Rule RussiaAsia	1993	1995	-	Sep	lastSun	 2:00s	0	-
+ Rule RussiaAsia	1996	max	-	Oct	lastSun	 2:00s	0	-
+ 
++# From Arthur David Olson (2011-06-15):
++# While Russia abandoned DST in 2011, Armenia may choose to
++# follow Russia's "old" rules.
++
+ # Afghanistan
+ # Zone	NAME		GMTOFF	RULES	FORMAT	[UNTIL]
+ Zone	Asia/Kabul	4:36:48 -	LMT	1890
+diff --git a/src/main/java/org/joda/time/tz/src/europe b/src/main/java/org/joda/time/tz/src/europe
+index f7fc1896f..aab683311 100644
+--- a/src/main/java/org/joda/time/tz/src/europe
++++ b/src/main/java/org/joda/time/tz/src/europe
+@@ -1,5 +1,5 @@
+ # <pre>
+-# @(#)europe	8.32
++# @(#)europe	8.33
+ # This file is in the public domain, so clarified as of
+ # 2009-05-17 by Arthur David Olson.
+ 
+@@ -565,6 +565,26 @@ Rule	Russia	1993	max	-	Mar	lastSun	 2:00s	1:00	S
+ Rule	Russia	1993	1995	-	Sep	lastSun	 2:00s	0	-
+ Rule	Russia	1996	max	-	Oct	lastSun	 2:00s	0	-
+ 
++# From Alexander Krivenyshev (2011-06-14):
++# According to Kremlin press service, Russian President Dmitry Medvedev
++# signed a federal law "On calculation of time" on June 9, 2011.
++# According to the law Russia is abolishing daylight saving time.
++# 
++# Medvedev signed a law "On the Calculation of Time" (in russian): 
++# <a href="http://bmockbe.ru/events/?ID=7583">
++# http://bmockbe.ru/events/?ID=7583
++# </a>
++# 
++# Medvedev signed a law on the calculation of the time (in russian):
++# <a href="http://www.regnum.ru/news/polit/1413906.html">
++# http://www.regnum.ru/news/polit/1413906.html
++# </a>
++
++# From Arthur David Olson (2011-06-15):
++# Take "abolishing daylight saving time" to mean that time is now considered
++# to be standard.
++# At least for now, keep the "old" Russia rules for the benefit of Belarus.
++
+ # These are for backward compatibility with older versions.
+ 
+ # Zone	NAME		GMTOFF	RULES	FORMAT	[UNTIL]
+@@ -2013,7 +2033,8 @@ Zone Europe/Kaliningrad	 1:22:00 -	LMT	1893 Apr
+ 			 1:00	C-Eur	CE%sT	1945
+ 			 2:00	Poland	CE%sT	1946
+ 			 3:00	Russia	MSK/MSD	1991 Mar 31 2:00s
+-			 2:00	Russia	EE%sT
++			 2:00	Russia	EE%sT	2011 Mar 27 2:00s
++			 3:00	-	EET
+ #
+ # From Oscar van Vlijmen (2001-08-25): [This region consists of]
+ # Respublika Adygeya, Arkhangel'skaya oblast',
+@@ -2042,7 +2063,8 @@ Zone Europe/Moscow	 2:30:20 -	LMT	1880
+ 			 2:00	-	EET	1930 Jun 21
+ 			 3:00	Russia	MSK/MSD	1991 Mar 31 2:00s
+ 			 2:00	Russia	EE%sT	1992 Jan 19 2:00s
+-			 3:00	Russia	MSK/MSD
++			 3:00	Russia	MSK/MSD	2011 Mar 27 2:00s
++			 4:00	-	MSK
+ #
+ # Astrakhanskaya oblast', Kirovskaya oblast', Saratovskaya oblast',
+ # Volgogradskaya oblast'.  Shanks & Pottenger say Kirov is still at +0400
+@@ -2055,7 +2077,8 @@ Zone Europe/Volgograd	 2:57:40 -	LMT	1920 Jan  3
+ 			 4:00	Russia	VOL%sT	1989 Mar 26 2:00s # Volgograd T
+ 			 3:00	Russia	VOL%sT	1991 Mar 31 2:00s
+ 			 4:00	-	VOLT	1992 Mar 29 2:00s
+-			 3:00	Russia	VOL%sT
++			 3:00	Russia	VOL%sT	2011 Mar 27 2:00s
++			 4:00	-	VOLT
+ #
+ # From Oscar van Vlijmen (2001-08-25): [This region consists of]
+ # Samarskaya oblast', Udmyrtskaya respublika
+@@ -2067,7 +2090,8 @@ Zone Europe/Samara	 3:20:36 -	LMT	1919 Jul  1 2:00
+ 			 2:00	Russia	KUY%sT	1991 Sep 29 2:00s
+ 			 3:00	-	KUYT	1991 Oct 20 3:00
+ 			 4:00	Russia	SAM%sT	2010 Mar 28 2:00s # Samara Time
+-			 3:00	Russia	SAM%sT
++			 3:00	Russia	SAM%sT	2011 Mar 27 2:00s
++			 4:00	-	SAMT
+ 
+ #
+ # From Oscar van Vlijmen (2001-08-25): [This region consists of]
+@@ -2080,7 +2104,8 @@ Zone Asia/Yekaterinburg	 4:02:24 -	LMT	1919 Jul 15 4:00
+ 			 4:00	-	SVET	1930 Jun 21 # Sverdlovsk Time
+ 			 5:00	Russia	SVE%sT	1991 Mar 31 2:00s
+ 			 4:00	Russia	SVE%sT	1992 Jan 19 2:00s
+-			 5:00	Russia	YEK%sT	# Yekaterinburg Time
++			 5:00	Russia	YEK%sT	2011 Mar 27 2:00s
++			 6:00	-	YEKT	# Yekaterinburg Time
+ #
+ # From Oscar van Vlijmen (2001-08-25): [This region consists of]
+ # Respublika Altaj, Altajskij kraj, Omskaya oblast'.
+@@ -2088,7 +2113,8 @@ Zone Asia/Omsk		 4:53:36 -	LMT	1919 Nov 14
+ 			 5:00	-	OMST	1930 Jun 21 # Omsk TIme
+ 			 6:00	Russia	OMS%sT	1991 Mar 31 2:00s
+ 			 5:00	Russia	OMS%sT	1992 Jan 19 2:00s
+-			 6:00	Russia	OMS%sT
++			 6:00	Russia	OMS%sT	2011 Mar 27 2:00s
++			 7:00	-	OMST
+ #
+ # From Paul Eggert (2006-08-19): I'm guessing about Tomsk here; it's
+ # not clear when it switched from +7 to +6.
+@@ -2098,7 +2124,8 @@ Zone Asia/Novosibirsk	 5:31:40 -	LMT	1919 Dec 14 6:00
+ 			 7:00	Russia	NOV%sT	1991 Mar 31 2:00s
+ 			 6:00	Russia	NOV%sT	1992 Jan 19 2:00s
+ 			 7:00	Russia	NOV%sT	1993 May 23 # say Shanks & P.
+-			 6:00	Russia	NOV%sT
++			 6:00	Russia	NOV%sT	2011 Mar 27 2:00s
++			 7:00	-	NOVT
+ 
+ # From Alexander Krivenyshev (2009-10-13):
+ # Kemerovo oblast' (Kemerovo region) in Russia will change current time zone on
+@@ -2131,7 +2158,8 @@ Zone Asia/Novokuznetsk	 5:48:48 -	NMT	1920 Jan  6
+ 			 7:00	Russia	KRA%sT	1991 Mar 31 2:00s
+ 			 6:00	Russia	KRA%sT	1992 Jan 19 2:00s
+ 			 7:00	Russia	KRA%sT	2010 Mar 28 2:00s
+-			 6:00	Russia	NOV%sT # Novosibirsk/Novokuznetsk Time
++			 6:00	Russia	NOV%sT	2011 Mar 27 2:00s
++			 7:00	-	NOVT # Novosibirsk/Novokuznetsk Time
+ 
+ #
+ # From Oscar van Vlijmen (2001-08-25): [This region consists of]
+@@ -2142,7 +2170,8 @@ Zone Asia/Krasnoyarsk	 6:11:20 -	LMT	1920 Jan  6
+ 			 6:00	-	KRAT	1930 Jun 21 # Krasnoyarsk Time
+ 			 7:00	Russia	KRA%sT	1991 Mar 31 2:00s
+ 			 6:00	Russia	KRA%sT	1992 Jan 19 2:00s
+-			 7:00	Russia	KRA%sT
++			 7:00	Russia	KRA%sT	2011 Mar 27 2:00s
++			 8:00	-	KRAT
+ #
+ # From Oscar van Vlijmen (2001-08-25): [This region consists of]
+ # Respublika Buryatiya, Irkutskaya oblast',
+@@ -2152,7 +2181,8 @@ Zone Asia/Irkutsk	 6:57:20 -	LMT	1880
+ 			 7:00	-	IRKT	1930 Jun 21 # Irkutsk Time
+ 			 8:00	Russia	IRK%sT	1991 Mar 31 2:00s
+ 			 7:00	Russia	IRK%sT	1992 Jan 19 2:00s
+-			 8:00	Russia	IRK%sT
++			 8:00	Russia	IRK%sT	2011 Mar 27 2:00s
++			 9:00	-	IRKT
+ #
+ # From Oscar van Vlijmen (2003-10-18): [This region consists of]
+ # Aginskij Buryatskij avtonomnyj okrug, Amurskaya oblast',
+@@ -2175,7 +2205,8 @@ Zone Asia/Yakutsk	 8:38:40 -	LMT	1919 Dec 15
+ 			 8:00	-	YAKT	1930 Jun 21 # Yakutsk Time
+ 			 9:00	Russia	YAK%sT	1991 Mar 31 2:00s
+ 			 8:00	Russia	YAK%sT	1992 Jan 19 2:00s
+-			 9:00	Russia	YAK%sT
++			 9:00	Russia	YAK%sT	2011 Mar 27 2:00s
++			 10:00	-	YAKT
+ #
+ # From Oscar van Vlijmen (2003-10-18): [This region consists of]
+ # Evrejskaya avtonomnaya oblast', Khabarovskij kraj, Primorskij kraj,
+@@ -2188,7 +2219,8 @@ Zone Asia/Vladivostok	 8:47:44 -	LMT	1922 Nov 15
+ 			 9:00	-	VLAT	1930 Jun 21 # Vladivostok Time
+ 			10:00	Russia	VLA%sT	1991 Mar 31 2:00s
+ 			 9:00	Russia	VLA%sST	1992 Jan 19 2:00s
+-			10:00	Russia	VLA%sT
++			10:00	Russia	VLA%sT	2011 Mar 27 2:00s
++			11:00	-	VLAT
+ #
+ # Sakhalinskaya oblast'.
+ # The Zone name should be Yuzhno-Sakhalinsk, but that's too long.
+@@ -2198,7 +2230,8 @@ Zone Asia/Sakhalin	 9:30:48 -	LMT	1905 Aug 23
+ 			11:00	Russia	SAK%sT	1991 Mar 31 2:00s # Sakhalin T.
+ 			10:00	Russia	SAK%sT	1992 Jan 19 2:00s
+ 			11:00	Russia	SAK%sT	1997 Mar lastSun 2:00s
+-			10:00	Russia	SAK%sT
++			10:00	Russia	SAK%sT	2011 Mar 27 2:00s
++			11:00	-	SAKT
+ #
+ # From Oscar van Vlijmen (2003-10-18): [This region consists of]
+ # Magadanskaya oblast', Respublika Sakha (Yakutiya).
+@@ -2211,7 +2244,8 @@ Zone Asia/Magadan	10:03:12 -	LMT	1924 May  2
+ 			10:00	-	MAGT	1930 Jun 21 # Magadan Time
+ 			11:00	Russia	MAG%sT	1991 Mar 31 2:00s
+ 			10:00	Russia	MAG%sT	1992 Jan 19 2:00s
+-			11:00	Russia	MAG%sT
++			11:00	Russia	MAG%sT	2011 Mar 27 2:00s
++			12:00	-	MAGT
+ #
+ # From Oscar van Vlijmen (2001-08-25): [This region consists of]
+ # Kamchatskaya oblast', Koryakskij avtonomnyj okrug.
+@@ -2222,7 +2256,8 @@ Zone Asia/Kamchatka	10:34:36 -	LMT	1922 Nov 10
+ 			12:00	Russia	PET%sT	1991 Mar 31 2:00s
+ 			11:00	Russia	PET%sT	1992 Jan 19 2:00s
+ 			12:00	Russia	PET%sT	2010 Mar 28 2:00s
+-			11:00	Russia	PET%sT
++			11:00	Russia	PET%sT	2011 Mar 27 2:00s
++			12:00	-	PETT
+ #
+ # Chukotskij avtonomnyj okrug
+ Zone Asia/Anadyr	11:49:56 -	LMT	1924 May  2
+@@ -2231,7 +2266,8 @@ Zone Asia/Anadyr	11:49:56 -	LMT	1924 May  2
+ 			12:00	Russia	ANA%sT	1991 Mar 31 2:00s
+ 			11:00	Russia	ANA%sT	1992 Jan 19 2:00s
+ 			12:00	Russia	ANA%sT	2010 Mar 28 2:00s
+-			11:00	Russia	ANA%sT
++			11:00	Russia	ANA%sT	2011 Mar 27 2:00s
++			12:00	-	ANAT
+ 
+ # Serbia
+ # Zone	NAME		GMTOFF	RULES	FORMAT	[UNTIL]
+diff --git a/src/main/java/org/joda/time/tz/src/southamerica b/src/main/java/org/joda/time/tz/src/southamerica
+index 919dc25be..90f531d71 100644
+--- a/src/main/java/org/joda/time/tz/src/southamerica
++++ b/src/main/java/org/joda/time/tz/src/southamerica
+@@ -1,5 +1,5 @@
+ # <pre>
+-# @(#)southamerica	8.49
++# @(#)southamerica	8.50
+ # This file is in the public domain, so clarified as of
+ # 2009-05-17 by Arthur David Olson.
+ 
+@@ -1276,6 +1276,14 @@ Zone	America/Curacao	-4:35:44 -	LMT	1912 Feb 12	# Willemstad
+ 			-4:30	-	ANT	1965 # Netherlands Antilles Time
+ 			-4:00	-	AST
+ 
++# From Arthur David Olson (2011-06-15):
++# At least for now, use links for places with new iso3166 codes.
++# The name "Lower Prince's Quarter" is both longer than fourteen charaters
++# and contains an apostrophe; use "Lower_Princes" below.
++
++Link	America/Curacao	America/Lower_Princes # Sint Maarten
++Link	America/Curacao	America/Kralendijk # Bonaire, Sint Estatius and Saba
++
+ # Ecuador
+ #
+ # From Paul Eggert (2007-03-04):
+diff --git a/src/site/xdoc/upgradeto200.xml b/src/site/xdoc/upgradeto200.xml
+index b00f5d2b3..2c94b7210 100644
+--- a/src/site/xdoc/upgradeto200.xml
++++ b/src/site/xdoc/upgradeto200.xml
+@@ -178,7 +178,7 @@ is greater than the gain of removing the deprecations.
+ Serialization compatible - Yes
+ 
+ Data compatible - Yes, except
+-  - DateTimeZone data updated to version 2011g
++  - DateTimeZone data updated to version 2011h
+ 
+ Semantic compatible - Yes, except
+ Previously, DateTimeZone.forID matched time zone names case-insensitively, now it is case-sensitive
+
+From aa17c53150656826623ae155c7a1ee8a2f7b2e60 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Sun, 31 Jul 2011 10:10:51 +0100
+Subject: [PATCH 15/21] Work around maven bug that puts duplicate files in
+ source jar
+
+---
+ pom.xml | 16 +++++++++-------
+ 1 file changed, 9 insertions(+), 7 deletions(-)
+
+diff --git a/pom.xml b/pom.xml
+index 9779c8ab6..b74214467 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -130,13 +130,7 @@
+         <directory>src/main/java</directory>
+         <includes>
+           <include>org/joda/time/tz/data/**</include>
+-        </includes>
+-      </resource>
+-      <resource>
+-        <targetPath>.</targetPath>
+-        <directory>src/main/java</directory>
+-        <includes>
+-          <include>org/joda/time/format/*.properties</include>
++          <include>**/*.properties</include>
+         </includes>
+       </resource>
+     </resources>
+@@ -218,6 +212,9 @@
+           <archive>
+             <manifestFile>src/conf/MANIFEST.MF</manifestFile>
+           </archive>
++          <archiverConfig>
++            <duplicateBehavior>skip</duplicateBehavior>
++          </archiverConfig>
+         </configuration>
+       </plugin>
+       <plugin>
+@@ -264,6 +261,11 @@
+             </goals>
+           </execution>
+         </executions>
++        <configuration>
++          <archiverConfig>
++            <duplicateBehavior>skip</duplicateBehavior>
++          </archiverConfig>
++        </configuration>
+       </plugin>
+       <plugin>
+         <groupId>org.apache.maven.plugins</groupId>
+
+From 0700250167244fa2883162d44dedb64aa75b4c6f Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Sun, 31 Jul 2011 10:59:19 +0100
+Subject: [PATCH 16/21] Comment out pmd to avoid Out Of Memory issues
+
+---
+ pom.xml | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/pom.xml b/pom.xml
+index b74214467..50df26ce8 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -375,7 +375,7 @@
+         <artifactId>maven-jxr-plugin</artifactId>
+         <version>2.2</version>
+       </plugin>
+-      <plugin>
++      <!--plugin>
+         <groupId>org.apache.maven.plugins</groupId>
+         <artifactId>maven-pmd-plugin</artifactId>
+         <version>2.5</version>
+@@ -385,7 +385,7 @@
+           <minimumTokens>100</minimumTokens>
+           <targetJdk>1.5</targetJdk>
+         </configuration>
+-      </plugin>
++      </plugin-->
+   	</plugins>
+   </reporting>
+   <distributionManagement>
+
+From 3ea62678a6497af61932df9b8e1b5c06d90df116 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Sun, 31 Jul 2011 11:03:23 +0100
+Subject: [PATCH 17/21] Add deprcated annotation
+
+---
+ src/main/java/org/joda/time/DateMidnight.java             | 1 +
+ src/main/java/org/joda/time/DateTime.java                 | 2 ++
+ src/main/java/org/joda/time/Instant.java                  | 2 ++
+ src/main/java/org/joda/time/TimeOfDay.java                | 4 +++-
+ src/main/java/org/joda/time/YearMonthDay.java             | 4 +++-
+ src/main/java/org/joda/time/format/DateTimeFormatter.java | 1 +
+ 6 files changed, 12 insertions(+), 2 deletions(-)
+
+diff --git a/src/main/java/org/joda/time/DateMidnight.java b/src/main/java/org/joda/time/DateMidnight.java
+index 2a2d72443..7b85df95e 100644
+--- a/src/main/java/org/joda/time/DateMidnight.java
++++ b/src/main/java/org/joda/time/DateMidnight.java
+@@ -859,6 +859,7 @@ public Property property(DateTimeFieldType type) {
+      * @return a YearMonthDay using the same millis and chronology
+      * @deprecated Use LocalDate instead of YearMonthDay
+      */
++    @Deprecated
+     public YearMonthDay toYearMonthDay() {
+         return new YearMonthDay(getMillis(), getChronology());
+     }
+diff --git a/src/main/java/org/joda/time/DateTime.java b/src/main/java/org/joda/time/DateTime.java
+index 75797dc22..6cb6dc317 100644
+--- a/src/main/java/org/joda/time/DateTime.java
++++ b/src/main/java/org/joda/time/DateTime.java
+@@ -1510,6 +1510,7 @@ public DateMidnight toDateMidnight() {
+      * @return a YearMonthDay using the same millis and chronology
+      * @deprecated Use LocalDate instead of YearMonthDay
+      */
++    @Deprecated
+     public YearMonthDay toYearMonthDay() {
+         return new YearMonthDay(getMillis(), getChronology());
+     }
+@@ -1521,6 +1522,7 @@ public YearMonthDay toYearMonthDay() {
+      * @return a TimeOfDay using the same millis and chronology
+      * @deprecated Use LocalTime instead of TimeOfDay
+      */
++    @Deprecated
+     public TimeOfDay toTimeOfDay() {
+         return new TimeOfDay(getMillis(), getChronology());
+     }
+diff --git a/src/main/java/org/joda/time/Instant.java b/src/main/java/org/joda/time/Instant.java
+index 4ec1206b2..070baaabb 100644
+--- a/src/main/java/org/joda/time/Instant.java
++++ b/src/main/java/org/joda/time/Instant.java
+@@ -310,6 +310,7 @@ public DateTime toDateTime() {
+      * @return a DateTime using the same millis with ISOChronology
+      * @deprecated Use toDateTime() as it is identical
+      */
++    @Deprecated
+     public DateTime toDateTimeISO() {
+         return toDateTime();
+     }
+@@ -355,6 +356,7 @@ public MutableDateTime toMutableDateTime() {
+      * @return a MutableDateTime using the same millis with ISOChronology
+      * @deprecated Use toMutableDateTime() as it is identical
+      */
++    @Deprecated
+     public MutableDateTime toMutableDateTimeISO() {
+         return toMutableDateTime();
+     }
+diff --git a/src/main/java/org/joda/time/TimeOfDay.java b/src/main/java/org/joda/time/TimeOfDay.java
+index 0c483fd94..7c46912ad 100644
+--- a/src/main/java/org/joda/time/TimeOfDay.java
++++ b/src/main/java/org/joda/time/TimeOfDay.java
+@@ -1,5 +1,5 @@
+ /*
+- *  Copyright 2001-2006 Stephen Colebourne
++ *  Copyright 2001-2011 Stephen Colebourne
+  *
+  *  Licensed under the Apache License, Version 2.0 (the "License");
+  *  you may not use this file except in compliance with the License.
+@@ -62,6 +62,7 @@
+  * @deprecated Use LocalTime which has a much better internal implementation and
+  *  has been available since 1.3
+  */
++@Deprecated
+ public final class TimeOfDay
+         extends BasePartial
+         implements ReadablePartial, Serializable {
+@@ -1013,6 +1014,7 @@ public String toString() {
+      * @since 1.0
+      * @deprecated Use LocalTime which has a much better internal implementation
+      */
++    @Deprecated
+     public static class Property extends AbstractPartialFieldProperty implements Serializable {
+ 
+         /** Serialization version */
+diff --git a/src/main/java/org/joda/time/YearMonthDay.java b/src/main/java/org/joda/time/YearMonthDay.java
+index ea7ab54d2..661a4c31a 100644
+--- a/src/main/java/org/joda/time/YearMonthDay.java
++++ b/src/main/java/org/joda/time/YearMonthDay.java
+@@ -1,5 +1,5 @@
+ /*
+- *  Copyright 2001-2006 Stephen Colebourne
++ *  Copyright 2001-2011 Stephen Colebourne
+  *
+  *  Licensed under the Apache License, Version 2.0 (the "License");
+  *  you may not use this file except in compliance with the License.
+@@ -61,6 +61,7 @@
+  * @deprecated Use LocalDate which has a much better internal implementation and
+  *  has been available since 1.3
+  */
++@Deprecated
+ public final class YearMonthDay
+         extends BasePartial
+         implements ReadablePartial, Serializable {
+@@ -928,6 +929,7 @@ public String toString() {
+      * @since 1.0
+      * @deprecated Use LocalDate which has a much better internal implementation
+      */
++    @Deprecated
+     public static class Property extends AbstractPartialFieldProperty implements Serializable {
+ 
+         /** Serialization version */
+diff --git a/src/main/java/org/joda/time/format/DateTimeFormatter.java b/src/main/java/org/joda/time/format/DateTimeFormatter.java
+index 89a5b6521..5ed74d039 100644
+--- a/src/main/java/org/joda/time/format/DateTimeFormatter.java
++++ b/src/main/java/org/joda/time/format/DateTimeFormatter.java
+@@ -274,6 +274,7 @@ public Chronology getChronology() {
+      * @return the chronology to use as an override
+      * @deprecated Use the method with the correct spelling
+      */
++    @Deprecated
+     public Chronology getChronolgy() {
+         return iChrono;
+     }
+
+From 1ec3c2f0962d41db0d83e01ac5df26d7b954aa34 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Sun, 31 Jul 2011 11:11:15 +0100
+Subject: [PATCH 18/21] Support parsing of date-time zone names like BST or
+ British Summer Time
+
+Fix code to avoid source and binary incompatibility
+---
+ .../joda/time/format/DateTimeFormatter.java   | 16 ++++++------
+ .../time/format/DateTimeFormatterBuilder.java |  6 ++---
+ .../time/format/DateTimeParserBucket.java     | 26 ++++++++++++++++---
+ 3 files changed, 33 insertions(+), 15 deletions(-)
+
+diff --git a/src/main/java/org/joda/time/format/DateTimeFormatter.java b/src/main/java/org/joda/time/format/DateTimeFormatter.java
+index 5ed74d039..f92771a10 100644
+--- a/src/main/java/org/joda/time/format/DateTimeFormatter.java
++++ b/src/main/java/org/joda/time/format/DateTimeFormatter.java
+@@ -705,8 +705,8 @@ public int parseInto(ReadWritableInstant instant, String text, int position) {
+             instantLocal, chrono, iLocale, iPivotYear, iDefaultYear);
+         int newPos = parser.parseInto(bucket, text, position);
+         instant.setMillis(bucket.computeMillis(false, text));
+-        if (iOffsetParsed && bucket.getOffset() != null) {
+-            int parsedOffset = bucket.getOffset();
++        if (iOffsetParsed && bucket.getOffsetInteger() != null) {
++            int parsedOffset = bucket.getOffsetInteger();
+             DateTimeZone parsedZone = DateTimeZone.forOffsetMillis(parsedOffset);
+             chrono = chrono.withZone(parsedZone);
+         } else if (bucket.getZone() != null) {
+@@ -806,8 +806,8 @@ public LocalDateTime parseLocalDateTime(String text) {
+         if (newPos >= 0) {
+             if (newPos >= text.length()) {
+                 long millis = bucket.computeMillis(true, text);
+-                if (bucket.getOffset() != null) {  // treat withOffsetParsed() as being true
+-                    int parsedOffset = bucket.getOffset();
++                if (bucket.getOffsetInteger() != null) {  // treat withOffsetParsed() as being true
++                    int parsedOffset = bucket.getOffsetInteger();
+                     DateTimeZone parsedZone = DateTimeZone.forOffsetMillis(parsedOffset);
+                     chrono = chrono.withZone(parsedZone);
+                 } else if (bucket.getZone() != null) {
+@@ -847,8 +847,8 @@ public DateTime parseDateTime(String text) {
+         if (newPos >= 0) {
+             if (newPos >= text.length()) {
+                 long millis = bucket.computeMillis(true, text);
+-                if (iOffsetParsed && bucket.getOffset() != null) {
+-                    int parsedOffset = bucket.getOffset();
++                if (iOffsetParsed && bucket.getOffsetInteger() != null) {
++                    int parsedOffset = bucket.getOffsetInteger();
+                     DateTimeZone parsedZone = DateTimeZone.forOffsetMillis(parsedOffset);
+                     chrono = chrono.withZone(parsedZone);
+                 } else if (bucket.getZone() != null) {
+@@ -892,8 +892,8 @@ public MutableDateTime parseMutableDateTime(String text) {
+         if (newPos >= 0) {
+             if (newPos >= text.length()) {
+                 long millis = bucket.computeMillis(true, text);
+-                if (iOffsetParsed && bucket.getOffset() != null) {
+-                    int parsedOffset = bucket.getOffset();
++                if (iOffsetParsed && bucket.getOffsetInteger() != null) {
++                    int parsedOffset = bucket.getOffsetInteger();
+                     DateTimeZone parsedZone = DateTimeZone.forOffsetMillis(parsedOffset);
+                     chrono = chrono.withZone(parsedZone);
+                 } else if (bucket.getZone() != null) {
+diff --git a/src/main/java/org/joda/time/format/DateTimeFormatterBuilder.java b/src/main/java/org/joda/time/format/DateTimeFormatterBuilder.java
+index a06065740..558a5864a 100644
+--- a/src/main/java/org/joda/time/format/DateTimeFormatterBuilder.java
++++ b/src/main/java/org/joda/time/format/DateTimeFormatterBuilder.java
+@@ -2249,11 +2249,11 @@ public int parseInto(DateTimeParserBucket bucket, String text, int position) {
+                             break zeroOffset;
+                         }
+                     }
+-                    bucket.setOffset(0);
++                    bucket.setOffset(Integer.valueOf(0));
+                     return position;
+                 }
+                 if (text.regionMatches(true, position, iZeroOffsetParseText, 0, iZeroOffsetParseText.length())) {
+-                    bucket.setOffset(0);
++                    bucket.setOffset(Integer.valueOf(0));
+                     return position + iZeroOffsetParseText.length();
+                 }
+             }
+@@ -2403,7 +2403,7 @@ public int parseInto(DateTimeParserBucket bucket, String text, int position) {
+                 }
+             }
+ 
+-            bucket.setOffset(negative ? -offset : offset);
++            bucket.setOffset(Integer.valueOf(negative ? -offset : offset));
+             return position;
+         }
+ 
+diff --git a/src/main/java/org/joda/time/format/DateTimeParserBucket.java b/src/main/java/org/joda/time/format/DateTimeParserBucket.java
+index f4ebf54be..4c5f5b47b 100644
+--- a/src/main/java/org/joda/time/format/DateTimeParserBucket.java
++++ b/src/main/java/org/joda/time/format/DateTimeParserBucket.java
+@@ -58,8 +58,9 @@
+     private final Chronology iChrono;
+     private final long iMillis;
+     
+-    // TimeZone to switch to in computeMillis. If null, use offset.
++    /** The parsed zone, initialised to formatter zone. */
+     private DateTimeZone iZone;
++    /** The parsed offset. */
+     private Integer iOffset;
+     /** The locale to use for parsing. */
+     private Locale iLocale;
+@@ -153,8 +154,6 @@ public DateTimeZone getZone() {
+ 
+     /**
+      * Set a time zone to be used when computeMillis is called.
+-     *
+-     * @param zone the date time zone to operate in, not null
+      */
+     public void setZone(DateTimeZone zone) {
+         iSavedState = null;
+@@ -162,13 +161,32 @@ public void setZone(DateTimeZone zone) {
+     }
+ 
+     //-----------------------------------------------------------------------
++    /**
++     * Returns the time zone offset in milliseconds used by computeMillis.
++     * @deprecated use Integer version
++     */
++    @Deprecated
++    public int getOffset() {
++        return (iOffset != null ? iOffset : 0);
++    }
++
+     /**
+      * Returns the time zone offset in milliseconds used by computeMillis.
+      */
+-    public Integer getOffset() {
++    public Integer getOffsetInteger() {
+         return iOffset;
+     }
+ 
++    /**
++     * Set a time zone offset to be used when computeMillis is called.
++     * @deprecated use Integer version
++     */
++    @Deprecated
++    public void setOffset(int offset) {
++        iSavedState = null;
++        iOffset = offset;
++    }
++
+     /**
+      * Set a time zone offset to be used when computeMillis is called.
+      */
+
+From 5d127a3a3eee543ad018d41568f363f6159876f7 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Sun, 31 Jul 2011 11:38:15 +0100
+Subject: [PATCH 19/21] Fix release date
+
+---
+ src/site/xdoc/index.xml | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/site/xdoc/index.xml b/src/site/xdoc/index.xml
+index fcdced1e7..07be6e497 100644
+--- a/src/site/xdoc/index.xml
++++ b/src/site/xdoc/index.xml
+@@ -54,7 +54,7 @@ public boolean isJoinedInLastThreeMonths(<a href="api-release/org/joda/time/Date
+   return last3Months.contains(datetimeJoined);
+ }
+ -->
+-Version 2.0 was released on 2011-07-30 -
++Version 2.0 was released on 2011-07-31 -
+ <a href="https://sourceforge.net/projects/joda-time/files/joda-time/2.0/">Download now</a>
+ </p>
+ </section>
+
+From 49558a5286c3b7eb6c85d5f26e5ae94f11f7a892 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Sun, 31 Jul 2011 12:16:54 +0100
+Subject: [PATCH 20/21] Work around maven bug that puts duplicate files in
+ source jar
+
+---
+ pom.xml | 10 ++++------
+ 1 file changed, 4 insertions(+), 6 deletions(-)
+
+diff --git a/pom.xml b/pom.xml
+index 50df26ce8..2fb87273a 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -212,9 +212,6 @@
+           <archive>
+             <manifestFile>src/conf/MANIFEST.MF</manifestFile>
+           </archive>
+-          <archiverConfig>
+-            <duplicateBehavior>skip</duplicateBehavior>
+-          </archiverConfig>
+         </configuration>
+       </plugin>
+       <plugin>
+@@ -261,10 +258,11 @@
+             </goals>
+           </execution>
+         </executions>
++        <!-- work around maven bug where properties files added twice -->
+         <configuration>
+-          <archiverConfig>
+-            <duplicateBehavior>skip</duplicateBehavior>
+-          </archiverConfig>
++          <excludes>
++            <exclude>**/*.properties</exclude>
++          </excludes>
+         </configuration>
+       </plugin>
+       <plugin>
+
+From c5a5190e19c062405ae4825c36e2172ae64202fb Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Sun, 31 Jul 2011 23:41:30 +0100
+Subject: [PATCH 21/21] Remove broken test class
+
+---
+ src/test/java/org/joda/time/TestParseISO.java | 403 ------------------
+ 1 file changed, 403 deletions(-)
+ delete mode 100644 src/test/java/org/joda/time/TestParseISO.java
+
+diff --git a/src/test/java/org/joda/time/TestParseISO.java b/src/test/java/org/joda/time/TestParseISO.java
+deleted file mode 100644
+index ad2f28e5c..000000000
+--- a/src/test/java/org/joda/time/TestParseISO.java
++++ /dev/null
+@@ -1,403 +0,0 @@
+-/*
+- *  Copyright 2001-2005 Stephen Colebourne
+- *
+- *  Licensed under the Apache License, Version 2.0 (the "License");
+- *  you may not use this file except in compliance with the License.
+- *  You may obtain a copy of the License at
+- *
+- *      http://www.apache.org/licenses/LICENSE-2.0
+- *
+- *  Unless required by applicable law or agreed to in writing, software
+- *  distributed under the License is distributed on an "AS IS" BASIS,
+- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+- *  See the License for the specific language governing permissions and
+- *  limitations under the License.
+- */
+-package org.joda.time;
+-
+-import junit.framework.Assert;
+-import junit.framework.TestCase;
+-import junit.framework.TestSuite;
+-
+-import org.joda.time.format.DateTimeFormatter;
+-import org.joda.time.format.ISODateTimeFormat;
+-
+-/**
+- * Unit test the parsing of ISO format datetimes
+- *
+- * @author Guy Allard
+- * @author Stephen Colebourne
+- */
+-public class TestParseISO extends TestCase {
+-    
+-    private static final int DEFAULT = 99999;
+-
+-    /**
+-     * This is the main class for this test suite.
+-     * @param args command line arguments.
+-     */
+-    public static void main(String[] args) {
+-        junit.textui.TestRunner.run(suite());
+-    }
+-    
+-    /**
+-     * TestSuite suite() is a junit required method.
+-     * @see org.joda.test.time.BulkTest
+-     */
+-    public static TestSuite suite() {
+-        return new TestSuite(TestParseISO.class);
+-    }
+-    
+-    /**
+-     * Constructor.
+-     * @param name
+-     */
+-    public TestParseISO(String name) {
+-        super(name);
+-    }
+-
+-    protected void setUp() throws Exception {
+-        super.setUp();
+-    }
+-    
+-    protected void tearDown() throws Exception {
+-        super.tearDown();
+-    }
+-    
+-    //-----------------------------------------------------------------------
+-    // Dates
+-    //-----------------------------------------------------------------------
+-    public void testSpecCompleteDate() {
+-        new DMatcher("5.2.1.1", "1999-10-20", "19991020",
+-            19, 99, 10, 20, DEFAULT).run();
+-    }        
+-    //-----------------------------------------------------------------------
+-    public void testSpecReducedPrecisionCYM() {
+-        new DMatcher("5.2.1.2", "1999-10", "199910",
+-            19, 99, 10, DEFAULT, DEFAULT).run();
+-    }
+-    public void testSpecReducedPrecisionCY() {
+-        new DMatcher("5.2.1.2", "1999", "1999",
+-            19, 99, DEFAULT, DEFAULT, DEFAULT).run();
+-    }
+-    public void testSpecReducedPrecisionC() {
+-        new DMatcher("5.2.1.2", "20", "20",
+-            20, DEFAULT, DEFAULT, DEFAULT, DEFAULT).run();
+-        new DMatcher("5.2.1.2", "19", "19",
+-            19, DEFAULT, DEFAULT, DEFAULT, DEFAULT).run();
+-    }
+-    //-----------------------------------------------------------------------
+-    public void testSpecTruncatedYMD() {
+-        new DMatcher("5.2.1.3", "85-04-11", "850411",
+-            DEFAULT, 85, 4, 11, DEFAULT).run();
+-    }
+-    public void testSpecTruncatedYM() {
+-        new DMatcher("5.2.1.3", "-85-04", "-8504",
+-            DEFAULT, 85, 4, DEFAULT, DEFAULT).run();
+-    }
+-    public void testSpecTruncatedY() {
+-        new DMatcher("5.2.1.3", "-85", "-85",
+-            DEFAULT, 85, DEFAULT, DEFAULT, DEFAULT).run();
+-    }
+-    public void testSpecTruncatedMD() {
+-        new DMatcher("5.2.1.3", "--04-11", "--0411",
+-            DEFAULT, DEFAULT, 4, 11, DEFAULT).run();
+-    }
+-    public void testSpecTruncatedM() {
+-        new DMatcher("5.2.1.3", "--04", "--04",
+-            DEFAULT, DEFAULT, 4, DEFAULT, DEFAULT).run();
+-    }
+-    public void testSpecTruncatedD() {
+-        new DMatcher("5.2.1.3", "---11", "---11",
+-            DEFAULT, DEFAULT, DEFAULT, 11, DEFAULT).run();
+-    }
+-    //-----------------------------------------------------------------------
+-    public void testSpecExpandedCYMD() {
+-        new DMatcher("5.2.1.4", "+001985-04-11", "+0019850411",
+-            19, 85, 4, 11, DEFAULT).run();
+-    }
+-    public void testSpecExpandedCYM() {
+-        new DMatcher("5.2.1.4", "+001985-04", "+00198504",
+-            19, 85, 4, DEFAULT, DEFAULT).run();
+-    }
+-    public void testSpecExpandedCY() {
+-        new DMatcher("5.2.1.4", "+001985", "+001985",
+-            19, 85, DEFAULT, DEFAULT, DEFAULT).run();
+-    }
+-    public void testSpecExpandedC() {
+-        // Not supported - could only tell difference from CY if you knew
+-        // number of digits representing year
+-//        new DMatcher("5.2.1.4", "+0019", "+0019",
+-//            19, DEFAULT, DEFAULT, DEFAULT, DEFAULT).assert();
+-    }
+-    
+-    //-----------------------------------------------------------------------
+-    // Ordinal based date
+-    //-----------------------------------------------------------------------
+-    public void testSpecOrdinalComplete() {
+-        new DMatcher("5.2.2.1", "1985-101", "1985101",
+-            19, 85, 4, 11, DEFAULT).run();
+-        new DMatcher("5.2.2.1", "1985-021", "1985021",
+-            19, 85, 1, 21, DEFAULT).run();
+-        new DMatcher("5.2.2.1", "1985-006", "1985006",
+-            19, 85, 1, 6, DEFAULT).run();
+-    }
+-    //-----------------------------------------------------------------------
+-    public void testSpecOrdinalTruncatedYD() {
+-        new DMatcher("5.2.2.2", "85-101", "85101",
+-            DEFAULT, 85, 4, 11, DEFAULT).run();
+-    }
+-    public void testSpecOrdinalTruncatedD() {
+-        new DMatcher("5.2.2.2", "-101", "-101",
+-            DEFAULT, DEFAULT, 4, 11, DEFAULT).run();
+-    }
+-    //-----------------------------------------------------------------------
+-    public void testSpecOrdinalExpandedYD() {
+-        new DMatcher("5.2.2.3", "+001985-101", "+001985101",
+-            19, 85, 4, 11, DEFAULT).run();
+-    }
+-    //-----------------------------------------------------------------------
+-    // Week based date
+-    //-----------------------------------------------------------------------
+-    public void testSpecWeekComplete() {
+-        new DMatcher("5.2.3.1", "1985-W15-1", "1985W151",
+-            19, 85, 4, 8, DEFAULT).run();
+-        new DMatcher("5.2.3.1", "1985-W15-2", "1985W152",
+-            19, 85, 4, 9, DEFAULT).run();
+-        new DMatcher("5.2.3.1", "1985-W15-3", "1985W153",
+-            19, 85, 4, 10, DEFAULT).run();
+-        new DMatcher("5.2.3.1", "1985-W15-4", "1985W154",
+-            19, 85, 4, 11, DEFAULT).run();
+-        new DMatcher("5.2.3.1", "1985-W15-5", "1985W155",
+-            19, 85, 4, 12, DEFAULT).run();
+-        new DMatcher("5.2.3.1", "1985-W15-6", "1985W156",
+-            19, 85, 4, 13, DEFAULT).run();
+-        new DMatcher("5.2.3.1", "1985-W15-7", "1985W157",
+-            19, 85, 4, 14, DEFAULT).run();
+-    }
+-    //-----------------------------------------------------------------------
+-    public void testSpecWeekReducedPrecision() {
+-        // test date is Sunday, which should be left alone
+-        new DMatcher("5.2.3.2", "1985-W15", "1985W15",
+-            19, 85, 4, 14, DEFAULT).run();
+-    }
+-    //-----------------------------------------------------------------------
+-    public void testSpecWeekTruncatedYWD() {
+-        new DMatcher("5.2.3.2", "85-W154", "85W154",
+-            DEFAULT, 85, 4, 11, DEFAULT).run();
+-    }
+-    public void testSpecWeekTruncatedYW() {
+-        // test date is Sunday, which should be left alone
+-        new DMatcher("5.2.3.2", "85-W15", "85W15",
+-            DEFAULT, 85, 4, 14, DEFAULT).run();
+-    }
+-    public void testSpecWeekTruncatedDWD() {
+-        // decade not supported
+-    }
+-    public void testSpecWeekTruncatedDW() {
+-        // decade not supported
+-    }
+-    public void testSpecWeekTruncatedWD() {
+-        new DMatcher("5.2.3.2", "-W154", "-W154",
+-            DEFAULT, DEFAULT, 4, 11, DEFAULT).run();
+-    }
+-    public void testSpecWeekTruncatedW() {
+-        // test date is Sunday, which should be left alone
+-        new DMatcher("5.2.3.2", "-W15", "-W15",
+-            DEFAULT, DEFAULT, 4, 14, DEFAULT).run();
+-    }
+-    public void testSpecWeekTruncatedD() {
+-        // test date is Sunday 3rd Dec, thus relative Thursday is 30th Nov
+-        new DMatcher("5.2.3.3", "-W-4", "-W-4",
+-            DEFAULT, DEFAULT, 11, 30, DEFAULT).run();
+-    }
+-    public void testSpecWeekExpandedYWD() {
+-        // test date is Sunday 3rd Dec, thus relative Thursday is 30th Nov
+-        new DMatcher("5.2.3.4", "+001985-W15-4", "+001985W154",
+-            19, 85, 4, 11, DEFAULT).run();
+-    }
+-
+-    //-----------------------------------------------------------------------
+-    // Times
+-    //-----------------------------------------------------------------------
+-    public void testSpecTimeComplete() {
+-        new TMatcher("5.3.1.1", "23:20:50", "232050",
+-            23, 20, 50, 0, DEFAULT).run();
+-    }
+-    //-----------------------------------------------------------------------
+-    public void testSpecTimeReducedPrecisionHM() {
+-        new TMatcher("5.3.1.2", "23:20", "2320",
+-            23, 20, DEFAULT, DEFAULT, DEFAULT).run();
+-    }
+-    public void testSpecTimeReducedPrecisionH() {
+-        new TMatcher("5.3.1.2", "23", "23",
+-            23, DEFAULT, DEFAULT, DEFAULT, DEFAULT).run();
+-    }
+-    //-----------------------------------------------------------------------
+-    public void testSpecTimeFractionalHMS() {
+-        new TMatcher("5.3.1.3", "23:20:50.607", "232050.607",
+-            23, 20, 50, 607, DEFAULT).run();
+-        new TMatcher("5.3.1.3", "23:20:50,607", "232050,607",
+-            23, 20, 50, 607, DEFAULT).run();
+-    }
+-    public void testSpecTimeFractionalHM() {
+-        new TMatcher("5.3.1.3", "23:20.4", "2320.4",
+-            23, 20, 24, 0, DEFAULT).run();
+-        new TMatcher("5.3.1.3", "23:20,4", "2320,4",
+-            23, 20, 24, 0, DEFAULT).run();
+-    }
+-    public void testSpecTimeFractionalH() {
+-        new TMatcher("5.3.1.3", "23.25", "23.25",
+-            23, 15, 0, 0, DEFAULT).run();
+-        new TMatcher("5.3.1.3", "23.25", "23,25",
+-            23, 15, 0, 0, DEFAULT).run();
+-    }
+-    //-----------------------------------------------------------------------
+-    public void testSpecTimeTruncatedMS() {
+-        new TMatcher("5.3.1.4", "-20:50", "-2050",
+-            DEFAULT, 20, 50, 0, DEFAULT).run();
+-    }
+-    public void testSpecTimeTruncatedM() {
+-        new TMatcher("5.3.1.4", "-20", "-20",
+-            DEFAULT, 20, DEFAULT, DEFAULT, DEFAULT).run();
+-    }
+-    public void testSpecTimeTruncatedS() {
+-        new TMatcher("5.3.1.4", "--50", "--50",
+-            DEFAULT, DEFAULT, 50, 0, DEFAULT).run();
+-    }
+-    public void testSpecTimeTruncatedFractionMS() {
+-        new TMatcher("5.3.1.4", "-20:50.607", "-2050.607",
+-            DEFAULT, 20, 50, 607, DEFAULT).run();
+-    }
+-    public void testSpecTimeTruncatedFractionM() {
+-        new TMatcher("5.3.1.4", "-20.4", "-20.4",
+-            DEFAULT, 20, 24, 0, DEFAULT).run();
+-    }
+-    public void testSpecTimeTruncatedFractionS() {
+-        new TMatcher("5.3.1.4", "--50.607", "--50.607",
+-            DEFAULT, DEFAULT, 50, 607, DEFAULT).run();
+-    }
+-    
+-    //-----------------------------------------------------------------------
+-    //-----------------------------------------------------------------------
+-    //-----------------------------------------------------------------------
+-    /**
+-     * Perform test.
+-     */        
+-    protected static abstract class Matcher extends Assert {
+-        String spec, extended, basic;
+-        int century, yearOfCentury, monthOfYear, dayOfMonth, hour, min, sec, milli, zone;
+-        MutableDateTime dt;
+-        
+-        protected Matcher(String spec, String extended, String basic) {
+-            this.spec = spec;
+-            this.extended = extended;
+-            this.basic = basic;
+-        }
+-        
+-        protected abstract void run();
+-        protected void assertDate() {
+-            String msg = "\nSpec:   " + spec + "\nParsed: " + extended + "\nTo:     " + dt;
+-            assertEquals(msg + "\nCentury: ", century, dt.getCenturyOfEra());
+-            assertEquals(msg + "\nYear: ", yearOfCentury, dt.getYearOfCentury());
+-            assertEquals(msg + "\nMonth: ", monthOfYear, dt.getMonthOfYear());
+-            assertEquals(msg + "\nDay: ", dayOfMonth, dt.getDayOfMonth());
+-            assertEquals(msg + "\nHour: ", hour, dt.getHourOfDay());
+-            assertEquals(msg + "\nMinute: ", min, dt.getMinuteOfHour());
+-            assertEquals(msg + "\nSecond: ", sec, dt.getSecondOfMinute());
+-            assertEquals(msg + "\nMilli: ", milli, dt.getMillisOfSecond());
+-            DateTimeZone z;
+-            if (zone == DEFAULT) {
+-                z = DateTimeZone.getDefault();
+-            } else if (zone == 0) {
+-                    z = DateTimeZone.UTC;
+-            } else {
+-                String str = "0" + Math.abs(zone) + ":00";
+-                str = str.substring(str.length() - 4);
+-                str = (zone < 0 ? "-" : "+") + str;
+-                z = DateTimeZone.forID(str);
+-            }
+-            assertEquals(msg + "\nZone: ", z, dt.getZone());
+-        }
+-        protected void parse(DateTimeFormatter p) {
+-            int result = p.parseInto(dt, extended, 0);
+-            assertTrue("\nSpec:   " + spec + "\nParsed: " + extended + "\nTo:     "
+-                + dt + "\nParse failed at: " + ~result,
+-                result >= 0);
+-        }
+-    }
+-    protected static class DTMatcher extends Matcher {
+-        protected DTMatcher(String spec, String extended, String basic,
+-                int century, int yearOfCentury, int monthOfYear, int dayOfMonth,
+-                int hour, int min, int sec, int milli, int zone) {
+-            super(spec, extended, basic);
+-            this.century = (century == DEFAULT ? 19 : century);
+-            this.yearOfCentury = (yearOfCentury == DEFAULT ? 72 : yearOfCentury);
+-            this.monthOfYear = (monthOfYear == DEFAULT ? 12 : monthOfYear);
+-            this.dayOfMonth = (dayOfMonth == DEFAULT ? 3 : dayOfMonth);
+-            this.hour = (hour == DEFAULT ? 10 : hour);
+-            this.min = (min == DEFAULT ? 32 : min);
+-            this.sec = (sec == DEFAULT ? 40 : sec);
+-            this.milli = (milli == DEFAULT ? 205 : milli);
+-            this.zone = zone;
+-        }            
+-        protected void run() {
+-            dt = new MutableDateTime(1972, 12, 3, 10, 32, 40, 205);
+-            parse(ISODateTimeFormat.dateTimeParser());
+-            super.assertDate();
+-        }
+-    }
+-    protected static class DMatcher extends Matcher {
+-        protected DMatcher(String spec, String extended, String basic,
+-                int century, int yearOfCentury, int monthOfYear, int dayOfMonth, int zone) {
+-            super(spec, extended, basic);
+-            this.century = (century == DEFAULT ? 19 : century);
+-            this.yearOfCentury = (yearOfCentury == DEFAULT ? 72 : yearOfCentury);
+-            this.monthOfYear = (monthOfYear == DEFAULT ? 12 : monthOfYear);
+-            this.dayOfMonth = (dayOfMonth == DEFAULT ? 3 : dayOfMonth);
+-            this.hour = 10;
+-            this.min = 32;
+-            this.sec = 40;
+-            this.milli = 205;
+-            this.zone = zone;
+-        }
+-        protected void run() {
+-            dt = new MutableDateTime(1972, 12, 3, 10, 32, 40, 205);
+-            parse(ISODateTimeFormat.dateParser());
+-            super.assertDate();
+-        
+-            dt = new MutableDateTime(1972, 12, 3, 10, 32, 40, 205);
+-            parse(ISODateTimeFormat.dateTimeParser());
+-            super.assertDate();
+-        }
+-    }
+-    protected static class TMatcher extends Matcher {
+-        protected TMatcher(String spec, String extended, String basic,
+-                int hour, int min, int sec, int milli, int zone) {
+-            super(spec, extended, basic);
+-            this.century = 19;
+-            this.yearOfCentury = 72;
+-            this.monthOfYear = 12;
+-            this.dayOfMonth = 3;
+-            this.hour = (hour == DEFAULT ? 10 : hour);
+-            this.min = (min == DEFAULT ? 32 : min);
+-            this.sec = (sec == DEFAULT ? 40 : sec);
+-            this.milli = (milli == DEFAULT ? 205 : milli);
+-            this.zone = zone;
+-        }
+-        protected void run() {
+-            dt = new MutableDateTime(1972, 12, 3, 10, 32, 40, 205);
+-            parse(ISODateTimeFormat.timeParser());
+-            super.assertDate();
+-            
+-            extended = "T" + extended;
+-            dt = new MutableDateTime(1972, 12, 3, 10, 32, 40, 205);
+-            parse(ISODateTimeFormat.timeParser());
+-            super.assertDate();
+-            
+-            dt = new MutableDateTime(1972, 12, 3, 10, 32, 40, 205);
+-            parse(ISODateTimeFormat.dateTimeParser());
+-            super.assertDate();
+-        }
+-    }
+-}

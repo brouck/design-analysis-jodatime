@@ -1,0 +1,1194 @@
+From 1253e8c052e2fa54863efe3ef09b2eee0362acc4 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Wed, 12 Dec 2007 16:34:19 +0000
+Subject: [PATCH 1/9] Javadoc inspired by mistake in Hours spotted by Phil
+ Brock
+
+git-svn-id: https://joda-time.svn.sourceforge.net/svnroot/joda-time/trunk@1312 1e1cfbb7-5c0e-0410-a2f0-f98d92ec03a1
+---
+ JodaTime/src/java/org/joda/time/Days.java    | 4 ++--
+ JodaTime/src/java/org/joda/time/Hours.java   | 6 +++---
+ JodaTime/src/java/org/joda/time/Minutes.java | 4 ++--
+ JodaTime/src/java/org/joda/time/Months.java  | 4 ++--
+ JodaTime/src/java/org/joda/time/Seconds.java | 4 ++--
+ JodaTime/src/java/org/joda/time/Weeks.java   | 4 ++--
+ JodaTime/src/java/org/joda/time/Years.java   | 6 +++---
+ 7 files changed, 16 insertions(+), 16 deletions(-)
+
+diff --git a/JodaTime/src/java/org/joda/time/Days.java b/JodaTime/src/java/org/joda/time/Days.java
+index 5ac3d9fbf..4b04f6215 100644
+--- a/JodaTime/src/java/org/joda/time/Days.java
++++ b/JodaTime/src/java/org/joda/time/Days.java
+@@ -55,9 +55,9 @@
+     public static final Days SIX = new Days(6);
+     /** Constant representing seven days. */
+     public static final Days SEVEN = new Days(7);
+-    /** Constant representing the maximum nuber of days that can be stored in this object. */
++    /** Constant representing the maximum number of days that can be stored in this object. */
+     public static final Days MAX_VALUE = new Days(Integer.MAX_VALUE);
+-    /** Constant representing the minimum nuber of days that can be stored in this object. */
++    /** Constant representing the minimum number of days that can be stored in this object. */
+     public static final Days MIN_VALUE = new Days(Integer.MIN_VALUE);
+ 
+     /** The paser to use for this class. */
+diff --git a/JodaTime/src/java/org/joda/time/Hours.java b/JodaTime/src/java/org/joda/time/Hours.java
+index 49e920c1b..3d21245fa 100644
+--- a/JodaTime/src/java/org/joda/time/Hours.java
++++ b/JodaTime/src/java/org/joda/time/Hours.java
+@@ -55,11 +55,11 @@
+     public static final Hours SIX = new Hours(6);
+     /** Constant representing seven hours. */
+     public static final Hours SEVEN = new Hours(7);
+-    /** Constant representing seven hours. */
++    /** Constant representing eight hours. */
+     public static final Hours EIGHT = new Hours(8);
+-    /** Constant representing the maximum nuber of hours that can be stored in this object. */
++    /** Constant representing the maximum number of hours that can be stored in this object. */
+     public static final Hours MAX_VALUE = new Hours(Integer.MAX_VALUE);
+-    /** Constant representing the minimum nuber of hours that can be stored in this object. */
++    /** Constant representing the minimum number of hours that can be stored in this object. */
+     public static final Hours MIN_VALUE = new Hours(Integer.MIN_VALUE);
+ 
+     /** The paser to use for this class. */
+diff --git a/JodaTime/src/java/org/joda/time/Minutes.java b/JodaTime/src/java/org/joda/time/Minutes.java
+index 310eea7a6..f2383ef95 100644
+--- a/JodaTime/src/java/org/joda/time/Minutes.java
++++ b/JodaTime/src/java/org/joda/time/Minutes.java
+@@ -47,9 +47,9 @@
+     public static final Minutes TWO = new Minutes(2);
+     /** Constant representing three minutes. */
+     public static final Minutes THREE = new Minutes(3);
+-    /** Constant representing the maximum nuber of minutes that can be stored in this object. */
++    /** Constant representing the maximum number of minutes that can be stored in this object. */
+     public static final Minutes MAX_VALUE = new Minutes(Integer.MAX_VALUE);
+-    /** Constant representing the minimum nuber of minutes that can be stored in this object. */
++    /** Constant representing the minimum number of minutes that can be stored in this object. */
+     public static final Minutes MIN_VALUE = new Minutes(Integer.MIN_VALUE);
+ 
+     /** The paser to use for this class. */
+diff --git a/JodaTime/src/java/org/joda/time/Months.java b/JodaTime/src/java/org/joda/time/Months.java
+index 8918c04cb..3dc9bd361 100644
+--- a/JodaTime/src/java/org/joda/time/Months.java
++++ b/JodaTime/src/java/org/joda/time/Months.java
+@@ -65,9 +65,9 @@
+     public static final Months ELEVEN = new Months(11);
+     /** Constant representing twelve months. */
+     public static final Months TWELVE = new Months(12);
+-    /** Constant representing the maximum nuber of months that can be stored in this object. */
++    /** Constant representing the maximum number of months that can be stored in this object. */
+     public static final Months MAX_VALUE = new Months(Integer.MAX_VALUE);
+-    /** Constant representing the minimum nuber of months that can be stored in this object. */
++    /** Constant representing the minimum number of months that can be stored in this object. */
+     public static final Months MIN_VALUE = new Months(Integer.MIN_VALUE);
+ 
+     /** The paser to use for this class. */
+diff --git a/JodaTime/src/java/org/joda/time/Seconds.java b/JodaTime/src/java/org/joda/time/Seconds.java
+index 76d08dd2d..23d8a949f 100644
+--- a/JodaTime/src/java/org/joda/time/Seconds.java
++++ b/JodaTime/src/java/org/joda/time/Seconds.java
+@@ -47,9 +47,9 @@
+     public static final Seconds TWO = new Seconds(2);
+     /** Constant representing three seconds. */
+     public static final Seconds THREE = new Seconds(3);
+-    /** Constant representing the maximum nuber of seconds that can be stored in this object. */
++    /** Constant representing the maximum number of seconds that can be stored in this object. */
+     public static final Seconds MAX_VALUE = new Seconds(Integer.MAX_VALUE);
+-    /** Constant representing the minimum nuber of seconds that can be stored in this object. */
++    /** Constant representing the minimum number of seconds that can be stored in this object. */
+     public static final Seconds MIN_VALUE = new Seconds(Integer.MIN_VALUE);
+ 
+     /** The paser to use for this class. */
+diff --git a/JodaTime/src/java/org/joda/time/Weeks.java b/JodaTime/src/java/org/joda/time/Weeks.java
+index 873d8063c..05d8911b1 100644
+--- a/JodaTime/src/java/org/joda/time/Weeks.java
++++ b/JodaTime/src/java/org/joda/time/Weeks.java
+@@ -47,9 +47,9 @@
+     public static final Weeks TWO = new Weeks(2);
+     /** Constant representing three weeks. */
+     public static final Weeks THREE = new Weeks(3);
+-    /** Constant representing the maximum nuber of weeks that can be stored in this object. */
++    /** Constant representing the maximum number of weeks that can be stored in this object. */
+     public static final Weeks MAX_VALUE = new Weeks(Integer.MAX_VALUE);
+-    /** Constant representing the minimum nuber of weeks that can be stored in this object. */
++    /** Constant representing the minimum number of weeks that can be stored in this object. */
+     public static final Weeks MIN_VALUE = new Weeks(Integer.MIN_VALUE);
+ 
+     /** The paser to use for this class. */
+diff --git a/JodaTime/src/java/org/joda/time/Years.java b/JodaTime/src/java/org/joda/time/Years.java
+index 01f0c62d1..fc78e209f 100644
+--- a/JodaTime/src/java/org/joda/time/Years.java
++++ b/JodaTime/src/java/org/joda/time/Years.java
+@@ -41,15 +41,15 @@
+ 
+     /** Constant representing zero years. */
+     public static final Years ZERO = new Years(0);
+-    /** Constant representing one day. */
++    /** Constant representing one year. */
+     public static final Years ONE = new Years(1);
+     /** Constant representing two years. */
+     public static final Years TWO = new Years(2);
+     /** Constant representing three years. */
+     public static final Years THREE = new Years(3);
+-    /** Constant representing the maximum nuber of years that can be stored in this object. */
++    /** Constant representing the maximum number of years that can be stored in this object. */
+     public static final Years MAX_VALUE = new Years(Integer.MAX_VALUE);
+-    /** Constant representing the minimum nuber of years that can be stored in this object. */
++    /** Constant representing the minimum number of years that can be stored in this object. */
+     public static final Years MIN_VALUE = new Years(Integer.MIN_VALUE);
+ 
+     /** The paser to use for this class. */
+
+From 990fcfc06f49cf9b83969c3b5f0c0eb434ef6cc9 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Sun, 16 Dec 2007 14:11:04 +0000
+Subject: [PATCH 2/9] Improve Javadoc on Object constructors suggested by Gili
+ Tzabari
+
+git-svn-id: https://joda-time.svn.sourceforge.net/svnroot/joda-time/trunk@1313 1e1cfbb7-5c0e-0410-a2f0-f98d92ec03a1
+---
+ JodaTime/RELEASE-NOTES.txt                    | 13 +++++---
+ JodaTime/src/java/org/joda/time/Interval.java | 16 +++++++++
+ .../java/org/joda/time/MutableInterval.java   | 16 +++++++++
+ .../src/java/org/joda/time/MutablePeriod.java | 33 ++++++++++++++-----
+ JodaTime/src/java/org/joda/time/Period.java   | 33 ++++++++++++++-----
+ 5 files changed, 90 insertions(+), 21 deletions(-)
+
+diff --git a/JodaTime/RELEASE-NOTES.txt b/JodaTime/RELEASE-NOTES.txt
+index ebffa9ccd..b729eebc1 100644
+--- a/JodaTime/RELEASE-NOTES.txt
++++ b/JodaTime/RELEASE-NOTES.txt
+@@ -1,12 +1,11 @@
+-Joda-Time version 1.5.1
+------------------------
++Joda-Time version 1.6
++---------------------
+ 
+ Joda-Time is a date and time handling library that seeks to replace the JDK
+ Date and Calendar classes.
+ 
+-This is a patch release for Joda-Time 1.5.
+-This release contains one bug fix and a time zone update.
+-We recommend all users of 1.5 upgrade to 1.5.1.
++This is the seventh full release of Joda-Time.
++This release contains various bug fixes and enhancements.
+ 
+ We recommend JDK 1.4 or later, and have performed no testing on earlier JDKs.
+ 
+@@ -46,6 +45,10 @@ Bug fixes since 1.5
+ - Parsing (regression) [1839440]
+   Support parsing all upper-case and all lower-case text
+ 
++- Javadoc clarity enhancements
++  - Constants in Years/Months/Weeks/Days/Hours/Minutes/Seconds etc.
++  - Period/Interval Object constructors
++
+ 
+ Feedback
+ --------
+diff --git a/JodaTime/src/java/org/joda/time/Interval.java b/JodaTime/src/java/org/joda/time/Interval.java
+index f1d367757..62b80b86e 100644
+--- a/JodaTime/src/java/org/joda/time/Interval.java
++++ b/JodaTime/src/java/org/joda/time/Interval.java
+@@ -19,6 +19,8 @@
+ 
+ import org.joda.time.base.BaseInterval;
+ import org.joda.time.chrono.ISOChronology;
++import org.joda.time.format.ISODateTimeFormat;
++import org.joda.time.format.ISOPeriodFormat;
+ 
+ /**
+  * Interval is the standard implementation of an immutable time interval.
+@@ -161,6 +163,13 @@ public Interval(ReadablePeriod period, ReadableInstant end) {
+ 
+     /**
+      * Constructs a time interval by converting or copying from another object.
++     * <p>
++     * The recognised object types are defined in
++     * {@link org.joda.time.convert.ConverterManager ConverterManager} and
++     * include ReadableInterval and String.
++     * The String formats are described by {@link ISODateTimeFormat#dateTimeParser()}
++     * and {@link ISOPeriodFormat#standard()}, and may be 'datetime/datetime',
++     * 'datetime/period' or 'period/datetime'.
+      * 
+      * @param interval  the time interval to copy
+      * @throws IllegalArgumentException if the interval is invalid
+@@ -172,6 +181,13 @@ public Interval(Object interval) {
+     /**
+      * Constructs a time interval by converting or copying from another object,
+      * overriding the chronology.
++     * <p>
++     * The recognised object types are defined in
++     * {@link org.joda.time.convert.ConverterManager ConverterManager} and
++     * include ReadableInterval and String.
++     * The String formats are described by {@link ISODateTimeFormat#dateTimeParser()}
++     * and {@link ISOPeriodFormat#standard()}, and may be 'datetime/datetime',
++     * 'datetime/period' or 'period/datetime'.
+      * 
+      * @param interval  the time interval to copy
+      * @param chronology  the chronology to use, null means ISO default
+diff --git a/JodaTime/src/java/org/joda/time/MutableInterval.java b/JodaTime/src/java/org/joda/time/MutableInterval.java
+index 2e851373e..521619c4b 100644
+--- a/JodaTime/src/java/org/joda/time/MutableInterval.java
++++ b/JodaTime/src/java/org/joda/time/MutableInterval.java
+@@ -19,6 +19,8 @@
+ 
+ import org.joda.time.base.BaseInterval;
+ import org.joda.time.field.FieldUtils;
++import org.joda.time.format.ISODateTimeFormat;
++import org.joda.time.format.ISOPeriodFormat;
+ 
+ /**
+  * MutableInterval is the standard implementation of a mutable time interval.
+@@ -154,6 +156,13 @@ public MutableInterval(ReadablePeriod period, ReadableInstant end) {
+ 
+     /**
+      * Constructs a time interval by converting or copying from another object.
++     * <p>
++     * The recognised object types are defined in
++     * {@link org.joda.time.convert.ConverterManager ConverterManager} and
++     * include ReadableInterval and String.
++     * The String formats are described by {@link ISODateTimeFormat#dateTimeParser()}
++     * and {@link ISOPeriodFormat#standard()}, and may be 'datetime/datetime',
++     * 'datetime/period' or 'period/datetime'.
+      * 
+      * @param interval  the time interval to copy
+      * @throws IllegalArgumentException if the interval is invalid
+@@ -165,6 +174,13 @@ public MutableInterval(Object interval) {
+     /**
+      * Constructs a time interval by converting or copying from another object,
+      * overriding the chronology.
++     * <p>
++     * The recognised object types are defined in
++     * {@link org.joda.time.convert.ConverterManager ConverterManager} and
++     * include ReadableInterval and String.
++     * The String formats are described by {@link ISODateTimeFormat#dateTimeParser()}
++     * and {@link ISOPeriodFormat#standard()}, and may be 'datetime/datetime',
++     * 'datetime/period' or 'period/datetime'.
+      * 
+      * @param interval  the time interval to copy
+      * @param chronology  the chronology to use, null means ISO default
+diff --git a/JodaTime/src/java/org/joda/time/MutablePeriod.java b/JodaTime/src/java/org/joda/time/MutablePeriod.java
+index 0615c1b27..6089f0d86 100644
+--- a/JodaTime/src/java/org/joda/time/MutablePeriod.java
++++ b/JodaTime/src/java/org/joda/time/MutablePeriod.java
+@@ -19,6 +19,7 @@
+ 
+ import org.joda.time.base.BasePeriod;
+ import org.joda.time.field.FieldUtils;
++import org.joda.time.format.ISOPeriodFormat;
+ 
+ /**
+  * Standard mutable time period implementation.
+@@ -330,8 +331,12 @@ public MutablePeriod(ReadableDuration duration, ReadableInstant endInstant, Peri
+     }
+ 
+     /**
+-     * Creates a period from the specified object using the
+-     * {@link org.joda.time.convert.ConverterManager ConverterManager}.
++     * Creates a period by converting or copying from another object.
++     * <p>
++     * The recognised object types are defined in
++     * {@link org.joda.time.convert.ConverterManager ConverterManager} and
++     * include ReadablePeriod, ReadableInterval and String.
++     * The String formats are described by {@link ISOPeriodFormat#standard()}.
+      *
+      * @param period  period to convert
+      * @throws IllegalArgumentException if period is invalid
+@@ -342,8 +347,12 @@ public MutablePeriod(Object period) {
+     }
+ 
+     /**
+-     * Creates a period from the specified object using the
+-     * {@link org.joda.time.convert.ConverterManager ConverterManager}.
++     * Creates a period by converting or copying from another object.
++     * <p>
++     * The recognised object types are defined in
++     * {@link org.joda.time.convert.ConverterManager ConverterManager} and
++     * include ReadablePeriod, ReadableInterval and String.
++     * The String formats are described by {@link ISOPeriodFormat#standard()}.
+      *
+      * @param period  period to convert
+      * @param type  which set of fields this period supports, null means use converter
+@@ -355,8 +364,12 @@ public MutablePeriod(Object period, PeriodType type) {
+     }
+ 
+     /**
+-     * Creates a period from the specified object using the
+-     * {@link org.joda.time.convert.ConverterManager ConverterManager}.
++     * Creates a period by converting or copying from another object.
++     * <p>
++     * The recognised object types are defined in
++     * {@link org.joda.time.convert.ConverterManager ConverterManager} and
++     * include ReadablePeriod, ReadableInterval and String.
++     * The String formats are described by {@link ISOPeriodFormat#standard()}.
+      *
+      * @param period  period to convert
+      * @param chrono  the chronology to use, null means ISO in default zone
+@@ -368,8 +381,12 @@ public MutablePeriod(Object period, Chronology chrono) {
+     }
+ 
+     /**
+-     * Creates a period from the specified object using the
+-     * {@link org.joda.time.convert.ConverterManager ConverterManager}.
++     * Creates a period by converting or copying from another object.
++     * <p>
++     * The recognised object types are defined in
++     * {@link org.joda.time.convert.ConverterManager ConverterManager} and
++     * include ReadablePeriod, ReadableInterval and String.
++     * The String formats are described by {@link ISOPeriodFormat#standard()}.
+      *
+      * @param period  period to convert
+      * @param type  which set of fields this period supports, null means use converter
+diff --git a/JodaTime/src/java/org/joda/time/Period.java b/JodaTime/src/java/org/joda/time/Period.java
+index d66b44a8b..a0443d309 100644
+--- a/JodaTime/src/java/org/joda/time/Period.java
++++ b/JodaTime/src/java/org/joda/time/Period.java
+@@ -20,6 +20,7 @@
+ import org.joda.time.base.BasePeriod;
+ import org.joda.time.chrono.ISOChronology;
+ import org.joda.time.field.FieldUtils;
++import org.joda.time.format.ISOPeriodFormat;
+ 
+ /**
+  * An immutable time period specifying a set of duration field values.
+@@ -578,8 +579,12 @@ public Period(ReadableDuration duration, ReadableInstant endInstant, PeriodType
+     }
+ 
+     /**
+-     * Creates a period from the specified object using the
+-     * {@link org.joda.time.convert.ConverterManager ConverterManager}.
++     * Creates a period by converting or copying from another object.
++     * <p>
++     * The recognised object types are defined in
++     * {@link org.joda.time.convert.ConverterManager ConverterManager} and
++     * include ReadablePeriod, ReadableInterval and String.
++     * The String formats are described by {@link ISOPeriodFormat#standard()}.
+      *
+      * @param period  period to convert
+      * @throws IllegalArgumentException if period is invalid
+@@ -590,8 +595,12 @@ public Period(Object period) {
+     }
+ 
+     /**
+-     * Creates a period from the specified object using the
+-     * {@link org.joda.time.convert.ConverterManager ConverterManager}.
++     * Creates a period by converting or copying from another object.
++     * <p>
++     * The recognised object types are defined in
++     * {@link org.joda.time.convert.ConverterManager ConverterManager} and
++     * include ReadablePeriod, ReadableInterval and String.
++     * The String formats are described by {@link ISOPeriodFormat#standard()}.
+      *
+      * @param period  period to convert
+      * @param type  which set of fields this period supports, null means use converter
+@@ -603,8 +612,12 @@ public Period(Object period, PeriodType type) {
+     }
+ 
+     /**
+-     * Creates a period from the specified object using the
+-     * {@link org.joda.time.convert.ConverterManager ConverterManager}.
++     * Creates a period by converting or copying from another object.
++     * <p>
++     * The recognised object types are defined in
++     * {@link org.joda.time.convert.ConverterManager ConverterManager} and
++     * include ReadablePeriod, ReadableInterval and String.
++     * The String formats are described by {@link ISOPeriodFormat#standard()}.
+      *
+      * @param period  period to convert
+      * @param chrono  the chronology to use, null means ISO in default zone
+@@ -616,8 +629,12 @@ public Period(Object period, Chronology chrono) {
+     }
+ 
+     /**
+-     * Creates a period from the specified object using the
+-     * {@link org.joda.time.convert.ConverterManager ConverterManager}.
++     * Creates a period by converting or copying from another object.
++     * <p>
++     * The recognised object types are defined in
++     * {@link org.joda.time.convert.ConverterManager ConverterManager} and
++     * include ReadablePeriod, ReadableInterval and String.
++     * The String formats are described by {@link ISOPeriodFormat#standard()}.
+      *
+      * @param period  period to convert
+      * @param type  which set of fields this period supports, null means use converter
+
+From f2878d1c00a8665748e9afe7d9f6f57107da92ad Mon Sep 17 00:00:00 2001
+From: Brian S O'Neill <bronee@gmail.com>
+Date: Mon, 31 Dec 2007 18:03:53 +0000
+Subject: [PATCH 3/9] DateTimeZone data updated to version 2007k.
+
+git-svn-id: https://joda-time.svn.sourceforge.net/svnroot/joda-time/trunk@1314 1e1cfbb7-5c0e-0410-a2f0-f98d92ec03a1
+---
+ JodaTime/RELEASE-NOTES.txt                    |  2 +-
+ .../src/java/org/joda/time/tz/src/Readme.txt  |  2 +-
+ .../src/java/org/joda/time/tz/src/backward    |  3 +-
+ JodaTime/src/java/org/joda/time/tz/src/europe |  3 +-
+ .../java/org/joda/time/tz/src/southamerica    | 52 ++++++++++++++-----
+ 5 files changed, 45 insertions(+), 17 deletions(-)
+
+diff --git a/JodaTime/RELEASE-NOTES.txt b/JodaTime/RELEASE-NOTES.txt
+index b729eebc1..99c7908ea 100644
+--- a/JodaTime/RELEASE-NOTES.txt
++++ b/JodaTime/RELEASE-NOTES.txt
+@@ -31,7 +31,7 @@ Source compatible - Yes
+ Serialization compatible - Yes
+ 
+ Data compatible - Yes, except
+-  - DateTimeZone data updated to version 2007j
++  - DateTimeZone data updated to version 2007k
+ 
+ Semantic compatible - Yes
+ 
+diff --git a/JodaTime/src/java/org/joda/time/tz/src/Readme.txt b/JodaTime/src/java/org/joda/time/tz/src/Readme.txt
+index 6be59b7cb..8c862672a 100644
+--- a/JodaTime/src/java/org/joda/time/tz/src/Readme.txt
++++ b/JodaTime/src/java/org/joda/time/tz/src/Readme.txt
+@@ -1,2 +1,2 @@
+ The data files in this directory were obtained from the public tz database,
+-http://www.twinsun.com/tz/tz-link.htm, version 2007j.
++http://www.twinsun.com/tz/tz-link.htm, version 2007k.
+diff --git a/JodaTime/src/java/org/joda/time/tz/src/backward b/JodaTime/src/java/org/joda/time/tz/src/backward
+index 5ad2a3467..2d44bac4d 100644
+--- a/JodaTime/src/java/org/joda/time/tz/src/backward
++++ b/JodaTime/src/java/org/joda/time/tz/src/backward
+@@ -1,4 +1,4 @@
+-# @(#)backward	8.3
++# @(#)backward	8.4
+ 
+ # This file provides links between current names for time zones
+ # and their old names.  Many names changed in late 1993.
+@@ -30,6 +30,7 @@ Link	Asia/Thimphu		Asia/Thimbu
+ Link	Asia/Makassar		Asia/Ujung_Pandang
+ Link	Asia/Ulaanbaatar	Asia/Ulan_Bator
+ Link	Atlantic/Faroe		Atlantic/Faeroe
++Link	Europe/Oslo		Atlantic/Jan_Mayen
+ Link	Australia/Sydney	Australia/ACT
+ Link	Australia/Sydney	Australia/Canberra
+ Link	Australia/Lord_Howe	Australia/LHI
+diff --git a/JodaTime/src/java/org/joda/time/tz/src/europe b/JodaTime/src/java/org/joda/time/tz/src/europe
+index 94a650408..88e8889cd 100644
+--- a/JodaTime/src/java/org/joda/time/tz/src/europe
++++ b/JodaTime/src/java/org/joda/time/tz/src/europe
+@@ -1,4 +1,4 @@
+-# @(#)europe	8.11
++# @(#)europe	8.12
+ # <pre>
+ 
+ # This data is by no means authoritative; if you think you know better,
+@@ -1714,7 +1714,6 @@ Zone	Europe/Oslo	0:43:00 -	LMT	1895 Jan  1
+ # come up with more definitive info about the timekeeping during the
+ # war years it's probably best just do do the following for now:
+ Link	Europe/Oslo	Arctic/Longyearbyen
+-Link	Europe/Oslo	Atlantic/Jan_Mayen
+ 
+ # Poland
+ # Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
+diff --git a/JodaTime/src/java/org/joda/time/tz/src/southamerica b/JodaTime/src/java/org/joda/time/tz/src/southamerica
+index 0a96f6e07..aaffeee68 100644
+--- a/JodaTime/src/java/org/joda/time/tz/src/southamerica
++++ b/JodaTime/src/java/org/joda/time/tz/src/southamerica
+@@ -1,4 +1,4 @@
+-# @(#)southamerica	8.13
++# @(#)southamerica	8.15
+ # <pre>
+ 
+ # This data is by no means authoritative; if you think you know better,
+@@ -105,7 +105,11 @@ Rule	Arg	1989	1992	-	Oct	Sun>=15	0:00	1:00	S
+ # which did not result in the switch of a time zone, as they stayed 9 hours
+ # from the International Date Line.
+ Rule	Arg	1999	only	-	Oct	Sun>=1	0:00	1:00	S
+-Rule	Arg	2000	only	-	Mar	Sun>=1	0:00	0	-
++# From Paul Eggert (2007-12-28):
++# DST was set to expire on March 5, not March 3, but since it was converted
++# to standard time on March 3 it's more convenient for us to pretend that
++# it ended on March 3.
++Rule	Arg	2000	only	-	Mar	3	0:00	0	-
+ #
+ # From Peter Gradelski via Steffen Thorsen (2000-03-01):
+ # We just checked with our Sao Paulo office and they say the government of
+@@ -140,6 +144,30 @@ Rule	Arg	2000	only	-	Mar	Sun>=1	0:00	0	-
+ # This kind of things had always been done this way in Argentina.
+ # We are still -03:00 all year round in all of the country.
+ #
++# From Steffen Thorsen (2007-12-21):
++# A user (Leonardo Chaim) reported that Argentina will adopt DST....
++# all of the country (all Zone-entries) are affected.  News reports like
++# http://www.lanacion.com.ar/opinion/nota.asp?nota_id=973037 indicate
++# that Argentina will use DST next year as well, from October to
++# March, although exact rules are not given.
++#
++# From Jesper Norgaard Welen (2007-12-26)
++# The last hurdle of Argentina DST is over, the proposal was approved in
++# the lower chamber too (Deputados) with a vote 192 for and 2 against.
++# By the way thanks to Mariano Absatz and Daniel Mario Vega for the link to
++# the original scanned proposal, where the dates and the zero hours are
++# clear and unambiguous...This is the article about final approval:
++# <a href="http://www.lanacion.com.ar/politica/nota.asp?nota_id=973996">
++# http://www.lanacion.com.ar/politica/nota.asp?nota_id=973996
++# </a>
++#
++# From Paul Eggert (2007-12-22):
++# For dates after mid-2008, the following rules are my guesses and
++# are quite possibly wrong, but are more likely than no DST at all.
++Rule	Arg	2007	only	-	Dec	30	0:00	1:00	S
++Rule	Arg	2008	max	-	Mar	Sun>=15	0:00	0	-
++Rule	Arg	2008	max	-	Oct	Sun>=1	0:00	1:00	S
++ 
+ # From Mariano Absatz (2004-05-21):
+ # Today it was officially published that the Province of Mendoza is changing
+ # its timezone this winter... starting tomorrow night....
+@@ -214,7 +242,7 @@ Zone America/Argentina/Buenos_Aires -3:53:48 - LMT 1894 Oct 31
+ 			-4:00	Arg	AR%sT	1969 Oct  5
+ 			-3:00	Arg	AR%sT	1999 Oct  3
+ 			-4:00	Arg	AR%sT	2000 Mar  3
+-			-3:00	-	ART
++			-3:00	Arg	AR%sT
+ #
+ # Santa Fe (SF), Entre Rios (ER), Corrientes (CN), Misiones (MN), Chaco (CC),
+ # Formosa (FM), Salta (SA), Santiago del Estero (SE), Cordoba (CB),
+@@ -237,7 +265,7 @@ Zone America/Argentina/Cordoba -4:16:48 - LMT	1894 Oct 31
+ 			-4:00	-	WART	1991 Oct 20
+ 			-3:00	Arg	AR%sT	1999 Oct  3
+ 			-4:00	Arg	AR%sT	2000 Mar  3
+-			-3:00	-	ART
++			-3:00	Arg	AR%sT
+ #
+ # Tucuman (TM)
+ Zone America/Argentina/Tucuman -4:20:52 - LMT	1894 Oct 31
+@@ -250,7 +278,7 @@ Zone America/Argentina/Tucuman -4:20:52 - LMT	1894 Oct 31
+ 			-4:00	Arg	AR%sT	2000 Mar  3
+ 			-3:00	-	ART	2004 Jun  1
+ 			-4:00	-	WART	2004 Jun 13
+-			-3:00	-	ART
++			-3:00	Arg	AR%sT
+ #
+ # La Rioja (LR)
+ Zone America/Argentina/La_Rioja -4:27:24 - LMT	1894 Oct 31
+@@ -263,7 +291,7 @@ Zone America/Argentina/La_Rioja -4:27:24 - LMT	1894 Oct 31
+ 			-4:00	Arg	AR%sT	2000 Mar  3
+ 			-3:00	-	ART	2004 Jun  1
+ 			-4:00	-	WART	2004 Jun 20
+-			-3:00	-	ART
++			-3:00	Arg	AR%sT
+ #
+ # San Juan (SJ)
+ Zone America/Argentina/San_Juan -4:34:04 - LMT	1894 Oct 31
+@@ -276,7 +304,7 @@ Zone America/Argentina/San_Juan -4:34:04 - LMT	1894 Oct 31
+ 			-4:00	Arg	AR%sT	2000 Mar  3
+ 			-3:00	-	ART	2004 May 31
+ 			-4:00	-	WART	2004 Jul 25
+-			-3:00	-	ART
++			-3:00	Arg	AR%sT
+ #
+ # Jujuy (JY)
+ Zone America/Argentina/Jujuy -4:21:12 -	LMT	1894 Oct 31
+@@ -290,7 +318,7 @@ Zone America/Argentina/Jujuy -4:21:12 -	LMT	1894 Oct 31
+ 			-3:00	1:00	ARST	1992
+ 			-3:00	Arg	AR%sT	1999 Oct  3
+ 			-4:00	Arg	AR%sT	2000 Mar  3
+-			-3:00	-	ART
++			-3:00	Arg	AR%sT
+ #
+ # Catamarca (CT), Chubut (CH)
+ Zone America/Argentina/Catamarca -4:23:08 - LMT	1894 Oct 31
+@@ -303,7 +331,7 @@ Zone America/Argentina/Catamarca -4:23:08 - LMT	1894 Oct 31
+ 			-4:00	Arg	AR%sT	2000 Mar  3
+ 			-3:00	-	ART	2004 Jun  1
+ 			-4:00	-	WART	2004 Jun 20
+-			-3:00	-	ART
++			-3:00	Arg	AR%sT
+ #
+ # Mendoza (MZ)
+ Zone America/Argentina/Mendoza -4:35:16 - LMT	1894 Oct 31
+@@ -320,7 +348,7 @@ Zone America/Argentina/Mendoza -4:35:16 - LMT	1894 Oct 31
+ 			-4:00	Arg	AR%sT	2000 Mar  3
+ 			-3:00	-	ART	2004 May 23
+ 			-4:00	-	WART	2004 Sep 26
+-			-3:00	-	ART
++			-3:00	Arg	AR%sT
+ #
+ # Santa Cruz (SC)
+ Zone America/Argentina/Rio_Gallegos -4:36:52 - LMT 1894 Oct 31
+@@ -331,7 +359,7 @@ Zone America/Argentina/Rio_Gallegos -4:36:52 - LMT 1894 Oct 31
+ 			-4:00	Arg	AR%sT	2000 Mar  3
+ 			-3:00	-	ART	2004 Jun  1
+ 			-4:00	-	WART	2004 Jun 20
+-			-3:00	-	ART
++			-3:00	Arg	AR%sT
+ #
+ # Tierra del Fuego, Antartida e Islas del Atlantico Sur (TF)
+ Zone America/Argentina/Ushuaia -4:33:12 - LMT 1894 Oct 31
+@@ -342,7 +370,7 @@ Zone America/Argentina/Ushuaia -4:33:12 - LMT 1894 Oct 31
+ 			-4:00	Arg	AR%sT	2000 Mar  3
+ 			-3:00	-	ART	2004 May 30
+ 			-4:00	-	WART	2004 Jun 20
+-			-3:00	-	ART
++			-3:00	Arg	AR%sT
+ 
+ # Aruba
+ # Zone	NAME		GMTOFF	RULES	FORMAT	[UNTIL]
+
+From 0c7b06d99dc6ac9dad724e9e3951aa0942593a6e Mon Sep 17 00:00:00 2001
+From: Brian S O'Neill <bronee@gmail.com>
+Date: Sat, 19 Jan 2008 17:50:51 +0000
+Subject: [PATCH 4/9] Fix getOffsetFromLocal DST gap adjustment.
+
+git-svn-id: https://joda-time.svn.sourceforge.net/svnroot/joda-time/trunk@1315 1e1cfbb7-5c0e-0410-a2f0-f98d92ec03a1
+---
+ JodaTime/RELEASE-NOTES.txt                    |  14 +-
+ .../src/java/org/joda/time/DateTimeZone.java  |   2 +-
+ .../joda/time/TestDateTimeZoneCutover.java    | 127 +++++++++++++++++-
+ 3 files changed, 132 insertions(+), 11 deletions(-)
+
+diff --git a/JodaTime/RELEASE-NOTES.txt b/JodaTime/RELEASE-NOTES.txt
+index 99c7908ea..974cefdb6 100644
+--- a/JodaTime/RELEASE-NOTES.txt
++++ b/JodaTime/RELEASE-NOTES.txt
+@@ -1,11 +1,12 @@
+-Joda-Time version 1.6
+----------------------
++Joda-Time version 1.5.2
++-----------------------
+ 
+ Joda-Time is a date and time handling library that seeks to replace the JDK
+ Date and Calendar classes.
+ 
+-This is the seventh full release of Joda-Time.
+-This release contains various bug fixes and enhancements.
++This is a patch release for Joda-Time 1.5.1.
++This release contains one bug fix.
++We recommend all users of 1.5.1 upgrade to 1.5.2.
+ 
+ We recommend JDK 1.4 or later, and have performed no testing on earlier JDKs.
+ 
+@@ -40,6 +41,11 @@ Deprecations since 1.5
+ ----------------------
+ 
+ 
++Bug fixes since 1.5.1
++---------------------
++- DateTimeZone (regression from 1.4)
++  Fix getOffsetFromLocal DST gap adjustment.
++
+ Bug fixes since 1.5
+ -------------------
+ - Parsing (regression) [1839440]
+diff --git a/JodaTime/src/java/org/joda/time/DateTimeZone.java b/JodaTime/src/java/org/joda/time/DateTimeZone.java
+index f8af1de22..88c4ab15e 100644
+--- a/JodaTime/src/java/org/joda/time/DateTimeZone.java
++++ b/JodaTime/src/java/org/joda/time/DateTimeZone.java
+@@ -864,7 +864,7 @@ public int getOffsetFromLocal(long instantLocal) {
+         if (offsetLocal != offsetAdjusted) {
+             // we need to ensure that time is always after the DST gap
+             // this happens naturally for positive offsets, but not for negative
+-            if (offsetLocal < 0) {
++            if ((offsetLocal - offsetAdjusted) < 0) {
+                 // if we just return offsetAdjusted then the time is pushed
+                 // back before the transition, whereas it should be
+                 // on or after the transition
+diff --git a/JodaTime/src/test/org/joda/time/TestDateTimeZoneCutover.java b/JodaTime/src/test/org/joda/time/TestDateTimeZoneCutover.java
+index 890f347dc..0506e1a4e 100644
+--- a/JodaTime/src/test/org/joda/time/TestDateTimeZoneCutover.java
++++ b/JodaTime/src/test/org/joda/time/TestDateTimeZoneCutover.java
+@@ -594,7 +594,7 @@ public void test_getOffsetFromLocal_NewYork_Autumn() {
+         doTest_getOffsetFromLocal(11, 4, 8, 0, "2007-11-04T08:00:00.000-05:00", ZONE_NEW_YORK);
+     }
+ 
+-    public void test_DateTime_plusHour_NewYork_Autumm() {
++    public void test_DateTime_plusHour_NewYork_Autumn() {
+         DateTime dt = new DateTime(2007, 11, 3, 18, 0, 0, 0, ZONE_NEW_YORK);
+         assertEquals("2007-11-03T18:00:00.000-04:00", dt.toString());
+         
+@@ -608,7 +608,7 @@ public void test_DateTime_plusHour_NewYork_Autumm() {
+         assertEquals("2007-11-04T02:00:00.000-05:00", plus9.toString());
+     }
+ 
+-    public void test_DateTime_minusHour_NewYork_Autumm() {
++    public void test_DateTime_minusHour_NewYork_Autumn() {
+         DateTime dt = new DateTime(2007, 11, 4, 8, 0, 0, 0, ZONE_NEW_YORK);
+         assertEquals("2007-11-04T08:00:00.000-05:00", dt.toString());
+         
+@@ -721,7 +721,7 @@ public void test_MoscowIsCorrect_Autumn() {
+ //        doTest_getOffsetFromLocal(10, 28, 8, 0, "2007-10-28T08:00:00.000+03:00", ZONE_MOSCOW);
+ //    }
+ 
+-    public void test_DateTime_plusHour_Moscow_Autumm() {
++    public void test_DateTime_plusHour_Moscow_Autumn() {
+         DateTime dt = new DateTime(2007, 10, 27, 19, 0, 0, 0, ZONE_MOSCOW);
+         assertEquals("2007-10-27T19:00:00.000+04:00", dt.toString());
+         
+@@ -735,7 +735,7 @@ public void test_DateTime_plusHour_Moscow_Autumm() {
+         assertEquals("2007-10-28T03:00:00.000+03:00", plus9.toString());
+     }
+ 
+-    public void test_DateTime_minusHour_Moscow_Autumm() {
++    public void test_DateTime_minusHour_Moscow_Autumn() {
+         DateTime dt = new DateTime(2007, 10, 28, 9, 0, 0, 0, ZONE_MOSCOW);
+         assertEquals("2007-10-28T09:00:00.000+03:00", dt.toString());
+         
+@@ -752,6 +752,113 @@ public void test_DateTime_minusHour_Moscow_Autumm() {
+     //-----------------------------------------------------------------------
+     //-----------------------------------------------------------------------
+     //-----------------------------------------------------------------------
++    /** America/Guatemala cutover from 23:59 to 00:00 on 2006-09-30 to 2006-10-01 */
++    private static long CUTOVER_GUATEMALA_AUTUMN = 1159682400000L; // 2006-10-01T00:00:00.000-06:00
++    private static final DateTimeZone ZONE_GUATEMALA = DateTimeZone.forID("America/Guatemala");
++
++    //-----------------------------------------------------------------------
++    public void test_GuatemataIsCorrect_Autumn() {
++        /*
++        long millis = new DateTime("2006-09-30T20:00:00.000", ZONE_GUATEMALA).getMillis();
++        for (int i=0; i<30; i++) {
++            System.out.println(new DateTime(millis, ZONE_GUATEMALA));
++            millis += 15 * 60 * 1000;
++        }
++        */
++
++        DateTime pre = new DateTime(CUTOVER_GUATEMALA_AUTUMN - 1L, ZONE_GUATEMALA);
++        assertEquals("2006-09-30T23:59:59.999-06:00", pre.toString());
++        DateTime at = new DateTime(CUTOVER_GUATEMALA_AUTUMN, ZONE_GUATEMALA);
++        assertEquals("2006-10-01T00:00:00.000-06:00", at.toString());
++        DateTime post = new DateTime(CUTOVER_GUATEMALA_AUTUMN + 1L, ZONE_GUATEMALA);
++        assertEquals("2006-10-01T00:00:00.001-06:00", post.toString());
++    }
++
++    public void test_getOffsetFromLocal_Guatemata_Autumn() {
++        doTest_getOffsetFromLocal( 2006, 9,30,23, 0,
++                                  "2006-09-30T23:00:00.000-05:00", ZONE_GUATEMALA);
++        doTest_getOffsetFromLocal( 2006, 9,30,23,30,
++                                  "2006-09-30T23:30:00.000-05:00", ZONE_GUATEMALA);
++        
++        doTest_getOffsetFromLocal( 2006, 9,30,23, 0,
++                                  "2006-09-30T23:00:00.000-05:00", ZONE_GUATEMALA);
++        doTest_getOffsetFromLocal( 2006, 9,30,23,30,
++                                  "2006-09-30T23:30:00.000-05:00", ZONE_GUATEMALA);
++        
++        doTest_getOffsetFromLocal( 2006,10, 1, 0, 0,
++                                  "2006-10-01T00:00:00.000-06:00", ZONE_GUATEMALA);
++        doTest_getOffsetFromLocal( 2006,10, 1, 0,30,
++                                  "2006-10-01T00:30:00.000-06:00", ZONE_GUATEMALA);
++        doTest_getOffsetFromLocal( 2006,10, 1, 1, 0,
++                                  "2006-10-01T01:00:00.000-06:00", ZONE_GUATEMALA);
++        doTest_getOffsetFromLocal( 2006,10, 1, 1,30,
++                                  "2006-10-01T01:30:00.000-06:00", ZONE_GUATEMALA);
++        doTest_getOffsetFromLocal( 2006,10, 1, 2, 0,
++                                  "2006-10-01T02:00:00.000-06:00", ZONE_GUATEMALA);
++        doTest_getOffsetFromLocal( 2006,10, 1, 2,30,
++                                  "2006-10-01T02:30:00.000-06:00", ZONE_GUATEMALA);
++        doTest_getOffsetFromLocal( 2006,10, 1, 3, 0,
++                                  "2006-10-01T03:00:00.000-06:00", ZONE_GUATEMALA);
++        doTest_getOffsetFromLocal( 2006,10, 1, 3,30,
++                                  "2006-10-01T03:30:00.000-06:00", ZONE_GUATEMALA);
++        doTest_getOffsetFromLocal( 2006,10, 1, 4, 0,
++                                  "2006-10-01T04:00:00.000-06:00", ZONE_GUATEMALA);
++        doTest_getOffsetFromLocal( 2006,10, 1, 4,30,
++                                  "2006-10-01T04:30:00.000-06:00", ZONE_GUATEMALA);
++        doTest_getOffsetFromLocal( 2006,10, 1, 5, 0,
++                                  "2006-10-01T05:00:00.000-06:00", ZONE_GUATEMALA);
++        doTest_getOffsetFromLocal( 2006,10, 1, 5,30,
++                                  "2006-10-01T05:30:00.000-06:00", ZONE_GUATEMALA);
++        doTest_getOffsetFromLocal( 2006,10, 1, 6, 0,
++                                  "2006-10-01T06:00:00.000-06:00", ZONE_GUATEMALA);
++        doTest_getOffsetFromLocal( 2006,10, 1, 6,30,
++                                  "2006-10-01T06:30:00.000-06:00", ZONE_GUATEMALA);
++    }
++
++    public void test_DateTime_plusHour_Guatemata_Autumn() {
++        DateTime dt = new DateTime(2006, 9, 30, 20, 0, 0, 0, ZONE_GUATEMALA);
++        assertEquals("2006-09-30T20:00:00.000-05:00", dt.toString());
++        
++        DateTime plus1 = dt.plusHours(1);
++        assertEquals("2006-09-30T21:00:00.000-05:00", plus1.toString());
++        DateTime plus2 = dt.plusHours(2);
++        assertEquals("2006-09-30T22:00:00.000-05:00", plus2.toString());
++        DateTime plus3 = dt.plusHours(3);
++        assertEquals("2006-09-30T23:00:00.000-05:00", plus3.toString());
++        DateTime plus4 = dt.plusHours(4);
++        assertEquals("2006-09-30T23:00:00.000-06:00", plus4.toString());
++        DateTime plus5 = dt.plusHours(5);
++        assertEquals("2006-10-01T00:00:00.000-06:00", plus5.toString());
++        DateTime plus6 = dt.plusHours(6);
++        assertEquals("2006-10-01T01:00:00.000-06:00", plus6.toString());
++        DateTime plus7 = dt.plusHours(7);
++        assertEquals("2006-10-01T02:00:00.000-06:00", plus7.toString());
++    }
++
++    public void test_DateTime_minusHour_Guatemata_Autumn() {
++        DateTime dt = new DateTime(2006, 10, 1, 2, 0, 0, 0, ZONE_GUATEMALA);
++        assertEquals("2006-10-01T02:00:00.000-06:00", dt.toString());
++        
++        DateTime minus1 = dt.minusHours(1);
++        assertEquals("2006-10-01T01:00:00.000-06:00", minus1.toString());
++        DateTime minus2 = dt.minusHours(2);
++        assertEquals("2006-10-01T00:00:00.000-06:00", minus2.toString());
++        DateTime minus3 = dt.minusHours(3);
++        assertEquals("2006-09-30T23:00:00.000-06:00", minus3.toString());
++        DateTime minus4 = dt.minusHours(4);
++        assertEquals("2006-09-30T23:00:00.000-05:00", minus4.toString());
++        DateTime minus5 = dt.minusHours(5);
++        assertEquals("2006-09-30T22:00:00.000-05:00", minus5.toString());
++        DateTime minus6 = dt.minusHours(6);
++        assertEquals("2006-09-30T21:00:00.000-05:00", minus6.toString());
++        DateTime minus7 = dt.minusHours(7);
++        assertEquals("2006-09-30T20:00:00.000-05:00", minus7.toString());
++    }
++
++    //-----------------------------------------------------------------------
++    //-----------------------------------------------------------------------
++    //-----------------------------------------------------------------------
++
+ //    public void test_toDateMidnight_SaoPaolo() {
+ //        // RFE: 1684259
+ //        DateTimeZone zone = DateTimeZone.forID("America/Sao_Paulo");
+@@ -765,8 +872,16 @@ public void test_DateTime_minusHour_Moscow_Autumm() {
+     //-----------------------------------------------------------------------
+     //-----------------------------------------------------------------------
+     //-----------------------------------------------------------------------
+-    private void doTest_getOffsetFromLocal(int month, int day, int hour, int min, String expected, DateTimeZone zone) {
+-        DateTime dt = new DateTime(2007, month, day, hour, min, 0, 0, DateTimeZone.UTC);
++    private void doTest_getOffsetFromLocal(int month, int day, int hour, int min,
++                                           String expected, DateTimeZone zone)
++    {
++        doTest_getOffsetFromLocal(2007, month, day, hour, min, expected, zone);
++    }
++
++    private void doTest_getOffsetFromLocal(int year, int month, int day, int hour, int min,
++                                           String expected, DateTimeZone zone)
++    {
++        DateTime dt = new DateTime(year, month, day, hour, min, 0, 0, DateTimeZone.UTC);
+         int offset = zone.getOffsetFromLocal(dt.getMillis());
+         DateTime res = new DateTime(dt.getMillis() - offset, zone);
+         assertEquals(res.toString(), expected, res.toString());
+
+From 90791a7791d06a6f2f3b426ec0c47accb853a11f Mon Sep 17 00:00:00 2001
+From: Brian S O'Neill <bronee@gmail.com>
+Date: Sat, 19 Jan 2008 17:53:02 +0000
+Subject: [PATCH 5/9] Note time zone update.
+
+git-svn-id: https://joda-time.svn.sourceforge.net/svnroot/joda-time/trunk@1316 1e1cfbb7-5c0e-0410-a2f0-f98d92ec03a1
+---
+ JodaTime/RELEASE-NOTES.txt | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/JodaTime/RELEASE-NOTES.txt b/JodaTime/RELEASE-NOTES.txt
+index 974cefdb6..a2a1e51f6 100644
+--- a/JodaTime/RELEASE-NOTES.txt
++++ b/JodaTime/RELEASE-NOTES.txt
+@@ -5,7 +5,7 @@ Joda-Time is a date and time handling library that seeks to replace the JDK
+ Date and Calendar classes.
+ 
+ This is a patch release for Joda-Time 1.5.1.
+-This release contains one bug fix.
++This release contains one bug fix and a time zone update.
+ We recommend all users of 1.5.1 upgrade to 1.5.2.
+ 
+ We recommend JDK 1.4 or later, and have performed no testing on earlier JDKs.
+
+From 98ab6879ada79e53b3eb89e23685214bcd17d868 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Sat, 26 Jan 2008 11:27:43 +0000
+Subject: [PATCH 6/9] Javadoc
+
+git-svn-id: https://joda-time.svn.sourceforge.net/svnroot/joda-time/trunk@1317 1e1cfbb7-5c0e-0410-a2f0-f98d92ec03a1
+---
+ JodaTime/src/java/org/joda/time/Partial.java | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/JodaTime/src/java/org/joda/time/Partial.java b/JodaTime/src/java/org/joda/time/Partial.java
+index b2a5f71f7..ab9acacca 100644
+--- a/JodaTime/src/java/org/joda/time/Partial.java
++++ b/JodaTime/src/java/org/joda/time/Partial.java
+@@ -727,9 +727,9 @@ public DateTimeFormatter getFormatter() {
+      * <p>
+      * This method will output the partial in one of two ways.
+      * If {@link #getFormatter()}
+-     * 
++     * <p>
+      * If there is no appropriate ISO format a dump of the fields is output
+-     * via {@link #toStringList()}. An appropr
++     * via {@link #toStringList()}.
+      * 
+      * @return ISO8601 formatted string
+      */
+
+From 3e6eded06f968760bbd8e322cb35937a423c26a8 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Sat, 26 Jan 2008 12:42:42 +0000
+Subject: [PATCH 7/9] Use correct Guatamala cutover date
+
+git-svn-id: https://joda-time.svn.sourceforge.net/svnroot/joda-time/trunk@1318 1e1cfbb7-5c0e-0410-a2f0-f98d92ec03a1
+---
+ .../joda/time/TestDateTimeZoneCutover.java    | 22 +++++--------------
+ 1 file changed, 5 insertions(+), 17 deletions(-)
+
+diff --git a/JodaTime/src/test/org/joda/time/TestDateTimeZoneCutover.java b/JodaTime/src/test/org/joda/time/TestDateTimeZoneCutover.java
+index 0506e1a4e..be04e0817 100644
+--- a/JodaTime/src/test/org/joda/time/TestDateTimeZoneCutover.java
++++ b/JodaTime/src/test/org/joda/time/TestDateTimeZoneCutover.java
+@@ -18,10 +18,6 @@
+ import junit.framework.TestCase;
+ import junit.framework.TestSuite;
+ 
+-import org.joda.time.chrono.ISOChronology;
+-import org.joda.time.chrono.LenientChronology;
+-import org.joda.time.chrono.StrictChronology;
+-
+ /**
+  * This class is a JUnit test for DateTimeZone.
+  *
+@@ -752,26 +748,18 @@ public void test_DateTime_minusHour_Moscow_Autumn() {
+     //-----------------------------------------------------------------------
+     //-----------------------------------------------------------------------
+     //-----------------------------------------------------------------------
+-    /** America/Guatemala cutover from 23:59 to 00:00 on 2006-09-30 to 2006-10-01 */
+-    private static long CUTOVER_GUATEMALA_AUTUMN = 1159682400000L; // 2006-10-01T00:00:00.000-06:00
++    /** America/Guatemala cutover from 23:59 to 23:00 on 2006-09-30 */
++    private static long CUTOVER_GUATEMALA_AUTUMN = 1159678800000L; // 2006-09-30T23:00:00.000-06:00
+     private static final DateTimeZone ZONE_GUATEMALA = DateTimeZone.forID("America/Guatemala");
+ 
+     //-----------------------------------------------------------------------
+     public void test_GuatemataIsCorrect_Autumn() {
+-        /*
+-        long millis = new DateTime("2006-09-30T20:00:00.000", ZONE_GUATEMALA).getMillis();
+-        for (int i=0; i<30; i++) {
+-            System.out.println(new DateTime(millis, ZONE_GUATEMALA));
+-            millis += 15 * 60 * 1000;
+-        }
+-        */
+-
+         DateTime pre = new DateTime(CUTOVER_GUATEMALA_AUTUMN - 1L, ZONE_GUATEMALA);
+-        assertEquals("2006-09-30T23:59:59.999-06:00", pre.toString());
++        assertEquals("2006-09-30T23:59:59.999-05:00", pre.toString());
+         DateTime at = new DateTime(CUTOVER_GUATEMALA_AUTUMN, ZONE_GUATEMALA);
+-        assertEquals("2006-10-01T00:00:00.000-06:00", at.toString());
++        assertEquals("2006-09-30T23:00:00.000-06:00", at.toString());
+         DateTime post = new DateTime(CUTOVER_GUATEMALA_AUTUMN + 1L, ZONE_GUATEMALA);
+-        assertEquals("2006-10-01T00:00:00.001-06:00", post.toString());
++        assertEquals("2006-09-30T23:00:00.001-06:00", post.toString());
+     }
+ 
+     public void test_getOffsetFromLocal_Guatemata_Autumn() {
+
+From f7fa039afd104582ca3340e056674e63b7d6d7e8 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Sat, 26 Jan 2008 15:46:36 +0000
+Subject: [PATCH 8/9] Pre release 1.5.2
+
+git-svn-id: https://joda-time.svn.sourceforge.net/svnroot/joda-time/trunk@1319 1e1cfbb7-5c0e-0410-a2f0-f98d92ec03a1
+---
+ JodaTime/build.xml              |  4 +-
+ JodaTime/project.xml            |  2 +-
+ JodaTime/xdocs/index.xml        |  4 +-
+ JodaTime/xdocs/installation.xml | 28 ++----------
+ JodaTime/xdocs/upgradeto152.xml | 77 +++++++++++++++++++++++++++++++++
+ 5 files changed, 85 insertions(+), 30 deletions(-)
+ create mode 100644 JodaTime/xdocs/upgradeto152.xml
+
+diff --git a/JodaTime/build.xml b/JodaTime/build.xml
+index 05328d4e6..5695beb19 100644
+--- a/JodaTime/build.xml
++++ b/JodaTime/build.xml
+@@ -27,8 +27,8 @@
+   <property name="component.title"         value="Joda date and time"/>
+ 
+   <!-- The current version number of this component -->
+-  <property name="component.version"       value="1.5.1"/>
+-  <property name="previous.version"        value="1.5"/>
++  <property name="component.version"       value="1.5.2"/>
++  <property name="previous.version"        value="1.5.1"/>
+ 
+   <!-- The current version number of this component -->
+   <property name="component.fullname"      value="${component.name}-${component.version}"/>
+diff --git a/JodaTime/project.xml b/JodaTime/project.xml
+index acc6a2be8..55a2ddadd 100644
+--- a/JodaTime/project.xml
++++ b/JodaTime/project.xml
+@@ -7,7 +7,7 @@
+   <groupId>joda-time</groupId>
+   <artifactId>joda-time</artifactId>
+   <name>Joda time</name>
+-  <currentVersion>1.5.1</currentVersion>
++  <currentVersion>1.5.2</currentVersion>
+   <organization>
+     <name>Joda.org</name>
+     <url>http://www.joda.org</url>
+diff --git a/JodaTime/xdocs/index.xml b/JodaTime/xdocs/index.xml
+index 9bd0a953e..8afc661f7 100644
+--- a/JodaTime/xdocs/index.xml
++++ b/JodaTime/xdocs/index.xml
+@@ -58,7 +58,7 @@ public boolean isJoinedInLastThreeMonths(<a href="api-release/index.html?org/jod
+   return last3Months.contains(datetimeJoined);
+ }
+ -->
+-Version 1.5.1 was released on 2007-12-04 -
++Version 1.5.2 was released on 2008-01-26 -
+ <a href="http://sourceforge.net/project/showfiles.php?group_id=97367&amp;package_id=104212">Download now</a>
+ </p>
+ </section>
+@@ -143,7 +143,7 @@ Various documentation is available:
+ 
+ <section name="Releases">
+ <p>
+-<a href="http://sourceforge.net/project/showfiles.php?group_id=97367&amp;package_id=104212">Release 1.5.1</a>
++<a href="http://sourceforge.net/project/showfiles.php?group_id=97367&amp;package_id=104212">Release 1.5.2</a>
+ is the current latest release.
+ This release is considered stable and worthy of the 1.x tag.
+ It has extensive testing suites and has been used in production.
+diff --git a/JodaTime/xdocs/installation.xml b/JodaTime/xdocs/installation.xml
+index 78843a167..01f29539e 100644
+--- a/JodaTime/xdocs/installation.xml
++++ b/JodaTime/xdocs/installation.xml
+@@ -12,16 +12,17 @@
+ <p>
+ To use Joda-Time you need to
+ <a href="http://sourceforge.net/project/showfiles.php?group_id=97367&amp;package_id=104212">download the latest version</a>.
+-The download will contain the joda-time-1.5.1.jar.
++The download will contain the joda-time-1.5.2.jar.
+ Once you add this to your classpath you will be able to use Joda-Time.
+ </p>
+ <p>
+-The binary download also includes joda-time-1.5.1-sources.jar, which is a jar file
++The binary download also includes joda-time-1.5.2-sources.jar, which is a jar file
+ of the source code suitable for linking to the jar file in IDEs such as Eclipse.
+ </p>
+ <p>
+ The release notes for upgraders can be found here:
+ <ul>
++<li><a href="upgradeto152.html">Version 1.5.1 to Version 1.5.2</a></li>
+ <li><a href="upgradeto151.html">Version 1.5 to Version 1.5.1</a></li>
+ <li><a href="upgradeto150.html">Version 1.4 to Version 1.5</a></li>
+ <li><a href="upgradeto140.html">Version 1.3 to Version 1.4</a></li>
+@@ -44,28 +45,5 @@ Maven is intended to be used primarily as a website generation tool.
+ Ant is our preferred build tool.
+ </p>
+ </section>
+-<!--
+-<section name="Eclipse Support">
+-<p>
+-If you use Eclipse as your IDE and want to integrate the Joda-Time help files
+-into the eclipse documentation tree, you need to download and install the
+-<a href="">Joda-Time documentation plugin</a>.
+-</p>
+-<p>
+-In addition, if you <em>are developing Eclipse plugins</em> (i.e. using the PDE),
+-you may choose to use the <a href="">Joda-Time plugin</a>. This is a wrapper
+-around
+-the Joda-Time jar which allows a single copy of the Joda-Time jar to be used
+-by all installed plugins. It needs to be available on both the development
+-and the run-time machine.
+-</p>
+-<p>
+-In addition you may also want the <a href="">Joda-Time source plugin</a>.
+-This is a wrapper for the joda time sources to make them visible to the Eclipse
+-PDE. It only needs to be made available on the development machine.
+-</p>
+-</section>
+--->
+-
+ </body>
+ </document>
+diff --git a/JodaTime/xdocs/upgradeto152.xml b/JodaTime/xdocs/upgradeto152.xml
+new file mode 100644
+index 000000000..d43e83c88
+--- /dev/null
++++ b/JodaTime/xdocs/upgradeto152.xml
+@@ -0,0 +1,77 @@
++<?xml version="1.0" encoding="ISO-8859-1"?>
++
++<document>
++ <properties>
++  <title>Java date and time API - Upgrade from 1.5 to 1.5.1</title>
++  <author email="scolebourne.at.users.sourceforge.net">Stephen Colebourne</author>
++ </properties>
++
++<body>
++
++<section name="Upgrade">
++<p>
++These are the release notes and advice for upgrading Joda-Time from
++version 1.5.1 to version 1.5.2.
++<source>
++Joda-Time version 1.5.2
++-----------------------
++
++Joda-Time is a date and time handling library that seeks to replace the JDK
++Date and Calendar classes.
++
++This is a patch release for Joda-Time 1.5.1.
++This release contains one bug fix and a time zone update.
++We recommend all users of 1.5.1 upgrade to 1.5.2.
++
++We recommend JDK 1.4 or later, and have performed no testing on earlier JDKs.
++
++Joda-Time is licensed under the business-friendly Apache License Version 2.
++This is the same license as all of Apache, plus other open source projects such as Spring.
++The intent is to make the code available to the Java community with the minimum
++of restrictions. If the license causes you problems please contact the mailing list.
++
++*  Please also check out our related projects   *
++* http://joda-time.sourceforge.net/related.html *
++
++
++Enhancements since 1.5
++----------------------
++
++
++Compatibility with 1.5
++----------------------
++Binary compatible - Yes
++
++Source compatible - Yes
++
++Serialization compatible - Yes
++
++Data compatible - Yes, except
++  - DateTimeZone data updated to version 2007k
++
++Semantic compatible - Yes
++
++
++Deprecations since 1.5
++----------------------
++
++
++Bug fixes since 1.5.1
++---------------------
++- DateTimeZone (regression from 1.4)
++  Fix getOffsetFromLocal DST gap adjustment.
++
++Bug fixes since 1.5
++-------------------
++- Parsing (regression) [1839440]
++  Support parsing all upper-case and all lower-case text
++
++- Javadoc clarity enhancements
++  - Constants in Years/Months/Weeks/Days/Hours/Minutes/Seconds etc.
++  - Period/Interval Object constructors
++</source>
++</p>
++</section>
++
++</body>
++</document>
+
+From 6f1b59b60b709ba7e377a80c3b02bb5366df3048 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Sat, 26 Jan 2008 15:46:51 +0000
+Subject: [PATCH 9/9] Pre release 1.5.2
+
+git-svn-id: https://joda-time.svn.sourceforge.net/svnroot/joda-time/trunk@1320 1e1cfbb7-5c0e-0410-a2f0-f98d92ec03a1
+---
+ JodaTime/src/conf/MANIFEST.MF | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/JodaTime/src/conf/MANIFEST.MF b/JodaTime/src/conf/MANIFEST.MF
+index 7299f7ad2..3030e195b 100644
+--- a/JodaTime/src/conf/MANIFEST.MF
++++ b/JodaTime/src/conf/MANIFEST.MF
+@@ -5,5 +5,5 @@ Specification-Vendor: Joda.org
+ Specification-Version: 1.5
+ Implementation-Vendor: Joda.org
+ Implementation-Title: org.joda.time
+-Implementation-Version: 1.5.1
++Implementation-Version: 1.5.2
+ Implementation-Vendor-Id: org.joda

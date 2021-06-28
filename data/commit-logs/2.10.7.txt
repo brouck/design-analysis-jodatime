@@ -1,0 +1,2606 @@
+From dc985636d80963075d39df14a77e65aabf721400 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Fri, 24 Apr 2020 11:09:51 +0100
+Subject: [PATCH 1/8] Bump version
+
+---
+ pom.xml                 | 2 +-
+ src/changes/changes.xml | 2 ++
+ 2 files changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/pom.xml b/pom.xml
+index 737ef5013..7c235ab9e 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -8,7 +8,7 @@
+   <artifactId>joda-time</artifactId>
+   <packaging>jar</packaging>
+   <name>Joda-Time</name>
+-  <version>2.10.6</version>
++  <version>2.10.7-SNAPSHOT</version>
+   <description>Date and time library to replace JDK date handling</description>
+   <url>https://www.joda.org/joda-time/</url>
+ 
+diff --git a/src/changes/changes.xml b/src/changes/changes.xml
+index f24e96c66..4f0c4b3a2 100644
+--- a/src/changes/changes.xml
++++ b/src/changes/changes.xml
+@@ -8,6 +8,8 @@
+   <body>
+ 
+     <!-- types are add, fix, remove, update -->
++    <release version="2.10.7" date="SNAPSHOT" description="v2.10.7">
++	</release>
+     <release version="2.10.6" date="2020-04-24" description="v2.10.6">
+       <action dev="jodastephen" type="update">
+         DateTimeZone data updated to version 2020a.
+
+From 887d56dd358be3e5dbc07edecc05be288ca2f556 Mon Sep 17 00:00:00 2001
+From: "aleksandr_kolinchenko@epam.com" <aleksandr_kolinchenko@epam.com>
+Date: Wed, 13 May 2020 00:12:14 +0300
+Subject: [PATCH 2/8] Fix errors in Russian format messages
+
+- fix regexp's in properties to process exceptional values (values ending with 11, 12, 13, 14) and to fix working with values ending with 1
+- add tests for Russian locale
+---
+ .../joda/time/format/messages_ru.properties   |  16 +-
+ .../joda/time/format/TestPeriodFormat.java    | 252 ++++++++++++++++++
+ 2 files changed, 260 insertions(+), 8 deletions(-)
+
+diff --git a/src/main/java/org/joda/time/format/messages_ru.properties b/src/main/java/org/joda/time/format/messages_ru.properties
+index 1aff4db97..4d7a68c3b 100644
+--- a/src/main/java/org/joda/time/format/messages_ru.properties
++++ b/src/main/java/org/joda/time/format/messages_ru.properties
+@@ -5,19 +5,19 @@ PeriodFormat.commaspaceand=, \u0438
+ PeriodFormat.commaspace=,\u0020
+ PeriodFormat.spaceandspace=\ \u0438\u0020
+ PeriodFormat.regex.separator=%
+-PeriodFormat.years.regex=^1$%[0-9]*(?<!1)[2-4]$%[0-9]*
++PeriodFormat.years.regex=(?![0-9]*11$)[0-9]*1$%(?![0-9]*(?:12|13|14)$)[0-9]*[2-4]$%[0-9]*
+ PeriodFormat.years.list=\ \u0433\u043E\u0434%\ \u0433\u043E\u0434\u0430%\ \u043B\u0435\u0442
+-PeriodFormat.months.regex=^1$%[0-9]*(?<!1)[2-4]$%[0-9]*
++PeriodFormat.months.regex=(?![0-9]*11$)[0-9]*1$%(?![0-9]*(?:12|13|14)$)[0-9]*[2-4]$%[0-9]*
+ PeriodFormat.months.list=\ \u043C\u0435\u0441\u044F\u0446%\ \u043C\u0435\u0441\u044F\u0446\u0430%\ \u043C\u0435\u0441\u044F\u0446\u0435\u0432
+-PeriodFormat.weeks.regex=^1$%[0-9]*(?<!1)[2-4]$%[0-9]*
++PeriodFormat.weeks.regex=(?![0-9]*11$)[0-9]*1$%(?![0-9]*(?:12|13|14)$)[0-9]*[2-4]$%[0-9]*
+ PeriodFormat.weeks.list=\ \u043D\u0435\u0434\u0435\u043B\u044F%\ \u043D\u0435\u0434\u0435\u043B\u0438%\ \u043D\u0435\u0434\u0435\u043B\u044C
+-PeriodFormat.days.regex=^1$%[0-9]*(?<!1)[2-4]$%[0-9]*
++PeriodFormat.days.regex=(?![0-9]*11$)[0-9]*1$%(?![0-9]*(?:12|13|14)$)[0-9]*[2-4]$%[0-9]*
+ PeriodFormat.days.list=\ \u0434\u0435\u043D\u044C%\ \u0434\u043D\u044F%\ \u0434\u043D\u0435\u0439
+-PeriodFormat.hours.regex=^1$%[0-9]*(?<!1)[2-4]$%[0-9]*
++PeriodFormat.hours.regex=(?![0-9]*11$)[0-9]*1$%(?![0-9]*(?:12|13|14)$)[0-9]*[2-4]$%[0-9]*
+ PeriodFormat.hours.list=\ \u0447\u0430\u0441%\ \u0447\u0430\u0441\u0430%\ \u0447\u0430\u0441\u043E\u0432
+-PeriodFormat.minutes.regex=^1$%[0-9]*(?<!1)[2-4]$%[0-9]*
++PeriodFormat.minutes.regex=(?![0-9]*11$)[0-9]*1$%(?![0-9]*(?:12|13|14)$)[0-9]*[2-4]$%[0-9]*
+ PeriodFormat.minutes.list=\ \u043C\u0438\u043D\u0443\u0442\u0430%\ \u043C\u0438\u043D\u0443\u0442\u044B%\ \u043C\u0438\u043D\u0443\u0442
+-PeriodFormat.seconds.regex=^1$%[0-9]*(?<!1)[2-4]$%[0-9]*
++PeriodFormat.seconds.regex=(?![0-9]*11$)[0-9]*1$%(?![0-9]*(?:12|13|14)$)[0-9]*[2-4]$%[0-9]*
+ PeriodFormat.seconds.list=\ \u0441\u0435\u043A\u0443\u043D\u0434\u0430%\ \u0441\u0435\u043A\u0443\u043D\u0434\u044B%\ \u0441\u0435\u043A\u0443\u043D\u0434
+-PeriodFormat.milliseconds.regex=^1$%[0-9]*(?<!1)[2-4]$%[0-9]*
++PeriodFormat.milliseconds.regex=(?![0-9]*11$)[0-9]*1$%(?![0-9]*(?:12|13|14)$)[0-9]*[2-4]$%[0-9]*
+ PeriodFormat.milliseconds.list=\ \u043C\u0438\u043B\u043B\u0438\u0441\u0435\u043A\u0443\u043D\u0434\u0430%\ \u043C\u0438\u043B\u043B\u0438\u0441\u0435\u043A\u0443\u043D\u0434\u044B%\ \u043C\u0438\u043B\u043B\u0438\u0441\u0435\u043A\u0443\u043D\u0434
+diff --git a/src/test/java/org/joda/time/format/TestPeriodFormat.java b/src/test/java/org/joda/time/format/TestPeriodFormat.java
+index 92dd638d2..5814f4e49 100644
+--- a/src/test/java/org/joda/time/format/TestPeriodFormat.java
++++ b/src/test/java/org/joda/time/format/TestPeriodFormat.java
+@@ -40,6 +40,7 @@
+     private static final Locale PL = new Locale("pl");
+     private static final Locale BG = new Locale("bg");
+     private static final Locale CS = new Locale("cs");
++    private static final Locale RU = new Locale("ru");
+ 
+     private Locale originalLocale = null;
+ 
+@@ -589,6 +590,257 @@ public void test_wordBased_cs_formatStandard() {
+         assertEquals("1 den, 5 hodin, 6 minut, 7 sekund a 8 milisekund", PeriodFormat.wordBased(CS).print(p));
+     }
+ 
++    // -----------------------------------------------------------------------
++    // wordBased(new Locale("ru")
++    // -----------------------------------------------------------------------
++    public void test_wordBased_ru_formatStandard() {
++        Period p = new Period(1, 2, 3, 4, 5, 6, 7, 8);
++        assertEquals("1 год, 2 месяца, 3 недели, 4 дня, 5 часов, 6 минут, 7 секунд и 8 миллисекунд", PeriodFormat.wordBased(RU).print(p));
++    }
++
++    // -----------------------------------------------------------------------
++    public void test_wordBased_ru_FormatOneField() {
++        Period p = Period.days(2);
++        assertEquals("2 дня", PeriodFormat.wordBased(RU).print(p));
++    }
++
++    // -----------------------------------------------------------------------
++    public void test_wordBased_ru_formatTwoFields() {
++        Period p = Period.years(1).withMonths(2);
++        assertEquals("1 год и 2 месяца", PeriodFormat.wordBased(RU).print(p));
++    }
++
++    // -----------------------------------------------------------------------
++    public void test_wordBased_ru_parseOneField() {
++        Period p = Period.years(1);
++        assertEquals(p, PeriodFormat.wordBased(RU).parsePeriod("1 год"));
++    }
++
++    // -----------------------------------------------------------------------
++    public void test_wordBased_ru_parseTwoFields() {
++        Period p = Period.hours(1).withMillis(5);
++        assertEquals(p, PeriodFormat.wordBased(RU).parsePeriod("1 час и 5 миллисекунд"));
++    }
++
++    // -----------------------------------------------------------------------
++    public void test_wordBased_ru_checkRedundantSeparator() {
++        try {
++            PeriodFormat.wordBased(RU).parsePeriod("2 дня and 5 минут");
++            fail("No exception was caught");
++        } catch (Exception e) {
++            assertEquals(IllegalArgumentException.class, e.getClass());
++        }
++    }
++
++    // -----------------------------------------------------------------------
++    public void test_wordBased_ru_cached() {
++        assertSame(PeriodFormat.wordBased(RU), PeriodFormat.wordBased(RU));
++    }
++
++    // -----------------------------------------------------------------------
++    public void test_wordBased_ru_regEx() {
++        PeriodFormatter pf = PeriodFormat.wordBased(RU);
++        assertEquals("1 год", pf.print(Period.years(1)));
++        assertEquals("11 лет", pf.print(Period.years(11)));
++        assertEquals("21 год", pf.print(Period.years(21)));
++        assertEquals("101 год", pf.print(Period.years(101)));
++        assertEquals("111 лет", pf.print(Period.years(111)));
++        assertEquals("121 год", pf.print(Period.years(121)));
++        assertEquals("2001 год", pf.print(Period.years(2001)));
++        assertEquals("2 года", pf.print(Period.years(2)));
++        assertEquals("3 года", pf.print(Period.years(3)));
++        assertEquals("4 года", pf.print(Period.years(4)));
++        assertEquals("12 лет", pf.print(Period.years(12)));
++        assertEquals("13 лет", pf.print(Period.years(13)));
++        assertEquals("14 лет", pf.print(Period.years(14)));
++        assertEquals("22 года", pf.print(Period.years(22)));
++        assertEquals("23 года", pf.print(Period.years(23)));
++        assertEquals("24 года", pf.print(Period.years(24)));
++        assertEquals("102 года", pf.print(Period.years(102)));
++        assertEquals("112 лет", pf.print(Period.years(112)));
++        assertEquals("124 года", pf.print(Period.years(124)));
++        assertEquals("5 лет", pf.print(Period.years(5)));
++        assertEquals("15 лет", pf.print(Period.years(15)));
++        assertEquals("25 лет", pf.print(Period.years(25)));
++        assertEquals("105 лет", pf.print(Period.years(105)));
++        assertEquals("1005 лет", pf.print(Period.years(1005)));
++
++        assertEquals("1 месяц", pf.print(Period.months(1)));
++        assertEquals("11 месяцев", pf.print(Period.months(11)));
++        assertEquals("21 месяц", pf.print(Period.months(21)));
++        assertEquals("101 месяц", pf.print(Period.months(101)));
++        assertEquals("111 месяцев", pf.print(Period.months(111)));
++        assertEquals("121 месяц", pf.print(Period.months(121)));
++        assertEquals("2001 месяц", pf.print(Period.months(2001)));
++        assertEquals("2 месяца", pf.print(Period.months(2)));
++        assertEquals("3 месяца", pf.print(Period.months(3)));
++        assertEquals("4 месяца", pf.print(Period.months(4)));
++        assertEquals("12 месяцев", pf.print(Period.months(12)));
++        assertEquals("13 месяцев", pf.print(Period.months(13)));
++        assertEquals("14 месяцев", pf.print(Period.months(14)));
++        assertEquals("22 месяца", pf.print(Period.months(22)));
++        assertEquals("23 месяца", pf.print(Period.months(23)));
++        assertEquals("24 месяца", pf.print(Period.months(24)));
++        assertEquals("102 месяца", pf.print(Period.months(102)));
++        assertEquals("112 месяцев", pf.print(Period.months(112)));
++        assertEquals("124 месяца", pf.print(Period.months(124)));
++        assertEquals("5 месяцев", pf.print(Period.months(5)));
++        assertEquals("15 месяцев", pf.print(Period.months(15)));
++        assertEquals("25 месяцев", pf.print(Period.months(25)));
++        assertEquals("105 месяцев", pf.print(Period.months(105)));
++        assertEquals("1005 месяцев", pf.print(Period.months(1005)));
++
++        assertEquals("1 неделя", pf.print(Period.weeks(1)));
++        assertEquals("11 недель", pf.print(Period.weeks(11)));
++        assertEquals("21 неделя", pf.print(Period.weeks(21)));
++        assertEquals("101 неделя", pf.print(Period.weeks(101)));
++        assertEquals("111 недель", pf.print(Period.weeks(111)));
++        assertEquals("121 неделя", pf.print(Period.weeks(121)));
++        assertEquals("2001 неделя", pf.print(Period.weeks(2001)));
++        assertEquals("2 недели", pf.print(Period.weeks(2)));
++        assertEquals("3 недели", pf.print(Period.weeks(3)));
++        assertEquals("4 недели", pf.print(Period.weeks(4)));
++        assertEquals("12 недель", pf.print(Period.weeks(12)));
++        assertEquals("13 недель", pf.print(Period.weeks(13)));
++        assertEquals("14 недель", pf.print(Period.weeks(14)));
++        assertEquals("22 недели", pf.print(Period.weeks(22)));
++        assertEquals("23 недели", pf.print(Period.weeks(23)));
++        assertEquals("24 недели", pf.print(Period.weeks(24)));
++        assertEquals("102 недели", pf.print(Period.weeks(102)));
++        assertEquals("112 недель", pf.print(Period.weeks(112)));
++        assertEquals("124 недели", pf.print(Period.weeks(124)));
++        assertEquals("5 недель", pf.print(Period.weeks(5)));
++        assertEquals("15 недель", pf.print(Period.weeks(15)));
++        assertEquals("25 недель", pf.print(Period.weeks(25)));
++        assertEquals("105 недель", pf.print(Period.weeks(105)));
++        assertEquals("1005 недель", pf.print(Period.weeks(1005)));
++
++        assertEquals("1 день", pf.print(Period.days(1)));
++        assertEquals("11 дней", pf.print(Period.days(11)));
++        assertEquals("21 день", pf.print(Period.days(21)));
++        assertEquals("101 день", pf.print(Period.days(101)));
++        assertEquals("111 дней", pf.print(Period.days(111)));
++        assertEquals("121 день", pf.print(Period.days(121)));
++        assertEquals("2001 день", pf.print(Period.days(2001)));
++        assertEquals("2 дня", pf.print(Period.days(2)));
++        assertEquals("3 дня", pf.print(Period.days(3)));
++        assertEquals("4 дня", pf.print(Period.days(4)));
++        assertEquals("12 дней", pf.print(Period.days(12)));
++        assertEquals("13 дней", pf.print(Period.days(13)));
++        assertEquals("14 дней", pf.print(Period.days(14)));
++        assertEquals("22 дня", pf.print(Period.days(22)));
++        assertEquals("23 дня", pf.print(Period.days(23)));
++        assertEquals("24 дня", pf.print(Period.days(24)));
++        assertEquals("102 дня", pf.print(Period.days(102)));
++        assertEquals("112 дней", pf.print(Period.days(112)));
++        assertEquals("124 дня", pf.print(Period.days(124)));
++        assertEquals("5 дней", pf.print(Period.days(5)));
++        assertEquals("15 дней", pf.print(Period.days(15)));
++        assertEquals("25 дней", pf.print(Period.days(25)));
++        assertEquals("105 дней", pf.print(Period.days(105)));
++        assertEquals("1005 дней", pf.print(Period.days(1005)));
++
++        assertEquals("1 час", pf.print(Period.hours(1)));
++        assertEquals("11 часов", pf.print(Period.hours(11)));
++        assertEquals("21 час", pf.print(Period.hours(21)));
++        assertEquals("101 час", pf.print(Period.hours(101)));
++        assertEquals("111 часов", pf.print(Period.hours(111)));
++        assertEquals("121 час", pf.print(Period.hours(121)));
++        assertEquals("2001 час", pf.print(Period.hours(2001)));
++        assertEquals("2 часа", pf.print(Period.hours(2)));
++        assertEquals("3 часа", pf.print(Period.hours(3)));
++        assertEquals("4 часа", pf.print(Period.hours(4)));
++        assertEquals("12 часов", pf.print(Period.hours(12)));
++        assertEquals("13 часов", pf.print(Period.hours(13)));
++        assertEquals("14 часов", pf.print(Period.hours(14)));
++        assertEquals("22 часа", pf.print(Period.hours(22)));
++        assertEquals("23 часа", pf.print(Period.hours(23)));
++        assertEquals("24 часа", pf.print(Period.hours(24)));
++        assertEquals("102 часа", pf.print(Period.hours(102)));
++        assertEquals("112 часов", pf.print(Period.hours(112)));
++        assertEquals("124 часа", pf.print(Period.hours(124)));
++        assertEquals("5 часов", pf.print(Period.hours(5)));
++        assertEquals("15 часов", pf.print(Period.hours(15)));
++        assertEquals("25 часов", pf.print(Period.hours(25)));
++        assertEquals("105 часов", pf.print(Period.hours(105)));
++        assertEquals("1005 часов", pf.print(Period.hours(1005)));
++
++        assertEquals("1 минута", pf.print(Period.minutes(1)));
++        assertEquals("11 минут", pf.print(Period.minutes(11)));
++        assertEquals("21 минута", pf.print(Period.minutes(21)));
++        assertEquals("101 минута", pf.print(Period.minutes(101)));
++        assertEquals("111 минут", pf.print(Period.minutes(111)));
++        assertEquals("121 минута", pf.print(Period.minutes(121)));
++        assertEquals("2001 минута", pf.print(Period.minutes(2001)));
++        assertEquals("2 минуты", pf.print(Period.minutes(2)));
++        assertEquals("3 минуты", pf.print(Period.minutes(3)));
++        assertEquals("4 минуты", pf.print(Period.minutes(4)));
++        assertEquals("12 минут", pf.print(Period.minutes(12)));
++        assertEquals("13 минут", pf.print(Period.minutes(13)));
++        assertEquals("14 минут", pf.print(Period.minutes(14)));
++        assertEquals("22 минуты", pf.print(Period.minutes(22)));
++        assertEquals("23 минуты", pf.print(Period.minutes(23)));
++        assertEquals("24 минуты", pf.print(Period.minutes(24)));
++        assertEquals("102 минуты", pf.print(Period.minutes(102)));
++        assertEquals("112 минут", pf.print(Period.minutes(112)));
++        assertEquals("124 минуты", pf.print(Period.minutes(124)));
++        assertEquals("5 минут", pf.print(Period.minutes(5)));
++        assertEquals("15 минут", pf.print(Period.minutes(15)));
++        assertEquals("25 минут", pf.print(Period.minutes(25)));
++        assertEquals("105 минут", pf.print(Period.minutes(105)));
++        assertEquals("1005 минут", pf.print(Period.minutes(1005)));
++
++        assertEquals("1 секунда", pf.print(Period.seconds(1)));
++        assertEquals("11 секунд", pf.print(Period.seconds(11)));
++        assertEquals("21 секунда", pf.print(Period.seconds(21)));
++        assertEquals("101 секунда", pf.print(Period.seconds(101)));
++        assertEquals("111 секунд", pf.print(Period.seconds(111)));
++        assertEquals("121 секунда", pf.print(Period.seconds(121)));
++        assertEquals("2001 секунда", pf.print(Period.seconds(2001)));
++        assertEquals("2 секунды", pf.print(Period.seconds(2)));
++        assertEquals("3 секунды", pf.print(Period.seconds(3)));
++        assertEquals("4 секунды", pf.print(Period.seconds(4)));
++        assertEquals("12 секунд", pf.print(Period.seconds(12)));
++        assertEquals("13 секунд", pf.print(Period.seconds(13)));
++        assertEquals("14 секунд", pf.print(Period.seconds(14)));
++        assertEquals("22 секунды", pf.print(Period.seconds(22)));
++        assertEquals("23 секунды", pf.print(Period.seconds(23)));
++        assertEquals("24 секунды", pf.print(Period.seconds(24)));
++        assertEquals("102 секунды", pf.print(Period.seconds(102)));
++        assertEquals("112 секунд", pf.print(Period.seconds(112)));
++        assertEquals("124 секунды", pf.print(Period.seconds(124)));
++        assertEquals("5 секунд", pf.print(Period.seconds(5)));
++        assertEquals("15 секунд", pf.print(Period.seconds(15)));
++        assertEquals("25 секунд", pf.print(Period.seconds(25)));
++        assertEquals("105 секунд", pf.print(Period.seconds(105)));
++        assertEquals("1005 секунд", pf.print(Period.seconds(1005)));
++
++        assertEquals("1 миллисекунда", pf.print(Period.millis(1)));
++        assertEquals("11 миллисекунд", pf.print(Period.millis(11)));
++        assertEquals("21 миллисекунда", pf.print(Period.millis(21)));
++        assertEquals("101 миллисекунда", pf.print(Period.millis(101)));
++        assertEquals("111 миллисекунд", pf.print(Period.millis(111)));
++        assertEquals("121 миллисекунда", pf.print(Period.millis(121)));
++        assertEquals("2001 миллисекунда", pf.print(Period.millis(2001)));
++        assertEquals("2 миллисекунды", pf.print(Period.millis(2)));
++        assertEquals("3 миллисекунды", pf.print(Period.millis(3)));
++        assertEquals("4 миллисекунды", pf.print(Period.millis(4)));
++        assertEquals("12 миллисекунд", pf.print(Period.millis(12)));
++        assertEquals("13 миллисекунд", pf.print(Period.millis(13)));
++        assertEquals("14 миллисекунд", pf.print(Period.millis(14)));
++        assertEquals("22 миллисекунды", pf.print(Period.millis(22)));
++        assertEquals("23 миллисекунды", pf.print(Period.millis(23)));
++        assertEquals("24 миллисекунды", pf.print(Period.millis(24)));
++        assertEquals("102 миллисекунды", pf.print(Period.millis(102)));
++        assertEquals("112 миллисекунд", pf.print(Period.millis(112)));
++        assertEquals("124 миллисекунды", pf.print(Period.millis(124)));
++        assertEquals("5 миллисекунд", pf.print(Period.millis(5)));
++        assertEquals("15 миллисекунд", pf.print(Period.millis(15)));
++        assertEquals("25 миллисекунд", pf.print(Period.millis(25)));
++        assertEquals("105 миллисекунд", pf.print(Period.millis(105)));
++        assertEquals("1005 миллисекунд", pf.print(Period.millis(1005)));
++    }
++
+     //-----------------------------------------------------------------------
+     // Cross check languages
+     //-----------------------------------------------------------------------
+
+From 9c089a9b20edb49c7ebb8a9f0d8ef91f63992ca5 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Wed, 13 May 2020 08:45:30 +0100
+Subject: [PATCH 3/8] Update after PR
+
+---
+ pom.xml                 | 4 ++++
+ src/changes/changes.xml | 4 ++++
+ 2 files changed, 8 insertions(+)
+
+diff --git a/pom.xml b/pom.xml
+index 7c235ab9e..3ab3c3966 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -49,6 +49,10 @@
+       <name>Afif Ahmed</name>
+       <url>https://github.com/a7i7</url>
+     </contributor>
++    <contributor>
++      <name>AlexMe951</name>
++      <url>https://github.com/AlexMe951</url>
++    </contributor>
+     <contributor>
+       <name>Guy Allard</name>
+     </contributor>
+diff --git a/src/changes/changes.xml b/src/changes/changes.xml
+index 4f0c4b3a2..94982a05b 100644
+--- a/src/changes/changes.xml
++++ b/src/changes/changes.xml
+@@ -9,6 +9,10 @@
+ 
+     <!-- types are add, fix, remove, update -->
+     <release version="2.10.7" date="SNAPSHOT" description="v2.10.7">
++      <action dev="AlexMe951" type="fix">
++        Fix localization for Russia.
++        Fixes #533.
++      </action>
+ 	</release>
+     <release version="2.10.6" date="2020-04-24" description="v2.10.6">
+       <action dev="jodastephen" type="update">
+
+From d4a2c3133a4929af618f38c8bb70f4117b602c79 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Fri, 16 Oct 2020 15:10:22 +0100
+Subject: [PATCH 4/8] Better error message for year-month-day
+
+Fixes #540
+---
+ src/changes/changes.xml                       |  4 +++
+ .../joda/time/IllegalFieldValueException.java | 22 +++++++++++++++
+ .../org/joda/time/chrono/BasicChronology.java | 12 +++++++-
+ .../joda/time/TestLocalDate_Constructors.java | 28 ++++++++++++++-----
+ 4 files changed, 58 insertions(+), 8 deletions(-)
+
+diff --git a/src/changes/changes.xml b/src/changes/changes.xml
+index 94982a05b..725775692 100644
+--- a/src/changes/changes.xml
++++ b/src/changes/changes.xml
+@@ -9,6 +9,10 @@
+ 
+     <!-- types are add, fix, remove, update -->
+     <release version="2.10.7" date="SNAPSHOT" description="v2.10.7">
++      <action dev="jodastephen" type="add">
++        Better error message for year-month-day.
++        Fixes #540.
++      </action>
+       <action dev="AlexMe951" type="fix">
+         Fix localization for Russia.
+         Fixes #533.
+diff --git a/src/main/java/org/joda/time/IllegalFieldValueException.java b/src/main/java/org/joda/time/IllegalFieldValueException.java
+index b45c9fec4..6fce02bff 100644
+--- a/src/main/java/org/joda/time/IllegalFieldValueException.java
++++ b/src/main/java/org/joda/time/IllegalFieldValueException.java
+@@ -116,6 +116,28 @@ public IllegalFieldValueException(DateTimeFieldType fieldType,
+         iMessage = super.getMessage();
+     }
+ 
++    /**
++     * Constructor.
++     * 
++     * @param fieldType  type of field being set
++     * @param value  illegal value being set
++     * @param lowerBound  lower legal field value, or null if not applicable
++     * @param upperBound  upper legal field value, or null if not applicable
++     * @param explain  an explanation message
++     */
++    public IllegalFieldValueException(DateTimeFieldType fieldType,
++                                      Number value, Number lowerBound, Number upperBound, String explain) {
++        super(createMessage(fieldType.getName(), value, lowerBound, upperBound, explain));
++        iDateTimeFieldType = fieldType;
++        iDurationFieldType = null;
++        iFieldName = fieldType.getName();
++        iNumberValue = value;
++        iStringValue = null;
++        iLowerBound = lowerBound;
++        iUpperBound = upperBound;
++        iMessage = super.getMessage();
++    }
++
+     /**
+      * Constructor.
+      * 
+diff --git a/src/main/java/org/joda/time/chrono/BasicChronology.java b/src/main/java/org/joda/time/chrono/BasicChronology.java
+index e0ec92379..34096b13d 100644
+--- a/src/main/java/org/joda/time/chrono/BasicChronology.java
++++ b/src/main/java/org/joda/time/chrono/BasicChronology.java
+@@ -24,6 +24,7 @@
+ import org.joda.time.DateTimeZone;
+ import org.joda.time.DurationField;
+ import org.joda.time.DurationFieldType;
++import org.joda.time.IllegalFieldValueException;
+ import org.joda.time.field.DividedDateTimeField;
+ import org.joda.time.field.FieldUtils;
+ import org.joda.time.field.MillisDurationField;
+@@ -629,7 +630,16 @@ int getDaysInMonthMaxForSet(long instant, int value) {
+     long getDateMidnightMillis(int year, int monthOfYear, int dayOfMonth) {
+         FieldUtils.verifyValueBounds(DateTimeFieldType.year(), year, getMinYear() - 1, getMaxYear() + 1);
+         FieldUtils.verifyValueBounds(DateTimeFieldType.monthOfYear(), monthOfYear, 1, getMaxMonth(year));
+-        FieldUtils.verifyValueBounds(DateTimeFieldType.dayOfMonth(), dayOfMonth, 1, getDaysInYearMonth(year, monthOfYear));
++        // avoid FieldUtils to get better error message
++        int upperBound = getDaysInYearMonth(year, monthOfYear);
++        if ((dayOfMonth < 1) || (dayOfMonth > upperBound)) {
++            throw new IllegalFieldValueException(
++                    DateTimeFieldType.dayOfMonth(), 
++                    Integer.valueOf(dayOfMonth),
++                    Integer.valueOf(1), 
++                    Integer.valueOf(upperBound),
++                    "year: " + year + " month: " + monthOfYear);
++        }
+         long instant = getYearMonthDayMillis(year, monthOfYear, dayOfMonth);
+         // check for limit caused by min/max year +1/-1
+         if (instant < 0 && year == getMaxYear() + 1) {
+diff --git a/src/test/java/org/joda/time/TestLocalDate_Constructors.java b/src/test/java/org/joda/time/TestLocalDate_Constructors.java
+index 21b31996a..87b240ce2 100644
+--- a/src/test/java/org/joda/time/TestLocalDate_Constructors.java
++++ b/src/test/java/org/joda/time/TestLocalDate_Constructors.java
+@@ -526,32 +526,46 @@ public void testConstructor_int_int_int() throws Throwable {
+         try {
+             new LocalDate(Integer.MIN_VALUE, 6, 9);
+             fail();
+-        } catch (IllegalArgumentException ex) {}
++        } catch (IllegalArgumentException ex) {
++            assertEquals("Value -2147483648 for year must be in the range [-292275055,292278994]", ex.getMessage());
++        }
+         try {
+             new LocalDate(Integer.MAX_VALUE, 6, 9);
+             fail();
+-        } catch (IllegalArgumentException ex) {}
++        } catch (IllegalArgumentException ex) {
++            assertEquals("Value 2147483647 for year must be in the range [-292275055,292278994]", ex.getMessage());
++        }
+         try {
+             new LocalDate(1970, 0, 9);
+             fail();
+-        } catch (IllegalArgumentException ex) {}
++        } catch (IllegalArgumentException ex) {
++            assertEquals("Value 0 for monthOfYear must be in the range [1,12]", ex.getMessage());
++        }
+         try {
+             new LocalDate(1970, 13, 9);
+             fail();
+-        } catch (IllegalArgumentException ex) {}
++        } catch (IllegalArgumentException ex) {
++            assertEquals("Value 13 for monthOfYear must be in the range [1,12]", ex.getMessage());
++        }
+         try {
+             new LocalDate(1970, 6, 0);
+             fail();
+-        } catch (IllegalArgumentException ex) {}
++        } catch (IllegalArgumentException ex) {
++            assertEquals("Value 0 for dayOfMonth must be in the range [1,30]: year: 1970 month: 6", ex.getMessage());
++        }
+         try {
+             new LocalDate(1970, 6, 31);
+             fail();
+-        } catch (IllegalArgumentException ex) {}
++        } catch (IllegalArgumentException ex) {
++            assertEquals("Value 31 for dayOfMonth must be in the range [1,30]: year: 1970 month: 6", ex.getMessage());
++        }
+         new LocalDate(1970, 7, 31);
+         try {
+             new LocalDate(1970, 7, 32);
+             fail();
+-        } catch (IllegalArgumentException ex) {}
++        } catch (IllegalArgumentException ex) {
++            assertEquals("Value 32 for dayOfMonth must be in the range [1,31]: year: 1970 month: 7", ex.getMessage());
++        }
+     }
+ 
+     public void testConstructor_int_int_int_Chronology() throws Throwable {
+
+From 87071681803e28c45ee39adf6152cd4a6266896b Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Mon, 19 Oct 2020 23:57:18 +0100
+Subject: [PATCH 5/8] Remove pacificnew and systemv time zones
+
+Fix automated TZDB job
+---
+ .github/workflows/tzdbupdate.yml              |  2 -
+ pom.xml                                       |  2 -
+ src/changes/changes.xml                       |  4 ++
+ src/main/java/org/joda/time/tz/src/pacificnew | 29 --------------
+ src/main/java/org/joda/time/tz/src/systemv    | 39 -------------------
+ 5 files changed, 4 insertions(+), 72 deletions(-)
+ delete mode 100644 src/main/java/org/joda/time/tz/src/pacificnew
+ delete mode 100644 src/main/java/org/joda/time/tz/src/systemv
+
+diff --git a/.github/workflows/tzdbupdate.yml b/.github/workflows/tzdbupdate.yml
+index e13b5bb97..454822861 100644
+--- a/.github/workflows/tzdbupdate.yml
++++ b/.github/workflows/tzdbupdate.yml
+@@ -70,9 +70,7 @@ jobs:
+         \cp target/tz/etcetera src/main/java/org/joda/time/tz/src
+         \cp target/tz/europe src/main/java/org/joda/time/tz/src
+         \cp target/tz/northamerica src/main/java/org/joda/time/tz/src
+-        \cp target/tz/pacificnew src/main/java/org/joda/time/tz/src
+         \cp target/tz/southamerica src/main/java/org/joda/time/tz/src
+-        \cp target/tz/systemv src/main/java/org/joda/time/tz/src
+         ls -l src/main/java/org/joda/time/tz/src
+     - name: Update build with new tzdb
+       if: env.NOOP != 'true'
+diff --git a/pom.xml b/pom.xml
+index 3ab3c3966..41ad9bf27 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -418,10 +418,8 @@
+             <argument>europe</argument>
+             <argument>northamerica</argument>
+             <argument>southamerica</argument>
+-            <argument>pacificnew</argument>
+             <argument>etcetera</argument>
+             <argument>backward</argument>
+-            <argument>systemv</argument>
+           </arguments>
+         </configuration>
+       </plugin>
+diff --git a/src/changes/changes.xml b/src/changes/changes.xml
+index 725775692..ea1b42a11 100644
+--- a/src/changes/changes.xml
++++ b/src/changes/changes.xml
+@@ -9,6 +9,10 @@
+ 
+     <!-- types are add, fix, remove, update -->
+     <release version="2.10.7" date="SNAPSHOT" description="v2.10.7">
++      <action dev="jodastephen" type="fix">
++        DateTimeZone data updated to version 2020c.
++        Remove systemv and pacificnew time zones as per TZDB changes.
++      </action>
+       <action dev="jodastephen" type="add">
+         Better error message for year-month-day.
+         Fixes #540.
+diff --git a/src/main/java/org/joda/time/tz/src/pacificnew b/src/main/java/org/joda/time/tz/src/pacificnew
+deleted file mode 100644
+index 8403219f6..000000000
+--- a/src/main/java/org/joda/time/tz/src/pacificnew
++++ /dev/null
+@@ -1,29 +0,0 @@
+-# tzdb data for proposed US election time (this file is obsolete)
+-
+-# This file is in the public domain, so clarified as of
+-# 2009-05-17 by Arthur David Olson.
+-
+-# From Arthur David Olson (1989-04-05):
+-# On 1989-04-05, the U. S. House of Representatives passed (238-154) a bill
+-# establishing "Pacific Presidential Election Time"; it was not acted on
+-# by the Senate or signed into law by the President.
+-# You might want to change the "PE" (Presidential Election) below to
+-# "Q" (Quadrennial) to maintain three-character zone abbreviations.
+-# If you're really conservative, you might want to change it to "D".
+-# Avoid "L" (Leap Year), which won't be true in 2100.
+-
+-# If Presidential Election Time is ever established, replace "XXXX" below
+-# with the year the law takes effect and uncomment the "##" lines.
+-
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
+-## Rule	Twilite	XXXX	max	-	Apr	Sun>=1	2:00	1:00	D
+-## Rule	Twilite	XXXX	max	uspres	Oct	lastSun	2:00	1:00	PE
+-## Rule	Twilite	XXXX	max	uspres	Nov	Sun>=7	2:00	0	S
+-## Rule	Twilite	XXXX	max	nonpres	Oct	lastSun	2:00	0	S
+-
+-# Zone	NAME			STDOFF	RULES/SAVE	FORMAT	[UNTIL]
+-## Zone	America/Los_Angeles-PET	-8:00	US		P%sT	XXXX
+-##				-8:00	Twilite		P%sT
+-
+-# For now...
+-Link	America/Los_Angeles	US/Pacific-New	##
+diff --git a/src/main/java/org/joda/time/tz/src/systemv b/src/main/java/org/joda/time/tz/src/systemv
+deleted file mode 100644
+index a8c037cd2..000000000
+--- a/src/main/java/org/joda/time/tz/src/systemv
++++ /dev/null
+@@ -1,39 +0,0 @@
+-# tzdb data for System V rules (this file is obsolete)
+-
+-# This file is in the public domain, so clarified as of
+-# 2009-05-17 by Arthur David Olson.
+-
+-# Old rules, should the need arise.
+-# No attempt is made to handle Newfoundland, since it cannot be expressed
+-# using the System V "TZ" scheme (half-hour offset), or anything outside
+-# North America (no support for non-standard DST start/end dates), nor
+-# the changes in the DST rules in the US after 1976 (which occurred after
+-# the old rules were written).
+-#
+-# If you need the old rules, uncomment ## lines.
+-# Compile this *without* leap second correction for true conformance.
+-
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
+-Rule	SystemV	min	1973	-	Apr	lastSun	2:00	1:00	D
+-Rule	SystemV	min	1973	-	Oct	lastSun	2:00	0	S
+-Rule	SystemV	1974	only	-	Jan	6	2:00	1:00	D
+-Rule	SystemV	1974	only	-	Nov	lastSun	2:00	0	S
+-Rule	SystemV	1975	only	-	Feb	23	2:00	1:00	D
+-Rule	SystemV	1975	only	-	Oct	lastSun	2:00	0	S
+-Rule	SystemV	1976	max	-	Apr	lastSun	2:00	1:00	D
+-Rule	SystemV	1976	max	-	Oct	lastSun	2:00	0	S
+-
+-# Zone	NAME		STDOFF	RULES/SAVE	FORMAT	[UNTIL]
+-## Zone	SystemV/AST4ADT	-4:00	SystemV		A%sT
+-## Zone	SystemV/EST5EDT	-5:00	SystemV		E%sT
+-## Zone	SystemV/CST6CDT	-6:00	SystemV		C%sT
+-## Zone	SystemV/MST7MDT	-7:00	SystemV		M%sT
+-## Zone	SystemV/PST8PDT	-8:00	SystemV		P%sT
+-## Zone	SystemV/YST9YDT	-9:00	SystemV		Y%sT
+-## Zone	SystemV/AST4	-4:00	-		AST
+-## Zone	SystemV/EST5	-5:00	-		EST
+-## Zone	SystemV/CST6	-6:00	-		CST
+-## Zone	SystemV/MST7	-7:00	-		MST
+-## Zone	SystemV/PST8	-8:00	-		PST
+-## Zone	SystemV/YST9	-9:00	-		YST
+-## Zone	SystemV/HST10	-10:00	-		HST
+
+From a233c408868bb1f5481225b27f837a87a90df57b Mon Sep 17 00:00:00 2001
+From: "Stephen Colebourne (CI)" <scolebourne@joda.org>
+Date: Wed, 21 Oct 2020 03:11:22 +0000
+Subject: [PATCH 6/8] Update TZDB to 2020c
+
+---
+ pom.xml                                       |   2 +-
+ src/main/java/org/joda/time/tz/src/africa     |  74 +++---
+ src/main/java/org/joda/time/tz/src/antarctica |  27 +-
+ src/main/java/org/joda/time/tz/src/asia       |  66 ++---
+ .../java/org/joda/time/tz/src/australasia     |  54 ++--
+ src/main/java/org/joda/time/tz/src/europe     | 234 ++++++++++++------
+ .../java/org/joda/time/tz/src/northamerica    |  90 ++++---
+ .../java/org/joda/time/tz/src/southamerica    |  18 +-
+ 8 files changed, 358 insertions(+), 207 deletions(-)
+
+diff --git a/pom.xml b/pom.xml
+index 41ad9bf27..d2acb3f60 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -1030,6 +1030,6 @@
+     <!-- Other properties -->
+     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+-    <tz.database.version>2020a</tz.database.version>
++    <tz.database.version>2020c</tz.database.version>
+   </properties>
+ </project>
+diff --git a/src/main/java/org/joda/time/tz/src/africa b/src/main/java/org/joda/time/tz/src/africa
+index 724744f37..566436b31 100644
+--- a/src/main/java/org/joda/time/tz/src/africa
++++ b/src/main/java/org/joda/time/tz/src/africa
+@@ -64,7 +64,7 @@
+ # Corrections are welcome.
+ 
+ # Algeria
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	Algeria	1916	only	-	Jun	14	23:00s	1:00	S
+ Rule	Algeria	1916	1919	-	Oct	Sun>=1	23:00s	0	-
+ Rule	Algeria	1917	only	-	Mar	24	23:00s	1:00	S
+@@ -87,10 +87,9 @@ Rule	Algeria	1978	only	-	Mar	24	 1:00	1:00	S
+ Rule	Algeria	1978	only	-	Sep	22	 3:00	0	-
+ Rule	Algeria	1980	only	-	Apr	25	 0:00	1:00	S
+ Rule	Algeria	1980	only	-	Oct	31	 2:00	0	-
+-# Shanks & Pottenger give 0:09:20 for Paris Mean Time; go with Howse's
+-# more precise 0:09:21.
++# See Europe/Paris for PMT-related transitions.
+ # Zone	NAME		STDOFF	RULES	FORMAT	[UNTIL]
+-Zone	Africa/Algiers	0:12:12 -	LMT	1891 Mar 15  0:01
++Zone	Africa/Algiers	0:12:12 -	LMT	1891 Mar 16
+ 			0:09:21	-	PMT	1911 Mar 11 # Paris Mean Time
+ 			0:00	Algeria	WE%sT	1940 Feb 25  2:00
+ 			1:00	Algeria	CE%sT	1946 Oct  7
+@@ -176,7 +175,7 @@ Link Africa/Abidjan Atlantic/St_Helena	# St Helena
+ # Egypt was mean noon at the Great Pyramid, 2:04:30.5, but apparently this
+ # did not apply to Cairo, Alexandria, or Port Said.
+ 
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	Egypt	1940	only	-	Jul	15	0:00	1:00	S
+ Rule	Egypt	1940	only	-	Oct	 1	0:00	0	-
+ Rule	Egypt	1941	only	-	Apr	15	0:00	1:00	S
+@@ -411,7 +410,7 @@ Zone	Africa/Cairo	2:05:09 -	LMT	1900 Oct
+ # now Ghana observed different DST regimes in different years.  For
+ # lack of better info, use Shanks except treat the minus sign as a
+ # typo, and assume DST started in 1920 not 1936.
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	Ghana	1920	1942	-	Sep	 1	0:00	0:20	-
+ Rule	Ghana	1920	1942	-	Dec	31	0:00	0	-
+ # Zone	NAME		STDOFF	RULES	FORMAT	[UNTIL]
+@@ -501,7 +500,7 @@ Zone	Africa/Monrovia	-0:43:08 -	LMT	1882
+ # From Paul Eggert (2013-10-25):
+ # For now, assume they're reverting to the pre-2012 rules of permanent UT +02.
+ 
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	Libya	1951	only	-	Oct	14	2:00	1:00	S
+ Rule	Libya	1952	only	-	Jan	 1	0:00	0	-
+ Rule	Libya	1953	only	-	Oct	 9	2:00	1:00	S
+@@ -624,7 +623,7 @@ Zone	Africa/Tripoli	0:52:44 -	LMT	1920
+ # "The trial ended on March 29, 2009, when the clocks moved back by one hour
+ # at 2am (or 02:00) local time..."
+ 
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule Mauritius	1982	only	-	Oct	10	0:00	1:00	-
+ Rule Mauritius	1983	only	-	Mar	21	0:00	0	-
+ Rule Mauritius	2008	only	-	Oct	lastSun	2:00	1:00	-
+@@ -875,17 +874,30 @@ Zone Indian/Mauritius	3:50:00 -	LMT	1907 # Port Louis
+ # https://maroc-diplomatique.net/maroc-le-retour-a-lheure-gmt-est-prevu-dimanche-prochain/
+ # http://aujourdhui.ma/actualite/gmt1-retour-a-lheure-normale-dimanche-prochain-1
+ #
+-# From Paul Eggert (2020-04-14):
++# From Milamber (2020-05-31)
++# In Morocco (where I live), the end of Ramadan (Arabic month) is followed by
++# the Eid al-Fitr, and concretely it's 1 or 2 day offs for the people (with
++# traditional visiting of family, big lunches/dinners, etc.).  So for this
++# year the astronomical calculations don't include the following 2 days off in
++# the calc.  These 2 days fall in a Sunday/Monday, so it's not acceptable by
++# people to have a time shift during these 2 days off.  Perhaps you can modify
++# the (predicted) rules for next years: if the end of Ramadan is a (probable)
++# Friday or Saturday (and so the 2 days off are on a weekend), the next time
++# shift will be the next weekend.
++#
++# From Paul Eggert (2020-05-31):
+ # For now, guess that in the future Morocco will fall back at 03:00
+ # the last Sunday before Ramadan, and spring forward at 02:00 the
+-# first Sunday after the day after Ramadan.  To implement this,
+-# transition dates for 2021 through 2087 were determined by running
+-# the following program under GNU Emacs 26.3.
+-# (let ((islamic-year 1442))
++# first Sunday after two days after Ramadan.  To implement this,
++# transition dates and times for 2019 through 2087 were determined by
++# running the following program under GNU Emacs 26.3.  (This algorithm
++# also produces the correct transition dates for 2016 through 2018,
++# though the times differ due to Morocco's time zone change in 2018.)
++# (let ((islamic-year 1440))
+ #   (require 'cal-islam)
+ #   (while (< islamic-year 1511)
+ #     (let ((a (calendar-islamic-to-absolute (list 9 1 islamic-year)))
+-#           (b (1+ (calendar-islamic-to-absolute (list 10 1 islamic-year))))
++#           (b (+ 2 (calendar-islamic-to-absolute (list 10 1 islamic-year))))
+ #           (sunday 0))
+ #       (while (/= sunday (mod (setq a (1- a)) 7)))
+ #       (while (/= sunday (mod b 7))
+@@ -900,7 +912,7 @@ Zone Indian/Mauritius	3:50:00 -	LMT	1907 # Port Louis
+ #         (car (cdr (cdr b))) (calendar-month-name (car b) t) (car (cdr b)))))
+ #     (setq islamic-year (+ 1 islamic-year))))
+ 
+-# RULE	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	Morocco	1939	only	-	Sep	12	 0:00	1:00	-
+ Rule	Morocco	1939	only	-	Nov	19	 0:00	0	-
+ Rule	Morocco	1940	only	-	Feb	25	 0:00	1:00	-
+@@ -951,7 +963,7 @@ Rule	Morocco	2021	only	-	May	16	 2:00	0	-
+ Rule	Morocco	2022	only	-	Mar	27	 3:00	-1:00	-
+ Rule	Morocco	2022	only	-	May	 8	 2:00	0	-
+ Rule	Morocco	2023	only	-	Mar	19	 3:00	-1:00	-
+-Rule	Morocco	2023	only	-	Apr	23	 2:00	0	-
++Rule	Morocco	2023	only	-	Apr	30	 2:00	0	-
+ Rule	Morocco	2024	only	-	Mar	10	 3:00	-1:00	-
+ Rule	Morocco	2024	only	-	Apr	14	 2:00	0	-
+ Rule	Morocco	2025	only	-	Feb	23	 3:00	-1:00	-
+@@ -967,7 +979,7 @@ Rule	Morocco	2029	only	-	Feb	18	 2:00	0	-
+ Rule	Morocco	2029	only	-	Dec	30	 3:00	-1:00	-
+ Rule	Morocco	2030	only	-	Feb	10	 2:00	0	-
+ Rule	Morocco	2030	only	-	Dec	22	 3:00	-1:00	-
+-Rule	Morocco	2031	only	-	Jan	26	 2:00	0	-
++Rule	Morocco	2031	only	-	Feb	 2	 2:00	0	-
+ Rule	Morocco	2031	only	-	Dec	14	 3:00	-1:00	-
+ Rule	Morocco	2032	only	-	Jan	18	 2:00	0	-
+ Rule	Morocco	2032	only	-	Nov	28	 3:00	-1:00	-
+@@ -983,7 +995,7 @@ Rule	Morocco	2036	only	-	Nov	23	 2:00	0	-
+ Rule	Morocco	2037	only	-	Oct	 4	 3:00	-1:00	-
+ Rule	Morocco	2037	only	-	Nov	15	 2:00	0	-
+ Rule	Morocco	2038	only	-	Sep	26	 3:00	-1:00	-
+-Rule	Morocco	2038	only	-	Oct	31	 2:00	0	-
++Rule	Morocco	2038	only	-	Nov	 7	 2:00	0	-
+ Rule	Morocco	2039	only	-	Sep	18	 3:00	-1:00	-
+ Rule	Morocco	2039	only	-	Oct	23	 2:00	0	-
+ Rule	Morocco	2040	only	-	Sep	 2	 3:00	-1:00	-
+@@ -999,7 +1011,7 @@ Rule	Morocco	2044	only	-	Aug	28	 2:00	0	-
+ Rule	Morocco	2045	only	-	Jul	 9	 3:00	-1:00	-
+ Rule	Morocco	2045	only	-	Aug	20	 2:00	0	-
+ Rule	Morocco	2046	only	-	Jul	 1	 3:00	-1:00	-
+-Rule	Morocco	2046	only	-	Aug	 5	 2:00	0	-
++Rule	Morocco	2046	only	-	Aug	12	 2:00	0	-
+ Rule	Morocco	2047	only	-	Jun	23	 3:00	-1:00	-
+ Rule	Morocco	2047	only	-	Jul	28	 2:00	0	-
+ Rule	Morocco	2048	only	-	Jun	 7	 3:00	-1:00	-
+@@ -1015,7 +1027,7 @@ Rule	Morocco	2052	only	-	Jun	 2	 2:00	0	-
+ Rule	Morocco	2053	only	-	Apr	13	 3:00	-1:00	-
+ Rule	Morocco	2053	only	-	May	25	 2:00	0	-
+ Rule	Morocco	2054	only	-	Apr	 5	 3:00	-1:00	-
+-Rule	Morocco	2054	only	-	May	10	 2:00	0	-
++Rule	Morocco	2054	only	-	May	17	 2:00	0	-
+ Rule	Morocco	2055	only	-	Mar	28	 3:00	-1:00	-
+ Rule	Morocco	2055	only	-	May	 2	 2:00	0	-
+ Rule	Morocco	2056	only	-	Mar	12	 3:00	-1:00	-
+@@ -1031,7 +1043,7 @@ Rule	Morocco	2060	only	-	Mar	 7	 2:00	0	-
+ Rule	Morocco	2061	only	-	Jan	16	 3:00	-1:00	-
+ Rule	Morocco	2061	only	-	Feb	27	 2:00	0	-
+ Rule	Morocco	2062	only	-	Jan	 8	 3:00	-1:00	-
+-Rule	Morocco	2062	only	-	Feb	12	 2:00	0	-
++Rule	Morocco	2062	only	-	Feb	19	 2:00	0	-
+ Rule	Morocco	2062	only	-	Dec	31	 3:00	-1:00	-
+ Rule	Morocco	2063	only	-	Feb	 4	 2:00	0	-
+ Rule	Morocco	2063	only	-	Dec	16	 3:00	-1:00	-
+@@ -1047,7 +1059,7 @@ Rule	Morocco	2067	only	-	Dec	11	 2:00	0	-
+ Rule	Morocco	2068	only	-	Oct	21	 3:00	-1:00	-
+ Rule	Morocco	2068	only	-	Dec	 2	 2:00	0	-
+ Rule	Morocco	2069	only	-	Oct	13	 3:00	-1:00	-
+-Rule	Morocco	2069	only	-	Nov	17	 2:00	0	-
++Rule	Morocco	2069	only	-	Nov	24	 2:00	0	-
+ Rule	Morocco	2070	only	-	Oct	 5	 3:00	-1:00	-
+ Rule	Morocco	2070	only	-	Nov	 9	 2:00	0	-
+ Rule	Morocco	2071	only	-	Sep	20	 3:00	-1:00	-
+@@ -1063,7 +1075,7 @@ Rule	Morocco	2075	only	-	Sep	15	 2:00	0	-
+ Rule	Morocco	2076	only	-	Jul	26	 3:00	-1:00	-
+ Rule	Morocco	2076	only	-	Sep	 6	 2:00	0	-
+ Rule	Morocco	2077	only	-	Jul	18	 3:00	-1:00	-
+-Rule	Morocco	2077	only	-	Aug	22	 2:00	0	-
++Rule	Morocco	2077	only	-	Aug	29	 2:00	0	-
+ Rule	Morocco	2078	only	-	Jul	10	 3:00	-1:00	-
+ Rule	Morocco	2078	only	-	Aug	14	 2:00	0	-
+ Rule	Morocco	2079	only	-	Jun	25	 3:00	-1:00	-
+@@ -1073,13 +1085,13 @@ Rule	Morocco	2080	only	-	Jul	21	 2:00	0	-
+ Rule	Morocco	2081	only	-	Jun	 1	 3:00	-1:00	-
+ Rule	Morocco	2081	only	-	Jul	13	 2:00	0	-
+ Rule	Morocco	2082	only	-	May	24	 3:00	-1:00	-
+-Rule	Morocco	2082	only	-	Jun	28	 2:00	0	-
++Rule	Morocco	2082	only	-	Jul	 5	 2:00	0	-
+ Rule	Morocco	2083	only	-	May	16	 3:00	-1:00	-
+ Rule	Morocco	2083	only	-	Jun	20	 2:00	0	-
+ Rule	Morocco	2084	only	-	Apr	30	 3:00	-1:00	-
+ Rule	Morocco	2084	only	-	Jun	11	 2:00	0	-
+ Rule	Morocco	2085	only	-	Apr	22	 3:00	-1:00	-
+-Rule	Morocco	2085	only	-	May	27	 2:00	0	-
++Rule	Morocco	2085	only	-	Jun	 3	 2:00	0	-
+ Rule	Morocco	2086	only	-	Apr	14	 3:00	-1:00	-
+ Rule	Morocco	2086	only	-	May	19	 2:00	0	-
+ Rule	Morocco	2087	only	-	Mar	30	 3:00	-1:00	-
+@@ -1180,7 +1192,7 @@ Link Africa/Maputo Africa/Lusaka	# Zambia
+ # Use plain "WAT" and "CAT" for the time zone abbreviations, to be compatible
+ # with Namibia's neighbors.
+ 
+-# RULE	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ # Vanguard section, for zic and other parsers that support negative DST.
+ Rule	Namibia	1994	only	-	Mar	21	0:00	-1:00	WAT
+ Rule	Namibia	1994	2017	-	Sep	Sun>=1	2:00	0	CAT
+@@ -1303,7 +1315,7 @@ Zone	Indian/Mahe	3:41:48 -	LMT	1906 Jun # Victoria
+ # See Africa/Nairobi.
+ 
+ # South Africa
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	SA	1942	1943	-	Sep	Sun>=15	2:00	1:00	-
+ Rule	SA	1943	1944	-	Mar	Sun>=15	2:00	0	-
+ # Zone	NAME		STDOFF	RULES	FORMAT	[UNTIL]
+@@ -1336,7 +1348,7 @@ Link Africa/Johannesburg Africa/Mbabane    # Eswatini
+ # Abdalla of NTC, archived at:
+ # https://mm.icann.org/pipermail/tz/2017-October/025333.html
+ 
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	Sudan	1970	only	-	May	 1	0:00	1:00	S
+ Rule	Sudan	1970	1985	-	Oct	15	0:00	0	-
+ Rule	Sudan	1971	only	-	Apr	30	0:00	1:00	S
+@@ -1424,7 +1436,7 @@ Zone	Africa/Juba	2:06:28 -	LMT	1931
+ # http://www.almadenahnews.com/newss/news.php?c=118&id=38036
+ # http://www.worldtimezone.com/dst_news/dst_news_tunis02.html
+ 
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	Tunisia	1939	only	-	Apr	15	23:00s	1:00	S
+ Rule	Tunisia	1939	only	-	Nov	18	23:00s	0	-
+ Rule	Tunisia	1940	only	-	Feb	25	23:00s	1:00	S
+@@ -1451,9 +1463,7 @@ Rule	Tunisia	2005	only	-	Sep	30	 1:00s	0	-
+ Rule	Tunisia	2006	2008	-	Mar	lastSun	 2:00s	1:00	S
+ Rule	Tunisia	2006	2008	-	Oct	lastSun	 2:00s	0	-
+ 
+-# Shanks & Pottenger give 0:09:20 for Paris Mean Time; go with Howse's
+-# more precise 0:09:21.
+-# Shanks & Pottenger say the 1911 switch was on Mar 9; go with Howse's Mar 11.
++# See Europe/Paris for PMT-related transitions.
+ # Zone	NAME		STDOFF	RULES	FORMAT	[UNTIL]
+ Zone	Africa/Tunis	0:40:44 -	LMT	1881 May 12
+ 			0:09:21	-	PMT	1911 Mar 11 # Paris Mean Time
+diff --git a/src/main/java/org/joda/time/tz/src/antarctica b/src/main/java/org/joda/time/tz/src/antarctica
+index 205998381..ed750a899 100644
+--- a/src/main/java/org/joda/time/tz/src/antarctica
++++ b/src/main/java/org/joda/time/tz/src/antarctica
+@@ -70,15 +70,30 @@
+ # Australian Antarctica Division informed us that Casey changed time
+ # zone to UTC+11 in "the morning of 22nd October 2016".
+ 
++# From Steffen Thorsen (2020-10-02, as corrected):
++# Based on information we have received from the Australian Antarctic
++# Division, Casey station and Macquarie Island station will move to Tasmanian
++# daylight savings time on Sunday 4 October. This will take effect from 0001
++# hrs on Sunday 4 October 2020 and will mean Casey and Macquarie Island will
++# be on the same time zone as Hobart.  Some past dates too for this 3 hour
++# time change back and forth between UTC+8 and UTC+11 for Casey:
++# - 2018 Oct  7 4:00 - 2019 Mar 17 3:00 - 2019 Oct  4 3:00 - 2020 Mar  8 3:00
++# and now - 2020 Oct  4 0:01
++
+ # Zone	NAME		STDOFF	RULES	FORMAT	[UNTIL]
+-Zone Antarctica/Casey	0	-	-00	1969
+-			8:00	-	+08	2009 Oct 18  2:00
++Zone Antarctica/Casey	 0	-	-00	1969
++			 8:00	-	+08	2009 Oct 18  2:00
+ 			11:00	-	+11	2010 Mar  5  2:00
+-			8:00	-	+08	2011 Oct 28  2:00
++			 8:00	-	+08	2011 Oct 28  2:00
+ 			11:00	-	+11	2012 Feb 21 17:00u
+-			8:00	-	+08	2016 Oct 22
++			 8:00	-	+08	2016 Oct 22
+ 			11:00	-	+11	2018 Mar 11  4:00
+-			8:00	-	+08
++			 8:00	-	+08	2018 Oct  7  4:00
++			11:00	-	+11	2019 Mar 17  3:00
++			 8:00	-	+08	2019 Oct  4  3:00
++			11:00	-	+11	2020 Mar  8  3:00
++			 8:00	-	+08	2020 Oct  4  0:01
++			11:00	-	+11
+ Zone Antarctica/Davis	0	-	-00	1957 Jan 13
+ 			7:00	-	+07	1964 Nov
+ 			0	-	-00	1969 Feb
+@@ -224,7 +239,7 @@ Zone Antarctica/Syowa	0	-	-00	1957 Jan 29
+ # suggested by Bengt-Inge Larsson comment them out for now, and approximate
+ # with only UTC and CEST.  Uncomment them when 2014b is more prevalent.
+ #
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ #Rule	Troll	2005	max	-	Mar	 1	1:00u	1:00	+01
+ Rule	Troll	2005	max	-	Mar	lastSun	1:00u	2:00	+02
+ #Rule	Troll	2005	max	-	Oct	lastSun	1:00u	1:00	+01
+diff --git a/src/main/java/org/joda/time/tz/src/asia b/src/main/java/org/joda/time/tz/src/asia
+index 106efad87..e4d84e9a2 100644
+--- a/src/main/java/org/joda/time/tz/src/asia
++++ b/src/main/java/org/joda/time/tz/src/asia
+@@ -70,7 +70,7 @@
+ ###############################################################################
+ 
+ # These rules are stolen from the 'europe' file.
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	EUAsia	1981	max	-	Mar	lastSun	 1:00u	1:00	S
+ Rule	EUAsia	1979	1995	-	Sep	lastSun	 1:00u	0	-
+ Rule	EUAsia	1996	max	-	Oct	lastSun	 1:00u	0	-
+@@ -114,7 +114,7 @@ Zone	Asia/Kabul	4:36:48 -	LMT	1890
+ # or
+ # (brief)
+ # http://www.worldtimezone.com/dst_news/dst_news_armenia03.html
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule Armenia	2011	only	-	Mar	lastSun	 2:00s	1:00	-
+ Rule Armenia	2011	only	-	Oct	lastSun	 2:00s	0	-
+ # Zone	NAME		STDOFF	RULES	FORMAT	[UNTIL]
+@@ -140,7 +140,7 @@ Zone	Asia/Yerevan	2:58:00 -	LMT	1924 May  2
+ # http://vestnikkavkaza.net/news/Azerbaijani-Cabinet-of-Ministers-cancels-daylight-saving-time.html
+ # http://en.apa.az/xeber_azerbaijan_abolishes_daylight_savings_ti_240862.html
+ 
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	Azer	1997	2015	-	Mar	lastSun	 4:00	1:00	-
+ Rule	Azer	1997	2015	-	Oct	lastSun	 5:00	0	-
+ # Zone	NAME		STDOFF	RULES	FORMAT	[UNTIL]
+@@ -227,7 +227,7 @@ Zone	Asia/Baku	3:19:24 -	LMT	1924 May  2
+ # http://www.thedailystar.net/newDesign/latest_news.php?nid=22817
+ # http://www.worldtimezone.com/dst_news/dst_news_bangladesh06.html
+ 
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	Dhaka	2009	only	-	Jun	19	23:00	1:00	-
+ Rule	Dhaka	2009	only	-	Dec	31	24:00	0	-
+ 
+@@ -303,7 +303,7 @@ Zone	Asia/Yangon	6:24:47 -	LMT	1880        # or Rangoon
+ # generally esteemed a success, it was announced early in 1920 that it would
+ # not be repeated."
+ #
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	Shang	1919	only	-	Apr	12	24:00	1:00	D
+ Rule	Shang	1919	only	-	Sep	30	24:00	0	S
+ 
+@@ -399,7 +399,7 @@ Rule	Shang	1919	only	-	Sep	30	24:00	0	S
+ # the Yangtze river delta area during that period of time although the scope
+ # of such use will need to be investigated to determine.
+ #
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	Shang	1940	only	-	Jun	 1	 0:00	1:00	D
+ Rule	Shang	1940	only	-	Oct	12	24:00	0	S
+ Rule	Shang	1941	only	-	Mar	15	 0:00	1:00	D
+@@ -462,7 +462,7 @@ Rule	Shang	1948	1949	-	Sep	30	24:00	0	S #plan
+ # to begin on 17 April.
+ # http://data.people.com.cn/pic/101p/1988/04/1988041201.jpg
+ 
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	PRC	1986	only	-	May	 4	 2:00	1:00	D
+ Rule	PRC	1986	1991	-	Sep	Sun>=11	 2:00	0	S
+ Rule	PRC	1987	1991	-	Apr	Sun>=11	 2:00	1:00	D
+@@ -846,7 +846,7 @@ Zone	Asia/Urumqi	5:50:20	-	LMT	1928
+ # or dates for the 1942 and 1945 transitions.
+ # The Japanese occupation of Hong Kong began 1941-12-25.
+ 
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	HK	1946	only	-	Apr	21	0:00	1:00	S
+ Rule	HK	1946	only	-	Dec	1	3:30s	0	-
+ Rule	HK	1947	only	-	Apr	13	3:30s	1:00	S
+@@ -973,7 +973,7 @@ Zone	Asia/Hong_Kong	7:36:42 -	LMT	1904 Oct 30  0:36:42
+ # until 1945-09-21 at 01:00, overriding Shanks & Pottenger.
+ # Likewise, use Yu-Cheng Chuang's data for DST in Taiwan.
+ 
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	Taiwan	1946	only	-	May	15	0:00	1:00	D
+ Rule	Taiwan	1946	only	-	Oct	1	0:00	0	S
+ Rule	Taiwan	1947	only	-	Apr	15	0:00	1:00	D
+@@ -1099,7 +1099,7 @@ Zone	Asia/Taipei	8:06:00 -	LMT	1896 Jan  1
+ # The 1904 decree says that Macau changed from the meridian of
+ # Fortaleza do Monte, presumably the basis for the 7:34:10 for LMT.
+ 
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	Macau	1942	1943	-	Apr	30	23:00	1:00	-
+ Rule	Macau	1942	only	-	Nov	17	23:00	0	-
+ Rule	Macau	1943	only	-	Sep	30	23:00	0	S
+@@ -1157,7 +1157,7 @@ Zone	Asia/Macau	7:34:10 -	LMT	1904 Oct 30
+ # Cyprus to remain united in time.  Cyprus Mail 2017-10-17.
+ # https://cyprus-mail.com/2017/10/17/cyprus-remain-united-time/
+ 
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	Cyprus	1975	only	-	Apr	13	0:00	1:00	S
+ Rule	Cyprus	1975	only	-	Oct	12	0:00	0	-
+ Rule	Cyprus	1976	only	-	May	15	0:00	1:00	S
+@@ -1534,7 +1534,7 @@ Zone Asia/Jayapura	9:22:48 -	LMT	1932 Nov
+ # be changed back to its previous state on the 24 hours of the
+ # thirtieth day of Shahrivar.
+ #
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	Iran	1978	1980	-	Mar	20	24:00	1:00	-
+ Rule	Iran	1978	only	-	Oct	20	24:00	0	-
+ Rule	Iran	1979	only	-	Sep	18	24:00	0	-
+@@ -1676,7 +1676,7 @@ Zone	Asia/Tehran	3:25:44	-	LMT	1916
+ # We have published a short article in English about the change:
+ # https://www.timeanddate.com/news/time/iraq-dumps-daylight-saving.html
+ 
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	Iraq	1982	only	-	May	1	0:00	1:00	-
+ Rule	Iraq	1982	1984	-	Oct	1	0:00	0	-
+ Rule	Iraq	1983	only	-	Mar	31	0:00	1:00	-
+@@ -1699,6 +1699,10 @@ Zone	Asia/Baghdad	2:57:40	-	LMT	1890
+ 
+ # Israel
+ 
++# For more info about the motivation for DST in Israel, see:
++# Barak Y. Israel's Daylight Saving Time controversy. Israel Affairs.
++# 2020-08-11. https://doi.org/10.1080/13537121.2020.1806564
++
+ # From Ephraim Silverberg (2001-01-11):
+ #
+ # I coined "IST/IDT" circa 1988.  Until then there were three
+@@ -1720,7 +1724,7 @@ Zone	Asia/Baghdad	2:57:40	-	LMT	1890
+ # family is from India).
+ 
+ # From Shanks & Pottenger:
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	Zion	1940	only	-	Jun	 1	0:00	1:00	D
+ Rule	Zion	1942	1944	-	Nov	 1	0:00	0	S
+ Rule	Zion	1943	only	-	Apr	 1	2:00	1:00	D
+@@ -1812,7 +1816,7 @@ Rule	Zion	1988	only	-	Sep	 4	0:00	0	S
+ # (except in 2002) is three nights before Yom Kippur [Day of Atonement]
+ # (the eve of the 7th of Tishrei in the lunar Hebrew calendar).
+ 
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	Zion	1989	only	-	Apr	30	0:00	1:00	D
+ Rule	Zion	1989	only	-	Sep	 3	0:00	0	S
+ Rule	Zion	1990	only	-	Mar	25	0:00	1:00	D
+@@ -1828,7 +1832,7 @@ Rule	Zion	1993	only	-	Sep	 5	0:00	0	S
+ # Ministry of Interior, Jerusalem, Israel.  The spokeswoman can be reached by
+ # calling the office directly at 972-2-6701447 or 972-2-6701448.
+ 
+-# Rule	NAME    FROM    TO      TYPE    IN      ON      AT      SAVE    LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	Zion	1994	only	-	Apr	 1	0:00	1:00	D
+ Rule	Zion	1994	only	-	Aug	28	0:00	0	S
+ Rule	Zion	1995	only	-	Mar	31	0:00	1:00	D
+@@ -1848,7 +1852,7 @@ Rule	Zion	1995	only	-	Sep	 3	0:00	0	S
+ #
+ #       where YYYY is the relevant year.
+ 
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	Zion	1996	only	-	Mar	15	0:00	1:00	D
+ Rule	Zion	1996	only	-	Sep	16	0:00	0	S
+ Rule	Zion	1997	only	-	Mar	21	0:00	1:00	D
+@@ -1871,7 +1875,7 @@ Rule	Zion	1999	only	-	Sep	 3	2:00	0	S
+ #
+ #	ftp://ftp.cs.huji.ac.il/pub/tz/announcements/2000-2004.ps.gz
+ 
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	Zion	2000	only	-	Apr	14	2:00	1:00	D
+ Rule	Zion	2000	only	-	Oct	 6	1:00	0	S
+ Rule	Zion	2001	only	-	Apr	 9	1:00	1:00	D
+@@ -1893,7 +1897,7 @@ Rule	Zion	2004	only	-	Sep	22	1:00	0	S
+ #
+ #	ftp://ftp.cs.huji.ac.il/pub/tz/announcements/2005+beyond.ps
+ 
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	Zion	2005	2012	-	Apr	Fri<=1	2:00	1:00	D
+ Rule	Zion	2005	only	-	Oct	 9	2:00	0	S
+ Rule	Zion	2006	only	-	Oct	 1	2:00	0	S
+@@ -1913,7 +1917,7 @@ Rule	Zion	2012	only	-	Sep	23	2:00	0	S
+ # As of 2013, DST starts at 02:00 on the Friday before the last Sunday
+ # in March.  DST ends at 02:00 on the last Sunday of October.
+ 
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	Zion	2013	max	-	Mar	Fri>=23	2:00	1:00	D
+ Rule	Zion	2013	max	-	Oct	lastSun	2:00	0	S
+ 
+@@ -2013,7 +2017,7 @@ Zone	Asia/Jerusalem	2:20:54 -	LMT	1880
+ # do in any POSIX or C platform.  The "25:00" assumes zic from 2007 or later,
+ # which should be safe now.
+ 
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	Japan	1948	only	-	May	Sat>=1	24:00	1:00	D
+ Rule	Japan	1948	1951	-	Sep	Sat>=8	25:00	0	S
+ Rule	Japan	1949	only	-	Apr	Sat>=1	24:00	1:00	D
+@@ -2090,7 +2094,7 @@ Zone	Asia/Tokyo	9:18:59	-	LMT	1887 Dec 31 15:00u
+ # From Paul Eggert (2013-12-11):
+ # As Steffen suggested, consider the past 21-month experiment to be DST.
+ 
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	Jordan	1973	only	-	Jun	6	0:00	1:00	S
+ Rule	Jordan	1973	1975	-	Oct	1	0:00	0	-
+ Rule	Jordan	1974	1977	-	May	1	0:00	1:00	S
+@@ -2416,7 +2420,7 @@ Zone	Asia/Oral	3:25:24	-	LMT	1924 May  2 # or Ural'sk
+ # Our government cancels daylight saving time 6th of August 2005.
+ # From 2005-08-12 our GMT-offset is +6, w/o any daylight saving.
+ 
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	Kyrgyz	1992	1996	-	Apr	Sun>=7	0:00s	1:00	-
+ Rule	Kyrgyz	1992	1996	-	Sep	lastSun	0:00	0	-
+ Rule	Kyrgyz	1997	2005	-	Mar	lastSun	2:30	1:00	-
+@@ -2472,7 +2476,7 @@ Zone	Asia/Bishkek	4:58:24 -	LMT	1924 May  2
+ # follow and continued to use GMT+9:00 for interoperability.
+ 
+ 
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	ROK	1948	only	-	Jun	 1	 0:00	1:00	D
+ Rule	ROK	1948	only	-	Sep	12	24:00	0	S
+ Rule	ROK	1949	only	-	Apr	 3	 0:00	1:00	D
+@@ -2560,7 +2564,7 @@ Zone	Asia/Pyongyang	8:23:00 -	LMT	1908 Apr  1
+ 
+ 
+ # Lebanon
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	Lebanon	1920	only	-	Mar	28	0:00	1:00	S
+ Rule	Lebanon	1920	only	-	Oct	25	0:00	0	-
+ Rule	Lebanon	1921	only	-	Apr	3	0:00	1:00	S
+@@ -2590,7 +2594,7 @@ Zone	Asia/Beirut	2:22:00 -	LMT	1880
+ 			2:00	Lebanon	EE%sT
+ 
+ # Malaysia
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	NBorneo	1935	1941	-	Sep	14	0:00	0:20	-
+ Rule	NBorneo	1935	1941	-	Dec	14	0:00	0	-
+ #
+@@ -2735,7 +2739,7 @@ Zone	Indian/Maldives	4:54:00 -	LMT	1880 # Malé
+ # September daylight saving time ends.  Source:
+ # http://zasag.mn/news/view/8969
+ 
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	Mongol	1983	1984	-	Apr	1	0:00	1:00	-
+ Rule	Mongol	1983	only	-	Oct	1	0:00	0	-
+ # Shanks & Pottenger and IATA SSIM say 1990s switches occurred at 00:00,
+@@ -2923,7 +2927,7 @@ Zone	Asia/Kathmandu	5:41:16 -	LMT	1920
+ # "People laud PM's announcement to end DST"
+ # http://www.app.com.pk/en_/index.php?option=com_content&task=view&id=99374&Itemid=2
+ 
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule Pakistan	2002	only	-	Apr	Sun>=2	0:00	1:00	S
+ Rule Pakistan	2002	only	-	Oct	Sun>=2	0:00	0	-
+ Rule Pakistan	2008	only	-	Jun	1	0:00	1:00	S
+@@ -3225,7 +3229,7 @@ Zone	Asia/Karachi	4:28:12 -	LMT	1907
+ # From Tim Parenti (2016-10-19):
+ # Predict fall transitions on October's last Saturday at 01:00 from now on.
+ 
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule EgyptAsia	1957	only	-	May	10	0:00	1:00	S
+ Rule EgyptAsia	1957	1958	-	Oct	 1	0:00	0	-
+ Rule EgyptAsia	1958	only	-	May	 1	0:00	1:00	S
+@@ -3325,7 +3329,7 @@ Zone	Asia/Hebron	2:20:23	-	LMT	1900 Oct
+ # influence of the sources.  There is no current abbreviation for DST,
+ # so use "PDT", the usual American style.
+ 
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	Phil	1936	only	-	Nov	1	0:00	1:00	D
+ Rule	Phil	1937	only	-	Feb	1	0:00	0	S
+ Rule	Phil	1954	only	-	Apr	12	0:00	1:00	D
+@@ -3473,7 +3477,7 @@ Zone	Asia/Colombo	5:19:24 -	LMT	1880
+ 			5:30	-	+0530
+ 
+ # Syria
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	Syria	1920	1923	-	Apr	Sun>=15	2:00	1:00	S
+ Rule	Syria	1920	1923	-	Oct	Sun>=1	2:00	0	-
+ Rule	Syria	1962	only	-	Apr	29	2:00	1:00	S
+diff --git a/src/main/java/org/joda/time/tz/src/australasia b/src/main/java/org/joda/time/tz/src/australasia
+index ac44c0482..aa7ab7f23 100644
+--- a/src/main/java/org/joda/time/tz/src/australasia
++++ b/src/main/java/org/joda/time/tz/src/australasia
+@@ -13,7 +13,7 @@
+ 
+ # Please see the notes below for the controversy about "EST" versus "AEST" etc.
+ 
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	Aus	1917	only	-	Jan	 1	0:01	1:00	D
+ Rule	Aus	1917	only	-	Mar	25	2:00	0	S
+ Rule	Aus	1942	only	-	Jan	 1	2:00	1:00	D
+@@ -32,7 +32,7 @@ Zone Australia/Darwin	 8:43:20 -	LMT	1895 Feb
+ 			 9:30	Aus	AC%sT
+ # Western Australia
+ #
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	AW	1974	only	-	Oct	lastSun	2:00s	1:00	D
+ Rule	AW	1975	only	-	Mar	Sun>=1	2:00s	0	S
+ Rule	AW	1983	only	-	Oct	lastSun	2:00s	1:00	D
+@@ -70,7 +70,7 @@ Zone Australia/Eucla	 8:35:28 -	LMT	1895 Dec
+ # applies to all of the Whitsundays.
+ # http://www.australia.gov.au/about-australia/australian-story/austn-islands
+ #
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	AQ	1971	only	-	Oct	lastSun	2:00s	1:00	D
+ Rule	AQ	1972	only	-	Feb	lastSun	2:00s	0	S
+ Rule	AQ	1989	1991	-	Oct	lastSun	2:00s	1:00	D
+@@ -86,7 +86,7 @@ Zone Australia/Lindeman  9:55:56 -	LMT	1895
+ 			10:00	Holiday	AE%sT
+ 
+ # South Australia
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	AS	1971	1985	-	Oct	lastSun	2:00s	1:00	D
+ Rule	AS	1986	only	-	Oct	19	2:00s	1:00	D
+ Rule	AS	1987	2007	-	Oct	lastSun	2:00s	1:00	D
+@@ -114,7 +114,7 @@ Zone Australia/Adelaide	9:14:20 -	LMT	1895 Feb
+ # http://www.bom.gov.au/climate/averages/tables/dst_times.shtml
+ # says King Island didn't observe DST from WWII until late 1971.
+ #
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	AT	1967	only	-	Oct	Sun>=1	2:00s	1:00	D
+ Rule	AT	1968	only	-	Mar	lastSun	2:00s	0	S
+ Rule	AT	1968	1985	-	Oct	lastSun	2:00s	1:00	D
+@@ -147,7 +147,7 @@ Zone Australia/Currie	9:35:28	-	LMT	1895 Sep
+ 			10:00	AT	AE%sT
+ 
+ # Victoria
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	AV	1971	1985	-	Oct	lastSun	2:00s	1:00	D
+ Rule	AV	1972	only	-	Feb	lastSun	2:00s	0	S
+ Rule	AV	1973	1985	-	Mar	Sun>=1	2:00s	0	S
+@@ -168,7 +168,7 @@ Zone Australia/Melbourne 9:39:52 -	LMT	1895 Feb
+ 			10:00	AV	AE%sT
+ 
+ # New South Wales
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	AN	1971	1985	-	Oct	lastSun	2:00s	1:00	D
+ Rule	AN	1972	only	-	Feb	27	2:00s	0	S
+ Rule	AN	1973	1981	-	Mar	Sun>=1	2:00s	0	S
+@@ -197,7 +197,7 @@ Zone Australia/Broken_Hill 9:25:48 -	LMT	1895 Feb
+ 			9:30	AS	AC%sT
+ 
+ # Lord Howe Island
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	LH	1981	1984	-	Oct	lastSun	2:00	1:00	-
+ Rule	LH	1982	1985	-	Mar	Sun>=1	2:00	0	-
+ Rule	LH	1985	only	-	Oct	lastSun	2:00	0:30	-
+@@ -252,8 +252,9 @@ Zone Antarctica/Macquarie 0	-	-00	1899 Nov
+ 			10:00	Aus	AE%sT	1919 Apr  1  0:00s
+ 			0	-	-00	1948 Mar 25
+ 			10:00	Aus	AE%sT	1967
+-			10:00	AT	AE%sT	2010 Apr  4  3:00
+-			11:00	-	+11
++			10:00	AT	AE%sT	2010
++			10:00	1:00	AEDT	2011
++			10:00	AT	AE%sT
+ 
+ # Christmas
+ # Zone	NAME		STDOFF	RULES	FORMAT	[UNTIL]
+@@ -380,7 +381,20 @@ Zone	Indian/Cocos	6:27:40	-	LMT	1900
+ # From Michael Deckers (2019-08-06):
+ # https://www.laws.gov.fj/LawsAsMade/downloadfile/848
+ 
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# From Raymond Kumar (2020-10-08):
++# [DST in Fiji] is from December 20th 2020, till 17th January 2021.
++# From Alan Mintz (2020-10-08):
++# https://www.laws.gov.fj/LawsAsMade/GetFile/1071
++# From Tim Parenti (2020-10-08):
++# https://www.fijivillage.com/news/Daylight-saving-from-Dec-20th-this-year-to-Jan-17th-2021-8rf4x5/
++# "Minister for Employment, Parveen Bala says they had never thought of
++# stopping daylight saving. He says it was just to decide on when it should
++# start and end.  Bala says it is a short period..."
++# Since the end date is still in line with our ongoing predictions, assume for
++# now that the later-than-usual start date is a one-time departure from the
++# recent second Sunday in November pattern.
++
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	Fiji	1998	1999	-	Nov	Sun>=1	2:00	1:00	-
+ Rule	Fiji	1999	2000	-	Feb	lastSun	3:00	0	-
+ Rule	Fiji	2009	only	-	Nov	29	2:00	1:00	-
+@@ -391,7 +405,9 @@ Rule	Fiji	2012	2013	-	Jan	Sun>=18	3:00	0	-
+ Rule	Fiji	2014	only	-	Jan	Sun>=18	2:00	0	-
+ Rule	Fiji	2014	2018	-	Nov	Sun>=1	2:00	1:00	-
+ Rule	Fiji	2015	max	-	Jan	Sun>=12	3:00	0	-
+-Rule	Fiji	2019	max	-	Nov	Sun>=8	2:00	1:00	-
++Rule	Fiji	2019	only	-	Nov	Sun>=8	2:00	1:00	-
++Rule	Fiji	2020	only	-	Dec	20	2:00	1:00	-
++Rule	Fiji	2021	max	-	Nov	Sun>=8	2:00	1:00	-
+ # Zone	NAME		STDOFF	RULES	FORMAT	[UNTIL]
+ Zone	Pacific/Fiji	11:55:44 -	LMT	1915 Oct 26 # Suva
+ 			12:00	Fiji	+12/+13
+@@ -409,7 +425,7 @@ Zone	Pacific/Tahiti	 -9:58:16 -	LMT	1912 Oct # Papeete
+ 
+ # Guam
+ 
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ # http://guamlegislature.com/Public_Laws_5th/PL05-025.pdf
+ # http://documents.guam.gov/wp-content/uploads/E.O.-59-7-Guam-Daylight-Savings-Time-May-6-1959.pdf
+ Rule	Guam	1959	only	-	Jun	27	2:00	1:00	D
+@@ -520,7 +536,7 @@ Zone	Pacific/Nauru	11:07:40 -	LMT	1921 Jan 15 # Uaobe
+ 			12:00	-	+12
+ 
+ # New Caledonia
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	NC	1977	1978	-	Dec	Sun>=1	0:00	1:00	-
+ Rule	NC	1978	1979	-	Feb	27	0:00	0	-
+ Rule	NC	1996	only	-	Dec	 1	2:00s	1:00	-
+@@ -535,7 +551,7 @@ Zone	Pacific/Noumea	11:05:48 -	LMT	1912 Jan 13 # Nouméa
+ 
+ # New Zealand
+ 
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	NZ	1927	only	-	Nov	 6	2:00	1:00	S
+ Rule	NZ	1928	only	-	Mar	 4	2:00	0	M
+ Rule	NZ	1928	1933	-	Oct	Sun>=8	2:00	0:30	S
+@@ -587,7 +603,7 @@ Link Pacific/Auckland Antarctica/McMurdo
+ 
+ # Cook Is
+ # From Shanks & Pottenger:
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	Cook	1978	only	-	Nov	12	0:00	0:30	-
+ Rule	Cook	1979	1991	-	Mar	Sun>=1	0:00	0	-
+ Rule	Cook	1979	1990	-	Oct	lastSun	0:00	0:30	-
+@@ -732,7 +748,7 @@ Link Pacific/Pago_Pago Pacific/Midway # in US minor outlying islands
+ # That web page currently lists transitions for 2012/3 and 2013/4.
+ # Assume the pattern instituted in 2012 will continue indefinitely.
+ 
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	WS	2010	only	-	Sep	lastSun	0:00	1	-
+ Rule	WS	2011	only	-	Apr	Sat>=1	4:00	0	-
+ Rule	WS	2011	only	-	Sep	lastSat	3:00	1	-
+@@ -776,7 +792,7 @@ Zone	Pacific/Fakaofo	-11:24:56 -	LMT	1901
+ 			13:00	-	+13
+ 
+ # Tonga
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	Tonga	1999	only	-	Oct	 7	2:00s	1:00	-
+ Rule	Tonga	2000	only	-	Mar	19	2:00s	0	-
+ Rule	Tonga	2000	2001	-	Nov	Sun>=1	2:00	1:00	-
+@@ -857,7 +873,7 @@ Zone	Pacific/Wake	11:06:28 -	LMT	1901
+ 
+ 
+ # Vanuatu
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	Vanuatu	1983	only	-	Sep	25	0:00	1:00	-
+ Rule	Vanuatu	1984	1991	-	Mar	Sun>=23	0:00	0	-
+ Rule	Vanuatu	1984	only	-	Oct	23	0:00	1:00	-
+diff --git a/src/main/java/org/joda/time/tz/src/europe b/src/main/java/org/joda/time/tz/src/europe
+index 5593c6079..af6c62821 100644
+--- a/src/main/java/org/joda/time/tz/src/europe
++++ b/src/main/java/org/joda/time/tz/src/europe
+@@ -388,7 +388,7 @@
+ # http://www.irishstatutebook.ie/eli/1926/sro/919/made/en/print
+ # http://www.irishstatutebook.ie/eli/1947/sro/71/made/en/print
+ 
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ # Summer Time Act, 1916
+ Rule	GB-Eire	1916	only	-	May	21	2:00s	1:00	BST
+ Rule	GB-Eire	1916	only	-	Oct	 1	2:00s	0	GMT
+@@ -529,7 +529,7 @@ Link	Europe/London	Europe/Isle_of_Man
+ # The following is like GB-Eire and EU, except with standard time in
+ # summer and negative daylight saving time in winter.  It is for when
+ # negative SAVE values are used.
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	Eire	1971	only	-	Oct	31	 2:00u	-1:00	-
+ Rule	Eire	1972	1980	-	Mar	Sun>=16	 2:00u	0	-
+ Rule	Eire	1972	1980	-	Oct	Sun>=23	 2:00u	-1:00	-
+@@ -566,7 +566,7 @@ Zone	Europe/Dublin	-0:25:00 -	LMT	1880 Aug  2
+ # predecessor organization, the European Communities.
+ # For brevity they are called "EU rules" elsewhere in this file.
+ 
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	EU	1977	1980	-	Apr	Sun>=1	 1:00u	1:00	S
+ Rule	EU	1977	only	-	Sep	lastSun	 1:00u	0	-
+ Rule	EU	1978	only	-	Oct	 1	 1:00u	0	-
+@@ -606,13 +606,13 @@ Rule	C-Eur	1944	only	-	Oct	 2	 2:00s	0	-
+ # corrected in version 2008d). The circumstantial evidence is simply the
+ # tz database itself, as seen below:
+ #
+-# Zone Europe/Paris 0:09:21 - LMT 1891 Mar 15  0:01
++# Zone Europe/Paris ...
+ #    0:00 France WE%sT 1945 Sep 16  3:00
+ #
+-# Zone Europe/Monaco 0:29:32 - LMT 1891 Mar 15
++# Zone Europe/Monaco ...
+ #    0:00 France WE%sT 1945 Sep 16  3:00
+ #
+-# Zone Europe/Belgrade 1:22:00 - LMT 1884
++# Zone Europe/Belgrade ...
+ #    1:00 1:00 CEST 1945 Sep 16  2:00s
+ #
+ # Rule France 1945 only - Sep 16  3:00 0 -
+@@ -658,7 +658,7 @@ Rule	E-Eur	1996	max	-	Oct	lastSun	 0:00	0	-
+ #
+ # The 1917-1921 decree URLs are from Alexander Belopolsky (2016-08-23).
+ 
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	Russia	1917	only	-	Jul	 1	23:00	1:00	MST  # Moscow Summer Time
+ #
+ # Decree No. 142 (1917-12-22) http://istmat.info/node/28137
+@@ -772,7 +772,7 @@ Zone	EET		2:00	EU	EE%sT
+ 
+ 
+ # Albania
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	Albania	1940	only	-	Jun	16	0:00	1:00	S
+ Rule	Albania	1942	only	-	Nov	 2	3:00	0	-
+ Rule	Albania	1943	only	-	Mar	29	2:00	1:00	S
+@@ -826,7 +826,7 @@ Zone	Europe/Andorra	0:06:04 -	LMT	1901
+ # In 1946 the end of DST was on Monday, 7 October 1946, at 3:00 am.
+ # Shanks had this right.  Source: Die Weltpresse, 5. Oktober 1946, page 5.
+ 
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	Austria	1920	only	-	Apr	 5	2:00s	1:00	S
+ Rule	Austria	1920	only	-	Sep	13	2:00s	0	-
+ Rule	Austria	1946	only	-	Apr	14	2:00s	1:00	S
+@@ -913,7 +913,7 @@ Zone	Europe/Minsk	1:50:16 -	LMT	1880
+ # The 1918 rules are listed for completeness; they apply to unoccupied Belgium.
+ # Assume Brussels switched to WET in 1918 when the armistice took effect.
+ #
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	Belgium	1918	only	-	Mar	 9	 0:00s	1:00	S
+ Rule	Belgium	1918	1919	-	Oct	Sat>=1	23:00s	0	-
+ Rule	Belgium	1919	only	-	Mar	 1	23:00s	1:00	S
+@@ -973,7 +973,7 @@ Zone	Europe/Brussels	0:17:30 -	LMT	1880
+ # EET -> EETDST is in 03:00 Local time in last Sunday of March ...
+ # EETDST -> EET is in 04:00 Local time in last Sunday of October
+ #
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	Bulg	1979	only	-	Mar	31	23:00	1:00	S
+ Rule	Bulg	1979	only	-	Oct	 1	 1:00	0	-
+ Rule	Bulg	1980	1982	-	Apr	Sat>=1	23:00	1:00	S
+@@ -1005,7 +1005,7 @@ Zone	Europe/Sofia	1:33:16 -	LMT	1880
+ # We know of no English-language name for historical Czech winter time;
+ # abbreviate it as "GMT", as it happened to be GMT.
+ #
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	Czech	1945	only	-	Apr	Mon>=1	2:00s	1:00	S
+ Rule	Czech	1945	only	-	Oct	 1	2:00s	0	-
+ Rule	Czech	1946	only	-	May	 6	2:00s	1:00	S
+@@ -1061,7 +1061,7 @@ Zone	Europe/Prague	0:57:44 -	LMT	1850
+ # Hence the "02:00" of the 1980 law refers to standard time, not
+ # wall-clock time, and so the EU rules were in effect in 1980.
+ 
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	Denmark	1916	only	-	May	14	23:00	1:00	S
+ Rule	Denmark	1916	only	-	Sep	30	23:00	0	-
+ Rule	Denmark	1940	only	-	May	15	 0:00	1:00	S
+@@ -1163,7 +1163,7 @@ Zone Atlantic/Faroe	-0:27:04 -	LMT	1908 Jan 11 # Tórshavn
+ # http://naalakkersuisut.gl/~/media/Nanoq/Files/Attached%20Files/Engelske-tekster/Legislation/Executive%20Order%20National%20Park.rtf
+ # It is their only National Park.
+ #
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	Thule	1991	1992	-	Mar	lastSun	2:00	1:00	D
+ Rule	Thule	1991	1992	-	Sep	lastSun	2:00	0	S
+ Rule	Thule	1993	2006	-	Apr	Sun>=1	2:00	1:00	D
+@@ -1294,7 +1294,7 @@ Zone	Europe/Tallinn	1:39:00	-	LMT	1880
+ # From Paul Eggert (2014-06-14):
+ # Go with Oja over Shanks.
+ 
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	Finland	1942	only	-	Apr	2	24:00	1:00	S
+ Rule	Finland	1942	only	-	Oct	4	1:00	0	-
+ Rule	Finland	1981	1982	-	Mar	lastSun	2:00	1:00	S
+@@ -1326,10 +1326,58 @@ Link	Europe/Helsinki	Europe/Mariehamn
+ # Françoise Gauquelin, Problèmes de l'heure résolus en astrologie,
+ # Guy Trédaniel, Paris 1987
+ 
++# From Michael Deckers (2020-06-11):
++# the law of 1891 <https://gallica.bnf.fr/ark:/12148/bpt6k64415343.texteImage>
++# was published on 1891-03-15, so it could only take force on 1891-03-16.
++
++# From Michael Deckers (2020-06-10):
++# Le Gaulois, 1911-03-11, page 1/6, online at
++# https://www.retronews.fr/societe/echo-de-presse/2018/01/29/1911-change-lheure-de-paris
++# ... [ Instantly, all pressure driven clock dials halted...  Nine minutes and
++#       twenty-one seconds later the hands resumed their circular motion. ]
++# There are also precise reports about how the change was prepared in train
++# stations: all the publicly visible clocks stopped at midnight railway time
++# (or were covered), only the chief of service had a watch, labeled
++# "Heure ancienne", that he kept running until it reached 00:04:21, when
++# he announced "Heure nouvelle".  See the "Le Petit Journal 1911-03-11".
++# https://gallica.bnf.fr/ark:/12148/bpt6k6192911/f1.item.zoom
++#
++# From Michael Deckers (2020-06-12):
++# That "all French clocks stopped" for 00:09:21 is a misreading of French
++# newspapers; this sort of adjustment applies only to certain
++# remote-controlled clocks ("pendules pneumatiques", of which there existed
++# perhaps a dozen in Paris, and which simply could not be set back remotely),
++# but not to all the clocks in all French towns and villages.  For instance,
++# the following story in the "Courrier de Saône-et-Loire" 1911-03-11, page 2:
++# only works if legal time was stepped back (was not monotone): ...
++#   [One can observe that children who had been born at midnight less 5
++#    minutes and who had died at midnight of the old time, would turn out to
++#    be dead before being born, time having been set back and having
++#    suppressed 9 minutes and 25 seconds of their existence, that is, more
++#    than they could spend.]
++#
++# From Paul Eggert (2020-06-12):
++# French time in railway stations was legally five minutes behind civil time,
++# which explains why railway "old time" ran to 00:04:21 instead of to 00:09:21.
++# The law's text (which Michael Deckers noted is at
++# <https://gallica.bnf.fr/ark:/12148/bpt6k2022333z/f2>) says only that
++# at 1911-03-11 00:00 legal time was that of Paris mean time delayed by
++# nine minutes and twenty-one seconds, and does not say how the
++# transition from Paris mean time was to occur.
++#
++# tzdb has no way to represent stopped clocks.  As the railway practice
++# was to keep a watch running on "old time" to decide when to restart
++# the other clocks, this could be modeled as a transition for "old time" at
++# 00:09:21.  However, since the law was ambiguous and clocks outside railway
++# stations were probably done haphazardly with the popular impression being
++# that the transition was done at 00:00 "old time", simply leave the time
++# blank; this causes zic to default to 00:00 "old time" which is good enough.
++# Do something similar for the 1891-03-16 transition.  There are similar
++# problems in Algiers, Monaco and Tunis.
+ 
+ #
+ # Shank & Pottenger seem to use '24:00' ambiguously; resolve it with Whitman.
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	France	1916	only	-	Jun	14	23:00s	1:00	S
+ Rule	France	1916	1919	-	Oct	Sun>=1	23:00s	0	-
+ Rule	France	1917	only	-	Mar	24	23:00s	1:00	S
+@@ -1389,13 +1437,11 @@ Rule	France	1945	only	-	Sep	16	 3:00	0	-
+ # go with Excoffier's 28/3/76 0hUT and 25/9/76 23hUT.
+ Rule	France	1976	only	-	Mar	28	 1:00	1:00	S
+ Rule	France	1976	only	-	Sep	26	 1:00	0	-
+-# Shanks & Pottenger give 0:09:20 for Paris Mean Time, and Whitman 0:09:05,
+-# but Howse quotes the actual French legislation as saying 0:09:21.
+-# Go with Howse.  Howse writes that the time in France was officially based
++# Howse writes that the time in France was officially based
+ # on PMT-0:09:21 until 1978-08-09, when the time base finally switched to UTC.
+ # Zone	NAME		STDOFF	RULES	FORMAT	[UNTIL]
+-Zone	Europe/Paris	0:09:21 -	LMT	1891 Mar 15  0:01
+-			0:09:21	-	PMT	1911 Mar 11  0:01 # Paris MT
++Zone	Europe/Paris	0:09:21 -	LMT	1891 Mar 16
++			0:09:21	-	PMT	1911 Mar 11 # Paris Mean Time
+ # Shanks & Pottenger give 1940 Jun 14 0:00; go with Excoffier and Le Corre.
+ 			0:00	France	WE%sT	1940 Jun 14 23:00
+ # Le Corre says Paris stuck with occupied-France time after the liberation;
+@@ -1424,7 +1470,7 @@ Zone	Europe/Paris	0:09:21 -	LMT	1891 Mar 15  0:01
+ # this was equivalent to UT +03, not +04.
+ 
+ 
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	Germany	1946	only	-	Apr	14	2:00s	1:00	S
+ Rule	Germany	1946	only	-	Oct	 7	2:00s	0	-
+ Rule	Germany	1947	1949	-	Oct	Sun>=1	2:00s	0	-
+@@ -1476,7 +1522,7 @@ Zone Europe/Gibraltar	-0:21:24 -	LMT	1880 Aug  2  0:00s
+ 			1:00	EU	CE%sT
+ 
+ # Greece
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ # Whitman gives 1932 Jul 5 - Nov 1; go with Shanks & Pottenger.
+ Rule	Greece	1932	only	-	Jul	 7	0:00	1:00	S
+ Rule	Greece	1932	only	-	Sep	 1	0:00	0	-
+@@ -1511,38 +1557,73 @@ Zone	Europe/Athens	1:34:52 -	LMT	1895 Sep 14
+ 			2:00	EU	EE%sT
+ 
+ # Hungary
+-# From Paul Eggert (2014-07-15):
+-# Dates for 1916-1945 are taken from:
+-# Oross A. Jelen a múlt jövője: a nyári időszámítás Magyarországon 1916-1945.
+-# National Archives of Hungary (2012-10-29).
+-# http://mnl.gov.hu/a_het_dokumentuma/a_nyari_idoszamitas_magyarorszagon_19161945.html
+-# This source does not always give times, which are taken from Shanks
+-# & Pottenger (which disagree about the dates).
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
+-Rule	Hungary	1918	only	-	Apr	 1	 3:00	1:00	S
+-Rule	Hungary	1918	only	-	Sep	16	 3:00	0	-
+-Rule	Hungary	1919	only	-	Apr	15	 3:00	1:00	S
+-Rule	Hungary	1919	only	-	Nov	24	 3:00	0	-
++
++# From Michael Deckers (2020-06-09):
++# an Austrian encyclopedia of railroads of 1913, online at
++# http://www.zeno.org/Roell-1912/A/Eisenbahnzeit
++# says that the switch [to CET] happened on 1890-11-01.
++
++# From Géza Nyáry (2020-06-07):
++# Data for 1918-1983 are based on the archive database of Library Hungaricana.
++# The dates are collected from original, scanned governmental orders,
++# bulletins, instructions and public press.
++# [See URLs below.]
++
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
++# https://library.hungaricana.hu/hu/view/OGYK_RT_1918/?pg=238
++# https://library.hungaricana.hu/hu/view/OGYK_RT_1919/?pg=808
++# https://library.hungaricana.hu/hu/view/OGYK_RT_1920/?pg=201
++Rule	Hungary	1918	1919	-	Apr	15	 2:00	1:00	S
++Rule	Hungary	1918	1920	-	Sep	Mon>=15	 3:00	0	-
++Rule	Hungary	1920	only	-	Apr	 5	 2:00	1:00	S
++# https://library.hungaricana.hu/hu/view/OGYK_RT_1945/?pg=882
+ Rule	Hungary	1945	only	-	May	 1	23:00	1:00	S
+-Rule	Hungary	1945	only	-	Nov	 1	 0:00	0	-
++Rule	Hungary	1945	only	-	Nov	 1	 1:00	0	-
++# https://library.hungaricana.hu/hu/view/Delmagyarorszag_1946_03/?pg=49
+ Rule	Hungary	1946	only	-	Mar	31	 2:00s	1:00	S
+-Rule	Hungary	1946	1949	-	Oct	Sun>=1	 2:00s	0	-
++# https://library.hungaricana.hu/hu/view/Delmagyarorszag_1946_09/?pg=54
++Rule	Hungary	1946	only	-	Oct	 7	 2:00	0	-
++# https://library.hungaricana.hu/hu/view/KulfBelfHirek_1947_04_1__001-123/?pg=90
++# https://library.hungaricana.hu/hu/view/DunantuliNaplo_1947_09/?pg=128
++# https://library.hungaricana.hu/hu/view/KulfBelfHirek_1948_03_3__001-123/?pg=304
++# https://library.hungaricana.hu/hu/view/Zala_1948_09/?pg=64
++# https://library.hungaricana.hu/hu/view/SatoraljaujhelyiLeveltar_ZempleniNepujsag_1948/?pg=53
++# https://library.hungaricana.hu/hu/view/SatoraljaujhelyiLeveltar_ZempleniNepujsag_1948/?pg=160
++# https://library.hungaricana.hu/hu/view/UjSzo_1949_01-04/?pg=102
++# https://library.hungaricana.hu/hu/view/KeletMagyarorszag_1949_03/?pg=96
++# https://library.hungaricana.hu/hu/view/Delmagyarorszag_1949_09/?pg=94
+ Rule	Hungary	1947	1949	-	Apr	Sun>=4	 2:00s	1:00	S
+-Rule	Hungary	1950	only	-	Apr	17	 2:00s	1:00	S
+-Rule	Hungary	1950	only	-	Oct	23	 2:00s	0	-
+-Rule	Hungary	1954	1955	-	May	23	 0:00	1:00	S
+-Rule	Hungary	1954	1955	-	Oct	 3	 0:00	0	-
+-Rule	Hungary	1956	only	-	Jun	Sun>=1	 0:00	1:00	S
+-Rule	Hungary	1956	only	-	Sep	lastSun	 0:00	0	-
+-Rule	Hungary	1957	only	-	Jun	Sun>=1	 1:00	1:00	S
+-Rule	Hungary	1957	only	-	Sep	lastSun	 3:00	0	-
+-Rule	Hungary	1980	only	-	Apr	 6	 1:00	1:00	S
++Rule	Hungary	1947	1949	-	Oct	Sun>=1	 2:00s	0	-
++# https://library.hungaricana.hu/hu/view/DTT_KOZL_TanacsokKozlonye_1954/?pg=513
++Rule	Hungary	1954	only	-	May	23	 0:00	1:00	S
++Rule	Hungary	1954	only	-	Oct	 3	 0:00	0	-
++# https://library.hungaricana.hu/hu/view/DTT_KOZL_TanacsokKozlonye_1955/?pg=398
++Rule	Hungary	1955	only	-	May	22	 2:00	1:00	S
++Rule	Hungary	1955	only	-	Oct	 2	 3:00	0	-
++# https://library.hungaricana.hu/hu/view/HevesMegyeiNepujsag_1956_06/?pg=0
++# https://library.hungaricana.hu/hu/view/EszakMagyarorszag_1956_06/?pg=6
++# https://library.hungaricana.hu/hu/view/SzolnokMegyeiNeplap_1957_04/?pg=120
++# https://library.hungaricana.hu/hu/view/PestMegyeiHirlap_1957_09/?pg=143
++Rule	Hungary	1956	1957	-	Jun	Sun>=1	 2:00	1:00	S
++Rule	Hungary	1956	1957	-	Sep	lastSun	 3:00	0	-
++# https://library.hungaricana.hu/hu/view/DTT_KOZL_TanacsokKozlonye_1980/?pg=189
++Rule	Hungary	1980	only	-	Apr	 6	 0:00	1:00	S
++Rule	Hungary	1980	only	-	Sep	28	 1:00	0	-
++# https://library.hungaricana.hu/hu/view/DTT_KOZL_TanacsokKozlonye_1980/?pg=1227
++# https://library.hungaricana.hu/hu/view/Delmagyarorszag_1981_01/?pg=79
++# https://library.hungaricana.hu/hu/view/DTT_KOZL_TanacsokKozlonye_1982/?pg=115
++# https://library.hungaricana.hu/hu/view/DTT_KOZL_TanacsokKozlonye_1983/?pg=85
++Rule	Hungary	1981	1983	-	Mar	lastSun	 0:00	1:00	S
++Rule	Hungary	1981	1983	-	Sep	lastSun	 1:00	0	-
++#
+ # Zone	NAME		STDOFF	RULES	FORMAT	[UNTIL]
+-Zone	Europe/Budapest	1:16:20 -	LMT	1890 Oct
++Zone	Europe/Budapest	1:16:20 -	LMT	1890 Nov  1
+ 			1:00	C-Eur	CE%sT	1918
+-			1:00	Hungary	CE%sT	1941 Apr  8
++# https://library.hungaricana.hu/hu/view/OGYK_RT_1941/?pg=1204
++# https://library.hungaricana.hu/hu/view/OGYK_RT_1942/?pg=3955
++			1:00	Hungary	CE%sT	1941 Apr  7 23:00
+ 			1:00	C-Eur	CE%sT	1945
+-			1:00	Hungary	CE%sT	1980 Sep 28  2:00s
++			1:00	Hungary	CE%sT	1984
+ 			1:00	EU	CE%sT
+ 
+ # Iceland
+@@ -1578,7 +1659,7 @@ Zone	Europe/Budapest	1:16:20 -	LMT	1890 Oct
+ # The information below is taken from the 1988 Almanak; see
+ # http://www.almanak.hi.is/klukkan.html
+ #
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	Iceland	1917	1919	-	Feb	19	23:00	1:00	-
+ Rule	Iceland	1917	only	-	Oct	21	 1:00	0	-
+ Rule	Iceland	1918	1919	-	Nov	16	 1:00	0	-
+@@ -1670,7 +1751,7 @@ Zone Atlantic/Reykjavik	-1:28	-	LMT	1908
+ # to 1944-06-04; although Rome was an open city during this period, it
+ # was effectively controlled by Germany.
+ #
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	Italy	1916	only	-	Jun	 3	24:00	1:00	S
+ Rule	Italy	1916	1917	-	Sep	30	24:00	0	-
+ Rule	Italy	1917	only	-	Mar	31	24:00	1:00	S
+@@ -1780,7 +1861,7 @@ Link	Europe/Rome	Europe/San_Marino
+ # urged Lithuania and Estonia to adopt a similar time policy, but it
+ # appears that they will not do so....
+ 
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	Latvia	1989	1996	-	Mar	lastSun	 2:00s	1:00	S
+ Rule	Latvia	1989	1996	-	Sep	lastSun	 2:00s	0	-
+ 
+@@ -1873,7 +1954,7 @@ Zone	Europe/Vilnius	1:41:16	-	LMT	1880
+ # Luxembourg
+ # Whitman disagrees with most of these dates in minor ways;
+ # go with Shanks & Pottenger.
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	Lux	1916	only	-	May	14	23:00	1:00	S
+ Rule	Lux	1916	only	-	Oct	 1	 1:00	0	-
+ Rule	Lux	1917	only	-	Apr	28	23:00	1:00	S
+@@ -1914,7 +1995,7 @@ Zone Europe/Luxembourg	0:24:36 -	LMT	1904 Jun
+ # From Paul Eggert (2016-10-21):
+ # Assume 1900-1972 was like Rome, overriding Shanks.
+ #
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	Malta	1973	only	-	Mar	31	0:00s	1:00	S
+ Rule	Malta	1973	only	-	Sep	29	0:00s	0	-
+ Rule	Malta	1974	only	-	Apr	21	0:00s	1:00	S
+@@ -1987,7 +2068,7 @@ Zone	Europe/Malta	0:58:04 -	LMT	1893 Nov  2  0:00s # Valletta
+ # says the 2014-03-30 spring-forward transition was at 02:00 local time.
+ # Guess that since 1997 Moldova has switched one hour before the EU.
+ 
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	Moldova	1997	max	-	Mar	lastSun	 2:00	1:00	S
+ Rule	Moldova	1997	max	-	Oct	lastSun	 3:00	0	-
+ 
+@@ -2005,11 +2086,24 @@ Zone	Europe/Chisinau	1:55:20 -	LMT	1880
+ 			2:00	Moldova	EE%sT
+ 
+ # Monaco
+-# Shanks & Pottenger give 0:09:20 for Paris Mean Time; go with Howse's
+-# more precise 0:09:21.
++#
++# From Michael Deckers (2020-06-12):
++# In the "Journal de Monaco" of 1892-05-24, online at
++# https://journaldemonaco.gouv.mc/var/jdm/storage/original/application/b1c67c12c5af11b41ea888fb048e4fe8.pdf
++# we read: ...
++#  [In virtue of a Sovereign Ordinance of the May 13 of the current [year],
++#   legal time in the Principality will be set to, from the date of June 1,
++#   1892 onwards, to the meridian of Paris, as in France.]
++# In the "Journal de Monaco" of 1911-03-28, online at
++# https://journaldemonaco.gouv.mc/var/jdm/storage/original/application/de74ffb7db53d4f599059fe8f0ed482a.pdf
++# we read an ordinance of 1911-03-16: ...
++#  [Legal time in the Principality will be set, from the date of promulgation
++#   of the present ordinance, to legal time in France....  Consequently, legal
++#   time will be retarded by 9 minutes and 21 seconds.]
++#
+ # Zone	NAME		STDOFF	RULES	FORMAT	[UNTIL]
+-Zone	Europe/Monaco	0:29:32 -	LMT	1891 Mar 15
+-			0:09:21	-	PMT	1911 Mar 11 # Paris Mean Time
++Zone	Europe/Monaco	0:29:32 -	LMT	1892 Jun  1
++			0:09:21	-	PMT	1911 Mar 29 # Paris Mean Time
+ 			0:00	France	WE%sT	1945 Sep 16  3:00
+ 			1:00	France	CE%sT	1977
+ 			1:00	EU	CE%sT
+@@ -2057,7 +2151,7 @@ Zone	Europe/Monaco	0:29:32 -	LMT	1891 Mar 15
+ # The data entries before 1945 are taken from
+ # https://www.staff.science.uu.nl/~gent0113/wettijd/wettijd.htm
+ 
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	Neth	1916	only	-	May	 1	0:00	1:00	NST	# Netherlands Summer Time
+ Rule	Neth	1916	only	-	Oct	 1	0:00	0	AMT	# Amsterdam Mean Time
+ Rule	Neth	1917	only	-	Apr	16	2:00s	1:00	NST
+@@ -2094,7 +2188,7 @@ Zone Europe/Amsterdam	0:19:32 -	LMT	1835
+ # Norway
+ # http://met.no/met/met_lex/q_u/sommertid.html (2004-01) agrees with Shanks &
+ # Pottenger.
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	Norway	1916	only	-	May	22	1:00	1:00	S
+ Rule	Norway	1916	only	-	Sep	30	0:00	0	-
+ Rule	Norway	1945	only	-	Apr	 2	2:00s	1:00	S
+@@ -2163,7 +2257,7 @@ Link	Europe/Oslo	Arctic/Longyearbyen
+ # The 1919 dates and times can be found in Tygodnik Urzędowy nr 1 (1919-03-20),
+ # <http://www.wbc.poznan.pl/publication/32156> pp 1-2.
+ 
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	Poland	1918	1919	-	Sep	16	2:00s	0	-
+ Rule	Poland	1919	only	-	Apr	15	2:00s	1:00	S
+ Rule	Poland	1944	only	-	Apr	 3	2:00s	1:00	S
+@@ -2234,7 +2328,7 @@ Zone	Europe/Warsaw	1:24:00 -	LMT	1880
+ # Guess that the Azores changed to EU rules in 1992 (since that's when Portugal
+ # harmonized with EU rules), and that they stayed +0:00 that winter.
+ #
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ # DSH writes that despite Decree 1,469 (1915), the change to the clocks was not
+ # done every year, depending on what Spain did, because of railroad schedules.
+ # Go with Shanks & Pottenger.
+@@ -2347,7 +2441,7 @@ Zone Atlantic/Madeira	-1:07:36 -	LMT	1884        # Funchal
+ # assume that Romania and Moldova switched to EU rules in 1997,
+ # the same year as Bulgaria.
+ #
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	Romania	1932	only	-	May	21	 0:00s	1:00	S
+ Rule	Romania	1932	1939	-	Oct	Sun>=1	 0:00s	0	-
+ Rule	Romania	1933	1939	-	Apr	Sun>=2	 0:00s	1:00	S
+@@ -3445,14 +3539,14 @@ Link Europe/Prague Europe/Bratislava
+ # fallback transition from the next day's 00:59... to 00:00.
+ 
+ # From Michael Deckers (2016-12-15):
+-# The Royal Decree of 1900-06-26 quoted by Planesas, online at
++# The Royal Decree of 1900-07-26 quoted by Planesas, online at
+ # https://www.boe.es/datos/pdfs/BOE//1900/209/A00383-00384.pdf
+ # says in its article 5 (my translation):
+ # These dispositions will enter into force beginning with the
+ # instant at which, according to the time indicated in article 1,
+ # the 1st day of January of 1901 will begin.
+ 
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	Spain	1918	only	-	Apr	15	23:00	1:00	S
+ Rule	Spain	1918	1919	-	Oct	 6	24:00s	0	-
+ Rule	Spain	1919	only	-	Apr	 6	23:00	1:00	S
+@@ -3589,7 +3683,7 @@ Zone Europe/Stockholm	1:12:12 -	LMT	1879 Jan  1
+ # By the end of the 18th century clocks and watches became commonplace
+ # and their performance improved enormously.  Communities began to keep
+ # mean time in preference to apparent time - Geneva from 1780 ....
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ # From Whitman (who writes "Midnight?"):
+ # Rule	Swiss	1940	only	-	Nov	 2	0:00	1:00	S
+ # Rule	Swiss	1940	only	-	Dec	31	0:00	0	-
+@@ -3676,7 +3770,7 @@ Zone Europe/Stockholm	1:12:12 -	LMT	1879 Jan  1
+ # 1853-07-16, though it probably occurred at some other date in Zurich, and
+ # legal civil time probably changed at still some other transition date.
+ 
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	Swiss	1941	1942	-	May	Mon>=1	1:00	1:00	S
+ Rule	Swiss	1941	1942	-	Oct	Mon>=1	2:00	0	-
+ # Zone	NAME		STDOFF	RULES	FORMAT	[UNTIL]
+@@ -3825,7 +3919,7 @@ Zone	Europe/Zurich	0:34:08 -	LMT	1853 Jul 16 # See above comment.
+ # Although Google Translate misfires on that source, it looks like
+ # Turkey reversed last month's decision, and so will stay at +03.
+ 
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	Turkey	1916	only	-	May	 1	0:00	1:00	S
+ Rule	Turkey	1916	only	-	Oct	 1	0:00	0	-
+ Rule	Turkey	1920	only	-	Mar	28	0:00	1:00	S
+@@ -3983,7 +4077,7 @@ Zone Europe/Kiev	2:02:04 -	LMT	1880
+ 			2:00	1:00	EEST	1991 Sep 29  3:00
+ 			2:00	E-Eur	EE%sT	1995
+ 			2:00	EU	EE%sT
+-# Ruthenia used CET 1990/1991.
++# Transcarpathia used CET 1990/1991.
+ # "Uzhhorod" is the transliteration of the Rusyn/Ukrainian pronunciation, but
+ # "Uzhgorod" is more common in English.
+ Zone Europe/Uzhgorod	1:29:12 -	LMT	1890 Oct
+diff --git a/src/main/java/org/joda/time/tz/src/northamerica b/src/main/java/org/joda/time/tz/src/northamerica
+index febf05bfd..675c648ec 100644
+--- a/src/main/java/org/joda/time/tz/src/northamerica
++++ b/src/main/java/org/joda/time/tz/src/northamerica
+@@ -170,7 +170,7 @@
+ # U.S. government action.  So even though the "US" rules have changed
+ # in the latest release, other countries won't be affected.
+ 
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	US	1918	1919	-	Mar	lastSun	2:00	1:00	D
+ Rule	US	1918	1919	-	Oct	lastSun	2:00	0	S
+ Rule	US	1942	only	-	Feb	9	2:00	1:00	W # War
+@@ -347,7 +347,7 @@ Zone	PST8PDT		 -8:00	US	P%sT
+ # Eastern time (i.e., -4:56:01.6) just before the 1883 switch.  Round to the
+ # nearest second.
+ 
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER
+ Rule	NYC	1920	only	-	Mar	lastSun	2:00	1:00	D
+ Rule	NYC	1920	only	-	Oct	lastSun	2:00	0	S
+ Rule	NYC	1921	1966	-	Apr	lastSun	2:00	1:00	D
+@@ -431,7 +431,7 @@ Zone America/New_York	-4:56:02 -	LMT	1883 Nov 18 12:03:58
+ # The Tennessean 2007-05-11, republished 2015-04-06.
+ # https://www.tennessean.com/story/insider/extras/2015/04/06/archives-seigenthaler-for-100-years-the-tennessean-had-it-covered/25348545/
+ 
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER
+ Rule	Chicago	1920	only	-	Jun	13	2:00	1:00	D
+ Rule	Chicago	1920	1921	-	Oct	lastSun	2:00	0	S
+ Rule	Chicago	1921	only	-	Mar	lastSun	2:00	1:00	D
+@@ -500,7 +500,7 @@ Zone America/North_Dakota/Beulah -6:47:07 - LMT	1883 Nov 18 12:12:53
+ # El Paso Times. 2018-10-24 06:40 -06.
+ # https://www.elpasotimes.com/story/news/local/el-paso/2018/10/24/el-pasoans-were-time-rebels-fought-stay-mountain-zone/1744509002/
+ #
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER
+ Rule	Denver	1920	1921	-	Mar	lastSun	2:00	1:00	D
+ Rule	Denver	1920	only	-	Oct	lastSun	2:00	0	S
+ Rule	Denver	1921	only	-	May	22	2:00	0	S
+@@ -553,7 +553,7 @@ Zone America/Denver	-6:59:56 -	LMT	1883 Nov 18 12:00:04
+ # https://repository.uchastings.edu/cgi/viewcontent.cgi?article=1501&context=ca_ballot_props
+ # https://repository.uchastings.edu/cgi/viewcontent.cgi?article=1636&context=ca_ballot_props
+ #
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER
+ Rule	CA	1948	only	-	Mar	14	2:01	1:00	D
+ Rule	CA	1949	only	-	Jan	 1	2:00	0	S
+ Rule	CA	1950	1966	-	Apr	lastSun	1:00	1:00	D
+@@ -911,7 +911,7 @@ Zone America/Boise	-7:44:49 -	LMT	1883 Nov 18 12:15:11
+ # going to switch from Central to Eastern Time on March 11, 2007....
+ # http://www.indystar.com/apps/pbcs.dll/article?AID=/20070207/LOCAL190108/702070524/0/LOCAL
+ 
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER
+ Rule Indianapolis 1941	only	-	Jun	22	2:00	1:00	D
+ Rule Indianapolis 1941	1954	-	Sep	lastSun	2:00	0	S
+ Rule Indianapolis 1946	1954	-	Apr	lastSun	2:00	1:00	D
+@@ -930,7 +930,7 @@ Zone America/Indiana/Indianapolis -5:44:38 - LMT	1883 Nov 18 12:15:22
+ #
+ # Eastern Crawford County, Indiana, left its clocks alone in 1974,
+ # as well as from 1976 through 2005.
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER
+ Rule	Marengo	1951	only	-	Apr	lastSun	2:00	1:00	D
+ Rule	Marengo	1951	only	-	Sep	lastSun	2:00	0	S
+ Rule	Marengo	1954	1960	-	Apr	lastSun	2:00	1:00	D
+@@ -949,7 +949,7 @@ Zone America/Indiana/Marengo -5:45:23 -	LMT	1883 Nov 18 12:14:37
+ # Daviess, Dubois, Knox, and Martin Counties, Indiana,
+ # switched from eastern to central time in April 2006, then switched back
+ # in November 2007.
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER
+ Rule Vincennes	1946	only	-	Apr	lastSun	2:00	1:00	D
+ Rule Vincennes	1946	only	-	Sep	lastSun	2:00	0	S
+ Rule Vincennes	1953	1954	-	Apr	lastSun	2:00	1:00	D
+@@ -974,7 +974,7 @@ Zone America/Indiana/Vincennes -5:50:07 - LMT	1883 Nov 18 12:09:53
+ # The Indianapolis News, Friday 27 October 1967 states that Perry County
+ # returned to CST.  It went again to EST on 27 April 1969, as documented by the
+ # Indianapolis star of Saturday 26 April.
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER
+ Rule Perry	1955	only	-	May	 1	0:00	1:00	D
+ Rule Perry	1955	1960	-	Sep	lastSun	2:00	0	S
+ Rule Perry	1956	1963	-	Apr	lastSun	2:00	1:00	D
+@@ -991,7 +991,7 @@ Zone America/Indiana/Tell_City -5:47:03 - LMT	1883 Nov 18 12:12:57
+ #
+ # Pike County, Indiana moved from central to eastern time in 1977,
+ # then switched back in 2006, then switched back again in 2007.
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER
+ Rule	Pike	1955	only	-	May	 1	0:00	1:00	D
+ Rule	Pike	1955	1960	-	Sep	lastSun	2:00	0	S
+ Rule	Pike	1956	1964	-	Apr	lastSun	2:00	1:00	D
+@@ -1012,7 +1012,7 @@ Zone America/Indiana/Petersburg -5:49:07 - LMT	1883 Nov 18 12:10:53
+ # An article on page A3 of the Sunday, 1991-10-27 Washington Post
+ # notes that Starke County switched from Central time to Eastern time as of
+ # 1991-10-27.
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER
+ Rule	Starke	1947	1961	-	Apr	lastSun	2:00	1:00	D
+ Rule	Starke	1947	1954	-	Sep	lastSun	2:00	0	S
+ Rule	Starke	1955	1956	-	Oct	lastSun	2:00	0	S
+@@ -1029,7 +1029,7 @@ Zone America/Indiana/Knox -5:46:30 -	LMT	1883 Nov 18 12:13:30
+ #
+ # Pulaski County, Indiana, switched from eastern to central time in
+ # April 2006 and then switched back in March 2007.
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER
+ Rule	Pulaski	1946	1960	-	Apr	lastSun	2:00	1:00	D
+ Rule	Pulaski	1946	1954	-	Sep	lastSun	2:00	0	S
+ Rule	Pulaski	1955	1956	-	Oct	lastSun	2:00	0	S
+@@ -1071,7 +1071,7 @@ Zone America/Indiana/Vevay -5:40:16 -	LMT	1883 Nov 18 12:19:44
+ #
+ # Part of Kentucky left its clocks alone in 1974.
+ # This also includes Clark, Floyd, and Harrison counties in Indiana.
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER
+ Rule Louisville	1921	only	-	May	1	2:00	1:00	D
+ Rule Louisville	1921	only	-	Sep	1	2:00	0	S
+ Rule Louisville	1941	only	-	Apr	lastSun	2:00	1:00	D
+@@ -1185,7 +1185,7 @@ Zone America/Kentucky/Monticello -5:39:24 - LMT	1883 Nov 18 12:20:36
+ # election Michigan voters narrowly repealed DST, effective 1969.
+ #
+ # Most of Michigan observed DST from 1973 on, but was a bit late in 1975.
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER
+ Rule	Detroit	1948	only	-	Apr	lastSun	2:00	1:00	D
+ Rule	Detroit	1948	only	-	Sep	lastSun	2:00	0	S
+ # Zone	NAME		STDOFF	RULES	FORMAT	[UNTIL]
+@@ -1202,7 +1202,7 @@ Zone America/Detroit	-5:32:11 -	LMT	1905
+ #
+ # Dickinson, Gogebic, Iron, and Menominee Counties, Michigan,
+ # switched from EST to CST/CDT in 1973.
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER
+ Rule Menominee	1946	only	-	Apr	lastSun	2:00	1:00	D
+ Rule Menominee	1946	only	-	Sep	lastSun	2:00	0	S
+ Rule Menominee	1966	only	-	Apr	lastSun	2:00	1:00	D
+@@ -1372,7 +1372,7 @@ Zone America/Menominee	-5:50:27 -	LMT	1885 Sep 18 12:00
+ # Oct 31, to Oct 27, 1918 (and Sunday is a more likely transition day
+ # than Thursday) in all Canadian rulesets.
+ 
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	Canada	1918	only	-	Apr	14	2:00	1:00	D
+ Rule	Canada	1918	only	-	Oct	27	2:00	0	S
+ Rule	Canada	1942	only	-	Feb	 9	2:00	1:00	W # War
+@@ -1395,7 +1395,7 @@ Rule	Canada	2007	max	-	Nov	Sun>=1	2:00	0	S
+ # that follows the rules is the southeast corner, including Port Hope
+ # Simpson and Mary's Harbour, but excluding, say, Black Tickle.
+ 
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	StJohns	1917	only	-	Apr	 8	2:00	1:00	D
+ Rule	StJohns	1917	only	-	Sep	17	2:00	0	S
+ # Whitman gives 1919 Apr 5 and 1920 Apr 5; go with Shanks & Pottenger.
+@@ -1497,7 +1497,7 @@ Zone America/Goose_Bay	-4:01:40 -	LMT	1884 # Happy Valley-Goose Bay
+ # bill say that it is "accommodating the customs and practices" of those
+ # regions, which suggests that they have always been in-line with Halifax.
+ 
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	Halifax	1916	only	-	Apr	 1	0:00	1:00	D
+ Rule	Halifax	1916	only	-	Oct	 1	0:00	0	S
+ Rule	Halifax	1920	only	-	May	 9	0:00	1:00	D
+@@ -1563,7 +1563,7 @@ Zone America/Glace_Bay	-3:59:48 -	LMT	1902 Jun 15
+ # clear that this was the case since at least 1993.
+ # For now, assume it started in 1993.
+ 
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	Moncton	1933	1935	-	Jun	Sun>=8	1:00	1:00	D
+ Rule	Moncton	1933	1935	-	Sep	Sun>=8	1:00	0	S
+ Rule	Moncton	1936	1938	-	Jun	Sun>=1	1:00	1:00	D
+@@ -1772,7 +1772,7 @@ Zone America/Blanc-Sablon -3:48:28 -	LMT	1884
+ #   With some exceptions, the use of daylight saving may be said to be limited
+ # to those cities and towns lying between Quebec city and Windsor, Ont.
+ 
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	Toronto	1919	only	-	Mar	30	23:30	1:00	D
+ Rule	Toronto	1919	only	-	Oct	26	0:00	0	S
+ Rule	Toronto	1920	only	-	May	 2	2:00	1:00	D
+@@ -1870,7 +1870,7 @@ Zone America/Atikokan	-6:06:28 -	LMT	1895
+ # starting 1966.  Since 02:00s is clearly correct for 1967 on, assume
+ # it was also 02:00s in 1966.
+ 
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	Winn	1916	only	-	Apr	23	0:00	1:00	D
+ Rule	Winn	1916	only	-	Sep	17	0:00	0	S
+ Rule	Winn	1918	only	-	Apr	14	2:00	1:00	D
+@@ -1961,7 +1961,7 @@ Zone America/Winnipeg	-6:28:36 -	LMT	1887 Jul 16
+ # long and rather painful to read.
+ # http://www.qp.gov.sk.ca/documents/English/Statutes/Statutes/T14.pdf
+ 
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	Regina	1918	only	-	Apr	14	2:00	1:00	D
+ Rule	Regina	1918	only	-	Oct	27	2:00	0	S
+ Rule	Regina	1930	1934	-	May	Sun>=1	0:00	1:00	D
+@@ -2011,7 +2011,7 @@ Zone America/Swift_Current -7:11:20 -	LMT	1905 Sep
+ # Boyer JP. Forcing Choice: The Risky Reward of Referendums. Dundum. 2017.
+ # ISBN 978-1459739123.
+ 
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	Edm	1918	1919	-	Apr	Sun>=8	2:00	1:00	D
+ Rule	Edm	1918	only	-	Oct	27	2:00	0	S
+ Rule	Edm	1919	only	-	May	27	2:00	0	S
+@@ -2120,7 +2120,7 @@ Zone America/Edmonton	-7:33:52 -	LMT	1906 Sep
+ # https://searcharchives.vancouver.ca/daylight-saving-1918-starts-again-july-7-1941-start-d-s-sept-27-end-of-d-s-1941
+ # We have no further details, so omit them for now.
+ 
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	Vanc	1918	only	-	Apr	14	2:00	1:00	D
+ Rule	Vanc	1918	only	-	Oct	27	2:00	0	S
+ Rule	Vanc	1942	only	-	Feb	 9	2:00	1:00	W # War
+@@ -2449,7 +2449,19 @@ Zone America/Creston	-7:46:04 -	LMT	1884
+ # consistency with nearby Dawson Creek, Creston, and Fort Nelson.
+ # https://yukon.ca/en/news/yukon-end-seasonal-time-change
+ 
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# From Andrew G. Smith (2020-09-24):
++# Yukon has completed its regulatory change to be on UTC -7 year-round....
++# http://www.gov.yk.ca/legislation/regs/oic2020_125.pdf
++# What we have done is re-defined Yukon Standard Time, as we are
++# authorized to do under section 33 of our Interpretation Act:
++# http://www.gov.yk.ca/legislation/acts/interpretation_c.pdf
++#
++# From Paul Eggert (2020-09-24):
++# tzdb uses the obsolete YST abbreviation for standard time in Yukon through
++# about 1970, and uses PST for standard time in Yukon since then.  Consistent
++# with that, use MST for -07, the new standard time in Yukon effective Nov. 1.
++
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	NT_YK	1918	only	-	Apr	14	2:00	1:00	D
+ Rule	NT_YK	1918	only	-	Oct	27	2:00	0	S
+ Rule	NT_YK	1919	only	-	May	25	2:00	1:00	D
+@@ -2503,12 +2515,12 @@ Zone America/Inuvik	0	-	-00	1953 # Inuvik founded
+ Zone America/Whitehorse	-9:00:12 -	LMT	1900 Aug 20
+ 			-9:00	NT_YK	Y%sT	1967 May 28  0:00
+ 			-8:00	NT_YK	P%sT	1980
+-			-8:00	Canada	P%sT	2020 Mar  8  2:00
++			-8:00	Canada	P%sT	2020 Nov  1
+ 			-7:00	-	MST
+ Zone America/Dawson	-9:17:40 -	LMT	1900 Aug 20
+ 			-9:00	NT_YK	Y%sT	1973 Oct 28  0:00
+ 			-8:00	NT_YK	P%sT	1980
+-			-8:00	Canada	P%sT	2020 Mar  8  2:00
++			-8:00	Canada	P%sT	2020 Nov  1
+ 			-7:00	-	MST
+ 
+ 
+@@ -2723,7 +2735,7 @@ Zone America/Dawson	-9:17:40 -	LMT	1900 Aug 20
+ # 5- The islands, reefs and keys shall take their timezone from the
+ #    longitude they are located at.
+ 
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	Mexico	1939	only	-	Feb	5	0:00	1:00	D
+ Rule	Mexico	1939	only	-	Jun	25	0:00	0	S
+ Rule	Mexico	1940	only	-	Dec	9	0:00	1:00	D
+@@ -2928,7 +2940,7 @@ Zone America/Tijuana	-7:48:04 -	LMT	1922 Jan  1  0:11:56
+ # rules to sync with the U.S. starting in 2007....
+ # http://www.jonesbahamas.com/?c=45&a=10412
+ 
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	Bahamas	1964	1975	-	Oct	lastSun	2:00	0	S
+ Rule	Bahamas	1964	1975	-	Apr	lastSun	2:00	1:00	D
+ # Zone	NAME		STDOFF	RULES	FORMAT	[UNTIL]
+@@ -2940,7 +2952,7 @@ Zone	America/Nassau	-5:09:30 -	LMT	1912 Mar 2
+ 
+ # For 1899 Milne gives -3:58:29.2; round that.
+ 
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	Barb	1977	only	-	Jun	12	2:00	1:00	D
+ Rule	Barb	1977	1978	-	Oct	Sun>=1	2:00	0	S
+ Rule	Barb	1978	1980	-	Apr	Sun>=15	2:00	1:00	D
+@@ -2953,7 +2965,7 @@ Zone America/Barbados	-3:58:29 -	LMT	1924 # Bridgetown
+ 
+ # Belize
+ # Whitman entirely disagrees with Shanks; go with Shanks & Pottenger.
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	Belize	1918	1942	-	Oct	Sun>=2	0:00	0:30	-0530
+ Rule	Belize	1919	1943	-	Feb	Sun>=9	0:00	0	CST
+ Rule	Belize	1973	only	-	Dec	 5	0:00	1:00	CDT
+@@ -2990,7 +3002,7 @@ Zone Atlantic/Bermuda	-4:19:18 -	LMT	1930 Jan  1  2:00 # Hamilton
+ 
+ # Milne gives -5:36:13.3 as San José mean time; round to nearest.
+ 
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	CR	1979	1980	-	Feb	lastSun	0:00	1:00	D
+ Rule	CR	1979	1980	-	Jun	Sun>=1	0:00	0	S
+ Rule	CR	1991	1992	-	Jan	Sat>=15	0:00	1:00	D
+@@ -3164,7 +3176,7 @@ Zone America/Costa_Rica	-5:36:13 -	LMT	1890        # San José
+ # From Paul Eggert (2012-11-03):
+ # For now, assume the future rule is first Sunday in November.
+ 
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	Cuba	1928	only	-	Jun	10	0:00	1:00	D
+ Rule	Cuba	1928	only	-	Oct	10	0:00	0	S
+ Rule	Cuba	1940	1942	-	Jun	Sun>=1	0:00	1:00	D
+@@ -3233,7 +3245,7 @@ Zone	America/Havana	-5:29:28 -	LMT	1890
+ # decided to revert.
+ 
+ 
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	DR	1966	only	-	Oct	30	0:00	1:00	EDT
+ Rule	DR	1967	only	-	Feb	28	0:00	0	EST
+ Rule	DR	1969	1973	-	Oct	lastSun	0:00	0:30	-0430
+@@ -3250,7 +3262,7 @@ Zone America/Santo_Domingo -4:39:36 -	LMT	1890
+ 
+ # El Salvador
+ 
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	Salv	1987	1988	-	May	Sun>=1	0:00	1:00	D
+ Rule	Salv	1987	1988	-	Sep	lastSun	0:00	0	S
+ # There are too many San Salvadors elsewhere, so use America/El_Salvador
+@@ -3279,7 +3291,7 @@ Zone America/El_Salvador -5:56:48 -	LMT	1921 # San Salvador
+ # (2006-04-19), says DST ends at 24:00.  See
+ # http://www.sieca.org.gt/Sitio_publico/Energeticos/Doc/Medidas/Cambio_Horario_Nac_190406.pdf
+ 
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	Guat	1973	only	-	Nov	25	0:00	1:00	D
+ Rule	Guat	1974	only	-	Feb	24	0:00	0	S
+ Rule	Guat	1983	only	-	May	21	0:00	1:00	D
+@@ -3360,7 +3372,7 @@ Zone America/Guatemala	-6:02:04 -	LMT	1918 Oct 5
+ # I have not been able to find a more authoritative source:
+ # https://www.haitilibre.com/en/news-20319-haiti-notices-time-change-in-haiti.html
+ 
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	Haiti	1983	only	-	May	8	0:00	1:00	D
+ Rule	Haiti	1984	1987	-	Apr	lastSun	0:00	1:00	D
+ Rule	Haiti	1983	1987	-	Oct	lastSun	0:00	0	S
+@@ -3408,7 +3420,7 @@ Zone America/Port-au-Prince -4:49:20 -	LMT	1890
+ # http://www.laprensahn.com/pais_nota.php?id04962=7386
+ # So it seems that Honduras will not enter DST this year....
+ 
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	Hond	1987	1988	-	May	Sun>=1	0:00	1:00	D
+ Rule	Hond	1987	1988	-	Sep	lastSun	0:00	0	S
+ Rule	Hond	2006	only	-	May	Sun>=1	0:00	1:00	D
+@@ -3499,7 +3511,7 @@ Zone America/Martinique	-4:04:20 -      LMT	1890        # Fort-de-France
+ # The natural sun time is restored in all the national territory, in that the
+ # time is returned one hour at 01:00 am of October 1 of 2006.
+ #
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	Nic	1979	1980	-	Mar	Sun>=16	0:00	1:00	D
+ Rule	Nic	1979	1980	-	Jun	Mon>=23	0:00	0	S
+ Rule	Nic	2005	only	-	Apr	10	0:00	1:00	D
+diff --git a/src/main/java/org/joda/time/tz/src/southamerica b/src/main/java/org/joda/time/tz/src/southamerica
+index 9b679c614..aad8b2dbd 100644
+--- a/src/main/java/org/joda/time/tz/src/southamerica
++++ b/src/main/java/org/joda/time/tz/src/southamerica
+@@ -48,7 +48,7 @@
+ # I am sending modifications to the Argentine time zone table...
+ # AR was chosen because they are the ISO letters that represent Argentina.
+ 
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	Arg	1930	only	-	Dec	 1	0:00	1:00	-
+ Rule	Arg	1931	only	-	Apr	 1	0:00	0	-
+ Rule	Arg	1931	only	-	Oct	15	0:00	1:00	-
+@@ -769,7 +769,7 @@ Zone	America/La_Paz	-4:32:36 -	LMT	1890
+ # From Paul Eggert (2013-10-17):
+ # For now, assume western Amazonas will change as well.
+ 
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ # Decree 20,466 <http://pcdsh01.on.br/HV20466.htm> (1931-10-01)
+ # Decree 21,896 <http://pcdsh01.on.br/HV21896.htm> (1932-01-10)
+ Rule	Brazil	1931	only	-	Oct	 3	11:00	1:00	-
+@@ -1258,7 +1258,7 @@ Zone America/Rio_Branco	-4:31:12 -	LMT	1914
+ # For now, assume that they will not revert,
+ # since they have extended the expiration date once already.
+ 
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	Chile	1927	1931	-	Sep	 1	0:00	1:00	-
+ Rule	Chile	1928	1932	-	Apr	 1	0:00	0	-
+ Rule	Chile	1968	only	-	Nov	 3	4:00u	1:00	-
+@@ -1358,7 +1358,7 @@ Zone Antarctica/Palmer	0	-	-00	1965
+ # Milne gives 4:56:16.4 for Bogotá time in 1899; round to nearest.  He writes,
+ # "A variation of fifteen minutes in the public clocks of Bogota is not rare."
+ 
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	CO	1992	only	-	May	 3	0:00	1:00	-
+ Rule	CO	1993	only	-	Apr	 4	0:00	0	-
+ # Zone	NAME		STDOFF	RULES	FORMAT	[UNTIL]
+@@ -1418,7 +1418,7 @@ Link	America/Curacao	America/Kralendijk	# Caribbean Netherlands
+ # (Not one step back), the clocks went back in 1993 and the experiment was not
+ # repeated.  For now, assume transitions were at 00:00 local time country-wide.
+ #
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	Ecuador	1992	only	-	Nov	28	0:00	1:00	-
+ Rule	Ecuador	1993	only	-	Feb	 5	0:00	0	-
+ #
+@@ -1512,7 +1512,7 @@ Zone Pacific/Galapagos	-5:58:24 -	LMT	1931 # Puerto Baquerizo Moreno
+ # For now we will assume permanent -03 for the Falklands
+ # until advised differently (to apply for 2012 and beyond, after the 2011
+ # experiment was apparently successful.)
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	Falk	1937	1938	-	Sep	lastSun	0:00	1:00	-
+ Rule	Falk	1938	1942	-	Mar	Sun>=19	0:00	0	-
+ Rule	Falk	1939	only	-	Oct	1	0:00	1:00	-
+@@ -1558,7 +1558,7 @@ Zone	America/Guyana	-3:52:40 -	LMT	1915 Mar    # Georgetown
+ # No time of the day is established for the adjustment, so people normally
+ # adjust their clocks at 0 hour of the given dates.
+ #
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	Para	1975	1988	-	Oct	 1	0:00	1:00	-
+ Rule	Para	1975	1978	-	Mar	 1	0:00	0	-
+ Rule	Para	1979	1991	-	Apr	 1	0:00	0	-
+@@ -1651,7 +1651,7 @@ Zone America/Asuncion	-3:50:40 -	LMT	1890
+ # From Paul Eggert (2006-03-22):
+ # Shanks & Pottenger don't have this transition.  Assume 1986 was like 1987.
+ 
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	Peru	1938	only	-	Jan	 1	0:00	1:00	-
+ Rule	Peru	1938	only	-	Apr	 1	0:00	0	-
+ Rule	Peru	1938	1939	-	Sep	lastSun	0:00	1:00	-
+@@ -1747,7 +1747,7 @@ Link America/Port_of_Spain America/Tortola	# Virgin Islands (UK)
+ # https://www.impo.com.uy/diariooficial/1926/03/10/2
+ # https://www.impo.com.uy/diariooficial/1926/03/18/2
+ #
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++# Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	Uruguay	1923	1925	-	Oct	 1	 0:00	0:30	-
+ Rule	Uruguay	1924	1926	-	Apr	 1	 0:00	0	-
+ # From Tim Parenti (2018-02-15):
+
+From a81ead8cdfa6ea8bf371f518775c2e23ba6b06d9 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Wed, 21 Oct 2020 09:36:32 +0100
+Subject: [PATCH 7/8] Update GitHub Actions
+
+Remove use of deprecated feature
+https://github.blog/changelog/2020-10-01-github-actions-deprecating-set-env-and-add-path-commands/
+---
+ .github/workflows/tzdbupdate.yml | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/.github/workflows/tzdbupdate.yml b/.github/workflows/tzdbupdate.yml
+index 454822861..fd6c8d66b 100644
+--- a/.github/workflows/tzdbupdate.yml
++++ b/.github/workflows/tzdbupdate.yml
+@@ -36,7 +36,7 @@ jobs:
+       run: |
+         CURRENT_TZDB=$(mvn help:evaluate -Dexpression=tz.database.version -q -DforceStdout)
+         echo "current: $CURRENT_TZDB"
+-        echo "::set-env name=CURRENT_TZDB::$CURRENT_TZDB"
++        echo "CURRENT_TZDB=$CURRENT_TZDB" >> $GITHUB_ENV
+     - name: Get latest version
+       working-directory: target
+       run: |
+@@ -44,12 +44,12 @@ jobs:
+         cd tz
+         LATEST_TZDB=$(git describe --abbrev=0 --tags)
+         echo "latest: $LATEST_TZDB"
+-        echo "::set-env name=LATEST_TZDB::$LATEST_TZDB"
++        echo "LATEST_TZDB=$LATEST_TZDB" >> $GITHUB_ENV
+     - name: Compare versions
+       run: |
+         echo "current: $CURRENT_TZDB"
+         echo "latest:  $LATEST_TZDB"
+-        if [ "$CURRENT_TZDB" == "$LATEST_TZDB" ]; then echo "::set-env name=NOOP::true"; fi
++        if [ "$CURRENT_TZDB" == "$LATEST_TZDB" ]; then echo "NOOP=true" >> $GITHUB_ENV; fi
+ 
+     - name: Checkout tzdb release
+       if: env.NOOP != 'true'
+
+From b9b872fb7cd4093fc046fea98d1d37c252ed0d95 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Wed, 21 Oct 2020 09:40:00 +0100
+Subject: [PATCH 8/8] Release v2.10.7
+
+---
+ README.md                  |  8 ++++----
+ pom.xml                    |  2 +-
+ src/changes/changes.xml    |  2 +-
+ src/conf/MANIFEST.MF       | 18 +++++++++---------
+ src/site/markdown/index.md |  4 ++--
+ 5 files changed, 17 insertions(+), 17 deletions(-)
+
+diff --git a/README.md b/README.md
+index bfd1d14f6..75b9b570d 100644
+--- a/README.md
++++ b/README.md
+@@ -51,7 +51,7 @@ Various documentation is available:
+ 
+ 
+ ### Releases
+-[Release 2.10.6](https://www.joda.org/joda-time/download.html) is the current latest release.
++[Release 2.10.7](https://www.joda.org/joda-time/download.html) is the current latest release.
+ This release is considered stable and worthy of the 2.x tag.
+ It depends on JDK 1.5 or later.
+ 
+@@ -62,13 +62,13 @@ Available in the [Maven Central repository](https://search.maven.org/search?q=g:
+ <dependency>
+   <groupId>joda-time</groupId>
+   <artifactId>joda-time</artifactId>
+-  <version>2.10.6</version>
++  <version>2.10.7</version>
+ </dependency>
+ ```
+ 
+ **Gradle configuration:**
+ ```groovy
+-compile 'joda-time:joda-time:2.10.6'
++compile 'joda-time:joda-time:2.10.7'
+ ```
+ 
+ ![Tidelift dependency check](https://tidelift.com/badges/github/JodaOrg/joda-time)
+@@ -111,4 +111,4 @@ Tidelift will coordinate the fix and disclosure.
+ * Commit and push
+ * Ensure on Java SE 8
+ * `mvn clean deploy -Doss.repo -Dgpg.passphrase=""`
+-* Website will be built and released by Travis
++* Website will be built and released by GitHub Actions
+diff --git a/pom.xml b/pom.xml
+index d2acb3f60..c50fc8b51 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -8,7 +8,7 @@
+   <artifactId>joda-time</artifactId>
+   <packaging>jar</packaging>
+   <name>Joda-Time</name>
+-  <version>2.10.7-SNAPSHOT</version>
++  <version>2.10.7</version>
+   <description>Date and time library to replace JDK date handling</description>
+   <url>https://www.joda.org/joda-time/</url>
+ 
+diff --git a/src/changes/changes.xml b/src/changes/changes.xml
+index ea1b42a11..cb38abe14 100644
+--- a/src/changes/changes.xml
++++ b/src/changes/changes.xml
+@@ -8,7 +8,7 @@
+   <body>
+ 
+     <!-- types are add, fix, remove, update -->
+-    <release version="2.10.7" date="SNAPSHOT" description="v2.10.7">
++    <release version="2.10.7" date="2020-10-21" description="v2.10.7">
+       <action dev="jodastephen" type="fix">
+         DateTimeZone data updated to version 2020c.
+         Remove systemv and pacificnew time zones as per TZDB changes.
+diff --git a/src/conf/MANIFEST.MF b/src/conf/MANIFEST.MF
+index d22ca296f..35ad0be79 100644
+--- a/src/conf/MANIFEST.MF
++++ b/src/conf/MANIFEST.MF
+@@ -5,19 +5,19 @@ Specification-Vendor: Joda.org
+ Specification-Version: 2.10
+ Implementation-Vendor: Joda.org
+ Implementation-Title: org.joda.time
+-Implementation-Version: 2.10.6
++Implementation-Version: 2.10.7
+ Implementation-Vendor-Id: org.joda
+ Bundle-ManifestVersion: 2
+ Bundle-Vendor: Joda.org
+ Bundle-Name: Joda-Time
+ Bundle-SymbolicName: joda-time
+-Bundle-Version: 2.10.6
+-Export-Package: org.joda.time;version=2.10.6,
+- org.joda.time.base;version=2.10.6,
+- org.joda.time.chrono;version=2.10.6,
+- org.joda.time.convert;version=2.10.6,
+- org.joda.time.field;version=2.10.6,
+- org.joda.time.format;version=2.10.6,
+- org.joda.time.tz;version=2.10.6
++Bundle-Version: 2.10.7
++Export-Package: org.joda.time;version=2.10.7,
++ org.joda.time.base;version=2.10.7,
++ org.joda.time.chrono;version=2.10.7,
++ org.joda.time.convert;version=2.10.7,
++ org.joda.time.field;version=2.10.7,
++ org.joda.time.format;version=2.10.7,
++ org.joda.time.tz;version=2.10.7
+ Bundle-License: Apache 2.0
+ Bundle-DocURL: https://www.joda.org/joda-time/
+diff --git a/src/site/markdown/index.md b/src/site/markdown/index.md
+index 5ce478a4c..e9edddf40 100644
+--- a/src/site/markdown/index.md
++++ b/src/site/markdown/index.md
+@@ -130,7 +130,7 @@ Joda-Time is licenced under the business friendly <a href="licenses.html">Apache
+ 
+ ## <i></i> Releases
+ 
+-[Release 2.10.6](download.html) is the current latest release.
++[Release 2.10.7](download.html) is the current latest release.
+ This release is considered stable and worthy of the 2.x tag.
+ See the [change notes](changes-report.html) for full details.
+ 
+@@ -144,7 +144,7 @@ Available in [Maven Central](https://search.maven.org/search?q=g:joda-time%20AND
+ <dependency>
+   <groupId>joda-time</groupId>
+   <artifactId>joda-time</artifactId>
+-  <version>2.10.6</version>
++  <version>2.10.7</version>
+ </dependency>
+ ```
+ 

@@ -1,0 +1,216 @@
+From 06a96a26e72294a1daedbaf3f4b94e1524cd201c Mon Sep 17 00:00:00 2001
+From: "github-actions[bot]"
+ <41898282+github-actions[bot]@users.noreply.github.com>
+Date: Wed, 30 Dec 2020 08:16:31 +0000
+Subject: [PATCH 1/4] Update TZDB to 2020f (#550)
+
+Co-authored-by: Stephen Colebourne (CI) <scolebourne@joda.org>
+---
+ pom.xml | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/pom.xml b/pom.xml
+index 795d460ae..2ae9262f8 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -1034,6 +1034,6 @@
+     <!-- Other properties -->
+     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+-    <tz.database.version>2020e</tz.database.version>
++    <tz.database.version>2020f</tz.database.version>
+   </properties>
+ </project>
+
+From 304d850091eed1331e1ad241c14cb3774daecd5c Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Wed, 30 Dec 2020 12:03:49 +0000
+Subject: [PATCH 2/4] Update Readme.txt
+
+---
+ src/main/java/org/joda/time/tz/src/Readme.txt | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/main/java/org/joda/time/tz/src/Readme.txt b/src/main/java/org/joda/time/tz/src/Readme.txt
+index 3f9009444..124ef5571 100644
+--- a/src/main/java/org/joda/time/tz/src/Readme.txt
++++ b/src/main/java/org/joda/time/tz/src/Readme.txt
+@@ -1,2 +1,2 @@
+ The data files in this directory were obtained from the public IANA time zone database,
+-https://www.iana.org/time-zones, version 2020a.
++https://www.iana.org/time-zones, see pom.xml for the version.
+
+From 890fb7b8801f7a8132464a8d558f410373918f96 Mon Sep 17 00:00:00 2001
+From: "github-actions[bot]"
+ <41898282+github-actions[bot]@users.noreply.github.com>
+Date: Mon, 25 Jan 2021 08:16:16 +0000
+Subject: [PATCH 3/4] Update TZDB to 2021a (#551)
+
+Co-authored-by: Stephen Colebourne (CI) <scolebourne@joda.org>
+---
+ pom.xml                                   | 2 +-
+ src/main/java/org/joda/time/tz/src/africa | 8 +++++++-
+ 2 files changed, 8 insertions(+), 2 deletions(-)
+
+diff --git a/pom.xml b/pom.xml
+index 2ae9262f8..b9e9ad932 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -1034,6 +1034,6 @@
+     <!-- Other properties -->
+     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+-    <tz.database.version>2020f</tz.database.version>
++    <tz.database.version>2021a</tz.database.version>
+   </properties>
+ </project>
+diff --git a/src/main/java/org/joda/time/tz/src/africa b/src/main/java/org/joda/time/tz/src/africa
+index 59cf501ec..28168cfc1 100644
+--- a/src/main/java/org/joda/time/tz/src/africa
++++ b/src/main/java/org/joda/time/tz/src/africa
+@@ -1527,11 +1527,17 @@ Zone	Africa/Khartoum	2:10:08 -	LMT	1931
+ 			3:00	-	EAT	2017 Nov  1
+ 			2:00	-	CAT
+ 
++# From Steffen Thorsen (2021-01-18):
++# "South Sudan will change its time zone by setting the clock back 1
++# hour on February 1, 2021...."
++# from https://eyeradio.org/south-sudan-adopts-new-time-zone-makuei/
++
+ # South Sudan
+ # Zone	NAME		STDOFF	RULES	FORMAT	[UNTIL]
+ Zone	Africa/Juba	2:06:28 -	LMT	1931
+ 			2:00	Sudan	CA%sT	2000 Jan 15 12:00
+-			3:00	-	EAT
++			3:00	-	EAT	2021 Feb  1 00:00
++			2:00	-	CAT
+ 
+ # Tanzania
+ # See Africa/Nairobi.
+
+From b126e8a56be3fbcd581efff9478aa11e310a4972 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Fri, 5 Feb 2021 21:17:31 +0000
+Subject: [PATCH 4/4] Release v2.10.10
+
+---
+ README.md                  |  6 +++---
+ pom.xml                    |  2 +-
+ src/changes/changes.xml    |  5 +++++
+ src/conf/MANIFEST.MF       | 18 +++++++++---------
+ src/site/markdown/index.md |  4 ++--
+ 5 files changed, 20 insertions(+), 15 deletions(-)
+
+diff --git a/README.md b/README.md
+index 4e827a82d..783fd215e 100644
+--- a/README.md
++++ b/README.md
+@@ -51,7 +51,7 @@ Various documentation is available:
+ 
+ 
+ ### Releases
+-[Release 2.10.9](https://www.joda.org/joda-time/download.html) is the current latest release.
++[Release 2.10.10](https://www.joda.org/joda-time/download.html) is the current latest release.
+ This release is considered stable and worthy of the 2.x tag.
+ It depends on JDK 1.5 or later.
+ 
+@@ -62,13 +62,13 @@ Available in the [Maven Central repository](https://search.maven.org/search?q=g:
+ <dependency>
+   <groupId>joda-time</groupId>
+   <artifactId>joda-time</artifactId>
+-  <version>2.10.9</version>
++  <version>2.10.10</version>
+ </dependency>
+ ```
+ 
+ **Gradle configuration:**
+ ```groovy
+-compile 'joda-time:joda-time:2.10.9'
++compile 'joda-time:joda-time:2.10.10'
+ ```
+ 
+ ![Tidelift dependency check](https://tidelift.com/badges/github/JodaOrg/joda-time)
+diff --git a/pom.xml b/pom.xml
+index b9e9ad932..49e6109de 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -8,7 +8,7 @@
+   <artifactId>joda-time</artifactId>
+   <packaging>jar</packaging>
+   <name>Joda-Time</name>
+-  <version>2.10.9</version>
++  <version>2.10.10</version>
+   <description>Date and time library to replace JDK date handling</description>
+   <url>https://www.joda.org/joda-time/</url>
+ 
+diff --git a/src/changes/changes.xml b/src/changes/changes.xml
+index baf4a8e78..edd1d8c1c 100644
+--- a/src/changes/changes.xml
++++ b/src/changes/changes.xml
+@@ -8,6 +8,11 @@
+   <body>
+ 
+     <!-- types are add, fix, remove, update -->
++    <release version="2.10.10" date="2020-02-05" description="v2.10.10">
++      <action dev="jodastephen" type="update">
++        DateTimeZone data updated to version 2021a.
++      </action>
++    </release>
+     <release version="2.10.9" date="2020-12-29" description="v2.10.9">
+       <action dev="jodastephen" type="update">
+         DateTimeZone data updated to version 2020e.
+diff --git a/src/conf/MANIFEST.MF b/src/conf/MANIFEST.MF
+index 283388941..cb9b4dd9d 100644
+--- a/src/conf/MANIFEST.MF
++++ b/src/conf/MANIFEST.MF
+@@ -5,19 +5,19 @@ Specification-Vendor: Joda.org
+ Specification-Version: 2.10
+ Implementation-Vendor: Joda.org
+ Implementation-Title: org.joda.time
+-Implementation-Version: 2.10.9
++Implementation-Version: 2.10.10
+ Implementation-Vendor-Id: org.joda
+ Bundle-ManifestVersion: 2
+ Bundle-Vendor: Joda.org
+ Bundle-Name: Joda-Time
+ Bundle-SymbolicName: joda-time
+-Bundle-Version: 2.10.9
+-Export-Package: org.joda.time;version=2.10.9,
+- org.joda.time.base;version=2.10.9,
+- org.joda.time.chrono;version=2.10.9,
+- org.joda.time.convert;version=2.10.9,
+- org.joda.time.field;version=2.10.9,
+- org.joda.time.format;version=2.10.9,
+- org.joda.time.tz;version=2.10.9
++Bundle-Version: 2.10.10
++Export-Package: org.joda.time;version=2.10.10,
++ org.joda.time.base;version=2.10.10,
++ org.joda.time.chrono;version=2.10.10,
++ org.joda.time.convert;version=2.10.10,
++ org.joda.time.field;version=2.10.10,
++ org.joda.time.format;version=2.10.10,
++ org.joda.time.tz;version=2.10.10
+ Bundle-License: Apache 2.0
+ Bundle-DocURL: https://www.joda.org/joda-time/
+diff --git a/src/site/markdown/index.md b/src/site/markdown/index.md
+index 5dc6016fa..d870ea1f8 100644
+--- a/src/site/markdown/index.md
++++ b/src/site/markdown/index.md
+@@ -130,7 +130,7 @@ Joda-Time is licenced under the business friendly <a href="licenses.html">Apache
+ 
+ ## <i></i> Releases
+ 
+-[Release 2.10.9](download.html) is the current latest release.
++[Release 2.10.10](download.html) is the current latest release.
+ This release is considered stable and worthy of the 2.x tag.
+ See the [change notes](changes-report.html) for full details.
+ 
+@@ -144,7 +144,7 @@ Available in [Maven Central](https://search.maven.org/search?q=g:joda-time%20AND
+ <dependency>
+   <groupId>joda-time</groupId>
+   <artifactId>joda-time</artifactId>
+-  <version>2.10.9</version>
++  <version>2.10.10</version>
+ </dependency>
+ ```
+ 

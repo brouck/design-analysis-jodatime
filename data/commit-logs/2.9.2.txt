@@ -1,0 +1,1961 @@
+From 76fa43737656d859f0943f5326cf2b8565c4b032 Mon Sep 17 00:00:00 2001
+From: emopers <emopers@gmail.com>
+Date: Sat, 21 Nov 2015 03:47:03 -0600
+Subject: [PATCH 01/17]  Fixed bug in ZoneInfoCompiler.java and added a test
+
+---
+ .../org/joda/time/tz/ZoneInfoCompiler.java    |  3 +++
+ .../java/org/joda/time/tz/TestCompiler.java   | 19 +++++++++++++++++++
+ 2 files changed, 22 insertions(+)
+
+diff --git a/src/main/java/org/joda/time/tz/ZoneInfoCompiler.java b/src/main/java/org/joda/time/tz/ZoneInfoCompiler.java
+index 72ffcb866..e3c509e55 100644
+--- a/src/main/java/org/joda/time/tz/ZoneInfoCompiler.java
++++ b/src/main/java/org/joda/time/tz/ZoneInfoCompiler.java
+@@ -528,6 +528,9 @@ public void parseDataFile(BufferedReader in, boolean backward) throws IOExceptio
+                         rs.addRule(r);
+                     }
+                 } else if (token.equalsIgnoreCase("Zone")) {
++		    if (st.countTokens() < 4) {
++			throw new IllegalArgumentException("Attempting to create a Zone from an incomplete tokenizer");
++		    }
+                     zone = new Zone(st);
+                 } else if (token.equalsIgnoreCase("Link")) {
+                     String real = st.nextToken();
+diff --git a/src/test/java/org/joda/time/tz/TestCompiler.java b/src/test/java/org/joda/time/tz/TestCompiler.java
+index 8eec2bc49..ac7936383 100644
+--- a/src/test/java/org/joda/time/tz/TestCompiler.java
++++ b/src/test/java/org/joda/time/tz/TestCompiler.java
+@@ -76,6 +76,14 @@ public static TestSuite suite() {
+         "Rule    US  1918    1919    -   Mar lastSun 2:00    1:00    D\n" +
+         "Rule    \n" ; // this line is intentionally incomplete
+ 
++    static final String BROKEN_TIMEZONE_FILE_2 =
++	"# Incomplete Zone for building America/Los_Angeles time zone.\n" +
++	"\n" +
++	"Rule    CA  1948    only    -   Mar 14  2:00    1:00    D\n" +
++	"Rule    CA  1949    only    -   Jan  1  2:00    0   S\n" +
++	"\n" +
++	"Zone "; // this line is intentionally left incomplete
++
+     private DateTimeZone originalDateTimeZone = null;
+ 
+     public TestCompiler(String name) {
+@@ -136,6 +144,17 @@ public void testCompileOnBrokenTimeZoneFile() throws Exception {
+             assertEquals("Attempting to create a Rule from an incomplete tokenizer", iae.getMessage());
+         }
+     }
++    public void testCompileOnBrokenTimeZoneFile_2() throws Exception {
++	try {
++	    Provider provider = compileAndLoad(BROKEN_TIMEZONE_FILE_2);
++	    fail();
++	} catch(NoSuchElementException nsee) {
++	    // This thrown from the Zone constructor
++	    fail("NoSuchElementException was thrown; broken timezone file?");
++	} catch(IllegalArgumentException iae) {
++	    assertEquals("Attempting to create a Zone from an incomplete tokenizer", iae.getMessage());
++	}
++    }
+ 
+     private Provider compileAndLoad(String data) throws Exception {
+         File tempDir = createDataFile(data);
+
+From 635830e5d8b7ee7c99ffaf40251936a876ee2df5 Mon Sep 17 00:00:00 2001
+From: Brendan Humphreys <brendan@canva.com>
+Date: Mon, 23 Nov 2015 23:00:28 +1100
+Subject: [PATCH 02/17] fixes subtle bug in timezone binary search
+
+---
+ .../time/format/DateTimeFormatterBuilder.java |  6 ++++--
+ .../format/TestDateTimeFormatterBuilder.java  | 20 +++++++++++++++++++
+ 2 files changed, 24 insertions(+), 2 deletions(-)
+
+diff --git a/src/main/java/org/joda/time/format/DateTimeFormatterBuilder.java b/src/main/java/org/joda/time/format/DateTimeFormatterBuilder.java
+index c5af255c3..51ae9f481 100644
+--- a/src/main/java/org/joda/time/format/DateTimeFormatterBuilder.java
++++ b/src/main/java/org/joda/time/format/DateTimeFormatterBuilder.java
+@@ -2618,14 +2618,16 @@ public int parseInto(DateTimeParserBucket bucket, CharSequence text, int positio
+     }
+ 
+     static int csCompare(CharSequence text, int position, String search) {
+-        int compareLen = Math.min(text.length() - position, search.length());
++        int matchLen = text.length() - position;
++        int searchLen = search.length();
++        int compareLen = Math.min(matchLen, searchLen);
+         for (int i = 0; i < compareLen; i++) {
+             int result = search.charAt(i) - text.charAt(position + i);
+             if (result != 0) {
+                 return result;
+             }
+         }
+-        return 0;
++        return searchLen - matchLen;
+     }
+ 
+     static boolean csStartsWith(CharSequence text, int position, String search) {
+diff --git a/src/test/java/org/joda/time/format/TestDateTimeFormatterBuilder.java b/src/test/java/org/joda/time/format/TestDateTimeFormatterBuilder.java
+index 602bac959..6436a274f 100644
+--- a/src/test/java/org/joda/time/format/TestDateTimeFormatterBuilder.java
++++ b/src/test/java/org/joda/time/format/TestDateTimeFormatterBuilder.java
+@@ -435,6 +435,26 @@ public void test_printParseZoneDawsonCreek() {  // clashes with shorter Dawson
+         assertEquals(dt, f.parseDateTime("2007-03-04 12:30 America/Dawson_Creek"));
+     }
+ 
++    public void test_printParseZoneEtcGMT() {
++        DateTimeFormatterBuilder bld = new DateTimeFormatterBuilder()
++                .appendPattern("yyyy-MM-dd HH:mm ZZZ");
++        DateTimeFormatter f = bld.toFormatter();
++
++        DateTime dt = new DateTime(2007, 3, 4, 12, 30, 0, DateTimeZone.forID("Etc/GMT"));
++        assertEquals("2007-03-04 12:30 Etc/GMT", f.print(dt));
++        assertEquals(dt, f.parseDateTime("2007-03-04 12:30 Etc/GMT"));
++    }
++
++    public void test_printParseZoneEtcGMT1() {
++        DateTimeFormatterBuilder bld = new DateTimeFormatterBuilder()
++                .appendPattern("yyyy-MM-dd HH:mm ZZZ");
++        DateTimeFormatter f = bld.toFormatter();
++
++        DateTime dt = new DateTime(2007, 3, 4, 12, 30, 0, DateTimeZone.forID("Etc/GMT+1"));
++        assertEquals("2007-03-04 12:30 Etc/GMT+1", f.print(dt));
++        assertEquals(dt, f.parseDateTime("2007-03-04 12:30 Etc/GMT+1"));
++    }
++
+     public void test_printParseZoneBahiaBanderas() {
+         DateTimeFormatterBuilder bld = new DateTimeFormatterBuilder()
+             .appendPattern("yyyy-MM-dd HH:mm ").appendTimeZoneId();
+
+From e0b01d44d113a7a1504f48f0ae924a57a01d90a2 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Mon, 7 Dec 2015 23:18:43 +0000
+Subject: [PATCH 03/17] Remove tabs
+
+---
+ .../org/joda/time/tz/ZoneInfoCompiler.java    |  6 ++--
+ .../java/org/joda/time/tz/TestCompiler.java   | 33 ++++++++++---------
+ 2 files changed, 20 insertions(+), 19 deletions(-)
+
+diff --git a/src/main/java/org/joda/time/tz/ZoneInfoCompiler.java b/src/main/java/org/joda/time/tz/ZoneInfoCompiler.java
+index e3c509e55..a04f2782b 100644
+--- a/src/main/java/org/joda/time/tz/ZoneInfoCompiler.java
++++ b/src/main/java/org/joda/time/tz/ZoneInfoCompiler.java
+@@ -528,9 +528,9 @@ public void parseDataFile(BufferedReader in, boolean backward) throws IOExceptio
+                         rs.addRule(r);
+                     }
+                 } else if (token.equalsIgnoreCase("Zone")) {
+-		    if (st.countTokens() < 4) {
+-			throw new IllegalArgumentException("Attempting to create a Zone from an incomplete tokenizer");
+-		    }
++                    if (st.countTokens() < 4) {
++                        throw new IllegalArgumentException("Attempting to create a Zone from an incomplete tokenizer");
++                    }
+                     zone = new Zone(st);
+                 } else if (token.equalsIgnoreCase("Link")) {
+                     String real = st.nextToken();
+diff --git a/src/test/java/org/joda/time/tz/TestCompiler.java b/src/test/java/org/joda/time/tz/TestCompiler.java
+index ac7936383..7cf6b9949 100644
+--- a/src/test/java/org/joda/time/tz/TestCompiler.java
++++ b/src/test/java/org/joda/time/tz/TestCompiler.java
+@@ -70,19 +70,19 @@ public static TestSuite suite() {
+         "            -8:00   CA  P%sT    1967\n" + 
+         "            -8:00   US  P%sT";
+ 
+-        static final String BROKEN_TIMEZONE_FILE =
++    static final String BROKEN_TIMEZONE_FILE =
+         "# Incomplete Rules for building America/Los_Angeles time zone.\n" +
+         "\n" +
+         "Rule    US  1918    1919    -   Mar lastSun 2:00    1:00    D\n" +
+         "Rule    \n" ; // this line is intentionally incomplete
+ 
+     static final String BROKEN_TIMEZONE_FILE_2 =
+-	"# Incomplete Zone for building America/Los_Angeles time zone.\n" +
+-	"\n" +
+-	"Rule    CA  1948    only    -   Mar 14  2:00    1:00    D\n" +
+-	"Rule    CA  1949    only    -   Jan  1  2:00    0   S\n" +
+-	"\n" +
+-	"Zone "; // this line is intentionally left incomplete
++        "# Incomplete Zone for building America/Los_Angeles time zone.\n" +
++        "\n" +
++        "Rule    CA  1948    only    -   Mar 14  2:00    1:00    D\n" +
++        "Rule    CA  1949    only    -   Jan  1  2:00    0   S\n" +
++        "\n" +
++        "Zone "; // this line is intentionally left incomplete
+ 
+     private DateTimeZone originalDateTimeZone = null;
+ 
+@@ -144,16 +144,17 @@ public void testCompileOnBrokenTimeZoneFile() throws Exception {
+             assertEquals("Attempting to create a Rule from an incomplete tokenizer", iae.getMessage());
+         }
+     }
++
+     public void testCompileOnBrokenTimeZoneFile_2() throws Exception {
+-	try {
+-	    Provider provider = compileAndLoad(BROKEN_TIMEZONE_FILE_2);
+-	    fail();
+-	} catch(NoSuchElementException nsee) {
+-	    // This thrown from the Zone constructor
+-	    fail("NoSuchElementException was thrown; broken timezone file?");
+-	} catch(IllegalArgumentException iae) {
+-	    assertEquals("Attempting to create a Zone from an incomplete tokenizer", iae.getMessage());
+-	}
++        try {
++            Provider provider = compileAndLoad(BROKEN_TIMEZONE_FILE_2);
++            fail();
++        } catch (NoSuchElementException nsee) {
++            // This thrown from the Zone constructor
++            fail("NoSuchElementException was thrown; broken timezone file?");
++        } catch (IllegalArgumentException iae) {
++            assertEquals("Attempting to create a Zone from an incomplete tokenizer", iae.getMessage());
++        }
+     }
+ 
+     private Provider compileAndLoad(String data) throws Exception {
+
+From e0d6015d3d42330fe0e4ab0c8fa0330435228bde Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Mon, 7 Dec 2015 23:22:38 +0000
+Subject: [PATCH 04/17] Update following PR
+
+---
+ pom.xml | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/pom.xml b/pom.xml
+index 078dc5051..84a542bc9 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -124,6 +124,10 @@
+       <name>LongHua Huang</name>
+       <url>https://github.com/longhua</url>
+     </contributor>
++    <contributor>
++      <name>Brendan Humphreys</name>
++      <url>https://github.com/pandacalculus</url>
++    </contributor>
+     <contributor>
+       <name>Vsevolod Ivanov</name>
+       <url>https://github.com/seva-ask</url>
+
+From 0e82517a7f4a2e659143ce84ff1f4ea706e9a88c Mon Sep 17 00:00:00 2001
+From: emopers <emopers@gmail.com>
+Date: Sat, 26 Dec 2015 18:28:06 -0600
+Subject: [PATCH 05/17] Fixing usage of ObjectOutputStream decorated with
+ ByteArrayOutputStream
+
+---
+ src/test/java/org/joda/time/TestDateMidnight_Basics.java      | 2 +-
+ src/test/java/org/joda/time/TestDateTimeComparator.java       | 4 ++--
+ src/test/java/org/joda/time/TestDateTimeFieldType.java        | 2 +-
+ src/test/java/org/joda/time/TestDateTimeZone.java             | 4 ++--
+ src/test/java/org/joda/time/TestDateTime_Basics.java          | 2 +-
+ src/test/java/org/joda/time/TestDays.java                     | 2 +-
+ src/test/java/org/joda/time/TestDurationFieldType.java        | 2 +-
+ src/test/java/org/joda/time/TestDuration_Basics.java          | 2 +-
+ src/test/java/org/joda/time/TestHours.java                    | 2 +-
+ src/test/java/org/joda/time/TestInstant_Basics.java           | 2 +-
+ src/test/java/org/joda/time/TestInterval_Basics.java          | 2 +-
+ src/test/java/org/joda/time/TestLocalDateTime_Basics.java     | 2 +-
+ src/test/java/org/joda/time/TestLocalDate_Basics.java         | 2 +-
+ src/test/java/org/joda/time/TestLocalTime_Basics.java         | 2 +-
+ src/test/java/org/joda/time/TestMinutes.java                  | 2 +-
+ src/test/java/org/joda/time/TestMonthDay_Basics.java          | 2 +-
+ src/test/java/org/joda/time/TestMonths.java                   | 2 +-
+ src/test/java/org/joda/time/TestMutableDateTime_Basics.java   | 2 +-
+ src/test/java/org/joda/time/TestMutableInterval_Basics.java   | 2 +-
+ src/test/java/org/joda/time/TestMutablePeriod_Basics.java     | 2 +-
+ src/test/java/org/joda/time/TestPartial_Basics.java           | 2 +-
+ src/test/java/org/joda/time/TestPeriodType.java               | 4 ++--
+ src/test/java/org/joda/time/TestPeriod_Basics.java            | 2 +-
+ src/test/java/org/joda/time/TestSeconds.java                  | 2 +-
+ src/test/java/org/joda/time/TestTimeOfDay_Basics.java         | 2 +-
+ src/test/java/org/joda/time/TestWeeks.java                    | 2 +-
+ src/test/java/org/joda/time/TestYearMonthDay_Basics.java      | 2 +-
+ src/test/java/org/joda/time/TestYearMonth_Basics.java         | 2 +-
+ src/test/java/org/joda/time/TestYears.java                    | 2 +-
+ .../java/org/joda/time/field/TestMillisDurationField.java     | 2 +-
+ .../java/org/joda/time/field/TestPreciseDurationField.java    | 2 +-
+ .../java/org/joda/time/field/TestScaledDurationField.java     | 2 +-
+ src/test/java/org/joda/time/tz/TestCachedDateTimeZone.java    | 2 +-
+ 33 files changed, 36 insertions(+), 36 deletions(-)
+
+diff --git a/src/test/java/org/joda/time/TestDateMidnight_Basics.java b/src/test/java/org/joda/time/TestDateMidnight_Basics.java
+index 57dc33b05..82982c9ff 100644
+--- a/src/test/java/org/joda/time/TestDateMidnight_Basics.java
++++ b/src/test/java/org/joda/time/TestDateMidnight_Basics.java
+@@ -422,8 +422,8 @@ public void testSerialization() throws Exception {
+         ByteArrayOutputStream baos = new ByteArrayOutputStream();
+         ObjectOutputStream oos = new ObjectOutputStream(baos);
+         oos.writeObject(test);
+-        byte[] bytes = baos.toByteArray();
+         oos.close();
++        byte[] bytes = baos.toByteArray();
+         
+         ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
+         ObjectInputStream ois = new ObjectInputStream(bais);
+diff --git a/src/test/java/org/joda/time/TestDateTimeComparator.java b/src/test/java/org/joda/time/TestDateTimeComparator.java
+index 1af7f962d..2d5e7a003 100644
+--- a/src/test/java/org/joda/time/TestDateTimeComparator.java
++++ b/src/test/java/org/joda/time/TestDateTimeComparator.java
+@@ -271,8 +271,8 @@ public void testSerialization1() throws Exception {
+         ByteArrayOutputStream baos = new ByteArrayOutputStream();
+         ObjectOutputStream oos = new ObjectOutputStream(baos);
+         oos.writeObject(c);
+-        byte[] bytes = baos.toByteArray();
+         oos.close();
++        byte[] bytes = baos.toByteArray();
+         
+         ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
+         ObjectInputStream ois = new ObjectInputStream(bais);
+@@ -289,8 +289,8 @@ public void testSerialization2() throws Exception {
+         ByteArrayOutputStream baos = new ByteArrayOutputStream();
+         ObjectOutputStream oos = new ObjectOutputStream(baos);
+         oos.writeObject(c);
+-        byte[] bytes = baos.toByteArray();
+         oos.close();
++        byte[] bytes = baos.toByteArray();
+         
+         ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
+         ObjectInputStream ois = new ObjectInputStream(bais);
+diff --git a/src/test/java/org/joda/time/TestDateTimeFieldType.java b/src/test/java/org/joda/time/TestDateTimeFieldType.java
+index 0e0babe20..29aaceefd 100644
+--- a/src/test/java/org/joda/time/TestDateTimeFieldType.java
++++ b/src/test/java/org/joda/time/TestDateTimeFieldType.java
+@@ -314,8 +314,8 @@ private DateTimeFieldType doSerialization(DateTimeFieldType type) throws Excepti
+         ByteArrayOutputStream baos = new ByteArrayOutputStream();
+         ObjectOutputStream oos = new ObjectOutputStream(baos);
+         oos.writeObject(type);
+-        byte[] bytes = baos.toByteArray();
+         oos.close();
++        byte[] bytes = baos.toByteArray();
+         
+         ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
+         ObjectInputStream ois = new ObjectInputStream(bais);
+diff --git a/src/test/java/org/joda/time/TestDateTimeZone.java b/src/test/java/org/joda/time/TestDateTimeZone.java
+index 5335fc2a6..3063e69b8 100644
+--- a/src/test/java/org/joda/time/TestDateTimeZone.java
++++ b/src/test/java/org/joda/time/TestDateTimeZone.java
+@@ -1025,8 +1025,8 @@ public void testSerialization1() throws Exception {
+         ByteArrayOutputStream baos = new ByteArrayOutputStream();
+         ObjectOutputStream oos = new ObjectOutputStream(baos);
+         oos.writeObject(zone);
+-        byte[] bytes = baos.toByteArray();
+         oos.close();
++        byte[] bytes = baos.toByteArray();
+         
+         ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
+         ObjectInputStream ois = new ObjectInputStream(bais);
+@@ -1043,8 +1043,8 @@ public void testSerialization2() throws Exception {
+         ByteArrayOutputStream baos = new ByteArrayOutputStream();
+         ObjectOutputStream oos = new ObjectOutputStream(baos);
+         oos.writeObject(zone);
+-        byte[] bytes = baos.toByteArray();
+         oos.close();
++        byte[] bytes = baos.toByteArray();
+         
+         ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
+         ObjectInputStream ois = new ObjectInputStream(bais);
+diff --git a/src/test/java/org/joda/time/TestDateTime_Basics.java b/src/test/java/org/joda/time/TestDateTime_Basics.java
+index b49e2bce4..293c271d7 100644
+--- a/src/test/java/org/joda/time/TestDateTime_Basics.java
++++ b/src/test/java/org/joda/time/TestDateTime_Basics.java
+@@ -487,8 +487,8 @@ public void testSerialization() throws Exception {
+         ByteArrayOutputStream baos = new ByteArrayOutputStream();
+         ObjectOutputStream oos = new ObjectOutputStream(baos);
+         oos.writeObject(test);
+-        byte[] bytes = baos.toByteArray();
+         oos.close();
++        byte[] bytes = baos.toByteArray();
+         
+         ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
+         ObjectInputStream ois = new ObjectInputStream(bais);
+diff --git a/src/test/java/org/joda/time/TestDays.java b/src/test/java/org/joda/time/TestDays.java
+index 18a4211f6..95db6cf37 100644
+--- a/src/test/java/org/joda/time/TestDays.java
++++ b/src/test/java/org/joda/time/TestDays.java
+@@ -240,8 +240,8 @@ public void testSerialization() throws Exception {
+         ByteArrayOutputStream baos = new ByteArrayOutputStream();
+         ObjectOutputStream oos = new ObjectOutputStream(baos);
+         oos.writeObject(test);
+-        byte[] bytes = baos.toByteArray();
+         oos.close();
++        byte[] bytes = baos.toByteArray();
+         
+         ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
+         ObjectInputStream ois = new ObjectInputStream(bais);
+diff --git a/src/test/java/org/joda/time/TestDurationFieldType.java b/src/test/java/org/joda/time/TestDurationFieldType.java
+index 582d78f7b..9f2bfb762 100644
+--- a/src/test/java/org/joda/time/TestDurationFieldType.java
++++ b/src/test/java/org/joda/time/TestDurationFieldType.java
+@@ -176,8 +176,8 @@ private DurationFieldType doSerialization(DurationFieldType type) throws Excepti
+         ByteArrayOutputStream baos = new ByteArrayOutputStream();
+         ObjectOutputStream oos = new ObjectOutputStream(baos);
+         oos.writeObject(type);
+-        byte[] bytes = baos.toByteArray();
+         oos.close();
++        byte[] bytes = baos.toByteArray();
+         
+         ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
+         ObjectInputStream ois = new ObjectInputStream(bais);
+diff --git a/src/test/java/org/joda/time/TestDuration_Basics.java b/src/test/java/org/joda/time/TestDuration_Basics.java
+index 4483b5b29..1abfa8e77 100644
+--- a/src/test/java/org/joda/time/TestDuration_Basics.java
++++ b/src/test/java/org/joda/time/TestDuration_Basics.java
+@@ -237,8 +237,8 @@ public void testSerialization() throws Exception {
+         ByteArrayOutputStream baos = new ByteArrayOutputStream();
+         ObjectOutputStream oos = new ObjectOutputStream(baos);
+         oos.writeObject(test);
+-        byte[] bytes = baos.toByteArray();
+         oos.close();
++        byte[] bytes = baos.toByteArray();
+         
+         ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
+         ObjectInputStream ois = new ObjectInputStream(bais);
+diff --git a/src/test/java/org/joda/time/TestHours.java b/src/test/java/org/joda/time/TestHours.java
+index 8f357b29e..ca15f1f1a 100644
+--- a/src/test/java/org/joda/time/TestHours.java
++++ b/src/test/java/org/joda/time/TestHours.java
+@@ -209,8 +209,8 @@ public void testSerialization() throws Exception {
+         ByteArrayOutputStream baos = new ByteArrayOutputStream();
+         ObjectOutputStream oos = new ObjectOutputStream(baos);
+         oos.writeObject(test);
+-        byte[] bytes = baos.toByteArray();
+         oos.close();
++        byte[] bytes = baos.toByteArray();
+         
+         ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
+         ObjectInputStream ois = new ObjectInputStream(bais);
+diff --git a/src/test/java/org/joda/time/TestInstant_Basics.java b/src/test/java/org/joda/time/TestInstant_Basics.java
+index a6097ce06..97a177e95 100644
+--- a/src/test/java/org/joda/time/TestInstant_Basics.java
++++ b/src/test/java/org/joda/time/TestInstant_Basics.java
+@@ -367,8 +367,8 @@ public void testSerialization() throws Exception {
+         ByteArrayOutputStream baos = new ByteArrayOutputStream();
+         ObjectOutputStream oos = new ObjectOutputStream(baos);
+         oos.writeObject(test);
+-        byte[] bytes = baos.toByteArray();
+         oos.close();
++        byte[] bytes = baos.toByteArray();
+         
+         ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
+         ObjectInputStream ois = new ObjectInputStream(bais);
+diff --git a/src/test/java/org/joda/time/TestInterval_Basics.java b/src/test/java/org/joda/time/TestInterval_Basics.java
+index 4b1e68538..1d933472d 100644
+--- a/src/test/java/org/joda/time/TestInterval_Basics.java
++++ b/src/test/java/org/joda/time/TestInterval_Basics.java
+@@ -1032,8 +1032,8 @@ public void testSerialization() throws Exception {
+         ByteArrayOutputStream baos = new ByteArrayOutputStream();
+         ObjectOutputStream oos = new ObjectOutputStream(baos);
+         oos.writeObject(test);
+-        byte[] bytes = baos.toByteArray();
+         oos.close();
++        byte[] bytes = baos.toByteArray();
+         
+         ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
+         ObjectInputStream ois = new ObjectInputStream(bais);
+diff --git a/src/test/java/org/joda/time/TestLocalDateTime_Basics.java b/src/test/java/org/joda/time/TestLocalDateTime_Basics.java
+index a32532cef..b3f190361 100644
+--- a/src/test/java/org/joda/time/TestLocalDateTime_Basics.java
++++ b/src/test/java/org/joda/time/TestLocalDateTime_Basics.java
+@@ -1051,8 +1051,8 @@ public void testSerialization() throws Exception {
+         ByteArrayOutputStream baos = new ByteArrayOutputStream();
+         ObjectOutputStream oos = new ObjectOutputStream(baos);
+         oos.writeObject(test);
+-        byte[] bytes = baos.toByteArray();
+         oos.close();
++        byte[] bytes = baos.toByteArray();
+         
+         ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
+         ObjectInputStream ois = new ObjectInputStream(bais);
+diff --git a/src/test/java/org/joda/time/TestLocalDate_Basics.java b/src/test/java/org/joda/time/TestLocalDate_Basics.java
+index 6dd7db4c4..593cb3618 100644
+--- a/src/test/java/org/joda/time/TestLocalDate_Basics.java
++++ b/src/test/java/org/joda/time/TestLocalDate_Basics.java
+@@ -1106,8 +1106,8 @@ public void testSerialization() throws Exception {
+         ByteArrayOutputStream baos = new ByteArrayOutputStream();
+         ObjectOutputStream oos = new ObjectOutputStream(baos);
+         oos.writeObject(test);
+-        byte[] bytes = baos.toByteArray();
+         oos.close();
++        byte[] bytes = baos.toByteArray();
+         
+         ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
+         ObjectInputStream ois = new ObjectInputStream(bais);
+diff --git a/src/test/java/org/joda/time/TestLocalTime_Basics.java b/src/test/java/org/joda/time/TestLocalTime_Basics.java
+index 42d3f25b7..5f0fd1e36 100644
+--- a/src/test/java/org/joda/time/TestLocalTime_Basics.java
++++ b/src/test/java/org/joda/time/TestLocalTime_Basics.java
+@@ -766,8 +766,8 @@ public void testSerialization() throws Exception {
+         ByteArrayOutputStream baos = new ByteArrayOutputStream();
+         ObjectOutputStream oos = new ObjectOutputStream(baos);
+         oos.writeObject(test);
+-        byte[] bytes = baos.toByteArray();
+         oos.close();
++        byte[] bytes = baos.toByteArray();
+         
+         ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
+         ObjectInputStream ois = new ObjectInputStream(bais);
+diff --git a/src/test/java/org/joda/time/TestMinutes.java b/src/test/java/org/joda/time/TestMinutes.java
+index 3a289ef05..dd0162023 100644
+--- a/src/test/java/org/joda/time/TestMinutes.java
++++ b/src/test/java/org/joda/time/TestMinutes.java
+@@ -199,8 +199,8 @@ public void testSerialization() throws Exception {
+         ByteArrayOutputStream baos = new ByteArrayOutputStream();
+         ObjectOutputStream oos = new ObjectOutputStream(baos);
+         oos.writeObject(test);
+-        byte[] bytes = baos.toByteArray();
+         oos.close();
++        byte[] bytes = baos.toByteArray();
+         
+         ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
+         ObjectInputStream ois = new ObjectInputStream(bais);
+diff --git a/src/test/java/org/joda/time/TestMonthDay_Basics.java b/src/test/java/org/joda/time/TestMonthDay_Basics.java
+index e8a8cede7..9cd923d90 100644
+--- a/src/test/java/org/joda/time/TestMonthDay_Basics.java
++++ b/src/test/java/org/joda/time/TestMonthDay_Basics.java
+@@ -769,8 +769,8 @@ public void testSerialization() throws Exception {
+         ByteArrayOutputStream baos = new ByteArrayOutputStream();
+         ObjectOutputStream oos = new ObjectOutputStream(baos);
+         oos.writeObject(test);
+-        byte[] bytes = baos.toByteArray();
+         oos.close();
++        byte[] bytes = baos.toByteArray();
+         
+         ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
+         ObjectInputStream ois = new ObjectInputStream(bais);
+diff --git a/src/test/java/org/joda/time/TestMonths.java b/src/test/java/org/joda/time/TestMonths.java
+index cf50e4027..6c7de3ec3 100644
+--- a/src/test/java/org/joda/time/TestMonths.java
++++ b/src/test/java/org/joda/time/TestMonths.java
+@@ -226,8 +226,8 @@ public void testSerialization() throws Exception {
+         ByteArrayOutputStream baos = new ByteArrayOutputStream();
+         ObjectOutputStream oos = new ObjectOutputStream(baos);
+         oos.writeObject(test);
+-        byte[] bytes = baos.toByteArray();
+         oos.close();
++        byte[] bytes = baos.toByteArray();
+         
+         ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
+         ObjectInputStream ois = new ObjectInputStream(bais);
+diff --git a/src/test/java/org/joda/time/TestMutableDateTime_Basics.java b/src/test/java/org/joda/time/TestMutableDateTime_Basics.java
+index 9259d44a4..f81f59b96 100644
+--- a/src/test/java/org/joda/time/TestMutableDateTime_Basics.java
++++ b/src/test/java/org/joda/time/TestMutableDateTime_Basics.java
+@@ -391,8 +391,8 @@ public void testSerialization() throws Exception {
+         ByteArrayOutputStream baos = new ByteArrayOutputStream();
+         ObjectOutputStream oos = new ObjectOutputStream(baos);
+         oos.writeObject(test);
+-        byte[] bytes = baos.toByteArray();
+         oos.close();
++        byte[] bytes = baos.toByteArray();
+         
+         ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
+         ObjectInputStream ois = new ObjectInputStream(bais);
+diff --git a/src/test/java/org/joda/time/TestMutableInterval_Basics.java b/src/test/java/org/joda/time/TestMutableInterval_Basics.java
+index 514df6796..091d7a4b2 100644
+--- a/src/test/java/org/joda/time/TestMutableInterval_Basics.java
++++ b/src/test/java/org/joda/time/TestMutableInterval_Basics.java
+@@ -452,8 +452,8 @@ public void testSerialization() throws Exception {
+         ByteArrayOutputStream baos = new ByteArrayOutputStream();
+         ObjectOutputStream oos = new ObjectOutputStream(baos);
+         oos.writeObject(test);
+-        byte[] bytes = baos.toByteArray();
+         oos.close();
++        byte[] bytes = baos.toByteArray();
+         
+         ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
+         ObjectInputStream ois = new ObjectInputStream(bais);
+diff --git a/src/test/java/org/joda/time/TestMutablePeriod_Basics.java b/src/test/java/org/joda/time/TestMutablePeriod_Basics.java
+index 792a68da9..176338ca9 100644
+--- a/src/test/java/org/joda/time/TestMutablePeriod_Basics.java
++++ b/src/test/java/org/joda/time/TestMutablePeriod_Basics.java
+@@ -163,8 +163,8 @@ public void testSerialization() throws Exception {
+         ByteArrayOutputStream baos = new ByteArrayOutputStream();
+         ObjectOutputStream oos = new ObjectOutputStream(baos);
+         oos.writeObject(test);
+-        byte[] bytes = baos.toByteArray();
+         oos.close();
++        byte[] bytes = baos.toByteArray();
+         
+         ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
+         ObjectInputStream ois = new ObjectInputStream(bais);
+diff --git a/src/test/java/org/joda/time/TestPartial_Basics.java b/src/test/java/org/joda/time/TestPartial_Basics.java
+index 5c154a380..d49cb2886 100644
+--- a/src/test/java/org/joda/time/TestPartial_Basics.java
++++ b/src/test/java/org/joda/time/TestPartial_Basics.java
+@@ -781,8 +781,8 @@ public void testSerialization() throws Exception {
+         ByteArrayOutputStream baos = new ByteArrayOutputStream();
+         ObjectOutputStream oos = new ObjectOutputStream(baos);
+         oos.writeObject(test);
+-        byte[] bytes = baos.toByteArray();
+         oos.close();
++        byte[] bytes = baos.toByteArray();
+         
+         ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
+         ObjectInputStream ois = new ObjectInputStream(bais);
+diff --git a/src/test/java/org/joda/time/TestPeriodType.java b/src/test/java/org/joda/time/TestPeriodType.java
+index 9c6108259..17497d385 100644
+--- a/src/test/java/org/joda/time/TestPeriodType.java
++++ b/src/test/java/org/joda/time/TestPeriodType.java
+@@ -110,8 +110,8 @@ private void assertEqualsAfterSerialization(PeriodType type) throws Exception {
+         ByteArrayOutputStream baos = new ByteArrayOutputStream();
+         ObjectOutputStream oos = new ObjectOutputStream(baos);
+         oos.writeObject(type);
+-        byte[] bytes = baos.toByteArray();
+         oos.close();
++        byte[] bytes = baos.toByteArray();
+         
+         ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
+         ObjectInputStream ois = new ObjectInputStream(bais);
+@@ -125,8 +125,8 @@ private void assertSameAfterSerialization(PeriodType type) throws Exception {
+         ByteArrayOutputStream baos = new ByteArrayOutputStream();
+         ObjectOutputStream oos = new ObjectOutputStream(baos);
+         oos.writeObject(type);
+-        byte[] bytes = baos.toByteArray();
+         oos.close();
++        byte[] bytes = baos.toByteArray();
+         
+         ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
+         ObjectInputStream ois = new ObjectInputStream(bais);
+diff --git a/src/test/java/org/joda/time/TestPeriod_Basics.java b/src/test/java/org/joda/time/TestPeriod_Basics.java
+index 82030f808..46c6871f6 100644
+--- a/src/test/java/org/joda/time/TestPeriod_Basics.java
++++ b/src/test/java/org/joda/time/TestPeriod_Basics.java
+@@ -230,8 +230,8 @@ public void testSerialization() throws Exception {
+         ByteArrayOutputStream baos = new ByteArrayOutputStream();
+         ObjectOutputStream oos = new ObjectOutputStream(baos);
+         oos.writeObject(test);
+-        byte[] bytes = baos.toByteArray();
+         oos.close();
++        byte[] bytes = baos.toByteArray();
+         
+         ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
+         ObjectInputStream ois = new ObjectInputStream(bais);
+diff --git a/src/test/java/org/joda/time/TestSeconds.java b/src/test/java/org/joda/time/TestSeconds.java
+index 6842d236f..41614b04d 100644
+--- a/src/test/java/org/joda/time/TestSeconds.java
++++ b/src/test/java/org/joda/time/TestSeconds.java
+@@ -196,8 +196,8 @@ public void testSerialization() throws Exception {
+         ByteArrayOutputStream baos = new ByteArrayOutputStream();
+         ObjectOutputStream oos = new ObjectOutputStream(baos);
+         oos.writeObject(test);
+-        byte[] bytes = baos.toByteArray();
+         oos.close();
++        byte[] bytes = baos.toByteArray();
+         
+         ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
+         ObjectInputStream ois = new ObjectInputStream(bais);
+diff --git a/src/test/java/org/joda/time/TestTimeOfDay_Basics.java b/src/test/java/org/joda/time/TestTimeOfDay_Basics.java
+index 7ab489138..671740ba5 100644
+--- a/src/test/java/org/joda/time/TestTimeOfDay_Basics.java
++++ b/src/test/java/org/joda/time/TestTimeOfDay_Basics.java
+@@ -853,8 +853,8 @@ public void testSerialization() throws Exception {
+         ByteArrayOutputStream baos = new ByteArrayOutputStream();
+         ObjectOutputStream oos = new ObjectOutputStream(baos);
+         oos.writeObject(test);
+-        byte[] bytes = baos.toByteArray();
+         oos.close();
++        byte[] bytes = baos.toByteArray();
+         
+         ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
+         ObjectInputStream ois = new ObjectInputStream(bais);
+diff --git a/src/test/java/org/joda/time/TestWeeks.java b/src/test/java/org/joda/time/TestWeeks.java
+index ecc668b12..e08079b3b 100644
+--- a/src/test/java/org/joda/time/TestWeeks.java
++++ b/src/test/java/org/joda/time/TestWeeks.java
+@@ -198,8 +198,8 @@ public void testSerialization() throws Exception {
+         ByteArrayOutputStream baos = new ByteArrayOutputStream();
+         ObjectOutputStream oos = new ObjectOutputStream(baos);
+         oos.writeObject(test);
+-        byte[] bytes = baos.toByteArray();
+         oos.close();
++        byte[] bytes = baos.toByteArray();
+         
+         ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
+         ObjectInputStream ois = new ObjectInputStream(bais);
+diff --git a/src/test/java/org/joda/time/TestYearMonthDay_Basics.java b/src/test/java/org/joda/time/TestYearMonthDay_Basics.java
+index 17b18a96a..a9c47d12e 100644
+--- a/src/test/java/org/joda/time/TestYearMonthDay_Basics.java
++++ b/src/test/java/org/joda/time/TestYearMonthDay_Basics.java
+@@ -779,8 +779,8 @@ public void testSerialization() throws Exception {
+         ByteArrayOutputStream baos = new ByteArrayOutputStream();
+         ObjectOutputStream oos = new ObjectOutputStream(baos);
+         oos.writeObject(test);
+-        byte[] bytes = baos.toByteArray();
+         oos.close();
++        byte[] bytes = baos.toByteArray();
+         
+         ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
+         ObjectInputStream ois = new ObjectInputStream(bais);
+diff --git a/src/test/java/org/joda/time/TestYearMonth_Basics.java b/src/test/java/org/joda/time/TestYearMonth_Basics.java
+index 1ce184ef0..98afd5640 100644
+--- a/src/test/java/org/joda/time/TestYearMonth_Basics.java
++++ b/src/test/java/org/joda/time/TestYearMonth_Basics.java
+@@ -603,8 +603,8 @@ public void testSerialization() throws Exception {
+         ByteArrayOutputStream baos = new ByteArrayOutputStream();
+         ObjectOutputStream oos = new ObjectOutputStream(baos);
+         oos.writeObject(test);
+-        byte[] bytes = baos.toByteArray();
+         oos.close();
++        byte[] bytes = baos.toByteArray();
+         
+         ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
+         ObjectInputStream ois = new ObjectInputStream(bais);
+diff --git a/src/test/java/org/joda/time/TestYears.java b/src/test/java/org/joda/time/TestYears.java
+index c14282bfe..2bc352a3b 100644
+--- a/src/test/java/org/joda/time/TestYears.java
++++ b/src/test/java/org/joda/time/TestYears.java
+@@ -181,8 +181,8 @@ public void testSerialization() throws Exception {
+         ByteArrayOutputStream baos = new ByteArrayOutputStream();
+         ObjectOutputStream oos = new ObjectOutputStream(baos);
+         oos.writeObject(test);
+-        byte[] bytes = baos.toByteArray();
+         oos.close();
++        byte[] bytes = baos.toByteArray();
+         
+         ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
+         ObjectInputStream ois = new ObjectInputStream(bais);
+diff --git a/src/test/java/org/joda/time/field/TestMillisDurationField.java b/src/test/java/org/joda/time/field/TestMillisDurationField.java
+index 126a32e00..293a3d478 100644
+--- a/src/test/java/org/joda/time/field/TestMillisDurationField.java
++++ b/src/test/java/org/joda/time/field/TestMillisDurationField.java
+@@ -202,8 +202,8 @@ public void testSerialization() throws Exception {
+         ByteArrayOutputStream baos = new ByteArrayOutputStream();
+         ObjectOutputStream oos = new ObjectOutputStream(baos);
+         oos.writeObject(test);
+-        byte[] bytes = baos.toByteArray();
+         oos.close();
++        byte[] bytes = baos.toByteArray();
+         
+         ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
+         ObjectInputStream ois = new ObjectInputStream(bais);
+diff --git a/src/test/java/org/joda/time/field/TestPreciseDurationField.java b/src/test/java/org/joda/time/field/TestPreciseDurationField.java
+index b8f25452e..1154d0596 100644
+--- a/src/test/java/org/joda/time/field/TestPreciseDurationField.java
++++ b/src/test/java/org/joda/time/field/TestPreciseDurationField.java
+@@ -261,8 +261,8 @@ public void testSerialization() throws Exception {
+         ByteArrayOutputStream baos = new ByteArrayOutputStream();
+         ObjectOutputStream oos = new ObjectOutputStream(baos);
+         oos.writeObject(test);
+-        byte[] bytes = baos.toByteArray();
+         oos.close();
++        byte[] bytes = baos.toByteArray();
+         
+         ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
+         ObjectInputStream ois = new ObjectInputStream(bais);
+diff --git a/src/test/java/org/joda/time/field/TestScaledDurationField.java b/src/test/java/org/joda/time/field/TestScaledDurationField.java
+index baf84ddac..4bfd65eb7 100644
+--- a/src/test/java/org/joda/time/field/TestScaledDurationField.java
++++ b/src/test/java/org/joda/time/field/TestScaledDurationField.java
+@@ -278,8 +278,8 @@ public void testSerialization() throws Exception {
+         ByteArrayOutputStream baos = new ByteArrayOutputStream();
+         ObjectOutputStream oos = new ObjectOutputStream(baos);
+         oos.writeObject(test);
+-        byte[] bytes = baos.toByteArray();
+         oos.close();
++        byte[] bytes = baos.toByteArray();
+         
+         ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
+         ObjectInputStream ois = new ObjectInputStream(bais);
+diff --git a/src/test/java/org/joda/time/tz/TestCachedDateTimeZone.java b/src/test/java/org/joda/time/tz/TestCachedDateTimeZone.java
+index d6d01fd20..56b73c75a 100644
+--- a/src/test/java/org/joda/time/tz/TestCachedDateTimeZone.java
++++ b/src/test/java/org/joda/time/tz/TestCachedDateTimeZone.java
+@@ -68,8 +68,8 @@ public void testSerialization() throws Exception {
+         ByteArrayOutputStream baos = new ByteArrayOutputStream();
+         ObjectOutputStream oos = new ObjectOutputStream(baos);
+         oos.writeObject(test);
+-        byte[] bytes = baos.toByteArray();
+         oos.close();
++        byte[] bytes = baos.toByteArray();
+         
+         ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
+         ObjectInputStream ois = new ObjectInputStream(bais);
+
+From b6b8ef051decf0d450146cbc87475b9f4dcc3de8 Mon Sep 17 00:00:00 2001
+From: Adrian-Ryan Acala <adrianacala87@gmail.com>
+Date: Fri, 30 Oct 2015 23:19:54 -0700
+Subject: [PATCH 06/17] Minor changes for readability.
+
+---
+ src/main/java/org/joda/time/chrono/IslamicChronology.java | 6 ++----
+ src/main/java/org/joda/time/chrono/LimitChronology.java   | 8 +++-----
+ src/main/java/org/joda/time/tz/DateTimeZoneBuilder.java   | 8 +++-----
+ src/main/java/org/joda/time/tz/ZoneInfoCompiler.java      | 6 ++----
+ 4 files changed, 10 insertions(+), 18 deletions(-)
+
+diff --git a/src/main/java/org/joda/time/chrono/IslamicChronology.java b/src/main/java/org/joda/time/chrono/IslamicChronology.java
+index 8630349cd..ca8aaff3c 100644
+--- a/src/main/java/org/joda/time/chrono/IslamicChronology.java
++++ b/src/main/java/org/joda/time/chrono/IslamicChronology.java
+@@ -331,12 +331,10 @@ long setYear(long instant, int year) {
+         int dayOfYear = getDayOfYear(instant, thisYear);
+         int millisOfDay = getMillisOfDay(instant);
+ 
+-        if (dayOfYear > 354) {
+-            // Current year is leap, and day is leap.
+-            if (!isLeapYear(year)) {
++        // Current year is leap, and day is leap.
++        if (dayOfYear > 354 && !isLeapYear(year)) {
+                 // Moving to a non-leap year, leap day doesn't exist.
+                 dayOfYear--;
+-            }
+         }
+ 
+         instant = getYearMonthDayMillis(year, 1, dayOfYear);
+diff --git a/src/main/java/org/joda/time/chrono/LimitChronology.java b/src/main/java/org/joda/time/chrono/LimitChronology.java
+index 89325adee..46a162f72 100644
+--- a/src/main/java/org/joda/time/chrono/LimitChronology.java
++++ b/src/main/java/org/joda/time/chrono/LimitChronology.java
+@@ -71,11 +71,9 @@ public static LimitChronology getInstance(Chronology base,
+         lowerLimit = lowerLimit == null ? null : lowerLimit.toDateTime();
+         upperLimit = upperLimit == null ? null : upperLimit.toDateTime();
+ 
+-        if (lowerLimit != null && upperLimit != null) {
+-            if (!lowerLimit.isBefore(upperLimit)) {
+-                throw new IllegalArgumentException
+-                    ("The lower limit must be come before than the upper limit");
+-            }
++        if (lowerLimit != null && upperLimit != null && !lowerLimit.isBefore(upperLimit)) {
++        	throw new IllegalArgumentException
++        	("The lower limit must be come before than the upper limit");
+         }
+ 
+         return new LimitChronology(base, (DateTime)lowerLimit, (DateTime)upperLimit);
+diff --git a/src/main/java/org/joda/time/tz/DateTimeZoneBuilder.java b/src/main/java/org/joda/time/tz/DateTimeZoneBuilder.java
+index c95f9008a..a005142ab 100644
+--- a/src/main/java/org/joda/time/tz/DateTimeZoneBuilder.java
++++ b/src/main/java/org/joda/time/tz/DateTimeZoneBuilder.java
+@@ -360,11 +360,9 @@ public DateTimeZone toDateTimeZone(String id, boolean outputID) {
+             rs = new RuleSet(rs);
+ 
+             while ((next = rs.nextTransition(millis, saveMillis)) != null) {
+-                if (addTransition(transitions, next)) {
+-                    if (tailZone != null) {
+-                        // Got the extra transition before DSTZone.
+-                        break;
+-                    }
++                if (addTransition(transitions, next) && tailZone != null) {
++                	// Got the extra transition before DSTZone.
++                	break;
+                 }
+                 millis = next.getMillis();
+                 saveMillis = next.getSaveMillis();
+diff --git a/src/main/java/org/joda/time/tz/ZoneInfoCompiler.java b/src/main/java/org/joda/time/tz/ZoneInfoCompiler.java
+index a04f2782b..64448d2fb 100644
+--- a/src/main/java/org/joda/time/tz/ZoneInfoCompiler.java
++++ b/src/main/java/org/joda/time/tz/ZoneInfoCompiler.java
+@@ -364,10 +364,8 @@ public ZoneInfoCompiler() {
+         }
+ 
+         if (outputDir != null) {
+-            if (!outputDir.exists()) {
+-                if (!outputDir.mkdirs()) {
+-                    throw new IOException("Destination directory doesn't exist and cannot be created: " + outputDir);
+-                }
++            if (!outputDir.exists() && !outputDir.mkdirs()) {
++            	throw new IOException("Destination directory doesn't exist and cannot be created: " + outputDir);
+             }
+             if (!outputDir.isDirectory()) {
+                 throw new IOException("Destination is not a directory: " + outputDir);
+
+From 91ad3ada2d9c7d246cf8ec75726b6d085255f751 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Fri, 1 Jan 2016 01:20:30 +0000
+Subject: [PATCH 07/17] Replace evil tabs with spaces
+
+---
+ src/main/java/org/joda/time/chrono/LimitChronology.java  | 4 ++--
+ src/main/java/org/joda/time/convert/StringConverter.java | 6 +++---
+ src/main/java/org/joda/time/tz/DateTimeZoneBuilder.java  | 4 ++--
+ src/main/java/org/joda/time/tz/ZoneInfoCompiler.java     | 2 +-
+ 4 files changed, 8 insertions(+), 8 deletions(-)
+
+diff --git a/src/main/java/org/joda/time/chrono/LimitChronology.java b/src/main/java/org/joda/time/chrono/LimitChronology.java
+index 46a162f72..1e0aa93be 100644
+--- a/src/main/java/org/joda/time/chrono/LimitChronology.java
++++ b/src/main/java/org/joda/time/chrono/LimitChronology.java
+@@ -72,8 +72,8 @@ public static LimitChronology getInstance(Chronology base,
+         upperLimit = upperLimit == null ? null : upperLimit.toDateTime();
+ 
+         if (lowerLimit != null && upperLimit != null && !lowerLimit.isBefore(upperLimit)) {
+-        	throw new IllegalArgumentException
+-        	("The lower limit must be come before than the upper limit");
++            throw new IllegalArgumentException
++            ("The lower limit must be come before than the upper limit");
+         }
+ 
+         return new LimitChronology(base, (DateTime)lowerLimit, (DateTime)upperLimit);
+diff --git a/src/main/java/org/joda/time/convert/StringConverter.java b/src/main/java/org/joda/time/convert/StringConverter.java
+index ea4553e56..a0d505d43 100644
+--- a/src/main/java/org/joda/time/convert/StringConverter.java
++++ b/src/main/java/org/joda/time/convert/StringConverter.java
+@@ -117,8 +117,8 @@ public long getDurationMillis(Object object) {
+             if (str.charAt(i) >= '0' && str.charAt(i) <= '9') {
+                 // ok
+             } else if (i == 0 && str.charAt(0) == '-') {
+-            	// ok
+-            	negative = true;
++                // ok
++                negative = true;
+             } else if (i > (negative ? 1 : 0) && str.charAt(i) == '.' && dot == -1) {
+                 // ok
+                 dot = i;
+@@ -136,7 +136,7 @@ public long getDurationMillis(Object object) {
+             }
+             millis = Integer.parseInt(str);
+         } else if (negative) {
+-        	seconds = Long.parseLong(str.substring(firstDigit, str.length()));
++            seconds = Long.parseLong(str.substring(firstDigit, str.length()));
+         } else {
+             seconds = Long.parseLong(str);
+         }
+diff --git a/src/main/java/org/joda/time/tz/DateTimeZoneBuilder.java b/src/main/java/org/joda/time/tz/DateTimeZoneBuilder.java
+index a005142ab..4a89b14fc 100644
+--- a/src/main/java/org/joda/time/tz/DateTimeZoneBuilder.java
++++ b/src/main/java/org/joda/time/tz/DateTimeZoneBuilder.java
+@@ -361,8 +361,8 @@ public DateTimeZone toDateTimeZone(String id, boolean outputID) {
+ 
+             while ((next = rs.nextTransition(millis, saveMillis)) != null) {
+                 if (addTransition(transitions, next) && tailZone != null) {
+-                	// Got the extra transition before DSTZone.
+-                	break;
++                    // Got the extra transition before DSTZone.
++                    break;
+                 }
+                 millis = next.getMillis();
+                 saveMillis = next.getSaveMillis();
+diff --git a/src/main/java/org/joda/time/tz/ZoneInfoCompiler.java b/src/main/java/org/joda/time/tz/ZoneInfoCompiler.java
+index 64448d2fb..f6737ea6f 100644
+--- a/src/main/java/org/joda/time/tz/ZoneInfoCompiler.java
++++ b/src/main/java/org/joda/time/tz/ZoneInfoCompiler.java
+@@ -365,7 +365,7 @@ public ZoneInfoCompiler() {
+ 
+         if (outputDir != null) {
+             if (!outputDir.exists() && !outputDir.mkdirs()) {
+-            	throw new IOException("Destination directory doesn't exist and cannot be created: " + outputDir);
++                throw new IOException("Destination directory doesn't exist and cannot be created: " + outputDir);
+             }
+             if (!outputDir.isDirectory()) {
+                 throw new IOException("Destination is not a directory: " + outputDir);
+
+From 83c7de55bd5af7ef3fb27573c69b4d33c4414c61 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Fri, 1 Jan 2016 01:21:36 +0000
+Subject: [PATCH 08/17] Update pom for PR
+
+---
+ pom.xml | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/pom.xml b/pom.xml
+index 84a542bc9..483689db5 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -50,6 +50,10 @@
+     </developer>
+   </developers>
+   <contributors>
++    <contributor>
++      <name>Adrian Acala</name>
++      <url>https://github.com/AdrianAcala</url>
++    </contributor>
+     <contributor>
+       <name>Guy Allard</name>
+     </contributor>
+
+From 60be421469dd85893978bfc645b41e94c63ba1b1 Mon Sep 17 00:00:00 2001
+From: emopers <emopers@gmail.com>
+Date: Mon, 11 Jan 2016 14:43:19 -0600
+Subject: [PATCH 09/17] Fixing usage of DataOutputStream
+
+---
+ src/main/java/org/joda/time/tz/DateTimeZoneBuilder.java | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/src/main/java/org/joda/time/tz/DateTimeZoneBuilder.java b/src/main/java/org/joda/time/tz/DateTimeZoneBuilder.java
+index 4a89b14fc..a1b50a5ac 100644
+--- a/src/main/java/org/joda/time/tz/DateTimeZoneBuilder.java
++++ b/src/main/java/org/joda/time/tz/DateTimeZoneBuilder.java
+@@ -441,7 +441,9 @@ public void writeTo(String zoneID, OutputStream out) throws IOException {
+         if (out instanceof DataOutput) {
+             writeTo(zoneID, (DataOutput)out);
+         } else {
+-            writeTo(zoneID, (DataOutput)new DataOutputStream(out));
++            DataOutputStream dout = new DataOutputStream(out);
++            writeTo(zoneID, (DataOutput)dout);
++            dout.flush();
+         }
+     }
+ 
+
+From 474bf290ab6e2eb51cf041f50a9943ca5f262520 Mon Sep 17 00:00:00 2001
+From: Arthur Carlsson <arthur@kiron.net>
+Date: Tue, 12 Jan 2016 11:46:42 +0100
+Subject: [PATCH 10/17] Fixed comment typo
+
+---
+ .../java/org/joda/time/DurationFieldType.java | 24 +++++++++----------
+ 1 file changed, 12 insertions(+), 12 deletions(-)
+
+diff --git a/src/main/java/org/joda/time/DurationFieldType.java b/src/main/java/org/joda/time/DurationFieldType.java
+index af1e7b0ab..c94e27ba6 100644
+--- a/src/main/java/org/joda/time/DurationFieldType.java
++++ b/src/main/java/org/joda/time/DurationFieldType.java
+@@ -99,7 +99,7 @@ protected DurationFieldType(String name) {
+     /**
+      * Get the millis field type.
+      * 
+-     * @return the DateTimeFieldType constant
++     * @return the DurationFieldType constant
+      */
+     public static DurationFieldType millis() {
+         return MILLIS_TYPE;
+@@ -108,7 +108,7 @@ public static DurationFieldType millis() {
+     /**
+      * Get the seconds field type.
+      * 
+-     * @return the DateTimeFieldType constant
++     * @return the DurationFieldType constant
+      */
+     public static DurationFieldType seconds() {
+         return SECONDS_TYPE;
+@@ -117,7 +117,7 @@ public static DurationFieldType seconds() {
+     /**
+      * Get the minutes field type.
+      * 
+-     * @return the DateTimeFieldType constant
++     * @return the DurationFieldType constant
+      */
+     public static DurationFieldType minutes() {
+         return MINUTES_TYPE;
+@@ -126,7 +126,7 @@ public static DurationFieldType minutes() {
+     /**
+      * Get the hours field type.
+      * 
+-     * @return the DateTimeFieldType constant
++     * @return the DurationFieldType constant
+      */
+     public static DurationFieldType hours() {
+         return HOURS_TYPE;
+@@ -135,7 +135,7 @@ public static DurationFieldType hours() {
+     /**
+      * Get the halfdays field type.
+      * 
+-     * @return the DateTimeFieldType constant
++     * @return the DurationFieldType constant
+      */
+     public static DurationFieldType halfdays() {
+         return HALFDAYS_TYPE;
+@@ -145,7 +145,7 @@ public static DurationFieldType halfdays() {
+     /**
+      * Get the days field type.
+      * 
+-     * @return the DateTimeFieldType constant
++     * @return the DurationFieldType constant
+      */
+     public static DurationFieldType days() {
+         return DAYS_TYPE;
+@@ -154,7 +154,7 @@ public static DurationFieldType days() {
+     /**
+      * Get the weeks field type.
+      * 
+-     * @return the DateTimeFieldType constant
++     * @return the DurationFieldType constant
+      */
+     public static DurationFieldType weeks() {
+         return WEEKS_TYPE;
+@@ -163,7 +163,7 @@ public static DurationFieldType weeks() {
+     /**
+      * Get the weekyears field type.
+      * 
+-     * @return the DateTimeFieldType constant
++     * @return the DurationFieldType constant
+      */
+     public static DurationFieldType weekyears() {
+         return WEEKYEARS_TYPE;
+@@ -172,7 +172,7 @@ public static DurationFieldType weekyears() {
+     /**
+      * Get the months field type.
+      * 
+-     * @return the DateTimeFieldType constant
++     * @return the DurationFieldType constant
+      */
+     public static DurationFieldType months() {
+         return MONTHS_TYPE;
+@@ -181,7 +181,7 @@ public static DurationFieldType months() {
+     /**
+      * Get the years field type.
+      * 
+-     * @return the DateTimeFieldType constant
++     * @return the DurationFieldType constant
+      */
+     public static DurationFieldType years() {
+         return YEARS_TYPE;
+@@ -190,7 +190,7 @@ public static DurationFieldType years() {
+     /**
+      * Get the centuries field type.
+      * 
+-     * @return the DateTimeFieldType constant
++     * @return the DurationFieldType constant
+      */
+     public static DurationFieldType centuries() {
+         return CENTURIES_TYPE;
+@@ -199,7 +199,7 @@ public static DurationFieldType centuries() {
+     /**
+      * Get the eras field type.
+      * 
+-     * @return the DateTimeFieldType constant
++     * @return the DurationFieldType constant
+      */
+     public static DurationFieldType eras() {
+         return ERAS_TYPE;
+
+From 2190b1b82f07ebaa864b2775186c238f3aeb8885 Mon Sep 17 00:00:00 2001
+From: Brian Melton <iambmelton@gmail.com>
+Date: Mon, 25 Jan 2016 11:59:34 -0800
+Subject: [PATCH 11/17] Adding gradle config + formatting
+
+Adding the copy/paste gradle config for the current version -  this prevents users from merely googling 'joda gradle' and helps keep them up to date.
+---
+ README.md | 17 ++++++++++++-----
+ 1 file changed, 12 insertions(+), 5 deletions(-)
+
+diff --git a/README.md b/README.md
+index 3edc6fa12..0d0fd9c80 100644
+--- a/README.md
++++ b/README.md
+@@ -52,12 +52,19 @@ It depends on JDK 1.5 or later.
+ 
+ Available in the [Maven Central repository](http://search.maven.org/#artifactdetails|joda-time|joda-time|2.9.1|jar)
+ 
+-    <dependency>
+-      <groupId>joda-time</groupId>
+-      <artifactId>joda-time</artifactId>
+-      <version>2.9.1</version>
+-    </dependency>
++**Maven configuration:**
++```xml
++<dependency>
++  <groupId>joda-time</groupId>
++  <artifactId>joda-time</artifactId>
++  <version>2.9.1</version>
++</dependency>
++```
+ 
++**Gradle configuration:**
++```groovy
++compile 'joda-time:joda-time:2.9.1'
++```
+ 
+ ### Related projects
+ Related projects at GitHub:
+
+From 5abe1c4dfe19f27ad155fd08970a0308607779b2 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Thu, 28 Jan 2016 12:56:21 +0000
+Subject: [PATCH 12/17] Add sample security policy file for testing
+
+See #327
+---
+ pom.xml                        |  1 +
+ src/test/resources/java.policy | 21 +++++++++++++++++++++
+ 2 files changed, 22 insertions(+)
+ create mode 100644 src/test/resources/java.policy
+
+diff --git a/pom.xml b/pom.xml
+index 483689db5..d12eb1a80 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -335,6 +335,7 @@
+           <includes>
+             <include>**/TestAllPackages.java</include>
+           </includes>
++          <!--argLine>-Djava.security.manager -Djava.security.policy=${basedir}/src/test/resources/java.policy</argLine-->
+         </configuration>
+       </plugin>
+       <plugin>
+diff --git a/src/test/resources/java.policy b/src/test/resources/java.policy
+new file mode 100644
+index 000000000..fb643efd5
+--- /dev/null
++++ b/src/test/resources/java.policy
+@@ -0,0 +1,21 @@
++grant { 
++	permission java.util.PropertyPermission "*", "read,write";
++	permission java.lang.RuntimePermission "setIO";
++	permission java.io.FilePermission "target/-", "read";
++	permission java.io.FilePermission "C:/Users/stephen/AppData/Local/Temp/-", "read,write,delete";
++
++	permission java.lang.reflect.ReflectPermission "suppressAccessChecks";
++	permission java.lang.RuntimePermission "accessClassInPackage.sun.util";
++	permission java.io.FilePermission "src/test/resources/-", "read";
++
++	permission org.joda.time.JodaTimePermission "CurrentTime.setProvider";
++	permission org.joda.time.JodaTimePermission "DateTimeZone.setDefault";
++	permission org.joda.time.JodaTimePermission "DateTimeZone.setNameProvider";
++	permission org.joda.time.JodaTimePermission "DateTimeZone.setProvider";
++	permission org.joda.time.JodaTimePermission "ConverterManager.alterDurationConverters";
++	permission org.joda.time.JodaTimePermission "ConverterManager.alterInstantConverters";
++	permission org.joda.time.JodaTimePermission "ConverterManager.alterIntervalConverters";
++	permission org.joda.time.JodaTimePermission "ConverterManager.alterPartialConverters";
++	permission org.joda.time.JodaTimePermission "ConverterManager.alterPeriodConverters";
++};
++
+
+From d979bd86945ba316bace078fd2314a2751d0c908 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Thu, 28 Jan 2016 12:56:02 +0000
+Subject: [PATCH 13/17] Document Months.between behaviour
+
+Behaviour in this area is long standing and should not be changed
+See #325
+---
+ src/main/java/org/joda/time/Months.java     |  8 +++++++
+ src/test/java/org/joda/time/TestMonths.java | 24 +++++++++++++++++++++
+ 2 files changed, 32 insertions(+)
+
+diff --git a/src/main/java/org/joda/time/Months.java b/src/main/java/org/joda/time/Months.java
+index eec6def23..99cb5b4d4 100644
+--- a/src/main/java/org/joda/time/Months.java
++++ b/src/main/java/org/joda/time/Months.java
+@@ -128,6 +128,10 @@ public static Months months(int months) {
+      * Creates a <code>Months</code> representing the number of whole months
+      * between the two specified datetimes. This method corectly handles
+      * any daylight savings time changes that may occur during the interval.
++     * <p>
++     * This method calculates by adding months to the start date until the result
++     * is past the end date. As such, a period from the end of a "long" month to
++     * the end of a "short" month is counted as a whole month.
+      *
+      * @param start  the start instant, must not be null
+      * @param end  the end instant, must not be null
+@@ -145,6 +149,10 @@ public static Months monthsBetween(ReadableInstant start, ReadableInstant end) {
+      * <p>
+      * The two partials must contain the same fields, for example you can specify
+      * two <code>LocalDate</code> objects.
++     * <p>
++     * This method calculates by adding months to the start date until the result
++     * is past the end date. As such, a period from the end of a "long" month to
++     * the end of a "short" month is counted as a whole month.
+      *
+      * @param start  the start partial date, must not be null
+      * @param end  the end partial date, must not be null
+diff --git a/src/test/java/org/joda/time/TestMonths.java b/src/test/java/org/joda/time/TestMonths.java
+index 6c7de3ec3..278c56f12 100644
+--- a/src/test/java/org/joda/time/TestMonths.java
++++ b/src/test/java/org/joda/time/TestMonths.java
+@@ -104,6 +104,21 @@ public void testFactory_monthsBetween_RInstant() {
+         assertEquals(6, Months.monthsBetween(start, end2).getMonths());
+     }
+ 
++    public void testFactory_monthsBetween_RInstant_LocalDate_EndMonth() {
++        assertEquals(0, Months.monthsBetween(
++                new DateTime(2006, 1, 31, 0, 0, 0, PARIS), new DateTime(2006, 2, 27, 0, 0, 0, PARIS)).getMonths());
++        assertEquals(1, Months.monthsBetween(
++                new DateTime(2006, 1, 28, 0, 0, 0, PARIS), new DateTime(2006, 2, 28, 0, 0, 0, PARIS)).getMonths());
++        assertEquals(1, Months.monthsBetween(
++                new DateTime(2006, 1, 29, 0, 0, 0, PARIS), new DateTime(2006, 2, 28, 0, 0, 0, PARIS)).getMonths());
++        assertEquals(1, Months.monthsBetween(
++                new DateTime(2006, 1, 30, 0, 0, 0, PARIS), new DateTime(2006, 2, 28, 0, 0, 0, PARIS)).getMonths());
++        assertEquals(1, Months.monthsBetween(
++                new DateTime(2006, 1, 31, 0, 0, 0, PARIS), new DateTime(2006, 2, 28, 0, 0, 0, PARIS)).getMonths());
++        assertEquals(1, Months.monthsBetween(
++                new DateTime(2006, 1, 31, 0, 0, 0, PARIS), new DateTime(2006, 3, 1, 0, 0, 0, PARIS)).getMonths());
++    }
++
+     //-------------------------------------------------------------------------
+     @SuppressWarnings("deprecation")
+     public void testFactory_monthsBetween_RPartial_LocalDate() {
+@@ -118,6 +133,15 @@ public void testFactory_monthsBetween_RPartial_LocalDate() {
+         assertEquals(6, Months.monthsBetween(start, end2).getMonths());
+     }
+ 
++    public void testFactory_monthsBetween_RPartial_LocalDate_EndMonth() {
++        assertEquals(0, Months.monthsBetween(new LocalDate(2006, 1, 31), new LocalDate(2006, 2, 27)).getMonths());
++        assertEquals(1, Months.monthsBetween(new LocalDate(2006, 1, 28), new LocalDate(2006, 2, 28)).getMonths());
++        assertEquals(1, Months.monthsBetween(new LocalDate(2006, 1, 29), new LocalDate(2006, 2, 28)).getMonths());
++        assertEquals(1, Months.monthsBetween(new LocalDate(2006, 1, 30), new LocalDate(2006, 2, 28)).getMonths());
++        assertEquals(1, Months.monthsBetween(new LocalDate(2006, 1, 31), new LocalDate(2006, 2, 28)).getMonths());
++        assertEquals(1, Months.monthsBetween(new LocalDate(2006, 1, 31), new LocalDate(2006, 3, 1)).getMonths());
++    }
++
+     public void testFactory_monthsBetween_RPartial_YearMonth() {
+         YearMonth start1 = new YearMonth(2011, 1);
+         for (int i = 0; i < 6; i++) {
+
+From 6c50ef551e56b01909b999eb2645996a9b670567 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Thu, 28 Jan 2016 11:13:49 +0000
+Subject: [PATCH 14/17] tzdata updated to 2016a
+
+---
+ RELEASE-NOTES.txt                             |  2 +-
+ pom.xml                                       |  2 +-
+ src/main/java/org/joda/time/tz/src/Readme.txt |  2 +-
+ src/main/java/org/joda/time/tz/src/asia       | 24 ++++++--
+ src/main/java/org/joda/time/tz/src/backward   |  1 +
+ src/main/java/org/joda/time/tz/src/europe     | 15 ++++-
+ .../java/org/joda/time/tz/src/northamerica    | 58 +++++++++----------
+ 7 files changed, 65 insertions(+), 39 deletions(-)
+
+diff --git a/RELEASE-NOTES.txt b/RELEASE-NOTES.txt
+index b3419fb97..7136f7577 100644
+--- a/RELEASE-NOTES.txt
++++ b/RELEASE-NOTES.txt
+@@ -56,7 +56,7 @@ Source compatible - Yes
+ Serialization compatible - Yes
+ 
+ Data compatible - Yes
+- - DateTimeZone data updated to version 2015g
++ - DateTimeZone data updated to version 2016a
+ 
+ Semantic compatible - Yes
+ 
+diff --git a/pom.xml b/pom.xml
+index d12eb1a80..bc26cb3b6 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -832,6 +832,6 @@
+     <!-- Other properties -->
+     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+-    <tz.database.version>2015g</tz.database.version>
++    <tz.database.version>2016a</tz.database.version>
+   </properties>
+ </project>
+diff --git a/src/main/java/org/joda/time/tz/src/Readme.txt b/src/main/java/org/joda/time/tz/src/Readme.txt
+index e68cabb14..a31fa35d6 100644
+--- a/src/main/java/org/joda/time/tz/src/Readme.txt
++++ b/src/main/java/org/joda/time/tz/src/Readme.txt
+@@ -1,2 +1,2 @@
+ The data files in this directory were obtained from the public IANA time zone database,
+-http://www.iana.org/time-zones, version 2015g.
++http://www.iana.org/time-zones, version 2016a.
+diff --git a/src/main/java/org/joda/time/tz/src/asia b/src/main/java/org/joda/time/tz/src/asia
+index 5467024db..a59d653ed 100644
+--- a/src/main/java/org/joda/time/tz/src/asia
++++ b/src/main/java/org/joda/time/tz/src/asia
+@@ -874,6 +874,15 @@ Zone	Asia/Dili	8:22:20 -	LMT	1912 Jan  1
+ 			9:00	-	TLT
+ 
+ # India
++
++# From Ian P. Beacock, in "A brief history of (modern) time", The Atlantic
++# http://www.theatlantic.com/technology/archive/2015/12/the-creation-of-modern-time/421419/
++# (2015-12-22):
++# In January 1906, several thousand cotton-mill workers rioted on the
++# outskirts of Bombay....  They were protesting the proposed abolition of
++# local time in favor of Indian Standard Time....  Journalists called this
++# dispute the "Battle of the Clocks."  It lasted nearly half a century.
++
+ # Zone	NAME		GMTOFF	RULES	FORMAT	[UNTIL]
+ Zone	Asia/Kolkata	5:53:28 -	LMT	1880        # Kolkata
+ 			5:53:20	-	HMT	1941 Oct    # Howrah Mean Time?
+@@ -1084,8 +1093,15 @@ Rule	Iran	2032	2033	-	Mar	21	0:00	1:00	D
+ Rule	Iran	2032	2033	-	Sep	21	0:00	0	S
+ Rule	Iran	2034	2035	-	Mar	22	0:00	1:00	D
+ Rule	Iran	2034	2035	-	Sep	22	0:00	0	S
+-Rule	Iran	2036	2037	-	Mar	21	0:00	1:00	D
+-Rule	Iran	2036	2037	-	Sep	21	0:00	0	S
++#
++# The following rules are approximations starting in the year 2038.
++# These are the best post-2037 approximations available, given the
++# restrictions of a single rule using a Gregorian-based data format.
++# At some point this table will need to be extended, though quite
++# possibly Iran will change the rules first.
++Rule	Iran	2036	max	-	Mar	21	0:00	1:00	D
++Rule	Iran	2036	max	-	Sep	21	0:00	0	S
++
+ # Zone	NAME		GMTOFF	RULES	FORMAT	[UNTIL]
+ Zone	Asia/Tehran	3:25:44	-	LMT	1916
+ 			3:25:44	-	TMT	1946     # Tehran Mean Time
+@@ -2111,8 +2127,8 @@ Zone	Asia/Kathmandu	5:41:16 -	LMT	1920
+ # http://www.app.com.pk/en_/index.php?option=com_content&task=view&id=99374&Itemid=2
+ 
+ # Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
+-Rule Pakistan	2002	only	-	Apr	Sun>=2	0:01	1:00	S
+-Rule Pakistan	2002	only	-	Oct	Sun>=2	0:01	0	-
++Rule Pakistan	2002	only	-	Apr	Sun>=2	0:00	1:00	S
++Rule Pakistan	2002	only	-	Oct	Sun>=2	0:00	0	-
+ Rule Pakistan	2008	only	-	Jun	1	0:00	1:00	S
+ Rule Pakistan	2008	2009	-	Nov	1	0:00	0	-
+ Rule Pakistan	2009	only	-	Apr	15	0:00	1:00	S
+diff --git a/src/main/java/org/joda/time/tz/src/backward b/src/main/java/org/joda/time/tz/src/backward
+index 8b0fef582..aab237a5e 100644
+--- a/src/main/java/org/joda/time/tz/src/backward
++++ b/src/main/java/org/joda/time/tz/src/backward
+@@ -23,6 +23,7 @@ Link	America/Argentina/Mendoza	America/Mendoza
+ Link	America/Toronto		America/Montreal
+ Link	America/Rio_Branco	America/Porto_Acre
+ Link	America/Argentina/Cordoba	America/Rosario
++Link	America/Tijuana		America/Santa_Isabel
+ Link	America/Denver		America/Shiprock
+ Link	America/Port_of_Spain	America/Virgin
+ Link	Pacific/Auckland	Antarctica/South_Pole
+diff --git a/src/main/java/org/joda/time/tz/src/europe b/src/main/java/org/joda/time/tz/src/europe
+index 358a0485f..6eea5583b 100644
+--- a/src/main/java/org/joda/time/tz/src/europe
++++ b/src/main/java/org/joda/time/tz/src/europe
+@@ -2593,13 +2593,20 @@ Zone Asia/Irkutsk	 6:57:05 -	LMT	1880
+ # Note: Effective 2008-03-01, (75) Chita Oblast and (80) Agin-Buryat
+ # Autonomous Okrug merged to form (92, RU-ZAB) Zabaykalsky Krai.
+ 
++# From Alexander Krivenyshev (2016-01-02):
++# [The] time zone in the Trans-Baikal Territory (Zabaykalsky Krai) -
++# Asia/Chita [is changing] from UTC+8 to UTC+9.  Effective date will
++# be March 27, 2016 at 2:00am....
++# http://publication.pravo.gov.ru/Document/View/000120151230010
++
+ Zone Asia/Chita	 7:33:52 -	LMT	1919 Dec 15
+ 			 8:00	-	YAKT	1930 Jun 21 # Yakutsk Time
+ 			 9:00	Russia	YAK%sT	1991 Mar 31  2:00s
+ 			 8:00	Russia	YAK%sT	1992 Jan 19  2:00s
+ 			 9:00	Russia	YAK%sT	2011 Mar 27  2:00s
+ 			10:00	-	YAKT	2014 Oct 26  2:00s
+-			 8:00	-	IRKT
++			 8:00	-	IRKT	2016 Mar 27  2:00
++			 9:00	-	YAKT
+ 
+ 
+ # From Tim Parenti (2014-07-03), per Oscar van Vlijmen (2009-11-29):
+@@ -3154,6 +3161,12 @@ Zone	Europe/Zurich	0:34:08 -	LMT	1853 Jul 16 # See above comment.
+ # It's officially announced now by the Ministry of Energy.
+ # Turkey delays winter time to 8th of November 04:00
+ # http://www.aa.com.tr/tr/turkiye/yaz-saati-uygulamasi-8-kasimda-sona-erecek/362217
++#
++# From BBC News (2015-10-25):
++# Confused Turks are asking "what's the time?" after automatic clocks defied a
++# government decision ... "For the next two weeks #Turkey is on EEST... Erdogan
++# Engineered Standard Time," said Twitter user @aysekarahasan.
++# http://www.bbc.com/news/world-europe-34631326
+ 
+ # Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
+ Rule	Turkey	1916	only	-	May	 1	0:00	1:00	S
+diff --git a/src/main/java/org/joda/time/tz/src/northamerica b/src/main/java/org/joda/time/tz/src/northamerica
+index 7658a45e5..78e588139 100644
+--- a/src/main/java/org/joda/time/tz/src/northamerica
++++ b/src/main/java/org/joda/time/tz/src/northamerica
+@@ -325,6 +325,16 @@ Zone America/New_York	-4:56:02 -	LMT	1883 Nov 18 12:03:58
+ # Statue 175 closer in synch with the US Congress' intent....
+ # http://www.legis.state.wi.us/2007/data/acts/07Act3.pdf
+ 
++# From an email administrator of the City of Fort Pierre, SD (2015-12-21):
++# Fort Pierre is technically located in the Mountain time zone as is
++# the rest of Stanley County.  Most of Stanley County and Fort Pierre
++# uses the Central time zone due to doing most of their business in
++# Pierre so it simplifies schedules.  I have lived in Stanley County
++# all my life and it has been that way since I can remember.  (43 years!)
++#
++# From Paul Eggert (2015-12-25):
++# Assume this practice predates 1970, so Fort Pierre can use America/Chicago.
++
+ # Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER
+ Rule	Chicago	1920	only	-	Jun	13	2:00	1:00	D
+ Rule	Chicago	1920	1921	-	Oct	lastSun	2:00	0	S
+@@ -481,6 +491,12 @@ Zone America/Los_Angeles -7:52:58 -	LMT	1883 Nov 18 12:07:02
+ # For lack of better information, assume that Metlakatla's
+ # abandonment of use of daylight saving resulted from the 1983 vote.
+ 
++# From Steffen Thorsen (2015-11-09):
++# It seems Metlakatla did go off PST on Sunday, November 1, changing
++# their time to AKST and are going to follow Alaska's DST, switching
++# between AKST and AKDT from now on....
++# http://www.krbd.org/2015/10/30/annette-island-times-they-are-a-changing/
++
+ # Zone	NAME		GMTOFF	RULES	FORMAT	[UNTIL]
+ Zone America/Juneau	 15:02:19 -	LMT	1867 Oct 18
+ 			 -8:57:41 -	LMT	1900 Aug 20 12:00
+@@ -506,7 +522,8 @@ Zone America/Metlakatla	 15:13:42 -	LMT	1867 Oct 18
+ 			 -8:00	US	P%sT	1946
+ 			 -8:00	-	PST	1969
+ 			 -8:00	US	P%sT	1983 Oct 30  2:00
+-			 -8:00	-	PST
++			 -8:00	-	PST	2015 Nov  1  2:00
++			 -9:00	US	AK%sT
+ Zone America/Yakutat	 14:41:05 -	LMT	1867 Oct 18
+ 			 -9:18:55 -	LMT	1900 Aug 20 12:00
+ 			 -9:00	-	YST	1942
+@@ -2587,25 +2604,6 @@ Zone America/Tijuana	-7:48:04 -	LMT	1922 Jan  1  0:11:56
+ 			-8:00	US	P%sT	2002 Feb 20
+ 			-8:00	Mexico	P%sT	2010
+ 			-8:00	US	P%sT
+-# Baja California (away from US border)
+-Zone America/Santa_Isabel	-7:39:28 -	LMT	1922 Jan  1  0:20:32
+-			-7:00	-	MST	1924
+-			-8:00	-	PST	1927 Jun 10 23:00
+-			-7:00	-	MST	1930 Nov 15
+-			-8:00	-	PST	1931 Apr  1
+-			-8:00	1:00	PDT	1931 Sep 30
+-			-8:00	-	PST	1942 Apr 24
+-			-8:00	1:00	PWT	1945 Aug 14 23:00u
+-			-8:00	1:00	PPT	1945 Nov 12 # Peace
+-			-8:00	-	PST	1948 Apr  5
+-			-8:00	1:00	PDT	1949 Jan 14
+-			-8:00	-	PST	1954
+-			-8:00	CA	P%sT	1961
+-			-8:00	-	PST	1976
+-			-8:00	US	P%sT	1996
+-			-8:00	Mexico	P%sT	2001
+-			-8:00	US	P%sT	2002 Feb 20
+-			-8:00	Mexico	P%sT
+ # From Paul Eggert (2006-03-22):
+ # Formerly there was an America/Ensenada zone, which differed from
+ # America/Tijuana only in that it did not observe DST from 1976
+@@ -2618,6 +2616,13 @@ Zone America/Santa_Isabel	-7:39:28 -	LMT	1922 Jan  1  0:20:32
+ # other than America/Tijuana for Baja, but it's not clear yet what its
+ # name or contents should be.
+ #
++# From Paul Eggert (2015-10-08):
++# Formerly there was an America/Santa_Isabel zone, but this appears to
++# have come from a misreading of
++# http://dof.gob.mx/nota_detalle.php?codigo=5127480&fecha=06/01/2010
++# It has been moved to the 'backward' file.
++#
++#
+ # Revillagigedo Is
+ # no information
+ 
+@@ -2692,17 +2697,7 @@ Zone Atlantic/Bermuda	-4:19:18 -	LMT	1930 Jan  1  2:00 # Hamilton
+ 			-4:00	US	A%sT
+ 
+ # Cayman Is
+-
+-# From Paul Eggert (2015-05-15):
+-# The Cayman government has decided to introduce DST in 2016, the idea being
+-# to keep in sync with New York.  The legislation hasn't passed but the change
+-# seems quite likely.  See: Meade B. Cayman 27.
+-# http://www.cayman27.com.ky/2015/05/15/clock-ticks-toward-daylight-saving-time-in-cayman
+-
+-Zone	America/Cayman	-5:25:32 -	LMT	1890     # Georgetown
+-			-5:07:11 -	KMT	1912 Feb # Kingston Mean Time
+-			-5:00	-	EST	2016
+-			-5:00	US	E%sT
++# See America/Panama.
+ 
+ # Costa Rica
+ 
+@@ -3225,6 +3220,7 @@ Zone	America/Managua	-5:45:08 -	LMT	1890
+ Zone	America/Panama	-5:18:08 -	LMT	1890
+ 			-5:19:36 -	CMT	1908 Apr 22 # Colón Mean Time
+ 			-5:00	-	EST
++Link America/Panama America/Cayman
+ 
+ # Puerto Rico
+ # There are too many San Juans elsewhere, so we'll use 'Puerto_Rico'.
+
+From 0b80f3ebf6c752debb8dbea87aa729968dcfa68e Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Thu, 28 Jan 2016 13:29:51 +0000
+Subject: [PATCH 15/17] Ensure GMT parses
+
+See #347
+---
+ .../joda/time/format/TestDateTimeFormatterBuilder.java | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+diff --git a/src/test/java/org/joda/time/format/TestDateTimeFormatterBuilder.java b/src/test/java/org/joda/time/format/TestDateTimeFormatterBuilder.java
+index 6436a274f..482eb75b5 100644
+--- a/src/test/java/org/joda/time/format/TestDateTimeFormatterBuilder.java
++++ b/src/test/java/org/joda/time/format/TestDateTimeFormatterBuilder.java
+@@ -445,6 +445,16 @@ public void test_printParseZoneEtcGMT() {
+         assertEquals(dt, f.parseDateTime("2007-03-04 12:30 Etc/GMT"));
+     }
+ 
++    public void test_printParseZoneGMT() {
++        DateTimeFormatterBuilder bld = new DateTimeFormatterBuilder()
++                .appendPattern("yyyy-MM-dd HH:mm ZZZ");
++        DateTimeFormatter f = bld.toFormatter();
++
++        DateTime dt = new DateTime(2007, 3, 4, 12, 30, 0, DateTimeZone.forID("GMT"));
++        assertEquals("2007-03-04 12:30 Etc/GMT", f.print(dt));
++        assertEquals(dt, f.parseDateTime("2007-03-04 12:30 GMT"));
++    }
++
+     public void test_printParseZoneEtcGMT1() {
+         DateTimeFormatterBuilder bld = new DateTimeFormatterBuilder()
+                 .appendPattern("yyyy-MM-dd HH:mm ZZZ");
+
+From a77d85d9c7ea5a2b987f35e185e12c622c0d13a4 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Thu, 28 Jan 2016 13:35:12 +0000
+Subject: [PATCH 16/17] Prepare for v2.9.2
+
+Fixes #346
+---
+ RELEASE-NOTES.txt | 17 ++++++++++++++---
+ 1 file changed, 14 insertions(+), 3 deletions(-)
+
+diff --git a/RELEASE-NOTES.txt b/RELEASE-NOTES.txt
+index 7136f7577..f9bf12c28 100644
+--- a/RELEASE-NOTES.txt
++++ b/RELEASE-NOTES.txt
+@@ -1,10 +1,10 @@
+-Joda-Time version 2.9.1
++Joda-Time version 2.9.2
+ -----------------------
+ 
+ Joda-Time is a date and time handling library that seeks to replace the JDK
+ Date and Calendar classes. For Java SE 8 and later, please use java.time instead.
+ 
+-This release contains one bug fix.
++This release contains one bug fix, a time-zone update and some minor internal changes.
+ The release runs on JDK 5 or later.
+ 
+ Joda-Time is licensed under the business-friendly Apache License Version 2.
+@@ -14,6 +14,17 @@ This is the same license as all of Apache, plus other open source projects such
+ ** http://www.joda.org/joda-time/related.html **
+ 
+ 
++Bug fixes in 2.9.2
++------------------
++ - Fix bug in time-zone binary search [#332]
++
++ - DateTimeZone data updated to version 2016a (version 2.9 had time-zone data 2015g)
++
++ - Minor fixes to code internals [#339, #326, #344, #350, #343]
++ 
++ - Better document behaviour [#325]
++
++
+ Bug fixes in 2.9.1
+ ------------------
+ - Fix bug introduced by Long.MIN_VALUE and Long.MAX_VALUE changes [#328]
+@@ -56,7 +67,7 @@ Source compatible - Yes
+ Serialization compatible - Yes
+ 
+ Data compatible - Yes
+- - DateTimeZone data updated to version 2016a
++ - DateTimeZone data updated to version 2015g
+ 
+ Semantic compatible - Yes
+ 
+
+From 625c9048aa5ec2d38b850172fa9f0700c8c217b4 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Thu, 28 Jan 2016 13:42:37 +0000
+Subject: [PATCH 17/17] Release v2.9.2
+
+---
+ README.md                      |   8 +--
+ pom.xml                        |   2 +-
+ src/conf/MANIFEST.MF           |  18 +++---
+ src/site/markdown/index.md     |   6 +-
+ src/site/xdoc/installation.xml |  51 +++++++--------
+ src/site/xdoc/upgradeto290.xml |   2 +-
+ src/site/xdoc/upgradeto291.xml |   4 +-
+ src/site/xdoc/upgradeto292.xml | 111 +++++++++++++++++++++++++++++++++
+ 8 files changed, 157 insertions(+), 45 deletions(-)
+ create mode 100644 src/site/xdoc/upgradeto292.xml
+
+diff --git a/README.md b/README.md
+index 0d0fd9c80..ca6f674df 100644
+--- a/README.md
++++ b/README.md
+@@ -46,24 +46,24 @@ Various documentation is available:
+ 
+ 
+ ### Releases
+-[Release 2.9.1](http://www.joda.org/joda-time/download.html) is the current latest release.
++[Release 2.9.2](http://www.joda.org/joda-time/download.html) is the current latest release.
+ This release is considered stable and worthy of the 2.x tag.
+ It depends on JDK 1.5 or later.
+ 
+-Available in the [Maven Central repository](http://search.maven.org/#artifactdetails|joda-time|joda-time|2.9.1|jar)
++Available in the [Maven Central repository](http://search.maven.org/#artifactdetails|joda-time|joda-time|2.9.2|jar)
+ 
+ **Maven configuration:**
+ ```xml
+ <dependency>
+   <groupId>joda-time</groupId>
+   <artifactId>joda-time</artifactId>
+-  <version>2.9.1</version>
++  <version>2.9.2</version>
+ </dependency>
+ ```
+ 
+ **Gradle configuration:**
+ ```groovy
+-compile 'joda-time:joda-time:2.9.1'
++compile 'joda-time:joda-time:2.9.2'
+ ```
+ 
+ ### Related projects
+diff --git a/pom.xml b/pom.xml
+index bc26cb3b6..91f8ab738 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -9,7 +9,7 @@
+   <artifactId>joda-time</artifactId>
+   <packaging>jar</packaging>
+   <name>Joda-Time</name>
+-  <version>2.9.1</version>
++  <version>2.9.2</version>
+   <description>Date and time library to replace JDK date handling</description>
+   <url>http://www.joda.org/joda-time/</url>
+ 
+diff --git a/src/conf/MANIFEST.MF b/src/conf/MANIFEST.MF
+index 7bf8a4c89..e5502a8dc 100644
+--- a/src/conf/MANIFEST.MF
++++ b/src/conf/MANIFEST.MF
+@@ -5,19 +5,19 @@ Specification-Vendor: Joda.org
+ Specification-Version: 2.9
+ Implementation-Vendor: Joda.org
+ Implementation-Title: org.joda.time
+-Implementation-Version: 2.9.1
++Implementation-Version: 2.9.2
+ Implementation-Vendor-Id: org.joda
+ Bundle-ManifestVersion: 2
+ Bundle-Vendor: Joda.org
+ Bundle-Name: Joda-Time
+ Bundle-SymbolicName: joda-time
+-Bundle-Version: 2.9.1
+-Export-Package: org.joda.time;version=2.9.1,
+- org.joda.time.base;version=2.9.1,
+- org.joda.time.chrono;version=2.9.1,
+- org.joda.time.convert;version=2.9.1,
+- org.joda.time.field;version=2.9.1,
+- org.joda.time.format;version=2.9.1,
+- org.joda.time.tz;version=2.9.1
++Bundle-Version: 2.9.2
++Export-Package: org.joda.time;version=2.9.2,
++ org.joda.time.base;version=2.9.2,
++ org.joda.time.chrono;version=2.9.2,
++ org.joda.time.convert;version=2.9.2,
++ org.joda.time.field;version=2.9.2,
++ org.joda.time.format;version=2.9.2,
++ org.joda.time.tz;version=2.9.2
+ Bundle-License: Apache 2.0
+ Bundle-DocURL: http://www.joda.org/joda-time/
+diff --git a/src/site/markdown/index.md b/src/site/markdown/index.md
+index e36581107..75ae89476 100644
+--- a/src/site/markdown/index.md
++++ b/src/site/markdown/index.md
+@@ -125,7 +125,7 @@ Joda-Time is licenced under the business friendly <a href="license.html">Apache
+ 
+ ## <i></i> Releases
+ 
+-[Release 2.9.1](download.html) is the current latest release.
++[Release 2.9.2](download.html) is the current latest release.
+ This release is considered stable and worthy of the 2.x tag.
+ See the [upgrade notes](upgradeto290.html) for full details.
+ 
+@@ -133,13 +133,13 @@ Joda-Time requires Java SE 5 or later and has [no dependencies](dependencies.htm
+ There is a *compile-time* dependency on [Joda-Convert](http://www.joda.org/joda-convert/),
+ but this is not required at runtime thanks to the magic of annotations.
+ 
+-Available in [Maven Central](http://search.maven.org/#artifactdetails%7Cjoda-time%7Cjoda-time%7C2.9.1%7Cjar).
++Available in [Maven Central](http://search.maven.org/#artifactdetails%7Cjoda-time%7Cjoda-time%7C2.9.2%7Cjar).
+ 
+ ```xml
+ <dependency>
+   <groupId>joda-time</groupId>
+   <artifactId>joda-time</artifactId>
+-  <version>2.9.1</version>
++  <version>2.9.2</version>
+ </dependency>
+ ```
+ 
+diff --git a/src/site/xdoc/installation.xml b/src/site/xdoc/installation.xml
+index 476926d6f..03bba0845 100644
+--- a/src/site/xdoc/installation.xml
++++ b/src/site/xdoc/installation.xml
+@@ -21,31 +21,32 @@ of the source code suitable for linking to the jar file in IDEs such as Eclipse.
+ <p>
+ The release notes for upgraders can be found here:
+ <ul>
+-<li><a href="upgradeto291.html">Version 2.9.1</a> - upgrade from Version 2.9</li>
+-<li><a href="upgradeto290.html">Version 2.9</a> - upgrade from Version 2.8</li>
+-<li><a href="upgradeto282.html">Version 2.8.2</a> - upgrade from Version 2.8.1</li>
+-<li><a href="upgradeto281.html">Version 2.8.1</a> - upgrade from Version 2.8</li>
+-<li><a href="upgradeto280.html">Version 2.8</a> - upgrade from Version 2.7</li>
+-<li><a href="upgradeto270.html">Version 2.7</a> - upgrade from Version 2.6</li>
+-<li><a href="upgradeto260.html">Version 2.6</a> - upgrade from Version 2.5</li>
+-<li><a href="upgradeto250.html">Version 2.5</a> - upgrade from Version 2.4</li>
+-<li><a href="upgradeto240.html">Version 2.4</a> - upgrade from Version 2.3</li>
+-<li><a href="upgradeto230.html">Version 2.3</a> - upgrade from Version 2.2</li>
+-<li><a href="upgradeto220.html">Version 2.2</a> - upgrade from Version 2.1</li>
+-<li><a href="upgradeto210.html">Version 2.1</a> - upgrade from Version 2.0</li>
+-<li><a href="upgradeto200.html">Version 2.0</a> - upgrade from Version 1.6</li>
+-<li><a href="upgradeto162.html">Version 1.6.2</a> - upgrade from Version 1.6.1</li>
+-<li><a href="upgradeto161.html">Version 1.6.1</a> - upgrade from Version 1.6</li>
+-<li><a href="upgradeto160.html">Version 1.6</a> - upgrade from Version 1.5</li>
+-<li><a href="upgradeto152.html">Version 1.5.2</a> - upgrade from Version 1.5.1</li>
+-<li><a href="upgradeto151.html">Version 1.5.1</a> - upgrade from Version 1.5</li>
+-<li><a href="upgradeto150.html">Version 1.5</a> - upgrade from Version 1.4</li>
+-<li><a href="upgradeto140.html">Version 1.4</a> - upgrade from Version 1.3</li>
+-<li><a href="upgradeto130.html">Version 1.3</a> - upgrade from Version 1.2</li>
+-<li><a href="upgradeto120.html">Version 1.2</a> - upgrade from Version 1.1</li>
+-<li><a href="upgradeto110.html">Version 1.1</a> - upgrade from Version 1.0</li>
+-<li><a href="upgradeto100.html">Version 1.0</a> - upgrade from Version 0.99</li>
+-<li><a href="upgradeto099.html">Version 0.99</a> - upgrade from Version 0.98</li>
++<li><a href="upgradeto292.html">Version 2.9.2</a></li>
++<li><a href="upgradeto291.html">Version 2.9.1</a></li>
++<li><a href="upgradeto290.html">Version 2.9</a></li>
++<li><a href="upgradeto282.html">Version 2.8.2</a></li>
++<li><a href="upgradeto281.html">Version 2.8.1</a></li>
++<li><a href="upgradeto280.html">Version 2.8</a></li>
++<li><a href="upgradeto270.html">Version 2.7</a></li>
++<li><a href="upgradeto260.html">Version 2.6</a></li>
++<li><a href="upgradeto250.html">Version 2.5</a></li>
++<li><a href="upgradeto240.html">Version 2.4</a></li>
++<li><a href="upgradeto230.html">Version 2.3</a></li>
++<li><a href="upgradeto220.html">Version 2.2</a></li>
++<li><a href="upgradeto210.html">Version 2.1</a></li>
++<li><a href="upgradeto200.html">Version 2.0</a></li>
++<li><a href="upgradeto162.html">Version 1.6.2</a></li>
++<li><a href="upgradeto161.html">Version 1.6.1</a></li>
++<li><a href="upgradeto160.html">Version 1.6</a></li>
++<li><a href="upgradeto152.html">Version 1.5.2</a></li>
++<li><a href="upgradeto151.html">Version 1.5.1</a></li>
++<li><a href="upgradeto150.html">Version 1.5</a></li>
++<li><a href="upgradeto140.html">Version 1.4</a></li>
++<li><a href="upgradeto130.html">Version 1.3</a></li>
++<li><a href="upgradeto120.html">Version 1.2</a></li>
++<li><a href="upgradeto110.html">Version 1.1</a></li>
++<li><a href="upgradeto100.html">Version 1.0</a></li>
++<li><a href="upgradeto099.html">Version 0.99</a></li>
+ </ul>
+ </p>
+ <p>
+diff --git a/src/site/xdoc/upgradeto290.xml b/src/site/xdoc/upgradeto290.xml
+index 93ec5bd91..b3ad20e74 100644
+--- a/src/site/xdoc/upgradeto290.xml
++++ b/src/site/xdoc/upgradeto290.xml
+@@ -1,4 +1,4 @@
+-<?xml version="1.0" encoding="ISO-8859-1"?>
++<?xml version="1.0" encoding="UTF-8"?>
+ 
+ <document>
+  <properties>
+diff --git a/src/site/xdoc/upgradeto291.xml b/src/site/xdoc/upgradeto291.xml
+index ed616b7d4..5a59ec485 100644
+--- a/src/site/xdoc/upgradeto291.xml
++++ b/src/site/xdoc/upgradeto291.xml
+@@ -1,8 +1,8 @@
+-<?xml version="1.0" encoding="ISO-8859-1"?>
++<?xml version="1.0" encoding="UTF-8"?>
+ 
+ <document>
+  <properties>
+-  <title>Java date and time API - Upgrade from 2.8 to 2.9</title>
++  <title>Java date and time API - Upgrade from 2.9 to 2.9.1</title>
+   <author>Stephen Colebourne</author>
+  </properties>
+ 
+diff --git a/src/site/xdoc/upgradeto292.xml b/src/site/xdoc/upgradeto292.xml
+new file mode 100644
+index 000000000..ac5739e6a
+--- /dev/null
++++ b/src/site/xdoc/upgradeto292.xml
+@@ -0,0 +1,111 @@
++<?xml version="1.0" encoding="UTF-8"?>
++
++<document>
++ <properties>
++  <title>Java date and time API - Upgrade from 2.9 to 2.9.2</title>
++  <author>Stephen Colebourne</author>
++ </properties>
++
++<body>
++
++<section name="Upgrade">
++<p>
++These are the release notes and advice for upgrading Joda-Time from version 2.8 to version 2.9.
++<source>
++Joda-Time version 2.9.2
++-----------------------
++
++Joda-Time is a date and time handling library that seeks to replace the JDK
++Date and Calendar classes. For Java SE 8 and later, please use java.time instead.
++
++This release contains one bug fix, a time-zone update and some minor internal changes.
++The release runs on JDK 5 or later.
++
++Joda-Time is licensed under the business-friendly Apache License Version 2.
++This is the same license as all of Apache, plus other open source projects such as Spring.
++
++**  Please also check out our related projects   **
++** http://www.joda.org/joda-time/related.html **
++
++
++Bug fixes in 2.9.2
++------------------
++ - Fix bug in time-zone binary search [#332]
++
++ - DateTimeZone data updated to version 2016a (version 2.9 had time-zone data 2015g)
++
++ - Minor fixes to code internals [#339, #326, #344, #350, #343]
++ 
++ - Better document behaviour [#325]
++
++
++Bug fixes in 2.9.1
++------------------
++- Fix bug introduced by Long.MIN_VALUE and Long.MAX_VALUE changes [#328]
++
++
++Enhancements in 2.9
++-------------------
++- Faster parsing of time-zone identifiers [#282]
++
++- Added Interval.parseWithOffset(String) [#299, #296]
++  Provides a way to parse the fixed offset in an interval string
++
++- Add DateTimeFormatter methods for StringBuilder [#298]
++
++- Add Russian period translations [#320]
++
++- Add Italian period translations [#312]
++
++- Add Czech period translations [#313]
++
++- Clarify that PeriodFormatterBuilder is in an invalid state once built [#309]
++
++- Allow DateTime and Interval to refer to values at Long.MIN_VALUE and Long.MAX_VALUE [#297, #190]
++  A DateTime may be created with any millisecond value, however at the very edges there may be
++  some undesirable effects, for example always using UTC instead of the time-zone
++
++- Better error message for malformed tzdb files [#319]
++
++- Better error message for interval constructor [#321]
++
++
++Compatibility between 2.8 and 2.9
++---------------------------------
++Build system - Yes
++
++Binary compatible - Yes
++
++Source compatible - Yes
++
++Serialization compatible - Yes
++
++Data compatible - Yes
++ - DateTimeZone data updated to version 2015g
++
++Semantic compatible - Yes
++
++
++Bug fixes in 2.9
++----------------
++- Fixed to handle JDK 8u60 [#288, #291]
++  Without this fix, formatting a time-zone will print "+00:00" instead of "GMT" for the GMT time-zone
++
++- Fix parsing of basic form ISO style where year has unnecessary plus sign [#86]
++  For example, +20151030 will now be correctly parsed as year 2015.
++
++- Fix overflow bug in intervals [#315]
++
++
++
++Scala
++-----
++Joda-Time uses annotations from Joda-Convert.
++In the Java programming language, this dependency is optional, however in Scala it is not.
++Scala users must manually add the Joda-Convert v1.2 dependency.
++</source>
++</p>
++</section>
++
++</body>
++</document>

@@ -1,0 +1,415 @@
+From 7d2a3bf80b95c19fe3b2e101d619e3091bd06d4f Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Tue, 27 Oct 2015 11:06:04 +0000
+Subject: [PATCH 1/4] Update Travis to new infrastructure
+
+---
+ .travis.yml | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/.travis.yml b/.travis.yml
+index 06fcd3bef..684e37e0f 100644
+--- a/.travis.yml
++++ b/.travis.yml
+@@ -4,6 +4,8 @@
+ #
+ # For more information, see https://travis-ci.org
+ 
++sudo: false
++
+ language: java
+ 
+ jdk: 
+
+From 556d2a007e74e51771f841ecbffb5b82f748dec3 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Thu, 12 Nov 2015 10:46:07 +0000
+Subject: [PATCH 2/4] Fix pom.xml
+
+---
+ pom.xml | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/pom.xml b/pom.xml
+index 426b5c798..3f2ad5b44 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -695,7 +695,7 @@
+         <artifactId>maven-surefire-report-plugin</artifactId>
+         <version>${maven-surefire-report-plugin.version}</version>
+         <configuration>
+-           <showSuccess>true</showSuccess>
++          <showSuccess>true</showSuccess>
+         </configuration>
+       </plugin>
+     </plugins>
+
+From c0cbd65f849645635110df3b719c7e9cc00104ca Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Thu, 12 Nov 2015 11:23:54 +0000
+Subject: [PATCH 3/4] Fix bug around 1970-01-01
+
+Bug introduced by min/max changes #190
+Fixes #328
+---
+ RELEASE-NOTES.txt                                       | 9 +++++++--
+ src/main/java/org/joda/time/chrono/ZonedChronology.java | 8 ++++++--
+ src/test/java/org/joda/time/TestMinMaxLong.java         | 9 +++++++++
+ 3 files changed, 22 insertions(+), 4 deletions(-)
+
+diff --git a/RELEASE-NOTES.txt b/RELEASE-NOTES.txt
+index 2e1044dd2..f650f79a3 100644
+--- a/RELEASE-NOTES.txt
++++ b/RELEASE-NOTES.txt
+@@ -1,5 +1,5 @@
+-Joda-Time version 2.9
+----------------------
++Joda-Time version 2.9.1
++-----------------------
+ 
+ Joda-Time is a date and time handling library that seeks to replace the JDK
+ Date and Calendar classes. For Java SE 8 and later, please use java.time instead.
+@@ -14,6 +14,11 @@ This is the same license as all of Apache, plus other open source projects such
+ ** http://www.joda.org/joda-time/related.html **
+ 
+ 
++Bug fixes since 2.9
++-------------------
++- Fix bug introduced by Long.MIN_VALUE and Long.MAX_VALUE changes [#328]
++
++
+ Enhancements since 2.8
+ ----------------------
+ - Faster parsing of time-zone identifiers [#282]
+diff --git a/src/main/java/org/joda/time/chrono/ZonedChronology.java b/src/main/java/org/joda/time/chrono/ZonedChronology.java
+index 0acbf689e..23fde526e 100644
+--- a/src/main/java/org/joda/time/chrono/ZonedChronology.java
++++ b/src/main/java/org/joda/time/chrono/ZonedChronology.java
+@@ -42,6 +42,10 @@
+ 
+     /** Serialization lock */
+     private static final long serialVersionUID = -1079258847191166848L;
++    /**
++     * Avoid calculation errors near zero.
++     */
++    private static final long NEAR_ZERO = 7L * 24 * 60 * 60 * 1000;
+ 
+     /**
+      * Create a ZonedChronology for any chronology, overriding any time zone it
+@@ -143,9 +147,9 @@ private long localToUTC(long localInstant) {
+         DateTimeZone zone = getZone();
+         int offset = zone.getOffsetFromLocal(localInstant);
+         long utcInstant = localInstant - offset;
+-        if (localInstant > 0 && utcInstant < 0) {
++        if (localInstant > NEAR_ZERO && utcInstant < 0) {
+             return Long.MAX_VALUE;
+-        } else if (localInstant < 0 && utcInstant > 0) {
++        } else if (localInstant < -NEAR_ZERO && utcInstant > 0) {
+             return Long.MIN_VALUE;
+         }
+         int offsetBasedOnUtc = zone.getOffset(utcInstant);
+diff --git a/src/test/java/org/joda/time/TestMinMaxLong.java b/src/test/java/org/joda/time/TestMinMaxLong.java
+index 85cbe79d6..992b064fd 100644
+--- a/src/test/java/org/joda/time/TestMinMaxLong.java
++++ b/src/test/java/org/joda/time/TestMinMaxLong.java
+@@ -314,4 +314,13 @@ public void testPrintParseMin() {
+         assertEquals(test2, test1);
+     }
+ 
++    public void testDateTime_aroundZero() {
++        DateTime base = new DateTime(1970, 1, 1, 1, 2, DateTimeZone.UTC);
++        assertEquals(62 * 60000L, base.getMillis());
++        for (int i = -23; i <= 23; i++) {
++            DateTime dt = new DateTime(1970, 1, 1, 1, 2, DateTimeZone.forOffsetHours(i));
++            assertEquals(base.getMillis() - i * 3600000L, dt.getMillis());
++        }
++    }
++
+ }
+
+From 73fd550faa7b37ef31dd246752394cbb5f5543da Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Thu, 12 Nov 2015 12:00:33 +0000
+Subject: [PATCH 4/4] Release v2.9.1
+
+---
+ README.md                      |   6 +-
+ RELEASE-NOTES.txt              |  18 +++---
+ pom.xml                        |   2 +-
+ src/conf/MANIFEST.MF           |  18 +++---
+ src/site/markdown/index.md     |   6 +-
+ src/site/xdoc/installation.xml |   1 +
+ src/site/xdoc/upgradeto291.xml | 100 +++++++++++++++++++++++++++++++++
+ 7 files changed, 126 insertions(+), 25 deletions(-)
+ create mode 100644 src/site/xdoc/upgradeto291.xml
+
+diff --git a/README.md b/README.md
+index 0b2ebe56a..3edc6fa12 100644
+--- a/README.md
++++ b/README.md
+@@ -46,16 +46,16 @@ Various documentation is available:
+ 
+ 
+ ### Releases
+-[Release 2.9](http://www.joda.org/joda-time/download.html) is the current latest release.
++[Release 2.9.1](http://www.joda.org/joda-time/download.html) is the current latest release.
+ This release is considered stable and worthy of the 2.x tag.
+ It depends on JDK 1.5 or later.
+ 
+-Available in the [Maven Central repository](http://search.maven.org/#artifactdetails|joda-time|joda-time|2.9|jar)
++Available in the [Maven Central repository](http://search.maven.org/#artifactdetails|joda-time|joda-time|2.9.1|jar)
+ 
+     <dependency>
+       <groupId>joda-time</groupId>
+       <artifactId>joda-time</artifactId>
+-      <version>2.9</version>
++      <version>2.9.1</version>
+     </dependency>
+ 
+ 
+diff --git a/RELEASE-NOTES.txt b/RELEASE-NOTES.txt
+index f650f79a3..b3419fb97 100644
+--- a/RELEASE-NOTES.txt
++++ b/RELEASE-NOTES.txt
+@@ -4,7 +4,7 @@ Joda-Time version 2.9.1
+ Joda-Time is a date and time handling library that seeks to replace the JDK
+ Date and Calendar classes. For Java SE 8 and later, please use java.time instead.
+ 
+-This release contains enhancements, bug fixes and a time zone update.
++This release contains one bug fix.
+ The release runs on JDK 5 or later.
+ 
+ Joda-Time is licensed under the business-friendly Apache License Version 2.
+@@ -14,13 +14,13 @@ This is the same license as all of Apache, plus other open source projects such
+ ** http://www.joda.org/joda-time/related.html **
+ 
+ 
+-Bug fixes since 2.9
+--------------------
++Bug fixes in 2.9.1
++------------------
+ - Fix bug introduced by Long.MIN_VALUE and Long.MAX_VALUE changes [#328]
+ 
+ 
+-Enhancements since 2.8
+-----------------------
++Enhancements in 2.9
++-------------------
+ - Faster parsing of time-zone identifiers [#282]
+ 
+ - Added Interval.parseWithOffset(String) [#299, #296]
+@@ -45,8 +45,8 @@ Enhancements since 2.8
+ - Better error message for interval constructor [#321]
+ 
+ 
+-Compatibility with 2.8
+-----------------------
++Compatibility between 2.8 and 2.9
++---------------------------------
+ Build system - Yes
+ 
+ Binary compatible - Yes
+@@ -61,8 +61,8 @@ Data compatible - Yes
+ Semantic compatible - Yes
+ 
+ 
+-Bug fixes since 2.8
+--------------------
++Bug fixes in 2.9
++----------------
+ - Fixed to handle JDK 8u60 [#288, #291]
+   Without this fix, formatting a time-zone will print "+00:00" instead of "GMT" for the GMT time-zone
+ 
+diff --git a/pom.xml b/pom.xml
+index 3f2ad5b44..078dc5051 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -9,7 +9,7 @@
+   <artifactId>joda-time</artifactId>
+   <packaging>jar</packaging>
+   <name>Joda-Time</name>
+-  <version>2.9</version>
++  <version>2.9.1</version>
+   <description>Date and time library to replace JDK date handling</description>
+   <url>http://www.joda.org/joda-time/</url>
+ 
+diff --git a/src/conf/MANIFEST.MF b/src/conf/MANIFEST.MF
+index 961a88994..7bf8a4c89 100644
+--- a/src/conf/MANIFEST.MF
++++ b/src/conf/MANIFEST.MF
+@@ -5,19 +5,19 @@ Specification-Vendor: Joda.org
+ Specification-Version: 2.9
+ Implementation-Vendor: Joda.org
+ Implementation-Title: org.joda.time
+-Implementation-Version: 2.9
++Implementation-Version: 2.9.1
+ Implementation-Vendor-Id: org.joda
+ Bundle-ManifestVersion: 2
+ Bundle-Vendor: Joda.org
+ Bundle-Name: Joda-Time
+ Bundle-SymbolicName: joda-time
+-Bundle-Version: 2.9
+-Export-Package: org.joda.time;version=2.9,
+- org.joda.time.base;version=2.9,
+- org.joda.time.chrono;version=2.9,
+- org.joda.time.convert;version=2.9,
+- org.joda.time.field;version=2.9,
+- org.joda.time.format;version=2.9,
+- org.joda.time.tz;version=2.9
++Bundle-Version: 2.9.1
++Export-Package: org.joda.time;version=2.9.1,
++ org.joda.time.base;version=2.9.1,
++ org.joda.time.chrono;version=2.9.1,
++ org.joda.time.convert;version=2.9.1,
++ org.joda.time.field;version=2.9.1,
++ org.joda.time.format;version=2.9.1,
++ org.joda.time.tz;version=2.9.1
+ Bundle-License: Apache 2.0
+ Bundle-DocURL: http://www.joda.org/joda-time/
+diff --git a/src/site/markdown/index.md b/src/site/markdown/index.md
+index f61fca371..e36581107 100644
+--- a/src/site/markdown/index.md
++++ b/src/site/markdown/index.md
+@@ -125,7 +125,7 @@ Joda-Time is licenced under the business friendly <a href="license.html">Apache
+ 
+ ## <i></i> Releases
+ 
+-[Release 2.9](download.html) is the current latest release.
++[Release 2.9.1](download.html) is the current latest release.
+ This release is considered stable and worthy of the 2.x tag.
+ See the [upgrade notes](upgradeto290.html) for full details.
+ 
+@@ -133,13 +133,13 @@ Joda-Time requires Java SE 5 or later and has [no dependencies](dependencies.htm
+ There is a *compile-time* dependency on [Joda-Convert](http://www.joda.org/joda-convert/),
+ but this is not required at runtime thanks to the magic of annotations.
+ 
+-Available in [Maven Central](http://search.maven.org/#artifactdetails%7Cjoda-time%7Cjoda-time%7C2.9%7Cjar).
++Available in [Maven Central](http://search.maven.org/#artifactdetails%7Cjoda-time%7Cjoda-time%7C2.9.1%7Cjar).
+ 
+ ```xml
+ <dependency>
+   <groupId>joda-time</groupId>
+   <artifactId>joda-time</artifactId>
+-  <version>2.9</version>
++  <version>2.9.1</version>
+ </dependency>
+ ```
+ 
+diff --git a/src/site/xdoc/installation.xml b/src/site/xdoc/installation.xml
+index 11bfce05f..476926d6f 100644
+--- a/src/site/xdoc/installation.xml
++++ b/src/site/xdoc/installation.xml
+@@ -21,6 +21,7 @@ of the source code suitable for linking to the jar file in IDEs such as Eclipse.
+ <p>
+ The release notes for upgraders can be found here:
+ <ul>
++<li><a href="upgradeto291.html">Version 2.9.1</a> - upgrade from Version 2.9</li>
+ <li><a href="upgradeto290.html">Version 2.9</a> - upgrade from Version 2.8</li>
+ <li><a href="upgradeto282.html">Version 2.8.2</a> - upgrade from Version 2.8.1</li>
+ <li><a href="upgradeto281.html">Version 2.8.1</a> - upgrade from Version 2.8</li>
+diff --git a/src/site/xdoc/upgradeto291.xml b/src/site/xdoc/upgradeto291.xml
+new file mode 100644
+index 000000000..ed616b7d4
+--- /dev/null
++++ b/src/site/xdoc/upgradeto291.xml
+@@ -0,0 +1,100 @@
++<?xml version="1.0" encoding="ISO-8859-1"?>
++
++<document>
++ <properties>
++  <title>Java date and time API - Upgrade from 2.8 to 2.9</title>
++  <author>Stephen Colebourne</author>
++ </properties>
++
++<body>
++
++<section name="Upgrade">
++<p>
++These are the release notes and advice for upgrading Joda-Time from version 2.8 to version 2.9.
++<source>
++Joda-Time version 2.9.1
++-----------------------
++
++Joda-Time is a date and time handling library that seeks to replace the JDK
++Date and Calendar classes. For Java SE 8 and later, please use java.time instead.
++
++This release contains one bug fix.
++The release runs on JDK 5 or later.
++
++Joda-Time is licensed under the business-friendly Apache License Version 2.
++This is the same license as all of Apache, plus other open source projects such as Spring.
++
++**  Please also check out our related projects   **
++** http://www.joda.org/joda-time/related.html **
++
++
++Bug fixes in 2.9.1
++------------------
++- Fix bug introduced by Long.MIN_VALUE and Long.MAX_VALUE changes [#328]
++
++
++Enhancements in 2.9
++-------------------
++- Faster parsing of time-zone identifiers [#282]
++
++- Added Interval.parseWithOffset(String) [#299, #296]
++  Provides a way to parse the fixed offset in an interval string
++
++- Add DateTimeFormatter methods for StringBuilder [#298]
++
++- Add Russian period translations [#320]
++
++- Add Italian period translations [#312]
++
++- Add Czech period translations [#313]
++
++- Clarify that PeriodFormatterBuilder is in an invalid state once built [#309]
++
++- Allow DateTime and Interval to refer to values at Long.MIN_VALUE and Long.MAX_VALUE [#297, #190]
++  A DateTime may be created with any millisecond value, however at the very edges there may be
++  some undesirable effects, for example always using UTC instead of the time-zone
++
++- Better error message for malformed tzdb files [#319]
++
++- Better error message for interval constructor [#321]
++
++
++Compatibility between 2.8 and 2.9
++---------------------------------
++Build system - Yes
++
++Binary compatible - Yes
++
++Source compatible - Yes
++
++Serialization compatible - Yes
++
++Data compatible - Yes
++ - DateTimeZone data updated to version 2015g
++
++Semantic compatible - Yes
++
++
++Bug fixes in 2.9
++----------------
++- Fixed to handle JDK 8u60 [#288, #291]
++  Without this fix, formatting a time-zone will print "+00:00" instead of "GMT" for the GMT time-zone
++
++- Fix parsing of basic form ISO style where year has unnecessary plus sign [#86]
++  For example, +20151030 will now be correctly parsed as year 2015.
++
++- Fix overflow bug in intervals [#315]
++
++
++
++Scala
++-----
++Joda-Time uses annotations from Joda-Convert.
++In the Java programming language, this dependency is optional, however in Scala it is not.
++Scala users must manually add the Joda-Convert v1.2 dependency.
++</source>
++</p>
++</section>
++
++</body>
++</document>

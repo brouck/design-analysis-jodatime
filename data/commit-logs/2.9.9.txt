@@ -1,0 +1,304 @@
+From 9bda820bc5375caba8d689aef730b98c7c695bbe Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Thu, 23 Mar 2017 13:32:47 +0000
+Subject: [PATCH 1/2] Update travis and pom.xml for releases
+
+---
+ .travis.yml | 20 +++------------
+ README.md   |  9 +++++++
+ pom.xml     | 73 ++++++++++++++++++++++++++++++++++++++---------------
+ 3 files changed, 65 insertions(+), 37 deletions(-)
+
+diff --git a/.travis.yml b/.travis.yml
+index 4be082052..dbda0058f 100644
+--- a/.travis.yml
++++ b/.travis.yml
+@@ -19,23 +19,9 @@ install:
+   - mvn --version
+ script:
+   - mvn install -e -B
+-# deploy
+-before_deploy:
+-  - travis_wait 40 mvn site-deploy -e -B --settings .github/maven-settings.xml
+-  - export DIST_FILE1=$(ls target/joda-time-*-dist.tar.gz)
+-  - export DIST_FILE2=$(ls target/joda-time-*-dist.zip)
+-deploy:
+-  provider: releases
+-  api_key:
+-    secure: S9aAxkk3ICWqC24GDZK+L6n/xK9OWh4KRWiiSJ4wN4gVoshxLWOvB6aDLMTlQwd5FffzG7RT9aqeYBOihWZWupW4/0xP00yW5WE7dKpURDB0AuOllo1Em1IBL2AlEmhepOss1tn/A/uSApe134Hg8qryOpffAYNWzgzVlYFEM+0=
+-  file:
+-    - "${DIST_FILE1}"
+-    - "${DIST_FILE2}"
+-  skip_cleanup: true
+-  on:
+-    jdk: "oraclejdk7"
+-    tags: true
+-    condition: "$TRAVIS_TAG =~ ^v.*$"
++after_success:
++  - if [[ $TRAVIS_TAG =~ ^v.*$ ]] && [ "$TRAVIS_PULL_REQUEST" == "false" ] && [ "$TRAVIS_JDK_VERSION" == "oraclejdk8" ]; then travis_wait 40 mvn site-deploy -e -B --settings .github/maven-settings.xml; fi
++# secure keys for GITHUB_TOKEN
+ env:
+   global:
+     secure: UK9A4eHPOP6XkYbST1kpv3gVEZTBqp79eCF0nqpXejbXihY58MNVZ0aGt8IM/ZThO/UoK+AxWjaSLljE2Neo4ehxvRHsRG0bIhAoCBUjP6f6vuMYTZlRNb9W+NM3RjXvrQGnCM3PTckWaFQ6i5Ny4e1GuETSdh96Yk7WNn6DMJM=
+diff --git a/README.md b/README.md
+index ea0728fb2..cdbfd0c6b 100644
+--- a/README.md
++++ b/README.md
+@@ -83,3 +83,12 @@ Please use GitHub issues and Pull Requests for support.
+ ### History
+ Issue tracking and active development is at GitHub.
+ Historically, the project was at [Sourceforge](https://sourceforge.net/projects/joda-time/).
++
++
++### Release process
++
++* Update version (pom.xml, README.md, index.md, MANIFEST.MF, changes.xml)
++* Commit and push
++* `mvn clean deploy -Doss.repo -Dgpg.passphrase=""`
++* Release project in [Nexus](https://oss.sonatype.org)
++* Website will be built and released by Travis
+diff --git a/pom.xml b/pom.xml
+index 2a0e25f7a..97fd6ae30 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -477,26 +477,6 @@
+           </excludes>
+         </configuration>
+       </plugin>
+-      <plugin>
+-        <groupId>org.apache.maven.plugins</groupId>
+-        <artifactId>maven-assembly-plugin</artifactId>
+-        <configuration>
+-          <attach>false</attach>
+-          <descriptors>
+-            <descriptor>src/main/assembly/dist.xml</descriptor>
+-          </descriptors>
+-          <tarLongFileMode>gnu</tarLongFileMode>
+-        </configuration>
+-        <executions>
+-          <execution>
+-            <id>make-assembly</id>
+-            <phase>deploy</phase>
+-            <goals>
+-              <goal>single</goal>
+-            </goals>
+-          </execution>
+-        </executions>
+-      </plugin>
+       <plugin>
+         <groupId>org.apache.maven.plugins</groupId>
+         <artifactId>maven-site-plugin</artifactId>
+@@ -816,6 +796,7 @@
+       </activation>
+       <build>
+         <plugins>
++          <!-- Use Java 5 -->
+           <plugin>
+             <groupId>org.apache.maven.plugins</groupId>
+             <artifactId>maven-toolchains-plugin</artifactId>
+@@ -836,6 +817,7 @@
+               </toolchains>
+             </configuration>
+           </plugin>
++          <!-- Sign artifacts -->
+           <plugin>
+             <groupId>org.apache.maven.plugins</groupId>
+             <artifactId>maven-gpg-plugin</artifactId>
+@@ -849,6 +831,57 @@
+               </execution>
+             </executions>
+           </plugin>
++          <!-- Create dist files -->
++          <plugin>
++            <groupId>org.apache.maven.plugins</groupId>
++            <artifactId>maven-assembly-plugin</artifactId>
++            <configuration>
++              <attach>false</attach>
++              <descriptors>
++                <descriptor>src/main/assembly/dist.xml</descriptor>
++              </descriptors>
++              <tarLongFileMode>gnu</tarLongFileMode>
++            </configuration>
++            <executions>
++              <execution>
++                <id>make-assembly</id>
++                <phase>install</phase>
++                <goals>
++                  <goal>single</goal>
++                </goals>
++              </execution>
++            </executions>
++          </plugin>
++          <!-- Release dist files to GitHub -->
++          <plugin>
++            <groupId>de.jutzig</groupId>
++            <artifactId>github-release-plugin</artifactId>
++            <version>1.1.1</version>
++            <configuration>
++              <releaseName>Release v${project.version}</releaseName>
++              <description>See the [change notes](http://www.joda.org/joda-time/changes-report.html) for more information.</description>
++              <tag>v${project.version}</tag>
++              <overwriteArtifact>true</overwriteArtifact>
++              <fileSets>
++                <fileSet>
++                  <directory>${project.build.directory}</directory>
++                  <includes>
++                    <include>${project.artifactId}*-dist.tar.gz</include>
++                    <include>${project.artifactId}*-dist.zip</include>
++                  </includes>
++                </fileSet>
++              </fileSets>
++            </configuration>
++            <executions>
++              <execution>
++                <id>github-releases</id>
++                <phase>deploy</phase>
++                <goals>
++                  <goal>release</goal>
++                </goals>
++              </execution>
++            </executions>
++          </plugin>
+         </plugins>
+       </build>
+       <properties>
+
+From 6ad133837a4c4f8199d00a05c3c16267dbf6deb8 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Thu, 23 Mar 2017 12:07:03 +0000
+Subject: [PATCH 2/2] Release v2.9.9
+
+---
+ README.md                  |  8 ++++----
+ pom.xml                    |  2 +-
+ src/changes/changes.xml    |  7 ++++++-
+ src/conf/MANIFEST.MF       | 18 +++++++++---------
+ src/site/markdown/index.md |  6 +++---
+ 5 files changed, 23 insertions(+), 18 deletions(-)
+
+diff --git a/README.md b/README.md
+index cdbfd0c6b..56cadb89d 100644
+--- a/README.md
++++ b/README.md
+@@ -46,24 +46,24 @@ Various documentation is available:
+ 
+ 
+ ### Releases
+-[Release 2.9.8](http://www.joda.org/joda-time/download.html) is the current latest release.
++[Release 2.9.9](http://www.joda.org/joda-time/download.html) is the current latest release.
+ This release is considered stable and worthy of the 2.x tag.
+ It depends on JDK 1.5 or later.
+ 
+-Available in the [Maven Central repository](http://search.maven.org/#artifactdetails|joda-time|joda-time|2.9.8|jar)
++Available in the [Maven Central repository](http://search.maven.org/#artifactdetails|joda-time|joda-time|2.9.9|jar)
+ 
+ **Maven configuration:**
+ ```xml
+ <dependency>
+   <groupId>joda-time</groupId>
+   <artifactId>joda-time</artifactId>
+-  <version>2.9.8</version>
++  <version>2.9.9</version>
+ </dependency>
+ ```
+ 
+ **Gradle configuration:**
+ ```groovy
+-compile 'joda-time:joda-time:2.9.8'
++compile 'joda-time:joda-time:2.9.9'
+ ```
+ 
+ ### Related projects
+diff --git a/pom.xml b/pom.xml
+index 97fd6ae30..2975425e0 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -9,7 +9,7 @@
+   <artifactId>joda-time</artifactId>
+   <packaging>jar</packaging>
+   <name>Joda-Time</name>
+-  <version>2.9.8</version>
++  <version>2.9.9</version>
+   <description>Date and time library to replace JDK date handling</description>
+   <url>http://www.joda.org/joda-time/</url>
+ 
+diff --git a/src/changes/changes.xml b/src/changes/changes.xml
+index 63ff20d3c..e01b4261e 100644
+--- a/src/changes/changes.xml
++++ b/src/changes/changes.xml
+@@ -8,7 +8,12 @@
+   <body>
+ 
+     <!-- types are add, fix, remove, update -->
+-    <release version="2.9.8" date="2017-03-22" description="v2.9.8">
++    <release version="2.9.9" date="2017-03-23" description="v2.9.9">
++      <action dev="jodastephen" type="update">
++        Optimise release process.
++      </action>
++    </release>
++    <release version="2.9.8" date="2017-03-22" description="v2.9.9">
+       <action dev="jodastephen" type="update">
+         DateTimeZone data updated to version 2017b.
+       </action>
+diff --git a/src/conf/MANIFEST.MF b/src/conf/MANIFEST.MF
+index a55ced190..5b0defe0f 100644
+--- a/src/conf/MANIFEST.MF
++++ b/src/conf/MANIFEST.MF
+@@ -5,19 +5,19 @@ Specification-Vendor: Joda.org
+ Specification-Version: 2.9
+ Implementation-Vendor: Joda.org
+ Implementation-Title: org.joda.time
+-Implementation-Version: 2.9.8
++Implementation-Version: 2.9.9
+ Implementation-Vendor-Id: org.joda
+ Bundle-ManifestVersion: 2
+ Bundle-Vendor: Joda.org
+ Bundle-Name: Joda-Time
+ Bundle-SymbolicName: joda-time
+-Bundle-Version: 2.9.8
+-Export-Package: org.joda.time;version=2.9.8,
+- org.joda.time.base;version=2.9.8,
+- org.joda.time.chrono;version=2.9.8,
+- org.joda.time.convert;version=2.9.8,
+- org.joda.time.field;version=2.9.8,
+- org.joda.time.format;version=2.9.8,
+- org.joda.time.tz;version=2.9.8
++Bundle-Version: 2.9.9
++Export-Package: org.joda.time;version=2.9.9,
++ org.joda.time.base;version=2.9.9,
++ org.joda.time.chrono;version=2.9.9,
++ org.joda.time.convert;version=2.9.9,
++ org.joda.time.field;version=2.9.9,
++ org.joda.time.format;version=2.9.9,
++ org.joda.time.tz;version=2.9.9
+ Bundle-License: Apache 2.0
+ Bundle-DocURL: http://www.joda.org/joda-time/
+diff --git a/src/site/markdown/index.md b/src/site/markdown/index.md
+index 16fc92ab7..da3d00b87 100644
+--- a/src/site/markdown/index.md
++++ b/src/site/markdown/index.md
+@@ -127,7 +127,7 @@ Joda-Time is licenced under the business friendly <a href="license.html">Apache
+ 
+ ## <i></i> Releases
+ 
+-[Release 2.9.8](download.html) is the current latest release.
++[Release 2.9.9](download.html) is the current latest release.
+ This release is considered stable and worthy of the 2.x tag.
+ See the [change notes](changes-report.html) for full details.
+ 
+@@ -135,13 +135,13 @@ Joda-Time requires Java SE 5 or later and has [no dependencies](dependencies.htm
+ There is a *compile-time* dependency on [Joda-Convert](http://www.joda.org/joda-convert/),
+ but this is not required at runtime thanks to the magic of annotations.
+ 
+-Available in [Maven Central](http://search.maven.org/#artifactdetails%7Cjoda-time%7Cjoda-time%7C2.9.8%7Cjar).
++Available in [Maven Central](http://search.maven.org/#artifactdetails%7Cjoda-time%7Cjoda-time%7C2.9.9%7Cjar).
+ 
+ ```xml
+ <dependency>
+   <groupId>joda-time</groupId>
+   <artifactId>joda-time</artifactId>
+-  <version>2.9.8</version>
++  <version>2.9.9</version>
+ </dependency>
+ ```
+ 

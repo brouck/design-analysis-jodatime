@@ -1,0 +1,682 @@
+From 43d6329da60122df66138ffc9c0943c32942595f Mon Sep 17 00:00:00 2001
+From: "Arend v. Reinersdorff" <arend@arendvr.com>
+Date: Sun, 7 Jun 2015 21:51:47 +0200
+Subject: [PATCH 1/8] Fix link to 2.8 upgrade notes
+
+---
+ src/site/markdown/index.md | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/site/markdown/index.md b/src/site/markdown/index.md
+index 044252fc4..8a96d1f20 100644
+--- a/src/site/markdown/index.md
++++ b/src/site/markdown/index.md
+@@ -127,7 +127,7 @@ Joda-Time is licenced under the business friendly <a href="license.html">Apache
+ 
+ [Release 2.8](download.html) is the current latest release.
+ This release is considered stable and worthy of the 2.x tag.
+-See the [upgrade notes](upgradeto270.html) for full details.
++See the [upgrade notes](upgradeto280.html) for full details.
+ 
+ Joda-Time requires Java SE 5 or later and has [no dependencies](dependencies.html).
+ There is a *compile-time* dependency on [Joda-Convert](http://www.joda.org/joda-convert/),
+
+From cf670c35d0c2050d1754d810a6656dfb44d2e3b2 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Mon, 15 Jun 2015 14:40:08 +0100
+Subject: [PATCH 2/8] Bump version
+
+---
+ RELEASE-NOTES.txt | 12 ++++++++++--
+ pom.xml           |  2 +-
+ 2 files changed, 11 insertions(+), 3 deletions(-)
+
+diff --git a/RELEASE-NOTES.txt b/RELEASE-NOTES.txt
+index 590ddcdbd..05ac6a7b6 100644
+--- a/RELEASE-NOTES.txt
++++ b/RELEASE-NOTES.txt
+@@ -1,5 +1,5 @@
+-Joda-Time version 2.8
+----------------------
++Joda-Time version 2.8.1
++-----------------------
+ 
+ Joda-Time is a date and time handling library that seeks to replace the JDK
+ Date and Calendar classes.
+@@ -16,6 +16,14 @@ of restrictions. If the license causes you problems please contact the mailing l
+ ** http://www.joda.org/joda-time/related.html **
+ 
+ 
++Changes in 2.8.1
++================
++
++
++
++Changes in 2.8.0
++================
++
+ Enhancements since 2.7
+ ----------------------
+ - Encode properties files using unicode escapes [#228]
+diff --git a/pom.xml b/pom.xml
+index 92674c58a..c7351deda 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -9,7 +9,7 @@
+   <artifactId>joda-time</artifactId>
+   <packaging>jar</packaging>
+   <name>Joda-Time</name>
+-  <version>2.8</version>
++  <version>2.8.1-SNAPSHOT</version>
+   <description>Date and time library to replace JDK date handling</description>
+   <url>http://www.joda.org/joda-time/</url>
+ 
+
+From 871e6ba23464067597d0734fcf2708a503cff363 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Mon, 15 Jun 2015 14:40:08 +0100
+Subject: [PATCH 3/8] Fix indentation
+
+---
+ .../org/joda/time/tz/DefaultNameProvider.java | 54 +++++++++----------
+ 1 file changed, 27 insertions(+), 27 deletions(-)
+
+diff --git a/src/main/java/org/joda/time/tz/DefaultNameProvider.java b/src/main/java/org/joda/time/tz/DefaultNameProvider.java
+index de4dd3937..97b384433 100644
+--- a/src/main/java/org/joda/time/tz/DefaultNameProvider.java
++++ b/src/main/java/org/joda/time/tz/DefaultNameProvider.java
+@@ -70,30 +70,30 @@ public String getName(Locale locale, String id, String nameKey) {
+             String[][] zoneStringsEn = DateTimeUtils.getDateFormatSymbols(Locale.ENGLISH).getZoneStrings();
+             String[] setEn = null;
+             for (String[] strings : zoneStringsEn) {
+-              if (strings != null && strings.length == 5 && id.equals(strings[0])) {
+-                setEn = strings;
+-                break;
+-              }
++                if (strings != null && strings.length == 5 && id.equals(strings[0])) {
++                    setEn = strings;
++                    break;
++                }
+             }
+             String[][] zoneStringsLoc = DateTimeUtils.getDateFormatSymbols(locale).getZoneStrings();
+             String[] setLoc = null;
+             for (String[] strings : zoneStringsLoc) {
+-              if (strings != null && strings.length == 5 && id.equals(strings[0])) {
+-                setLoc = strings;
+-                break;
+-              }
++                if (strings != null && strings.length == 5 && id.equals(strings[0])) {
++                    setLoc = strings;
++                    break;
++                }
+             }
+             
+             if (setEn != null && setLoc != null) {
+-              byNameKeyCache.put(setEn[2], new String[] {setLoc[2], setLoc[1]});
+-              // need to handle case where summer and winter have the same
+-              // abbreviation, such as EST in Australia [1716305]
+-              // we handle this by appending "-Summer", cf ZoneInfoCompiler
+-              if (setEn[2].equals(setEn[4])) {
+-                  byNameKeyCache.put(setEn[4] + "-Summer", new String[] {setLoc[4], setLoc[3]});
+-              } else {
+-                  byNameKeyCache.put(setEn[4], new String[] {setLoc[4], setLoc[3]});
+-              }
++                byNameKeyCache.put(setEn[2], new String[] {setLoc[2], setLoc[1]});
++                // need to handle case where summer and winter have the same
++                // abbreviation, such as EST in Australia [1716305]
++                // we handle this by appending "-Summer", cf ZoneInfoCompiler
++                if (setEn[2].equals(setEn[4])) {
++                    byNameKeyCache.put(setEn[4] + "-Summer", new String[] {setLoc[4], setLoc[3]});
++                } else {
++                    byNameKeyCache.put(setEn[4], new String[] {setLoc[4], setLoc[3]});
++                }
+             }
+         }
+         return (String[]) byNameKeyCache.get(nameKey);
+@@ -132,23 +132,23 @@ public String getName(Locale locale, String id, String nameKey, boolean standard
+             String[][] zoneStringsEn = DateTimeUtils.getDateFormatSymbols(Locale.ENGLISH).getZoneStrings();
+             String[] setEn = null;
+             for (String[] strings : zoneStringsEn) {
+-              if (strings != null && strings.length == 5 && id.equals(strings[0])) {
+-                setEn = strings;
+-                break;
+-              }
++                if (strings != null && strings.length == 5 && id.equals(strings[0])) {
++                    setEn = strings;
++                    break;
++                }
+             }
+             String[][] zoneStringsLoc = DateTimeUtils.getDateFormatSymbols(locale).getZoneStrings();
+             String[] setLoc = null;
+             for (String[] strings : zoneStringsLoc) {
+-              if (strings != null && strings.length == 5 && id.equals(strings[0])) {
+-                setLoc = strings;
+-                break;
+-              }
++                if (strings != null && strings.length == 5 && id.equals(strings[0])) {
++                    setLoc = strings;
++                    break;
++                }
+             }
+             
+             if (setEn != null && setLoc != null) {
+-              byNameKeyCache.put(Boolean.TRUE, new String[] {setLoc[2], setLoc[1]});
+-              byNameKeyCache.put(Boolean.FALSE, new String[] {setLoc[4], setLoc[3]});
++                byNameKeyCache.put(Boolean.TRUE, new String[] {setLoc[2], setLoc[1]});
++                byNameKeyCache.put(Boolean.FALSE, new String[] {setLoc[4], setLoc[3]});
+             }
+         }
+         return (String[]) byNameKeyCache.get(Boolean.valueOf(standardTime));
+
+From 31ea144fd1fc493c2f2717d61b279c6caddae4db Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Mon, 15 Jun 2015 14:50:28 +0100
+Subject: [PATCH 4/8] Fix to handle JDK 8u60
+
+Time-zone formatting data changed
+---
+ RELEASE-NOTES.txt                                       | 3 +++
+ src/main/java/org/joda/time/tz/DefaultNameProvider.java | 8 ++++----
+ 2 files changed, 7 insertions(+), 4 deletions(-)
+
+diff --git a/RELEASE-NOTES.txt b/RELEASE-NOTES.txt
+index 05ac6a7b6..f9d9d41f6 100644
+--- a/RELEASE-NOTES.txt
++++ b/RELEASE-NOTES.txt
+@@ -18,6 +18,9 @@ of restrictions. If the license causes you problems please contact the mailing l
+ 
+ Changes in 2.8.1
+ ================
++- Fixed to handle JDK 8u60 [#288, #291]
++  Without this fix, formatting a time-zone will print "+00:00" instead of "GMT" for the GMT time-zone
++
+ 
+ 
+ 
+diff --git a/src/main/java/org/joda/time/tz/DefaultNameProvider.java b/src/main/java/org/joda/time/tz/DefaultNameProvider.java
+index 97b384433..4af4f3982 100644
+--- a/src/main/java/org/joda/time/tz/DefaultNameProvider.java
++++ b/src/main/java/org/joda/time/tz/DefaultNameProvider.java
+@@ -70,7 +70,7 @@ public String getName(Locale locale, String id, String nameKey) {
+             String[][] zoneStringsEn = DateTimeUtils.getDateFormatSymbols(Locale.ENGLISH).getZoneStrings();
+             String[] setEn = null;
+             for (String[] strings : zoneStringsEn) {
+-                if (strings != null && strings.length == 5 && id.equals(strings[0])) {
++                if (strings != null && strings.length >= 5 && id.equals(strings[0])) {
+                     setEn = strings;
+                     break;
+                 }
+@@ -78,7 +78,7 @@ public String getName(Locale locale, String id, String nameKey) {
+             String[][] zoneStringsLoc = DateTimeUtils.getDateFormatSymbols(locale).getZoneStrings();
+             String[] setLoc = null;
+             for (String[] strings : zoneStringsLoc) {
+-                if (strings != null && strings.length == 5 && id.equals(strings[0])) {
++                if (strings != null && strings.length >= 5 && id.equals(strings[0])) {
+                     setLoc = strings;
+                     break;
+                 }
+@@ -132,7 +132,7 @@ public String getName(Locale locale, String id, String nameKey, boolean standard
+             String[][] zoneStringsEn = DateTimeUtils.getDateFormatSymbols(Locale.ENGLISH).getZoneStrings();
+             String[] setEn = null;
+             for (String[] strings : zoneStringsEn) {
+-                if (strings != null && strings.length == 5 && id.equals(strings[0])) {
++                if (strings != null && strings.length >= 5 && id.equals(strings[0])) {
+                     setEn = strings;
+                     break;
+                 }
+@@ -140,7 +140,7 @@ public String getName(Locale locale, String id, String nameKey, boolean standard
+             String[][] zoneStringsLoc = DateTimeUtils.getDateFormatSymbols(locale).getZoneStrings();
+             String[] setLoc = null;
+             for (String[] strings : zoneStringsLoc) {
+-                if (strings != null && strings.length == 5 && id.equals(strings[0])) {
++                if (strings != null && strings.length >= 5 && id.equals(strings[0])) {
+                     setLoc = strings;
+                     break;
+                 }
+
+From 1c0f0b90a1be8aec612174d4df10d5833a3f0485 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Mon, 15 Jun 2015 14:50:28 +0100
+Subject: [PATCH 5/8] Update to time-zone data 2015e
+
+---
+ RELEASE-NOTES.txt                             |  1 +
+ pom.xml                                       |  2 +-
+ src/main/java/org/joda/time/tz/src/Readme.txt |  2 +-
+ src/main/java/org/joda/time/tz/src/africa     | 88 ++++++++++++-------
+ .../java/org/joda/time/tz/src/northamerica    | 13 ++-
+ .../java/org/joda/time/tz/src/southamerica    |  2 +-
+ 6 files changed, 69 insertions(+), 39 deletions(-)
+
+diff --git a/RELEASE-NOTES.txt b/RELEASE-NOTES.txt
+index f9d9d41f6..828451ebb 100644
+--- a/RELEASE-NOTES.txt
++++ b/RELEASE-NOTES.txt
+@@ -21,6 +21,7 @@ Changes in 2.8.1
+ - Fixed to handle JDK 8u60 [#288, #291]
+   Without this fix, formatting a time-zone will print "+00:00" instead of "GMT" for the GMT time-zone
+ 
++- DateTimeZone data updated to version 2015e
+ 
+ 
+ 
+diff --git a/pom.xml b/pom.xml
+index c7351deda..731758b6b 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -799,6 +799,6 @@
+     <!-- Other properties -->
+     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+-    <tz.database.version>2015d</tz.database.version>
++    <tz.database.version>2015e</tz.database.version>
+   </properties>
+ </project>
+diff --git a/src/main/java/org/joda/time/tz/src/Readme.txt b/src/main/java/org/joda/time/tz/src/Readme.txt
+index 988f5a074..93fc6cbd5 100644
+--- a/src/main/java/org/joda/time/tz/src/Readme.txt
++++ b/src/main/java/org/joda/time/tz/src/Readme.txt
+@@ -1,2 +1,2 @@
+ The data files in this directory were obtained from the public IANA time zone database,
+-http://www.iana.org/time-zones, version 2015d.
++http://www.iana.org/time-zones, version 2015e.
+diff --git a/src/main/java/org/joda/time/tz/src/africa b/src/main/java/org/joda/time/tz/src/africa
+index ea0171a09..5ad47e360 100644
+--- a/src/main/java/org/joda/time/tz/src/africa
++++ b/src/main/java/org/joda/time/tz/src/africa
+@@ -338,9 +338,10 @@ Rule	Egypt	2007	only	-	Sep	Thu>=1	24:00	0	-
+ # time this summer, and carry out studies on the possibility of canceling the
+ # practice altogether in future years."
+ #
+-# From Paul Eggert (2015-04-20):
+-# For now, assume DST will be canceled.  Any resumption would likely
+-# use different rules anyway.
++# From Paul Eggert (2015-04-24):
++# Yesterday the office of Egyptian President El-Sisi announced his
++# decision to abandon DST permanently.  See Ahram Online 2015-04-24.
++# http://english.ahram.org.eg/NewsContent/1/64/128509/Egypt/Politics-/Sisi-cancels-daylight-saving-time-in-Egypt.aspx
+ 
+ Rule	Egypt	2008	only	-	Aug	lastThu	24:00	0	-
+ Rule	Egypt	2009	only	-	Aug	20	24:00	0	-
+@@ -787,20 +788,41 @@ Zone Indian/Mauritius	3:50:00 -	LMT	1907 # Port Louis
+ # will resume again at 02:00 on Saturday, August 2, 2014....
+ # http://www.mmsp.gov.ma/fr/actualites.aspx?id=586
+ 
+-# From Paul Eggert (2014-06-05):
+-# For now, guess that later spring and fall transitions will use 2014's rules,
++# From Milamber (2015-06-08):
++# (Google Translation) The hour will thus be delayed 60 minutes
++# Sunday, June 14 at 3:00, the ministry said in a statement, adding
++# that the time will be advanced again 60 minutes Sunday, July 19,
++# 2015 at 2:00.  The move comes under 2.12.126 Decree of 26 Jumada I
++# 1433 (18 April 2012) and the decision of the Head of Government of
++# 16 N. 3-29-15 Chaaban 1435 (4 June 2015).
++# Source (french):
++# http://lnt.ma/le-maroc-reculera-dune-heure-le-dimanche-14-juin/
++#
++# From Milamber (2015-06-09):
++# http://www.mmsp.gov.ma/fr/actualites.aspx?id=863
++#
++# From Michael Deckers (2015-06-09):
++# [The gov.ma announcement] would (probably) make the switch on 2015-07-19 go
++# from 03:00 to 04:00 rather than from 02:00 to 03:00, as in the patch....
++# I think the patch is correct and the quoted text is wrong; the text in
++# <http://lnt.ma/le-maroc-reculera-dune-heure-le-dimanche-14-juin/> agrees
++# with the patch.
++
++# From Paul Eggert (2015-06-08):
++# For now, guess that later spring and fall transitions will use 2015's rules,
+ # and guess that Morocco will switch to standard time at 03:00 the last
+-# Saturday before Ramadan, and back to DST at 02:00 the first Saturday after
+-# Ramadan.  To implement this, transition dates for 2015 through 2037 were
++# Sunday before Ramadan, and back to DST at 02:00 the first Sunday after
++# Ramadan.  To implement this, transition dates for 2016 through 2037 were
+ # determined by running the following program under GNU Emacs 24.3, with the
+ # results integrated by hand into the table below.
+-# (let ((islamic-year 1436))
++# (let ((islamic-year 1437))
++#   (require 'cal-islam)
+ #   (while (< islamic-year 1460)
+ #     (let ((a (calendar-islamic-to-absolute (list 9 1 islamic-year)))
+ #           (b (calendar-islamic-to-absolute (list 10 1 islamic-year)))
+-#           (saturday 6))
+-#       (while (/= saturday (mod (setq a (1- a)) 7)))
+-#       (while (/= saturday (mod b 7))
++#           (sunday 0))
++#       (while (/= sunday (mod (setq a (1- a)) 7)))
++#       (while (/= sunday (mod b 7))
+ #         (setq b (1+ b)))
+ #       (setq a (calendar-gregorian-from-absolute a))
+ #       (setq b (calendar-gregorian-from-absolute b))
+@@ -844,32 +866,30 @@ Rule	Morocco	2012	only	-	Aug	20	 2:00	1:00	S
+ Rule	Morocco	2013	only	-	Jul	 7	 3:00	0	-
+ Rule	Morocco	2013	only	-	Aug	10	 2:00	1:00	S
+ Rule	Morocco	2013	max	-	Oct	lastSun	 3:00	0	-
+-Rule	Morocco	2014	2022	-	Mar	lastSun	 2:00	1:00	S
++Rule	Morocco	2014	2021	-	Mar	lastSun	 2:00	1:00	S
+ Rule	Morocco	2014	only	-	Jun	28	 3:00	0	-
+ Rule	Morocco	2014	only	-	Aug	 2	 2:00	1:00	S
+-Rule	Morocco	2015	only	-	Jun	13	 3:00	0	-
+-Rule	Morocco	2015	only	-	Jul	18	 2:00	1:00	S
+-Rule	Morocco	2016	only	-	Jun	 4	 3:00	0	-
+-Rule	Morocco	2016	only	-	Jul	 9	 2:00	1:00	S
+-Rule	Morocco	2017	only	-	May	20	 3:00	0	-
+-Rule	Morocco	2017	only	-	Jul	 1	 2:00	1:00	S
+-Rule	Morocco	2018	only	-	May	12	 3:00	0	-
+-Rule	Morocco	2018	only	-	Jun	16	 2:00	1:00	S
+-Rule	Morocco	2019	only	-	May	 4	 3:00	0	-
+-Rule	Morocco	2019	only	-	Jun	 8	 2:00	1:00	S
+-Rule	Morocco	2020	only	-	Apr	18	 3:00	0	-
+-Rule	Morocco	2020	only	-	May	30	 2:00	1:00	S
+-Rule	Morocco	2021	only	-	Apr	10	 3:00	0	-
+-Rule	Morocco	2021	only	-	May	15	 2:00	1:00	S
+-Rule	Morocco	2022	only	-	Apr	 2	 3:00	0	-
+-Rule	Morocco	2022	only	-	May	 7	 2:00	1:00	S
+-Rule	Morocco	2023	only	-	Apr	22	 2:00	1:00	S
+-Rule	Morocco	2024	only	-	Apr	13	 2:00	1:00	S
+-Rule	Morocco	2025	only	-	Apr	 5	 2:00	1:00	S
++Rule	Morocco	2015	only	-	Jun	14	 3:00	0	-
++Rule	Morocco	2015	only	-	Jul	19	 2:00	1:00	S
++Rule	Morocco	2016	only	-	Jun	 5	 3:00	0	-
++Rule	Morocco	2016	only	-	Jul	10	 2:00	1:00	S
++Rule	Morocco	2017	only	-	May	21	 3:00	0	-
++Rule	Morocco	2017	only	-	Jul	 2	 2:00	1:00	S
++Rule	Morocco	2018	only	-	May	13	 3:00	0	-
++Rule	Morocco	2018	only	-	Jun	17	 2:00	1:00	S
++Rule	Morocco	2019	only	-	May	 5	 3:00	0	-
++Rule	Morocco	2019	only	-	Jun	 9	 2:00	1:00	S
++Rule	Morocco	2020	only	-	Apr	19	 3:00	0	-
++Rule	Morocco	2020	only	-	May	24	 2:00	1:00	S
++Rule	Morocco	2021	only	-	Apr	11	 3:00	0	-
++Rule	Morocco	2021	only	-	May	16	 2:00	1:00	S
++Rule	Morocco	2022	only	-	May	 8	 2:00	1:00	S
++Rule	Morocco	2023	only	-	Apr	23	 2:00	1:00	S
++Rule	Morocco	2024	only	-	Apr	14	 2:00	1:00	S
++Rule	Morocco	2025	only	-	Apr	 6	 2:00	1:00	S
+ Rule	Morocco	2026	max	-	Mar	lastSun	 2:00	1:00	S
+-Rule	Morocco	2035	only	-	Oct	27	 3:00	0	-
+-Rule	Morocco	2036	only	-	Oct	18	 3:00	0	-
+-Rule	Morocco	2037	only	-	Oct	10	 3:00	0	-
++Rule	Morocco	2036	only	-	Oct	19	 3:00	0	-
++Rule	Morocco	2037	only	-	Oct	 4	 3:00	0	-
+ 
+ # Zone	NAME		GMTOFF	RULES	FORMAT	[UNTIL]
+ Zone Africa/Casablanca	-0:30:20 -	LMT	1913 Oct 26
+diff --git a/src/main/java/org/joda/time/tz/src/northamerica b/src/main/java/org/joda/time/tz/src/northamerica
+index c3af9eb39..88423e61a 100644
+--- a/src/main/java/org/joda/time/tz/src/northamerica
++++ b/src/main/java/org/joda/time/tz/src/northamerica
+@@ -2661,7 +2661,17 @@ Zone Atlantic/Bermuda	-4:19:18 -	LMT	1930 Jan  1  2:00 # Hamilton
+ 			-4:00	US	A%sT
+ 
+ # Cayman Is
+-# See America/Panama.
++
++# From Paul Eggert (2015-05-15):
++# The Cayman government has decided to introduce DST in 2016, the idea being
++# to keep in sync with New York.  The legislation hasn't passed but the change
++# seems quite likely.  See: Meade B. Cayman 27.
++# http://www.cayman27.com.ky/2015/05/15/clock-ticks-toward-daylight-saving-time-in-cayman
++
++Zone	America/Cayman	-5:25:32 -	LMT	1890     # Georgetown
++			-5:07:11 -	KMT	1912 Feb # Kingston Mean Time
++			-5:00	-	EST	2016
++			-5:00	US	E%sT
+ 
+ # Costa Rica
+ 
+@@ -3184,7 +3194,6 @@ Zone	America/Managua	-5:45:08 -	LMT	1890
+ Zone	America/Panama	-5:18:08 -	LMT	1890
+ 			-5:19:36 -	CMT	1908 Apr 22 # Colón Mean Time
+ 			-5:00	-	EST
+-Link America/Panama America/Cayman
+ 
+ # Puerto Rico
+ # There are too many San Juans elsewhere, so we'll use 'Puerto_Rico'.
+diff --git a/src/main/java/org/joda/time/tz/src/southamerica b/src/main/java/org/joda/time/tz/src/southamerica
+index be63a88d5..6bbc2c8f8 100644
+--- a/src/main/java/org/joda/time/tz/src/southamerica
++++ b/src/main/java/org/joda/time/tz/src/southamerica
+@@ -30,7 +30,7 @@
+ #	I suggest the use of _Summer time_ instead of the more cumbersome
+ #	_daylight-saving time_.  _Summer time_ seems to be in general use
+ #	in Europe and South America.
+-#	-- E O Cutler, _New York Times_ (1937-02-14), quoted in
++#	-- E O Cutler, _New York Times_ (1937-02-14), quoted in
+ #	H L Mencken, _The American Language: Supplement I_ (1960), p 466
+ #
+ # Earlier editions of these tables also used the North American style
+
+From 1bf5a1945724a2811e2615eb48551e7eb099f02d Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Mon, 15 Jun 2015 14:50:36 +0100
+Subject: [PATCH 6/8] Update maven site plugin
+
+---
+ pom.xml | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/pom.xml b/pom.xml
+index 731758b6b..29de2aacb 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -436,7 +436,7 @@
+       <plugin><!-- invoke with mvn site-deploy -->
+         <groupId>com.github.github</groupId>
+         <artifactId>site-maven-plugin</artifactId>
+-        <version>0.11</version>
++        <version>0.12</version>
+         <executions>
+           <execution>
+             <id>github-site</id>
+
+From fb60aeb5598ed5c0b38e44f4e97ff4a7c6876c95 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Mon, 15 Jun 2015 15:16:31 +0100
+Subject: [PATCH 7/8] Update maven assembly plugin
+
+---
+ pom.xml | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/pom.xml b/pom.xml
+index 29de2aacb..95c5ba55f 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -760,7 +760,7 @@
+   <!-- ==================================================================== -->
+   <properties>
+     <!-- Plugin version numbers -->
+-    <maven-assembly-plugin.version>2.5.4</maven-assembly-plugin.version>
++    <maven-assembly-plugin.version>2.5.5</maven-assembly-plugin.version>
+     <maven-changes-plugin.version>2.11</maven-changes-plugin.version>
+     <maven-checkstyle-plugin.version>2.15</maven-checkstyle-plugin.version>
+     <maven-clean-plugin.version>2.6.1</maven-clean-plugin.version>
+
+From 6da4053f224c0af1a4be780954a14631d6205403 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Mon, 15 Jun 2015 15:16:31 +0100
+Subject: [PATCH 8/8] Release 2.8.1
+
+---
+ README.md                      |  4 +--
+ pom.xml                        |  2 +-
+ src/conf/MANIFEST.MF           | 18 ++++++------
+ src/site/markdown/index.md     | 10 +++----
+ src/site/xdoc/installation.xml |  1 +
+ src/site/xdoc/upgradeto281.xml | 51 ++++++++++++++++++++++++++++++++++
+ 6 files changed, 69 insertions(+), 17 deletions(-)
+ create mode 100644 src/site/xdoc/upgradeto281.xml
+
+diff --git a/README.md b/README.md
+index 1672b60d9..2037b4e46 100644
+--- a/README.md
++++ b/README.md
+@@ -46,11 +46,11 @@ Various documentation is available:
+ 
+ 
+ ### Releases
+-[Release 2.8](http://www.joda.org/joda-time/download.html) is the current latest release.
++[Release 2.8.1](http://www.joda.org/joda-time/download.html) is the current latest release.
+ This release is considered stable and worthy of the 1.x tag.
+ It depends on JDK 1.5 or later.
+ 
+-Available in the [Maven Central repository](http://search.maven.org/#artifactdetails|joda-time|joda-time|2.8|jar)
++Available in the [Maven Central repository](http://search.maven.org/#artifactdetails|joda-time|joda-time|2.8.1|jar)
+ 
+ 
+ ### Related projects
+diff --git a/pom.xml b/pom.xml
+index 95c5ba55f..8e288e77e 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -9,7 +9,7 @@
+   <artifactId>joda-time</artifactId>
+   <packaging>jar</packaging>
+   <name>Joda-Time</name>
+-  <version>2.8.1-SNAPSHOT</version>
++  <version>2.8.1</version>
+   <description>Date and time library to replace JDK date handling</description>
+   <url>http://www.joda.org/joda-time/</url>
+ 
+diff --git a/src/conf/MANIFEST.MF b/src/conf/MANIFEST.MF
+index bdac042e7..00adb8edf 100644
+--- a/src/conf/MANIFEST.MF
++++ b/src/conf/MANIFEST.MF
+@@ -5,19 +5,19 @@ Specification-Vendor: Joda.org
+ Specification-Version: 2.8
+ Implementation-Vendor: Joda.org
+ Implementation-Title: org.joda.time
+-Implementation-Version: 2.8
++Implementation-Version: 2.8.1
+ Implementation-Vendor-Id: org.joda
+ Bundle-ManifestVersion: 2
+ Bundle-Vendor: Joda.org
+ Bundle-Name: Joda-Time
+ Bundle-SymbolicName: joda-time
+-Bundle-Version: 2.8
+-Export-Package: org.joda.time;version=2.8,
+- org.joda.time.base;version=2.8,
+- org.joda.time.chrono;version=2.8,
+- org.joda.time.convert;version=2.8,
+- org.joda.time.field;version=2.8,
+- org.joda.time.format;version=2.8,
+- org.joda.time.tz;version=2.8
++Bundle-Version: 2.8.1
++Export-Package: org.joda.time;version=2.8.1,
++ org.joda.time.base;version=2.8.1,
++ org.joda.time.chrono;version=2.8.1,
++ org.joda.time.convert;version=2.8.1,
++ org.joda.time.field;version=2.8.1,
++ org.joda.time.format;version=2.8.1,
++ org.joda.time.tz;version=2.8.1
+ Bundle-License: Apache 2.0
+ Bundle-DocURL: http://www.joda.org/joda-time/
+diff --git a/src/site/markdown/index.md b/src/site/markdown/index.md
+index 8a96d1f20..c0a1327bf 100644
+--- a/src/site/markdown/index.md
++++ b/src/site/markdown/index.md
+@@ -125,21 +125,21 @@ Joda-Time is licenced under the business friendly <a href="license.html">Apache
+ 
+ ## <i></i> Releases
+ 
+-[Release 2.8](download.html) is the current latest release.
++[Release 2.8.1](download.html) is the current latest release.
+ This release is considered stable and worthy of the 2.x tag.
+-See the [upgrade notes](upgradeto280.html) for full details.
++See the [upgrade notes](upgradeto281.html) for full details.
+ 
+ Joda-Time requires Java SE 5 or later and has [no dependencies](dependencies.html).
+ There is a *compile-time* dependency on [Joda-Convert](http://www.joda.org/joda-convert/),
+ but this is not required at runtime thanks to the magic of annotations.
+ 
+-Available in [Maven Central](http://search.maven.org/#artifactdetails%7Cjoda-time%7Cjoda-time%7C2.8%7Cjar).
++Available in [Maven Central](http://search.maven.org/#artifactdetails%7Cjoda-time%7Cjoda-time%7C2.8.1%7Cjar).
+ 
+ ```xml
+ <dependency>
+   <groupId>joda-time</groupId>
+   <artifactId>joda-time</artifactId>
+-  <version>2.8</version>
++  <version>2.8.1</version>
+ </dependency>
+ ```
+ 
+@@ -153,7 +153,7 @@ Key changes included the use of Java SE 5 or later, generics, and the removal of
+ deprecated methods. See the [upgrade notes](upgradeto200.html) for full details when upgrading from 1.x
+ including information on the corner cases that are not compatible.
+ The ancient release [1.6.2](https://sourceforge.net/projects/joda-time/files/joda-time/1.6.2/) was
+-the last release to support Java SE 4 and the last v1.x release
++the last release to support Java SE 4 and the last v1.x release.
+ 
+ 
+ ---
+diff --git a/src/site/xdoc/installation.xml b/src/site/xdoc/installation.xml
+index 87a1ca52d..8ddc045b1 100644
+--- a/src/site/xdoc/installation.xml
++++ b/src/site/xdoc/installation.xml
+@@ -22,6 +22,7 @@ of the source code suitable for linking to the jar file in IDEs such as Eclipse.
+ <p>
+ The release notes for upgraders can be found here:
+ <ul>
++<li><a href="upgradeto281.html">Version 2.8.1</a> - upgrade from Version 2.8</li>
+ <li><a href="upgradeto280.html">Version 2.8</a> - upgrade from Version 2.7</li>
+ <li><a href="upgradeto270.html">Version 2.7</a> - upgrade from Version 2.6</li>
+ <li><a href="upgradeto260.html">Version 2.6</a> - upgrade from Version 2.5</li>
+diff --git a/src/site/xdoc/upgradeto281.xml b/src/site/xdoc/upgradeto281.xml
+new file mode 100644
+index 000000000..7ad3894b7
+--- /dev/null
++++ b/src/site/xdoc/upgradeto281.xml
+@@ -0,0 +1,51 @@
++<?xml version="1.0" encoding="ISO-8859-1"?>
++
++<document>
++ <properties>
++  <title>Java date and time API - Upgrade from 2.8 to 2.8.1</title>
++  <author>Stephen Colebourne</author>
++ </properties>
++
++<body>
++
++<section name="Upgrade">
++<p>
++These are the release notes and advice for upgrading Joda-Time from version 2.8 to version 2.8.1.
++<source>
++Joda-Time version 2.8.1
++-----------------------
++
++Joda-Time is a date and time handling library that seeks to replace the JDK
++Date and Calendar classes.
++
++This release contains enhancements, bug fixes and a time zone update.
++The release runs on JDK 5 or later.
++
++Joda-Time is licensed under the business-friendly Apache License Version 2.
++This is the same license as all of Apache, plus other open source projects such as Spring.
++The intent is to make the code available to the Java community with the minimum
++of restrictions. If the license causes you problems please contact the mailing list.
++
++**  Please also check out our related projects   **
++** http://www.joda.org/joda-time/related.html **
++
++
++Changes in 2.8.1
++================
++- Fixed to handle JDK 8u60 [#288, #291]
++  Without this fix, formatting a time-zone will print "+00:00" instead of "GMT" for the GMT time-zone
++
++- DateTimeZone data updated to version 2015e
++
++
++Changes in 2.8.0
++================
++
++See http://www.joda.org/joda-time/upgradeto280.html
++
++</source>
++</p>
++</section>
++
++</body>
++</document>

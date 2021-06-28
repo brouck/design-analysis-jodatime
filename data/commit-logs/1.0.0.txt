@@ -1,0 +1,2430 @@
+From ad1be7578f5822b29a3b14149f462298d6b5553d Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Fri, 18 Feb 2005 00:08:25 +0000
+Subject: [PATCH 01/12] Remove deprecated methods for 1.0
+
+git-svn-id: https://joda-time.svn.sourceforge.net/svnroot/joda-time/trunk@721 1e1cfbb7-5c0e-0410-a2f0-f98d92ec03a1
+---
+ .../src/java/org/joda/time/DateTimeZone.java  | 37 ---------
+ .../src/java/org/joda/time/TimeOfDay.java     | 18 -----
+ .../src/java/org/joda/time/YearMonthDay.java  | 18 -----
+ .../org/joda/time/format/DateTimeFormat.java  | 10 ---
+ .../joda/time/format/DateTimeFormatter.java   | 81 -------------------
+ .../joda/time/format/ISODateTimeFormat.java   | 12 ---
+ .../org/joda/time/format/ISOPeriodFormat.java | 12 ---
+ .../org/joda/time/format/PeriodFormat.java    | 23 ------
+ .../org/joda/time/format/PeriodFormatter.java | 18 -----
+ 9 files changed, 229 deletions(-)
+
+diff --git a/JodaTime/src/java/org/joda/time/DateTimeZone.java b/JodaTime/src/java/org/joda/time/DateTimeZone.java
+index 9ca2bb6af..9a13af048 100644
+--- a/JodaTime/src/java/org/joda/time/DateTimeZone.java
++++ b/JodaTime/src/java/org/joda/time/DateTimeZone.java
+@@ -311,43 +311,6 @@ public static DateTimeZone forTimeZone(TimeZone zone) {
+         throw new IllegalArgumentException("The datetime zone id is not recognised: " + id);
+     }
+ 
+-    //-----------------------------------------------------------------------
+-    /**
+-     * Deprecated, use {@link #forID(String)}.
+-     * 
+-     * @deprecated use forID(String)
+-     */
+-    public static DateTimeZone getInstance(String id) {
+-        return forID(id);
+-    }
+-
+-    /**
+-     * Deprecated, use {@link #forOffsetHours(int)}.
+-     * 
+-     * @deprecated use forOffsetHours(int)
+-     */
+-    public static DateTimeZone getInstance(int hours) {
+-        return forOffsetHours(hours);
+-    }
+-
+-    /**
+-     * Deprecated, use {@link #forOffsetHoursMinutes(int, int)}.
+-     * 
+-     * @deprecated use forOffsetHoursMinutes(int,int)
+-     */
+-    public static DateTimeZone getInstance(int hours, int mins) {
+-        return forOffsetHoursMinutes(hours, mins);
+-    }
+-
+-    /**
+-     * Deprecated, use {@link #forTimeZone(TimeZone)}.
+-     * 
+-     * @deprecated use forTimeZone(TimeZone)
+-     */
+-    public static DateTimeZone getInstance(TimeZone jdkZone) {
+-        return forTimeZone(jdkZone);
+-    }
+-
+     //-----------------------------------------------------------------------
+     /**
+      * Gets the zone using a fixed offset amount.
+diff --git a/JodaTime/src/java/org/joda/time/TimeOfDay.java b/JodaTime/src/java/org/joda/time/TimeOfDay.java
+index f4fe22c27..05caf8535 100644
+--- a/JodaTime/src/java/org/joda/time/TimeOfDay.java
++++ b/JodaTime/src/java/org/joda/time/TimeOfDay.java
+@@ -545,24 +545,6 @@ public Property property(DateTimeFieldType type) {
+     }
+ 
+     //-----------------------------------------------------------------------
+-    /**
+-     * Deprecated, use toDateTimeToday.
+-     * 
+-     * @deprecated use toDateTimeToday
+-     */
+-    public DateTime toDateTime() {
+-        return toDateTimeToday(null);
+-    }
+-
+-    /**
+-     * Deprecated, use toDateTimeToday.
+-     * 
+-     * @deprecated use toDateTimeToday
+-     */
+-    public DateTime toDateTime(DateTimeZone zone) {
+-        return toDateTimeToday(zone);
+-    }
+-
+     /**
+      * Converts this partial to a full datetime using the default time zone
+      * setting the time fields from this instance and the date fields from
+diff --git a/JodaTime/src/java/org/joda/time/YearMonthDay.java b/JodaTime/src/java/org/joda/time/YearMonthDay.java
+index 8c7bc92b8..072598b27 100644
+--- a/JodaTime/src/java/org/joda/time/YearMonthDay.java
++++ b/JodaTime/src/java/org/joda/time/YearMonthDay.java
+@@ -459,24 +459,6 @@ public DateTime toDateTimeAtMidnight(DateTimeZone zone) {
+     }
+ 
+     //-----------------------------------------------------------------------
+-    /**
+-     * Deprecated, use toDateAtCurrentTime.
+-     * 
+-     * @deprecated use toDateAtCurrentTime
+-     */
+-    public DateTime toDateTime() {
+-        return toDateTimeAtCurrentTime(null);
+-    }
+-
+-    /**
+-     * Deprecated, use toDateAtCurrentTime.
+-     * 
+-     * @deprecated use toDateAtCurrentTime
+-     */
+-    public DateTime toDateTime(DateTimeZone zone) {
+-        return toDateTimeAtCurrentTime(zone);
+-    }
+-
+     /**
+      * Converts this partial to a full datetime using the default time zone
+      * setting the date fields from this instance and the time fields from
+diff --git a/JodaTime/src/java/org/joda/time/format/DateTimeFormat.java b/JodaTime/src/java/org/joda/time/format/DateTimeFormat.java
+index 226d21aa8..2d70714c4 100644
+--- a/JodaTime/src/java/org/joda/time/format/DateTimeFormat.java
++++ b/JodaTime/src/java/org/joda/time/format/DateTimeFormat.java
+@@ -351,16 +351,6 @@ static void appendPatternTo(DateTimeFormatterBuilder builder, String pattern) {
+         parsePatternTo(builder, pattern);
+     }
+ 
+-    //-----------------------------------------------------------------------
+-    /**
+-     * Deprecated, methods on DateTimeFormat are now static.
+-     * 
+-     * @deprecated remove this call as the methods are now static
+-     */
+-    public static DateTimeFormat getInstance() {
+-        return new DateTimeFormat();
+-    }
+-
+     //-----------------------------------------------------------------------
+     /**
+      * Constructor.
+diff --git a/JodaTime/src/java/org/joda/time/format/DateTimeFormatter.java b/JodaTime/src/java/org/joda/time/format/DateTimeFormatter.java
+index ad7308cf2..e43f2fe8a 100644
+--- a/JodaTime/src/java/org/joda/time/format/DateTimeFormatter.java
++++ b/JodaTime/src/java/org/joda/time/format/DateTimeFormatter.java
+@@ -457,60 +457,6 @@ private void checkPrinter() {
+         }
+     }
+ 
+-    /**
+-     * Deprecated, use withZone(zone).printTo(buf, millis).
+-     * 
+-     * @deprecated use withZone(zone).printTo(buf, millis)
+-     */
+-    public void print(StringBuffer buf, long millis, DateTimeZone zone) {
+-        withChronology(null).withZone(zone).printTo(buf, millis);
+-    }
+-
+-    /**
+-     * Deprecated, use withChronology(chrono).printTo(buf, millis).
+-     * 
+-     * @deprecated use withChronology(chrono).printTo(buf, millis)
+-     */
+-    public void print(StringBuffer buf, long millis, Chronology chrono) {
+-        withZone(null).withChronology(chrono).printTo(buf, millis);
+-    }
+-
+-    /**
+-     * Deprecated, use withZone(zone).printTo(out, millis).
+-     * 
+-     * @deprecated use withZone(zone).printTo(out, millis)
+-     */
+-    public void print(Writer out, long millis, DateTimeZone zone) throws IOException {
+-        withChronology(null).withZone(zone).printTo(out, millis);
+-    }
+-
+-    /**
+-     * Deprecated, use withChronology(chrono).printTo(out, millis).
+-     * 
+-     * @deprecated use withChronology(chrono).printTo(out, millis)
+-     */
+-    public void print(Writer out, long millis, Chronology chrono) throws IOException {
+-        withZone(null).withChronology(chrono).printTo(out, millis);
+-    }
+-
+-    /**
+-     * Deprecated, use withZone(zone).print(millis).
+-     * 
+-     * @deprecated use withZone(zone).print(millis)
+-     */
+-    public String print(long millis, DateTimeZone zone) {
+-        return withChronology(null).withZone(zone).print(millis);
+-    }
+-
+-    /**
+-     * Deprecated, use withChronology(chrono).print(millis).
+-     * 
+-     * @deprecated use withChronology(chrono).print(millis)
+-     */
+-    public String print(long millis, Chronology chrono) {
+-        return withZone(null).withChronology(chrono).print(millis);
+-    }
+-
+     //-----------------------------------------------------------------------
+     /**
+      * Parses a datetime from the given text, at the given position, saving the
+@@ -681,33 +627,6 @@ private void checkParser() {
+         }
+     }
+ 
+-    /**
+-     * Deprecated, use withChronology(chrono).parseMillis(str).
+-     * 
+-     * @deprecated use withChronology(chrono).parseMillis(str)
+-     */
+-    public long parseMillis(String text, Chronology chrono) {
+-        return withZone(null).withChronology(chrono).parseMillis(text);
+-    }
+-
+-    /**
+-     * Deprecated, use withChronology(chrono).parseDateTime(str).
+-     * 
+-     * @deprecated use withChronology(chrono).parseDateTime(str)
+-     */
+-    public DateTime parseDateTime(String text, Chronology chrono) {
+-        return withZone(null).withChronology(chrono).parseDateTime(text);
+-    }
+-
+-    /**
+-     * Deprecated, use withChronology(chrono).parseMutableDateTime(str).
+-     * 
+-     * @deprecated use withChronology(chrono).parseMutableDateTime(str)
+-     */
+-    public MutableDateTime parseMutableDateTime(String text, Chronology chrono) {
+-        return withZone(null).withChronology(chrono).parseMutableDateTime(text);
+-    }
+-
+     //-----------------------------------------------------------------------
+     /**
+      * Determines the correct chronology to use.
+diff --git a/JodaTime/src/java/org/joda/time/format/ISODateTimeFormat.java b/JodaTime/src/java/org/joda/time/format/ISODateTimeFormat.java
+index 743ce0ed5..1b40b61c4 100644
+--- a/JodaTime/src/java/org/joda/time/format/ISODateTimeFormat.java
++++ b/JodaTime/src/java/org/joda/time/format/ISODateTimeFormat.java
+@@ -44,18 +44,6 @@
+  */
+ public class ISODateTimeFormat {
+ 
+-    /** The singleton instance. */
+-    private static final ISODateTimeFormat INSTANCE = new ISODateTimeFormat();
+-
+-    /**
+-     * Deprecated, use static methods instead.
+-     * 
+-     * @deprecated remove method call, as methods are now static
+-     */
+-    public static ISODateTimeFormat getInstance() {
+-        return INSTANCE;
+-    }
+-
+     //-----------------------------------------------------------------------
+     private static DateTimeFormatter
+         ye,  // year element (yyyy)
+diff --git a/JodaTime/src/java/org/joda/time/format/ISOPeriodFormat.java b/JodaTime/src/java/org/joda/time/format/ISOPeriodFormat.java
+index 818256e38..99b037d0a 100644
+--- a/JodaTime/src/java/org/joda/time/format/ISOPeriodFormat.java
++++ b/JodaTime/src/java/org/joda/time/format/ISOPeriodFormat.java
+@@ -32,9 +32,6 @@
+  */
+ public class ISOPeriodFormat {
+ 
+-    /** @deprecated */
+-    private static final ISOPeriodFormat INSTANCE = new ISOPeriodFormat();
+-
+     /** Cache of standard format. */
+     private static PeriodFormatter cStandard;
+     /** Cache of alternate months format. */
+@@ -46,15 +43,6 @@
+     /** Cache of alternate extended weeks format. */
+     private static PeriodFormatter cAlternateExtendedWihWeeks;
+ 
+-    /**
+-     * Deprecated, methods are now static.
+-     * 
+-     * @deprecated use static methods
+-     */
+-    public static ISOPeriodFormat getInstance() {
+-        return INSTANCE;
+-    }
+-
+     /**
+      * Constructor.
+      */
+diff --git a/JodaTime/src/java/org/joda/time/format/PeriodFormat.java b/JodaTime/src/java/org/joda/time/format/PeriodFormat.java
+index a96ae9f1f..61bc198b1 100644
+--- a/JodaTime/src/java/org/joda/time/format/PeriodFormat.java
++++ b/JodaTime/src/java/org/joda/time/format/PeriodFormat.java
+@@ -15,8 +15,6 @@
+  */
+ package org.joda.time.format;
+ 
+-import java.util.Locale;
+-
+ /**
+  * Factory that creates instances of PeriodFormatter.
+  * <p>
+@@ -34,30 +32,9 @@
+  */
+ public class PeriodFormat {
+ 
+-    /** @deprecated */
+-    private static final PeriodFormat INSTANCE = new PeriodFormat();
+-
+     /** An english words based formatter. */
+     private static PeriodFormatter cEnglishWords;
+ 
+-    /**
+-     * Deprecated, methods are now static.
+-     * 
+-     * @deprecated use static methods
+-     */
+-    public static PeriodFormat getInstance() {
+-        return INSTANCE;
+-    }
+-
+-    /**
+-     * Deprecated, methods are now static.
+-     * 
+-     * @deprecated use static methods
+-     */
+-    public static PeriodFormat getInstance(Locale locale) {
+-        return INSTANCE;
+-    }
+-
+     /**
+      * Constructor.
+      */
+diff --git a/JodaTime/src/java/org/joda/time/format/PeriodFormatter.java b/JodaTime/src/java/org/joda/time/format/PeriodFormatter.java
+index a5f14b146..5a80b31bc 100644
+--- a/JodaTime/src/java/org/joda/time/format/PeriodFormatter.java
++++ b/JodaTime/src/java/org/joda/time/format/PeriodFormatter.java
+@@ -326,24 +326,6 @@ public MutablePeriod parseMutablePeriod(String text) {
+         throw new IllegalArgumentException(FormatUtils.createErrorMessage(text, newPos));
+     }
+ 
+-    /**
+-     * Deprecated, use withParseType(type).parsePeriod(p).
+-     *
+-     * @deprecated use withParseType(type).parsePeriod(p).
+-     */
+-    public Period parsePeriod(PeriodType type, String text) {
+-        return withParseType(type).parsePeriod(text);
+-    }
+-
+-    /**
+-     * Deprecated, use withParseType(type).parseMutablePeriod(p).
+-     *
+-     * @deprecated use withParseType(type).parseMutablePeriod(p).
+-     */
+-    public MutablePeriod parseMutablePeriod(PeriodType type, String text) {
+-        return withParseType(type).parseMutablePeriod(text);
+-    }
+-
+     /**
+      * Checks whether parsing is supported.
+      * 
+
+From dcacae9dc3dbc0a624460c45ac8fdf312c9a605a Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Fri, 18 Feb 2005 00:52:40 +0000
+Subject: [PATCH 02/12] Add online upgrade notes
+
+git-svn-id: https://joda-time.svn.sourceforge.net/svnroot/joda-time/trunk@722 1e1cfbb7-5c0e-0410-a2f0-f98d92ec03a1
+---
+ JodaTime/xdocs/installation.xml |   7 ++
+ JodaTime/xdocs/upgradeto099.xml | 186 ++++++++++++++++++++++++++++++++
+ JodaTime/xdocs/upgradeto100.xml |  22 ++++
+ 3 files changed, 215 insertions(+)
+ create mode 100644 JodaTime/xdocs/upgradeto099.xml
+ create mode 100644 JodaTime/xdocs/upgradeto100.xml
+
+diff --git a/JodaTime/xdocs/installation.xml b/JodaTime/xdocs/installation.xml
+index fcbf784f9..498f0ccd8 100644
+--- a/JodaTime/xdocs/installation.xml
++++ b/JodaTime/xdocs/installation.xml
+@@ -15,6 +15,13 @@ You can download the latest version of Joda-Time
+ Once the "joda-time.jar" is in your classpath, you will be able to use Joda-Time.
+ </p>
+ <p>
++The release notes for upgraders can be found here:
++<ul>
++<li><a href="upgradeto100.html">Version 0.99 to Version 1.0</a></li>
++<li><a href="upgradeto099.html">Version 0.98 to Version 0.99</a></li>
++</ul>
++</p>
++<p>
+ Unless you have a specific reason to do otherwise, it is advisable to use the
+ binary download. If you want to build Joda-Time from source you will need
+ <a href="http://ant.apache.org">Apache Ant</a>.
+diff --git a/JodaTime/xdocs/upgradeto099.xml b/JodaTime/xdocs/upgradeto099.xml
+new file mode 100644
+index 000000000..57b5cbad2
+--- /dev/null
++++ b/JodaTime/xdocs/upgradeto099.xml
+@@ -0,0 +1,186 @@
++<?xml version="1.0" encoding="ISO-8859-1"?>
++
++<document>
++ <properties>
++  <title>Java date and time API - Upgrade from 0.98 to 0.99</title>
++  <author email="scolebourne@joda.org">Stephen Colebourne</author>
++ </properties>
++
++<body>
++
++<section name="Upgrade">
++<p>
++These are the release notes and advice for upgrading Joda-Time from
++version 0.98 to version 0.99.
++<source>
++Joda-Time version 0.99
++----------------------
++
++Joda-Time is a date and time handling library that seeks to replace the JDK
++Date and Calendar classes.
++
++This is the last pre-beta release of Joda-Time.
++
++We now recommend JDK 1.3 or later, and have performed no testing on earlier JDKs.
++
++      ******************************************
++      *  The license of Joda-Time has changed  *
++      *                                        *
++      *    Previous license: BSD-style         *
++      *    New license: Apache License v2      *
++      ******************************************
++
++This change should have no impact on users of the code, as the licenses both have the
++same intent - that is to make the code freely available with a minimum of restrictions.
++
++
++Incompatible changes since 0.98
++-------------------------------
++Please contact joda-interest@lists.sourceforge.net if you have difficulties upgrading
++This release is both source and binary incompatible with 0.98
++
++- Formatting package reworked
++  This mainly affects those doing low level formatting work.
++  A deprecated interface has been added for 0.99 for some methods.
++
++  DateTimeFormatter/PeriodFormatter changed from interface to class.
++  These classes are now the main formatting API.
++  You still create them via the same factory classes, such as DateTimeFormat.
++  Most methods, and all functionality, have been retained, but some are deprecated (see below).
++
++  DateTimePrinter/DateTimeParser/PeriodPrinter/PeriodParser are now internal classes.
++  Applications will use DateTimeFormatter/PeriodFormatter.
++  Any references to DateTimePrinter/DateTimeParser/PeriodPrinter/PeriodParser in
++  your application should be changed to DateTimeFormatter/PeriodFormatter.
++  (Unless you are implementing your own printer/parser)
++
++  DateTimeFormatterBuilder usage changes
++   DateTimeFormatterBuilder.toPrinter() --> DateTimeFormatterBuilder.toFormatter()
++   DateTimeFormatterBuilder.toParser() --> DateTimeFormatterBuilder.toFormatter()
++  The isPrinter() and isParser() methods on DateTimeFormatter tell you about the status of the formatter.
++  Make similar changes for PeriodFormatterBuilder.
++
++  Format factory classes now define static methods
++   DateTimeFormat.getInstance().xxx() --> DateTimeFormat.xxx()
++   DateTimeFormat.getInstance(locale).xxx() --> DateTimeFormat.xxx().withLocale()
++  and so on for ISODateFormat, PeriodFormat and ISOPeriodFormat
++
++  DateTimeFormat.appendPatternTo(formatter, pattern) --> f.appendPattern(pattern)
++  DateTimeFormat.getPatternForStyle --> Removed, please contact mailing list
++  
++  BaseDateTimeFormatter/BasePeriodFormatter
++  Classes removed, behaviour moved into DateTimeFormatter/PeriodFormatter
++  
++- DateTimeFormat pattern change
++  The time zone pattern 'ZZZZ' previously output a time zone offset like '+08:00'.
++  Now you need a pattern of 'ZZ' to output the offset.
++  The pattern 'ZZZZ' will now output the time zone id, such as 'Europe/London'.
++
++- ReadablePartial
++  - removed methods toDateTime(), toDateTime(DateTimeZone zone), as their meaning was confused.
++  Implementations on YearMonthDay/TimeOfDay are deprecated.
++
++- DateTime/DateMidnight/MutableDateTime
++  - removed getReadableInstant() from the property classes
++  On DateTime.Property, use getDateTime().
++  On DateMidnight.Property, use getDateMidnight().
++  On MutableDateTime.Property, use getMutableDateTime().
++
++- ReadableInstant
++  - added method isSupported(DateTimeFieldType field)
++  Implemented in DateTime/DateMidnight/MutableDateTime 
++
++- YearMonthDay/TimeOfDay
++  - removed getReadablePartial() from the property classes
++  On YearMonthDay.Property, use getYearMonthDay().
++  On TimeOfDay.Property, use getTimeOfDay().
++
++- TimeOfDay
++  - semantic change to TimeOfDay.Property.addToCopy()
++  Previously, add threw an exception if the 23:59/00:00 boundary was broken.
++  Now it wraps to the next 'day', as this is the more typical use case.
++  Change to the method TimeOfDay.Property.addNoWrapToCopy() to restore the old behaviour.
++
++
++Deprecations since 0.98
++-----------------------
++** ALL deprecated methods will be removed in 1.0 **
++Please contact joda-interest@lists.sourceforge.net if you have difficulties upgrading
++
++- Formatting package reworked
++  Factory classes now no longer have a static getInstance() method.
++   DateTimeFormat.getInstance().xxx() --> DateTimeFormat.xxx()
++   ISODateTimeFormat.getInstance().xxx() --> ISODateTimeFormat.xxx()
++   PeriodFormat.getInstance().xxx() --> PeriodFormat.xxx()
++   PeriodFormat.getInstance(locale).xxx() --> PeriodFormat.xxx().withLocale()
++   ISOPeriodFormat.getInstance().xxx() --> ISOPeriodFormat.xxx()
++  Some DateTimeFormatter methods deprecated.
++   f.print(millis, DateTimeZone) --> f.withZone(zone).print(millis)
++   f.print(millis, Chronology) --> f.withChronology(chrono).print(millis)
++   f.parseMillis(str, Chronology) --> f.withChronology(chrono).parseMillis(str)
++   f.parseDateTime(str, Chronology) --> f.withChronology(chrono).parseDateTime(str)
++   f.parseMutableDateTime(str, Chronology) --> f.withChronology(chrono).parseMutableDateTime(str)
++  Some PeriodFormatter methods deprecated.
++   f.parsePeriod(type, str) --> f.withType(type).parsePeriod(str)
++   f.parseMutablePeriod(type, str) --> f.withType(type).parseMutablePeriod(str)
++
++- DateTimeZone - factory methods changed:
++  getInstance() -> forID/forOffsetHours/forOffsetHoursMinutes/forTimeZone
++  Aim to clarify meaning of each method
++
++- YearMonthDay/TimeOfDay
++  - deprecated methods toDateTime(), toDateTime(DateTimeZone zone), as their meaning was confused.
++  On YearMonthDay, use toDateTimeAtCurrentTime() or toDateTimeAtMidnight().
++  On TimeOfDay, use toDateTimeToday().
++
++
++Bug fixes since 0.98
++--------------------
++- Interval/MutableInterval isAfter(ReadableInterval) - fixed bug when intervals abutted
++
++- Parsing periods of the form PT... - fixed bug that prevented parsing
++
++- Period parsing now more strict - 'T' character required to separate date and
++  time in ISO periods
++
++- Fixed parsing of fractional seconds in Periods
++
++- Default time zone based on offset was being interpreted as UTC
++
++- Fixed NullPointerException in DateTimeFormat
++
++- DateTimeFormat would use date style for time style
++
++- DateTimeFormatterBuilder was using wrong time zone for text fields
++
++- Avoid NPE in property(DateTimeFieldType) methods
++
++- Parsing two digit years using a pattern now follows JDK definition
++
++
++Enhancements since 0.98
++-----------------------
++- Formatting package much more powerful, and has potential to grow after 1.0 release
++
++- YearMonthDay/TimeOfDay
++  - add toString variants that take a pattern
++  - add withField(), withFieldAdded(), withPeriodAdded(), plus() and minus()
++
++- DateTimeField
++  - Add methods getAsText(int, Locale) and getAsShortText(int, Locale) for
++    simple access to text values
++
++- Period
++  - Added support to create periods from a duration and an end instant
++  - Periods can be converted to durations by end instant too
++
++- Duration
++  - Durations can be converted to periods by end instant too
++  - Durations can be converted to intervals by end instant too
++
++</source>
++</p>
++</section>
++
++</body>
++</document>
+diff --git a/JodaTime/xdocs/upgradeto100.xml b/JodaTime/xdocs/upgradeto100.xml
+new file mode 100644
+index 000000000..92b1dbd6c
+--- /dev/null
++++ b/JodaTime/xdocs/upgradeto100.xml
+@@ -0,0 +1,22 @@
++<?xml version="1.0" encoding="ISO-8859-1"?>
++
++<document>
++ <properties>
++  <title>Java date and time API - Upgrade from 0.99 to 1.0</title>
++  <author email="scolebourne@joda.org">Stephen Colebourne</author>
++ </properties>
++
++<body>
++
++<section name="Upgrade">
++<p>
++These are the release notes and advice for upgrading Joda-Time from
++version 0.99 to version 1.0.
++<source>
++	TODO
++</source>
++</p>
++</section>
++
++</body>
++</document>
+
+From 772cab190bdd1c50a6281dbe15203bd0155ef375 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Fri, 18 Feb 2005 00:53:40 +0000
+Subject: [PATCH 03/12] Prepare for 1.0
+
+git-svn-id: https://joda-time.svn.sourceforge.net/svnroot/joda-time/trunk@723 1e1cfbb7-5c0e-0410-a2f0-f98d92ec03a1
+---
+ JodaTime/RELEASE-NOTES.txt  | 167 +++++-------------------------------
+ JodaTime/ToDo.txt           |  94 +++++++++++---------
+ JodaTime/build.xml          |   2 +-
+ JodaTime/project.properties |   2 +-
+ JodaTime/project.xml        |   4 +-
+ 5 files changed, 78 insertions(+), 191 deletions(-)
+
+diff --git a/JodaTime/RELEASE-NOTES.txt b/JodaTime/RELEASE-NOTES.txt
+index 904ad1033..d161e88fc 100644
+--- a/JodaTime/RELEASE-NOTES.txt
++++ b/JodaTime/RELEASE-NOTES.txt
+@@ -1,167 +1,42 @@
+-Joda-Time version 0.99
+-----------------------
++Joda-Time version 1.0
++---------------------
+ 
+ Joda-Time is a date and time handling library that seeks to replace the JDK
+ Date and Calendar classes.
+ 
+-This is the last pre-beta release of Joda-Time.
++This is the first full release of Joda-Time.
++There have been numerous beta releases over an extended period of time.
+ 
+-We now recommend JDK 1.3 or later, and have performed no testing on earlier JDKs.
++We recommend JDK 1.3 or later, and have performed no testing on earlier JDKs.
+ 
+-      ******************************************
+-      *  The license of Joda-Time has changed  *
+-      *                                        *
+-      *    Previous license: BSD-style         *
+-      *    New license: Apache License v2      *
+-      ******************************************
++Joda-Time is licensed under the business-friendly Apache License Version 2.
++This is the same license as all of Apache, plus other open source projects such as Spring.
++The intent is to make the code available to the Java community with the minimum
++of restrictions. If the license cause you problems please contact the mailing list.
+ 
+-This change should have no impact on users of the code, as the licenses both have the
+-same intent - that is to make the code freely available with a minimum of restrictions.
+ 
+-
+-Incompatible changes since 0.98
++Incompatible changes since 0.99
+ -------------------------------
+-Please contact joda-interest@lists.sourceforge.net if you have difficulties upgrading
+-This release is both source and binary incompatible with 0.98
+-
+-- Formatting package reworked
+-  This mainly affects those doing low level formatting work.
+-  A deprecated interface has been added for 0.99 for some methods.
+-
+-  DateTimeFormatter/PeriodFormatter changed from interface to class.
+-  These classes are now the main formatting API.
+-  You still create them via the same factory classes, such as DateTimeFormat.
+-  Most methods, and all functionality, have been retained, but some are deprecated (see below).
+-
+-  DateTimePrinter/DateTimeParser/PeriodPrinter/PeriodParser are now internal classes.
+-  Applications will use DateTimeFormatter/PeriodFormatter.
+-  Any references to DateTimePrinter/DateTimeParser/PeriodPrinter/PeriodParser in
+-  your application should be changed to DateTimeFormatter/PeriodFormatter.
+-  (Unless you are implementing your own printer/parser)
+-
+-  DateTimeFormatterBuilder usage changes
+-   DateTimeFormatterBuilder.toPrinter() --> DateTimeFormatterBuilder.toFormatter()
+-   DateTimeFormatterBuilder.toParser() --> DateTimeFormatterBuilder.toFormatter()
+-  The isPrinter() and isParser() methods on DateTimeFormatter tell you about the status of the formatter.
+-  Make similar changes for PeriodFormatterBuilder.
+-
+-  Format factory classes now define static methods
+-   DateTimeFormat.getInstance().xxx() --> DateTimeFormat.xxx()
+-   DateTimeFormat.getInstance(locale).xxx() --> DateTimeFormat.xxx().withLocale()
+-  and so on for ISODateFormat, PeriodFormat and ISOPeriodFormat
+-
+-  DateTimeFormat.appendPatternTo(formatter, pattern) --> f.appendPattern(pattern)
+-  DateTimeFormat.getPatternForStyle --> Removed, please contact mailing list
+-  
+-  BaseDateTimeFormatter/BasePeriodFormatter
+-  Classes removed, behaviour moved into DateTimeFormatter/PeriodFormatter
+-  
+-- DateTimeFormat pattern change
+-  The time zone pattern 'ZZZZ' previously output a time zone offset like '+08:00'.
+-  Now you need a pattern of 'ZZ' to output the offset.
+-  The pattern 'ZZZZ' will now output the time zone id, such as 'Europe/London'.
++Deprecated methods removed.
++See http://joda-time.sourceforge.net/upgradeto099.html for 0.98 to 0.99 changes
+ 
+-- ReadablePartial
+-  - removed methods toDateTime(), toDateTime(DateTimeZone zone), as their meaning was confused.
+-  Implementations on YearMonthDay/TimeOfDay are deprecated.
+ 
+-- DateTime/DateMidnight/MutableDateTime
+-  - removed getReadableInstant() from the property classes
+-  On DateTime.Property, use getDateTime().
+-  On DateMidnight.Property, use getDateMidnight().
+-  On MutableDateTime.Property, use getMutableDateTime().
+-
+-- ReadableInstant
+-  - added method isSupported(DateTimeFieldType field)
+-  Implemented in DateTime/DateMidnight/MutableDateTime 
+-
+-- YearMonthDay/TimeOfDay
+-  - removed getReadablePartial() from the property classes
+-  On YearMonthDay.Property, use getYearMonthDay().
+-  On TimeOfDay.Property, use getTimeOfDay().
+-
+-- TimeOfDay
+-  - semantic change to TimeOfDay.Property.addToCopy()
+-  Previously, add threw an exception if the 23:59/00:00 boundary was broken.
+-  Now it wraps to the next 'day', as this is the more typical use case.
+-  Change to the method TimeOfDay.Property.addNoWrapToCopy() to restore the old behaviour.
+-
+-
+-Deprecations since 0.98
++Deprecations since 0.99
+ -----------------------
+-** ALL deprecated methods will be removed in 1.0 **
+-Please contact joda-interest@lists.sourceforge.net if you have difficulties upgrading
+-
+-- Formatting package reworked
+-  Factory classes now no longer have a static getInstance() method.
+-   DateTimeFormat.getInstance().xxx() --> DateTimeFormat.xxx()
+-   ISODateTimeFormat.getInstance().xxx() --> ISODateTimeFormat.xxx()
+-   PeriodFormat.getInstance().xxx() --> PeriodFormat.xxx()
+-   PeriodFormat.getInstance(locale).xxx() --> PeriodFormat.xxx().withLocale()
+-   ISOPeriodFormat.getInstance().xxx() --> ISOPeriodFormat.xxx()
+-  Some DateTimeFormatter methods deprecated.
+-   f.print(millis, DateTimeZone) --> f.withZone(zone).print(millis)
+-   f.print(millis, Chronology) --> f.withChronology(chrono).print(millis)
+-   f.parseMillis(str, Chronology) --> f.withChronology(chrono).parseMillis(str)
+-   f.parseDateTime(str, Chronology) --> f.withChronology(chrono).parseDateTime(str)
+-   f.parseMutableDateTime(str, Chronology) --> f.withChronology(chrono).parseMutableDateTime(str)
+-  Some PeriodFormatter methods deprecated.
+-   f.parsePeriod(type, str) --> f.withType(type).parsePeriod(str)
+-   f.parseMutablePeriod(type, str) --> f.withType(type).parseMutablePeriod(str)
+-
+-- DateTimeZone - factory methods changed:
+-  getInstance() -> forID/forOffsetHours/forOffsetHoursMinutes/forTimeZone
+-  Aim to clarify meaning of each method
++None
++See http://joda-time.sourceforge.net/upgradeto099.html for 0.98 to 0.99 changes
+ 
+-- YearMonthDay/TimeOfDay
+-  - deprecated methods toDateTime(), toDateTime(DateTimeZone zone), as their meaning was confused.
+-  On YearMonthDay, use toDateTimeAtCurrentTime() or toDateTimeAtMidnight().
+-  On TimeOfDay, use toDateTimeToday().
+ 
+-
+-Bug fixes since 0.98
++Bug fixes since 0.99
+ --------------------
+-- Interval/MutableInterval isAfter(ReadableInterval) - fixed bug when intervals abutted
+-
+-- Parsing periods of the form PT... - fixed bug that prevented parsing
+-
+-- Period parsing now more strict - 'T' character required to separate date and
+-  time in ISO periods
+-
+-- Fixed parsing of fractional seconds in Periods
+-
+-- Default time zone based on offset was being interpreted as UTC
+-
+-- Fixed NullPointerException in DateTimeFormat
+-
+-- DateTimeFormat would use date style for time style
++None
++See http://joda-time.sourceforge.net/upgradeto099.html for 0.98 to 0.99 changes
+ 
+-- DateTimeFormatterBuilder was using wrong time zone for text fields
+ 
+-- Avoid NPE in property(DateTimeFieldType) methods
+-
+-- Parsing two digit years using a pattern now follows JDK definition
+-
+-
+-Enhancements since 0.98
++Enhancements since 0.99
+ -----------------------
+-- Formatting package much more powerful, and has potential to grow after 1.0 release
+-
+-- YearMonthDay/TimeOfDay
+-  - add toString variants that take a pattern
+-  - add withField(), withFieldAdded(), withPeriodAdded(), plus() and minus()
+-
+-- DateTimeField
+-  - Add methods getAsText(int, Locale) and getAsShortText(int, Locale) for
+-    simple access to text values
+-
+-- Period
+-  - Added support to create periods from a duration and an end instant
+-  - Periods can be converted to durations by end instant too
+-
+-- Duration
+-  - Durations can be converted to periods by end instant too
+-  - Durations can be converted to intervals by end instant too
++None
++See http://joda-time.sourceforge.net/upgradeto099.html for 0.98 to 0.99 changes
+ 
+ 
+ Feedback
+diff --git a/JodaTime/ToDo.txt b/JodaTime/ToDo.txt
+index 018930956..1155f2505 100644
+--- a/JodaTime/ToDo.txt
++++ b/JodaTime/ToDo.txt
+@@ -1,51 +1,61 @@
+ JodaTime ToDo list
+ ==================
+ 
+-for 1.0
++For 1.1
+ -------
++The TODO list for 1.1 has not been set yet, however I would hope that
++at least some of the items below will be included.
+ 
+-Nothing left to do for 1.0
++Join joda-interest@lists.sourceforge.net to help out!
+ 
+ 
+ Ideas longer term
+ -----------------
+-DateTimeField.setNext(instant, value, howManyNext)
+-
+-DateHourMinute
+-DateHourMin
+-DateHM
+-
+-DateHourMinuteSecond
+-DateHourMinSec
+-DateHMS
+-
+-DurationProperty on DateTime, Period and related
+-
+-Factories for DateTime classes?
+- Is a locale dependent one needed at least?
+-
+-More chronologies:
+- Implement more chronologies, like ChineseChronology, HebrewChronology,
+- PersianChronology, etc. This may require more work in localization.
+-
+-Chronology:
+- Add daysFrom(year)
+- This would be a DateTimeField that, given a base year, returns the number of
+- elapsed days from 1st Jan that year. Apparantly useful for Excel, where a
+- standard format is days from 1900.
+-
+-ISOCalendar:
+- Calendar subclass that implements our interface. This might be difficult to
+- do since Calendar has so many final methods and a rigid specification.
+-
+-ISODate:
+- Date subclasses that implements our interface. This might not be a worthwhile
+- effort since almost all Date methods are deprecated.
+-
+-Recurrence:
+- Create a set of classes for supporting recurrences. This will need to support
+- complex specifications such as "2nd Wednesday in May" and "next Thursday".
+- A builder design might be helpful.
+-
+-Holidays:
+- These can simply be special instances of Recurrences.
++- More chronologies:
++   Implement more chronologies, like ChineseChronology, HebrewChronology,
++   PersianChronology, etc. This may require more work in localization.
++
++- DateTimeFormatter.appendLocaleFormatterMap(map)
++    Adds a map of Locale to Formatter, which picks the formatter to use
++    based on the locale of the print/parse. Allows for the flexible insertion
++    of any locale based text into a shared multi-language formatter.
++
++- DateTimeField.setNext(instant, value, howManyNext)
++    Allows questions like what is the date next Tuesday
++
++- Partial
++    A full implementation of partial, where any field may be present,
++    and any field may be substituted for. Thus you might define DayOfWeek=Friday
++    and DayOfMonth=13, and then resolve to find the next date.
++
++- DateHourMinute/DateHourMinuteSecond
++    More instant variations
++
++- DurationProperty on DateTime, Period and related
++    Possibly a clear way to do duration stuff, however adding plusDays() type
++    methods might be simpler.
++
++- Factories for DateTime classes?
++    Perhaps, but the constructors cover this now.
++
++- Chronology:
++    Add daysFrom(year)
++    This would be a DateTimeField that, given a base year, returns the number of
++    elapsed days from 1st Jan that year. Apparantly useful for Excel, where a
++    standard format is days from 1900.
++
++- ISOCalendar:
++    Calendar subclass that implements our interface. This might be difficult to
++    do since Calendar has so many final methods and a rigid specification.
++
++- ISODate:
++    Date subclasses that implements our interface. This might not be a worthwhile
++    effort since almost all Date methods are deprecated.
++
++- Recurrence:
++    Create a set of classes for supporting recurrences. This will need to support
++    complex specifications such as "2nd Wednesday in May" and "next Thursday".
++    A builder design might be helpful.
++
++- Holidays:
++    These might simply be special instances of Recurrences.
+diff --git a/JodaTime/build.xml b/JodaTime/build.xml
+index 076934e63..deed41b2a 100644
+--- a/JodaTime/build.xml
++++ b/JodaTime/build.xml
+@@ -27,7 +27,7 @@
+   <property name="component.title"         value="Joda date and time"/>
+ 
+   <!-- The current version number of this component -->
+-  <property name="component.version"       value="0.99"/>
++  <property name="component.version"       value="1.0"/>
+ 
+   <!-- The current version number of this component -->
+   <property name="component.fullname"      value="${component.name}-${component.version}"/>
+diff --git a/JodaTime/project.properties b/JodaTime/project.properties
+index 5ecc1fcc0..f8b4e6927 100644
+--- a/JodaTime/project.properties
++++ b/JodaTime/project.properties
+@@ -12,4 +12,4 @@ maven.javadoc.public=true
+ maven.javadoc.package=false
+ maven.javadoc.private=false
+ 
+-maven.jdiff.old.tag=v0_9_800
++maven.jdiff.old.tag=v0_9_900
+diff --git a/JodaTime/project.xml b/JodaTime/project.xml
+index 5a130039d..705e995e4 100644
+--- a/JodaTime/project.xml
++++ b/JodaTime/project.xml
+@@ -1,11 +1,13 @@
+ <?xml version="1.0" encoding="UTF-8"?>
++<!-- You are strongly recommended to use ant for compiling and building -->
++<!-- We only use and test maven for website construction -->
+ 
+ <project>
+   <pomVersion>3</pomVersion>
+   <id>joda-time</id>
+   <name>Joda time</name>
+   <groupId>joda-time</groupId>
+-  <currentVersion>0.99</currentVersion>
++  <currentVersion>1.0</currentVersion>
+   <organization>
+     <name>Joda.org</name>
+     <url>http://www.joda.org</url>
+
+From 4f36b1730b9ceef6c4e63b03103923dcf778af12 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Fri, 18 Feb 2005 22:51:46 +0000
+Subject: [PATCH 04/12] Allow slow tests to run directly from main method
+
+git-svn-id: https://joda-time.svn.sourceforge.net/svnroot/joda-time/trunk@724 1e1cfbb7-5c0e-0410-a2f0-f98d92ec03a1
+---
+ JodaTime/src/test/org/joda/time/chrono/TestAll.java | 10 ++++------
+ 1 file changed, 4 insertions(+), 6 deletions(-)
+
+diff --git a/JodaTime/src/test/org/joda/time/chrono/TestAll.java b/JodaTime/src/test/org/joda/time/chrono/TestAll.java
+index aa79fc315..b6afcd2da 100644
+--- a/JodaTime/src/test/org/joda/time/chrono/TestAll.java
++++ b/JodaTime/src/test/org/joda/time/chrono/TestAll.java
+@@ -18,6 +18,7 @@
+ import junit.framework.Test;
+ import junit.framework.TestCase;
+ import junit.framework.TestSuite;
++import junit.textui.TestRunner;
+ 
+ /**
+  * Entry point for all tests in this package.
+@@ -28,7 +29,7 @@
+  */
+ public class TestAll extends TestCase {
+ 
+-    public static boolean FAST = false;
++    public static boolean FAST = true;
+ 
+     public TestAll(String testName) {
+         super(testName);
+@@ -36,7 +37,6 @@ public TestAll(String testName) {
+ 
+     public static Test suite() {
+         TestSuite suite = new TestSuite();
+-        FAST = true;
+         
+         suite.addTest(TestBuddhistChronology.suite());
+         suite.addTest(TestCopticChronology.suite());
+@@ -49,10 +49,8 @@ public static Test suite() {
+     }
+ 
+     public static void main(String args[]) {
+-        String[] testCaseName = {
+-            TestAll.class.getName()
+-        };
+-        junit.textui.TestRunner.main(testCaseName);
++        FAST = false;
++        TestRunner.run(TestAll.suite());
+     }
+ 
+ }
+
+From e675e6d020b4261801fb6b2738acbfa7f9d00c6f Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Fri, 18 Feb 2005 23:02:25 +0000
+Subject: [PATCH 05/12] Refactor year classes into BaseGJChronology
+
+git-svn-id: https://joda-time.svn.sourceforge.net/svnroot/joda-time/trunk@725 1e1cfbb7-5c0e-0410-a2f0-f98d92ec03a1
+---
+ .../joda/time/chrono/BaseGJChronology.java    |  37 +++-
+ ...Field.java => BasicYearDateTimeField.java} |  63 ++----
+ .../joda/time/chrono/CopticChronology.java    |  38 +++-
+ .../joda/time/chrono/GJYearDateTimeField.java | 198 ------------------
+ 4 files changed, 92 insertions(+), 244 deletions(-)
+ rename JodaTime/src/java/org/joda/time/chrono/{CopticYearDateTimeField.java => BasicYearDateTimeField.java} (70%)
+ delete mode 100644 JodaTime/src/java/org/joda/time/chrono/GJYearDateTimeField.java
+
+diff --git a/JodaTime/src/java/org/joda/time/chrono/BaseGJChronology.java b/JodaTime/src/java/org/joda/time/chrono/BaseGJChronology.java
+index c93f47429..3dcf8d916 100644
+--- a/JodaTime/src/java/org/joda/time/chrono/BaseGJChronology.java
++++ b/JodaTime/src/java/org/joda/time/chrono/BaseGJChronology.java
+@@ -65,6 +65,8 @@
+         31,29,31,30,31,30,31,31,30,31,30,31
+     };
+ 
++    private static final long FEB_29 = (31L + 29 - 1) * DateTimeConstants.MILLIS_PER_DAY;
++
+     private static final long[] MIN_TOTAL_MILLIS_BY_MONTH_ARRAY;
+     private static final long[] MAX_TOTAL_MILLIS_BY_MONTH_ARRAY;
+ 
+@@ -297,7 +299,7 @@ protected void assemble(Fields fields) {
+         // Now create fields that have unique behavior for Gregorian and Julian
+         // chronologies.
+ 
+-        fields.year = new GJYearDateTimeField(this);
++        fields.year = new BasicYearDateTimeField(this);
+         fields.yearOfEra = new GJYearOfEraDateTimeField(fields.year, this);
+ 
+         // Define one-based centuryOfEra and yearOfCentury.
+@@ -535,9 +537,12 @@ private final int getYearOverflow(long instant) {
+     }
+ 
+     /**
+-     * @param instant millis from 1970-01-01T00:00:00Z
++     * Sets the year.
++     * 
++     * @param instant  millis from 1970-01-01T00:00:00Z
++     * @param year  the year to set
+      */
+-    final long setYear(long instant, int year) {
++    long setYear(long instant, int year) {
+         int thisYear = getYear(instant);
+         int dayOfYear = getDayOfYear(instant, thisYear);
+         int millisOfDay = getMillisOfDay(instant);
+@@ -751,6 +756,32 @@ long getDateMidnightMillis(int year, int monthOfYear, int dayOfMonth)
+         return instant;
+     }
+ 
++    long getYearDifference(long minuendInstant, long subtrahendInstant) {
++        int minuendYear = getYear(minuendInstant);
++        int subtrahendYear = getYear(subtrahendInstant);
++
++        // Inlined remainder method to avoid duplicate calls to get.
++        long minuendRem = minuendInstant - getYearMillis(minuendYear);
++        long subtrahendRem = subtrahendInstant - getYearMillis(subtrahendYear);
++
++        // Balance leap year differences on remainders.
++        if (subtrahendRem >= FEB_29) {
++            if (isLeapYear(subtrahendYear)) {
++                if (!isLeapYear(minuendYear)) {
++                    subtrahendRem -= DateTimeConstants.MILLIS_PER_DAY;
++                }
++            } else if (minuendRem >= FEB_29 && isLeapYear(minuendYear)) {
++                minuendRem -= DateTimeConstants.MILLIS_PER_DAY;
++            }
++        }
++
++        int difference = minuendYear - subtrahendYear;
++        if (minuendRem < subtrahendRem) {
++            difference--;
++        }
++        return difference;
++    }
++
+     abstract boolean isLeapYear(int year);
+ 
+     abstract long calculateFirstDayOfYearMillis(int year);
+diff --git a/JodaTime/src/java/org/joda/time/chrono/CopticYearDateTimeField.java b/JodaTime/src/java/org/joda/time/chrono/BasicYearDateTimeField.java
+similarity index 70%
+rename from JodaTime/src/java/org/joda/time/chrono/CopticYearDateTimeField.java
+rename to JodaTime/src/java/org/joda/time/chrono/BasicYearDateTimeField.java
+index 8569d9e1e..496c48298 100644
+--- a/JodaTime/src/java/org/joda/time/chrono/CopticYearDateTimeField.java
++++ b/JodaTime/src/java/org/joda/time/chrono/BasicYearDateTimeField.java
+@@ -21,20 +21,27 @@
+ import org.joda.time.field.ImpreciseDateTimeField;
+ 
+ /**
++ * A year field suitable for many calendars.
+  *
++ * @author Guy Allard
++ * @author Stephen Colebourne
+  * @author Brian S O'Neill
+  * @since 1.0
+  */
+-final class CopticYearDateTimeField extends ImpreciseDateTimeField {
++class BasicYearDateTimeField extends ImpreciseDateTimeField {
+ 
+-    private static final long serialVersionUID = 8990199361773280783L;
++    /** Serialization version. */
++    private static final long serialVersionUID = -98628754872287L;
+ 
+-    private final BaseGJChronology iChronology;
++    /** The underlying basic chronology. */
++    protected final BaseGJChronology iChronology;
+ 
+     /**
+-     * Restricted constructor
++     * Restricted constructor.
++     * 
++     * @param chronology  the chronology this field belogs to
+      */
+-    CopticYearDateTimeField(BaseGJChronology chronology) {
++    BasicYearDateTimeField(BaseGJChronology chronology) {
+         super(DateTimeFieldType.year(), chronology.getAverageMillisPerYear());
+         iChronology = chronology;
+     }
+@@ -51,7 +58,9 @@ public long add(long instant, int years) {
+         if (years == 0) {
+             return instant;
+         }
+-        return set(instant, get(instant) + years);
++        int thisYear = get(instant);
++        int newYear = FieldUtils.safeAdd(thisYear, years);
++        return set(instant, newYear);
+     }
+ 
+     public long add(long instant, long years) {
+@@ -69,47 +78,17 @@ public long addWrapField(long instant, int years) {
+         return set(instant, wrappedYear);
+     }
+ 
+-    public long getDifferenceAsLong(long minuendInstant, long subtrahendInstant) {
+-        if (minuendInstant < subtrahendInstant) {
+-            return -getDifference(subtrahendInstant, minuendInstant);
+-        }
+-
+-        int minuendYear = get(minuendInstant);
+-        int subtrahendYear = get(subtrahendInstant);
+-
+-        // Inlined remainder method to avoid duplicate calls to get.
+-        long minuendRem = minuendInstant - iChronology.getYearMillis(minuendYear);
+-        long subtrahendRem = subtrahendInstant - iChronology.getYearMillis(subtrahendYear);
+-
+-        int difference = minuendYear - subtrahendYear;
+-        if (minuendRem < subtrahendRem) {
+-            difference--;
+-        }
+-        return difference;
+-    }
+-
+     public long set(long instant, int year) {
+         FieldUtils.verifyValueBounds
+             (this, year, iChronology.getMinYear(), iChronology.getMaxYear());
++        return iChronology.setYear(instant, year);
++    }
+ 
+-		BaseGJChronology chrono = iChronology;
+-
+-        int thisYear = chrono.getYear(instant);
+-        int dayOfYear = chrono.getDayOfYear(instant, thisYear);
+-        int millisOfDay = chrono.getMillisOfDay(instant);
+-
+-        if (dayOfYear > 365) {
+-			// Current year is leap, and day is leap.
+-			if (!chrono.isLeapYear(year)) {
+-				// Moving to a non-leap year, leap day doesn't exist.
+-				dayOfYear--;
+-			}
++    public long getDifferenceAsLong(long minuendInstant, long subtrahendInstant) {
++        if (minuendInstant < subtrahendInstant) {
++            return -iChronology.getYearDifference(subtrahendInstant, minuendInstant);
+         }
+-
+-        instant = chrono.getYearMonthDayMillis(year, 1, dayOfYear);
+-        instant += millisOfDay;
+-
+-        return instant;
++        return iChronology.getYearDifference(minuendInstant, subtrahendInstant);
+     }
+ 
+     public DurationField getRangeDurationField() {
+diff --git a/JodaTime/src/java/org/joda/time/chrono/CopticChronology.java b/JodaTime/src/java/org/joda/time/chrono/CopticChronology.java
+index a79b5a9e8..43bac8a43 100644
+--- a/JodaTime/src/java/org/joda/time/chrono/CopticChronology.java
++++ b/JodaTime/src/java/org/joda/time/chrono/CopticChronology.java
+@@ -200,6 +200,42 @@ public Chronology withZone(DateTimeZone zone) {
+         return getInstance(zone);
+     }
+ 
++    //-----------------------------------------------------------------------
++    long setYear(long instant, int year) {
++        // optimsed implementation of set, due to 30 day months
++        int thisYear = getYear(instant);
++        int dayOfYear = getDayOfYear(instant, thisYear);
++        int millisOfDay = getMillisOfDay(instant);
++
++        if (dayOfYear > 365) {
++            // Current year is leap, and day is leap.
++            if (!isLeapYear(year)) {
++                // Moving to a non-leap year, leap day doesn't exist.
++                dayOfYear--;
++            }
++        }
++
++        instant = getYearMonthDayMillis(year, 1, dayOfYear);
++        instant += millisOfDay;
++        return instant;
++    }
++
++    long getYearDifference(long minuendInstant, long subtrahendInstant) {
++        // optimsed implementation of getDifference, due to 30 day months
++        int minuendYear = getYear(minuendInstant);
++        int subtrahendYear = getYear(subtrahendInstant);
++
++        // Inlined remainder method to avoid duplicate calls to get.
++        long minuendRem = minuendInstant - getYearMillis(minuendYear);
++        long subtrahendRem = subtrahendInstant - getYearMillis(subtrahendYear);
++
++        int difference = minuendYear - subtrahendYear;
++        if (minuendRem < subtrahendRem) {
++            difference--;
++        }
++        return difference;
++    }
++
+     long getDateMidnightMillis(int year, int monthOfYear, int dayOfMonth)
+         throws IllegalArgumentException
+     {
+@@ -279,7 +315,7 @@ protected void assemble(Fields fields) {
+         if (getBase() == null) {
+             super.assemble(fields);
+ 
+-            fields.year = new CopticYearDateTimeField(this);
++            fields.year = new BasicYearDateTimeField(this);
+             fields.years = fields.year.getDurationField();
+ 
+             // Coptic, like Julian, has no year zero.
+diff --git a/JodaTime/src/java/org/joda/time/chrono/GJYearDateTimeField.java b/JodaTime/src/java/org/joda/time/chrono/GJYearDateTimeField.java
+deleted file mode 100644
+index 1147cd550..000000000
+--- a/JodaTime/src/java/org/joda/time/chrono/GJYearDateTimeField.java
++++ /dev/null
+@@ -1,198 +0,0 @@
+-/*
+- *  Copyright 2001-2005 Stephen Colebourne
+- *
+- *  Licensed under the Apache License, Version 2.0 (the "License");
+- *  you may not use this file except in compliance with the License.
+- *  You may obtain a copy of the License at
+- *
+- *      http://www.apache.org/licenses/LICENSE-2.0
+- *
+- *  Unless required by applicable law or agreed to in writing, software
+- *  distributed under the License is distributed on an "AS IS" BASIS,
+- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+- *  See the License for the specific language governing permissions and
+- *  limitations under the License.
+- */
+-package org.joda.time.chrono;
+-
+-import org.joda.time.DateTimeConstants;
+-import org.joda.time.DateTimeFieldType;
+-import org.joda.time.DurationField;
+-import org.joda.time.field.FieldUtils;
+-import org.joda.time.field.ImpreciseDateTimeField;
+-
+-/**
+- * Provides time calculations for the year component of time.
+- *
+- * @author Guy Allard
+- * @author Stephen Colebourne
+- * @author Brian S O'Neill
+- * @since 1.0
+- */
+-final class GJYearDateTimeField extends ImpreciseDateTimeField {
+-
+-    private static final long serialVersionUID = -679076949530018869L;
+-
+-    private static final long FEB_29 = (31L + 29 - 1) * DateTimeConstants.MILLIS_PER_DAY;
+-
+-    private final BaseGJChronology iChronology;
+-
+-    /**
+-     * Restricted constructor
+-     */
+-    GJYearDateTimeField(BaseGJChronology chronology) {
+-        super(DateTimeFieldType.year(), chronology.getAverageMillisPerYear());
+-        iChronology = chronology;
+-    }
+-
+-    public boolean isLenient() {
+-        return false;
+-    }
+-
+-    /**
+-     * Get the Year component of the specified time instant.
+-     * 
+-     * @param instant  the time instant in millis to query.
+-     * @return the year extracted from the input.
+-     */
+-    public int get(long instant) {
+-        return iChronology.getYear(instant);
+-    }
+-
+-    /**
+-     * Add the specified year to the specified time instant.
+-     * The amount added may be negative.
+-     * 
+-     * @param instant  the time instant in millis to update.
+-     * @param years  the years to add (can be negative).
+-     * @return the updated time instant.
+-     */
+-    public long add(long instant, int years) {
+-        if (years == 0) {
+-            return instant;
+-        }
+-        int thisYear = get(instant);
+-        int newYear = thisYear + years;
+-        return set(instant, newYear);
+-    }
+-
+-    public long add(long instant, long years) {
+-        return add(instant, FieldUtils.safeToInt(years));
+-    }
+-
+-    /**
+-     * Add to the Year component of the specified time instant
+-     * wrapping around within that component if necessary.
+-     * 
+-     * @param instant  the time instant in millis to update.
+-     * @param years  the years to add (can be negative).
+-     * @return the updated time instant.
+-     */
+-    public long addWrapField(long instant, int years) {
+-        if (years == 0) {
+-            return instant;
+-        }
+-        // Return newly calculated millis value
+-        int thisYear = iChronology.getYear(instant);
+-        int wrappedYear = FieldUtils.getWrappedValue
+-            (thisYear, years, iChronology.getMinYear(), iChronology.getMaxYear());
+-        return set(instant, wrappedYear);
+-    }
+-
+-    public long getDifferenceAsLong(long minuendInstant, long subtrahendInstant) {
+-        if (minuendInstant < subtrahendInstant) {
+-            return -getDifference(subtrahendInstant, minuendInstant);
+-        }
+-
+-        int minuendYear = get(minuendInstant);
+-        int subtrahendYear = get(subtrahendInstant);
+-
+-        // Inlined remainder method to avoid duplicate calls to get.
+-        long minuendRem = minuendInstant - iChronology.getYearMillis(minuendYear);
+-        long subtrahendRem = subtrahendInstant - iChronology.getYearMillis(subtrahendYear);
+-
+-        // Balance leap year differences on remainders.
+-        if (subtrahendRem >= FEB_29) {
+-            if (iChronology.isLeapYear(subtrahendYear)) {
+-                if (!iChronology.isLeapYear(minuendYear)) {
+-                    subtrahendRem -= DateTimeConstants.MILLIS_PER_DAY;
+-                }
+-            } else if (minuendRem >= FEB_29 && iChronology.isLeapYear(minuendYear)) {
+-                minuendRem -= DateTimeConstants.MILLIS_PER_DAY;
+-            }
+-        }
+-
+-        int difference = minuendYear - subtrahendYear;
+-        if (minuendRem < subtrahendRem) {
+-            difference--;
+-        }
+-        return difference;
+-    }
+-
+-    /**
+-     * Set the Year component of the specified time instant.
+-     * 
+-     * @param instant  the time instant in millis to update.
+-     * @param year  the year (-292269055,292278994) to update the time to.
+-     * @return the updated time instant.
+-     * @throws IllegalArgumentException  if year is invalid.
+-     */
+-    public long set(long instant, int year) {
+-        FieldUtils.verifyValueBounds
+-            (this, year, iChronology.getMinYear(), iChronology.getMaxYear());
+-        return iChronology.setYear(instant, year);
+-    }
+-
+-    public DurationField getRangeDurationField() {
+-        return null;
+-    }
+-
+-    public boolean isLeap(long instant) {
+-        return iChronology.isLeapYear(get(instant));
+-    }
+-
+-    public int getLeapAmount(long instant) {
+-        if (iChronology.isLeapYear(get(instant))) {
+-            return 1;
+-        } else {
+-            return 0;
+-        }
+-    }
+-
+-    public DurationField getLeapDurationField() {
+-        return iChronology.days();
+-    }
+-
+-    public int getMinimumValue() {
+-        return iChronology.getMinYear();
+-    }
+-
+-    public int getMaximumValue() {
+-        return iChronology.getMaxYear();
+-    }
+-
+-    public long roundFloor(long instant) {
+-        return iChronology.getYearMillis(get(instant));
+-    }
+-
+-    public long roundCeiling(long instant) {
+-        int year = get(instant);
+-        long yearStartMillis = iChronology.getYearMillis(year);
+-        if (instant != yearStartMillis) {
+-            // Bump up to start of next year.
+-            instant = iChronology.getYearMillis(year + 1);
+-        }
+-        return instant;
+-    }
+-
+-    public long remainder(long instant) {
+-        return instant - roundFloor(instant);
+-    }
+-
+-    /**
+-     * Serialization singleton
+-     */
+-    private Object readResolve() {
+-        return iChronology.year();
+-    }
+-}
+
+From 79b24183d3e4517e3bceb2c2754758bb0e204410 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Sat, 19 Feb 2005 00:54:25 +0000
+Subject: [PATCH 06/12] Rollback to 0.99 for 1.0 release
+
+git-svn-id: https://joda-time.svn.sourceforge.net/svnroot/joda-time/trunk@726 1e1cfbb7-5c0e-0410-a2f0-f98d92ec03a1
+---
+ .../joda/time/chrono/BaseGJChronology.java    |  37 +---
+ .../joda/time/chrono/CopticChronology.java    |  38 +---
+ ...ield.java => CopticYearDateTimeField.java} |  63 ++++--
+ .../joda/time/chrono/GJYearDateTimeField.java | 198 ++++++++++++++++++
+ 4 files changed, 244 insertions(+), 92 deletions(-)
+ rename JodaTime/src/java/org/joda/time/chrono/{BasicYearDateTimeField.java => CopticYearDateTimeField.java} (70%)
+ create mode 100644 JodaTime/src/java/org/joda/time/chrono/GJYearDateTimeField.java
+
+diff --git a/JodaTime/src/java/org/joda/time/chrono/BaseGJChronology.java b/JodaTime/src/java/org/joda/time/chrono/BaseGJChronology.java
+index 3dcf8d916..c93f47429 100644
+--- a/JodaTime/src/java/org/joda/time/chrono/BaseGJChronology.java
++++ b/JodaTime/src/java/org/joda/time/chrono/BaseGJChronology.java
+@@ -65,8 +65,6 @@
+         31,29,31,30,31,30,31,31,30,31,30,31
+     };
+ 
+-    private static final long FEB_29 = (31L + 29 - 1) * DateTimeConstants.MILLIS_PER_DAY;
+-
+     private static final long[] MIN_TOTAL_MILLIS_BY_MONTH_ARRAY;
+     private static final long[] MAX_TOTAL_MILLIS_BY_MONTH_ARRAY;
+ 
+@@ -299,7 +297,7 @@ protected void assemble(Fields fields) {
+         // Now create fields that have unique behavior for Gregorian and Julian
+         // chronologies.
+ 
+-        fields.year = new BasicYearDateTimeField(this);
++        fields.year = new GJYearDateTimeField(this);
+         fields.yearOfEra = new GJYearOfEraDateTimeField(fields.year, this);
+ 
+         // Define one-based centuryOfEra and yearOfCentury.
+@@ -537,12 +535,9 @@ private final int getYearOverflow(long instant) {
+     }
+ 
+     /**
+-     * Sets the year.
+-     * 
+-     * @param instant  millis from 1970-01-01T00:00:00Z
+-     * @param year  the year to set
++     * @param instant millis from 1970-01-01T00:00:00Z
+      */
+-    long setYear(long instant, int year) {
++    final long setYear(long instant, int year) {
+         int thisYear = getYear(instant);
+         int dayOfYear = getDayOfYear(instant, thisYear);
+         int millisOfDay = getMillisOfDay(instant);
+@@ -756,32 +751,6 @@ long getDateMidnightMillis(int year, int monthOfYear, int dayOfMonth)
+         return instant;
+     }
+ 
+-    long getYearDifference(long minuendInstant, long subtrahendInstant) {
+-        int minuendYear = getYear(minuendInstant);
+-        int subtrahendYear = getYear(subtrahendInstant);
+-
+-        // Inlined remainder method to avoid duplicate calls to get.
+-        long minuendRem = minuendInstant - getYearMillis(minuendYear);
+-        long subtrahendRem = subtrahendInstant - getYearMillis(subtrahendYear);
+-
+-        // Balance leap year differences on remainders.
+-        if (subtrahendRem >= FEB_29) {
+-            if (isLeapYear(subtrahendYear)) {
+-                if (!isLeapYear(minuendYear)) {
+-                    subtrahendRem -= DateTimeConstants.MILLIS_PER_DAY;
+-                }
+-            } else if (minuendRem >= FEB_29 && isLeapYear(minuendYear)) {
+-                minuendRem -= DateTimeConstants.MILLIS_PER_DAY;
+-            }
+-        }
+-
+-        int difference = minuendYear - subtrahendYear;
+-        if (minuendRem < subtrahendRem) {
+-            difference--;
+-        }
+-        return difference;
+-    }
+-
+     abstract boolean isLeapYear(int year);
+ 
+     abstract long calculateFirstDayOfYearMillis(int year);
+diff --git a/JodaTime/src/java/org/joda/time/chrono/CopticChronology.java b/JodaTime/src/java/org/joda/time/chrono/CopticChronology.java
+index 43bac8a43..a79b5a9e8 100644
+--- a/JodaTime/src/java/org/joda/time/chrono/CopticChronology.java
++++ b/JodaTime/src/java/org/joda/time/chrono/CopticChronology.java
+@@ -200,42 +200,6 @@ public Chronology withZone(DateTimeZone zone) {
+         return getInstance(zone);
+     }
+ 
+-    //-----------------------------------------------------------------------
+-    long setYear(long instant, int year) {
+-        // optimsed implementation of set, due to 30 day months
+-        int thisYear = getYear(instant);
+-        int dayOfYear = getDayOfYear(instant, thisYear);
+-        int millisOfDay = getMillisOfDay(instant);
+-
+-        if (dayOfYear > 365) {
+-            // Current year is leap, and day is leap.
+-            if (!isLeapYear(year)) {
+-                // Moving to a non-leap year, leap day doesn't exist.
+-                dayOfYear--;
+-            }
+-        }
+-
+-        instant = getYearMonthDayMillis(year, 1, dayOfYear);
+-        instant += millisOfDay;
+-        return instant;
+-    }
+-
+-    long getYearDifference(long minuendInstant, long subtrahendInstant) {
+-        // optimsed implementation of getDifference, due to 30 day months
+-        int minuendYear = getYear(minuendInstant);
+-        int subtrahendYear = getYear(subtrahendInstant);
+-
+-        // Inlined remainder method to avoid duplicate calls to get.
+-        long minuendRem = minuendInstant - getYearMillis(minuendYear);
+-        long subtrahendRem = subtrahendInstant - getYearMillis(subtrahendYear);
+-
+-        int difference = minuendYear - subtrahendYear;
+-        if (minuendRem < subtrahendRem) {
+-            difference--;
+-        }
+-        return difference;
+-    }
+-
+     long getDateMidnightMillis(int year, int monthOfYear, int dayOfMonth)
+         throws IllegalArgumentException
+     {
+@@ -315,7 +279,7 @@ protected void assemble(Fields fields) {
+         if (getBase() == null) {
+             super.assemble(fields);
+ 
+-            fields.year = new BasicYearDateTimeField(this);
++            fields.year = new CopticYearDateTimeField(this);
+             fields.years = fields.year.getDurationField();
+ 
+             // Coptic, like Julian, has no year zero.
+diff --git a/JodaTime/src/java/org/joda/time/chrono/BasicYearDateTimeField.java b/JodaTime/src/java/org/joda/time/chrono/CopticYearDateTimeField.java
+similarity index 70%
+rename from JodaTime/src/java/org/joda/time/chrono/BasicYearDateTimeField.java
+rename to JodaTime/src/java/org/joda/time/chrono/CopticYearDateTimeField.java
+index 496c48298..8569d9e1e 100644
+--- a/JodaTime/src/java/org/joda/time/chrono/BasicYearDateTimeField.java
++++ b/JodaTime/src/java/org/joda/time/chrono/CopticYearDateTimeField.java
+@@ -21,27 +21,20 @@
+ import org.joda.time.field.ImpreciseDateTimeField;
+ 
+ /**
+- * A year field suitable for many calendars.
+  *
+- * @author Guy Allard
+- * @author Stephen Colebourne
+  * @author Brian S O'Neill
+  * @since 1.0
+  */
+-class BasicYearDateTimeField extends ImpreciseDateTimeField {
++final class CopticYearDateTimeField extends ImpreciseDateTimeField {
+ 
+-    /** Serialization version. */
+-    private static final long serialVersionUID = -98628754872287L;
++    private static final long serialVersionUID = 8990199361773280783L;
+ 
+-    /** The underlying basic chronology. */
+-    protected final BaseGJChronology iChronology;
++    private final BaseGJChronology iChronology;
+ 
+     /**
+-     * Restricted constructor.
+-     * 
+-     * @param chronology  the chronology this field belogs to
++     * Restricted constructor
+      */
+-    BasicYearDateTimeField(BaseGJChronology chronology) {
++    CopticYearDateTimeField(BaseGJChronology chronology) {
+         super(DateTimeFieldType.year(), chronology.getAverageMillisPerYear());
+         iChronology = chronology;
+     }
+@@ -58,9 +51,7 @@ public long add(long instant, int years) {
+         if (years == 0) {
+             return instant;
+         }
+-        int thisYear = get(instant);
+-        int newYear = FieldUtils.safeAdd(thisYear, years);
+-        return set(instant, newYear);
++        return set(instant, get(instant) + years);
+     }
+ 
+     public long add(long instant, long years) {
+@@ -78,17 +69,47 @@ public long addWrapField(long instant, int years) {
+         return set(instant, wrappedYear);
+     }
+ 
++    public long getDifferenceAsLong(long minuendInstant, long subtrahendInstant) {
++        if (minuendInstant < subtrahendInstant) {
++            return -getDifference(subtrahendInstant, minuendInstant);
++        }
++
++        int minuendYear = get(minuendInstant);
++        int subtrahendYear = get(subtrahendInstant);
++
++        // Inlined remainder method to avoid duplicate calls to get.
++        long minuendRem = minuendInstant - iChronology.getYearMillis(minuendYear);
++        long subtrahendRem = subtrahendInstant - iChronology.getYearMillis(subtrahendYear);
++
++        int difference = minuendYear - subtrahendYear;
++        if (minuendRem < subtrahendRem) {
++            difference--;
++        }
++        return difference;
++    }
++
+     public long set(long instant, int year) {
+         FieldUtils.verifyValueBounds
+             (this, year, iChronology.getMinYear(), iChronology.getMaxYear());
+-        return iChronology.setYear(instant, year);
+-    }
+ 
+-    public long getDifferenceAsLong(long minuendInstant, long subtrahendInstant) {
+-        if (minuendInstant < subtrahendInstant) {
+-            return -iChronology.getYearDifference(subtrahendInstant, minuendInstant);
++		BaseGJChronology chrono = iChronology;
++
++        int thisYear = chrono.getYear(instant);
++        int dayOfYear = chrono.getDayOfYear(instant, thisYear);
++        int millisOfDay = chrono.getMillisOfDay(instant);
++
++        if (dayOfYear > 365) {
++			// Current year is leap, and day is leap.
++			if (!chrono.isLeapYear(year)) {
++				// Moving to a non-leap year, leap day doesn't exist.
++				dayOfYear--;
++			}
+         }
+-        return iChronology.getYearDifference(minuendInstant, subtrahendInstant);
++
++        instant = chrono.getYearMonthDayMillis(year, 1, dayOfYear);
++        instant += millisOfDay;
++
++        return instant;
+     }
+ 
+     public DurationField getRangeDurationField() {
+diff --git a/JodaTime/src/java/org/joda/time/chrono/GJYearDateTimeField.java b/JodaTime/src/java/org/joda/time/chrono/GJYearDateTimeField.java
+new file mode 100644
+index 000000000..1147cd550
+--- /dev/null
++++ b/JodaTime/src/java/org/joda/time/chrono/GJYearDateTimeField.java
+@@ -0,0 +1,198 @@
++/*
++ *  Copyright 2001-2005 Stephen Colebourne
++ *
++ *  Licensed under the Apache License, Version 2.0 (the "License");
++ *  you may not use this file except in compliance with the License.
++ *  You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ *  Unless required by applicable law or agreed to in writing, software
++ *  distributed under the License is distributed on an "AS IS" BASIS,
++ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ *  See the License for the specific language governing permissions and
++ *  limitations under the License.
++ */
++package org.joda.time.chrono;
++
++import org.joda.time.DateTimeConstants;
++import org.joda.time.DateTimeFieldType;
++import org.joda.time.DurationField;
++import org.joda.time.field.FieldUtils;
++import org.joda.time.field.ImpreciseDateTimeField;
++
++/**
++ * Provides time calculations for the year component of time.
++ *
++ * @author Guy Allard
++ * @author Stephen Colebourne
++ * @author Brian S O'Neill
++ * @since 1.0
++ */
++final class GJYearDateTimeField extends ImpreciseDateTimeField {
++
++    private static final long serialVersionUID = -679076949530018869L;
++
++    private static final long FEB_29 = (31L + 29 - 1) * DateTimeConstants.MILLIS_PER_DAY;
++
++    private final BaseGJChronology iChronology;
++
++    /**
++     * Restricted constructor
++     */
++    GJYearDateTimeField(BaseGJChronology chronology) {
++        super(DateTimeFieldType.year(), chronology.getAverageMillisPerYear());
++        iChronology = chronology;
++    }
++
++    public boolean isLenient() {
++        return false;
++    }
++
++    /**
++     * Get the Year component of the specified time instant.
++     * 
++     * @param instant  the time instant in millis to query.
++     * @return the year extracted from the input.
++     */
++    public int get(long instant) {
++        return iChronology.getYear(instant);
++    }
++
++    /**
++     * Add the specified year to the specified time instant.
++     * The amount added may be negative.
++     * 
++     * @param instant  the time instant in millis to update.
++     * @param years  the years to add (can be negative).
++     * @return the updated time instant.
++     */
++    public long add(long instant, int years) {
++        if (years == 0) {
++            return instant;
++        }
++        int thisYear = get(instant);
++        int newYear = thisYear + years;
++        return set(instant, newYear);
++    }
++
++    public long add(long instant, long years) {
++        return add(instant, FieldUtils.safeToInt(years));
++    }
++
++    /**
++     * Add to the Year component of the specified time instant
++     * wrapping around within that component if necessary.
++     * 
++     * @param instant  the time instant in millis to update.
++     * @param years  the years to add (can be negative).
++     * @return the updated time instant.
++     */
++    public long addWrapField(long instant, int years) {
++        if (years == 0) {
++            return instant;
++        }
++        // Return newly calculated millis value
++        int thisYear = iChronology.getYear(instant);
++        int wrappedYear = FieldUtils.getWrappedValue
++            (thisYear, years, iChronology.getMinYear(), iChronology.getMaxYear());
++        return set(instant, wrappedYear);
++    }
++
++    public long getDifferenceAsLong(long minuendInstant, long subtrahendInstant) {
++        if (minuendInstant < subtrahendInstant) {
++            return -getDifference(subtrahendInstant, minuendInstant);
++        }
++
++        int minuendYear = get(minuendInstant);
++        int subtrahendYear = get(subtrahendInstant);
++
++        // Inlined remainder method to avoid duplicate calls to get.
++        long minuendRem = minuendInstant - iChronology.getYearMillis(minuendYear);
++        long subtrahendRem = subtrahendInstant - iChronology.getYearMillis(subtrahendYear);
++
++        // Balance leap year differences on remainders.
++        if (subtrahendRem >= FEB_29) {
++            if (iChronology.isLeapYear(subtrahendYear)) {
++                if (!iChronology.isLeapYear(minuendYear)) {
++                    subtrahendRem -= DateTimeConstants.MILLIS_PER_DAY;
++                }
++            } else if (minuendRem >= FEB_29 && iChronology.isLeapYear(minuendYear)) {
++                minuendRem -= DateTimeConstants.MILLIS_PER_DAY;
++            }
++        }
++
++        int difference = minuendYear - subtrahendYear;
++        if (minuendRem < subtrahendRem) {
++            difference--;
++        }
++        return difference;
++    }
++
++    /**
++     * Set the Year component of the specified time instant.
++     * 
++     * @param instant  the time instant in millis to update.
++     * @param year  the year (-292269055,292278994) to update the time to.
++     * @return the updated time instant.
++     * @throws IllegalArgumentException  if year is invalid.
++     */
++    public long set(long instant, int year) {
++        FieldUtils.verifyValueBounds
++            (this, year, iChronology.getMinYear(), iChronology.getMaxYear());
++        return iChronology.setYear(instant, year);
++    }
++
++    public DurationField getRangeDurationField() {
++        return null;
++    }
++
++    public boolean isLeap(long instant) {
++        return iChronology.isLeapYear(get(instant));
++    }
++
++    public int getLeapAmount(long instant) {
++        if (iChronology.isLeapYear(get(instant))) {
++            return 1;
++        } else {
++            return 0;
++        }
++    }
++
++    public DurationField getLeapDurationField() {
++        return iChronology.days();
++    }
++
++    public int getMinimumValue() {
++        return iChronology.getMinYear();
++    }
++
++    public int getMaximumValue() {
++        return iChronology.getMaxYear();
++    }
++
++    public long roundFloor(long instant) {
++        return iChronology.getYearMillis(get(instant));
++    }
++
++    public long roundCeiling(long instant) {
++        int year = get(instant);
++        long yearStartMillis = iChronology.getYearMillis(year);
++        if (instant != yearStartMillis) {
++            // Bump up to start of next year.
++            instant = iChronology.getYearMillis(year + 1);
++        }
++        return instant;
++    }
++
++    public long remainder(long instant) {
++        return instant - roundFloor(instant);
++    }
++
++    /**
++     * Serialization singleton
++     */
++    private Object readResolve() {
++        return iChronology.year();
++    }
++}
+
+From b4c55b6b5c06ef178b0ec4b8ca893a8361973336 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Sat, 19 Feb 2005 19:19:35 +0000
+Subject: [PATCH 07/12] Add more documentation
+
+git-svn-id: https://joda-time.svn.sourceforge.net/svnroot/joda-time/trunk@727 1e1cfbb7-5c0e-0410-a2f0-f98d92ec03a1
+---
+ JodaTime/xdocs/index.xml      |   8 +-
+ JodaTime/xdocs/navigation.xml |   3 +-
+ JodaTime/xdocs/quickstart.xml | 151 ++++++++++++++++++++++++++++++++++
+ 3 files changed, 157 insertions(+), 5 deletions(-)
+ create mode 100644 JodaTime/xdocs/quickstart.xml
+
+diff --git a/JodaTime/xdocs/index.xml b/JodaTime/xdocs/index.xml
+index 4c20aebba..00bf3dea2 100644
+--- a/JodaTime/xdocs/index.xml
++++ b/JodaTime/xdocs/index.xml
+@@ -81,9 +81,9 @@ as it recalculates fields at unexpected moments. Joda-Time does only the minimal
+ calculation for the field that is being accessed.</li>
+ <li><b>Good Test Coverage</b>. Joda-Time has a comprehensive set of developer tests,
+ providing assurance of the library's quality.</li>
+-<li><b>Complete Documentation</b>. There is an introductory
++<li><b>Complete Documentation</b>. There is a full
+ <a href="userguide.html">User Guide</a> which provides an overview and covers
+-common usage scenarios. The <a href="api-0.99/index.html">javadoc</a>
++common usage scenarios. The <a href="api-release/index.html">javadoc</a>
+ is extremely detailed and covers most of the API.</li>
+ <li><b>Maturity</b>. The library has been under active development since 2002.
+ Although it continues to be improved with the addition of new features and
+@@ -98,9 +98,9 @@ bug-fixes, it is a mature and reliable code base.</li>
+ <p>
+ Various documentation is available:
+ <ul>
+-<li>The <a href="userguide.html">user guide</a> which is a good starting point</li>
++<li>Two user guides - <a href="quickstart.html">quick</a> and <a href="userguide.html">full</a></li>
+ <li>The key concepts and chronology documents in the left navigation area</li>
+-<li>The javadoc for the <a href="api-0.99/index.html">current release</a></li>
++<li>The javadoc for the <a href="api-release/index.html">current release</a></li>
+ <li>The javadoc for the <a href="apidocs/index.html">latest CVS</a></li>
+ <li>A <a href="faq.html">FAQ</a> list</li>
+ <li>Information on <a href="installation.html">downloading and installing</a> Joda-Time</li>
+diff --git a/JodaTime/xdocs/navigation.xml b/JodaTime/xdocs/navigation.xml
+index b235f1f97..ac7c55abc 100644
+--- a/JodaTime/xdocs/navigation.xml
++++ b/JodaTime/xdocs/navigation.xml
+@@ -8,9 +8,10 @@
+   <body>
+     <menu name="Joda Time">
+       <item name="Overview" href="/index.html"/>
++      <item name="Quick start guide" href="/quickstart.html"/>
+       <item name="Users guide" href="/userguide.html"/>
+       <item name="FAQ" href="/faq.html"/>
+-      <item name="Javadoc (Release)" href="/api-0.99/index.html"/>
++      <item name="Javadoc (Release)" href="/api-release/index.html"/>
+       <item name="License" href="/license.html"/>
+       <item name="Download" href="http://sourceforge.net/project/showfiles.php?group_id=97367"/>
+     </menu>
+diff --git a/JodaTime/xdocs/quickstart.xml b/JodaTime/xdocs/quickstart.xml
+new file mode 100644
+index 000000000..01b909ffb
+--- /dev/null
++++ b/JodaTime/xdocs/quickstart.xml
+@@ -0,0 +1,151 @@
++<?xml version="1.0" encoding="ISO-8859-1"?>
++
++<document>
++ <properties>
++  <title>Java date and time API - Quick start guide</title>
++  <author email="scolebourne@users.sourceforge.net">Stephen Colebourne</author>
++ </properties>
++<body>
++
++<!-- ========================================================================= -->
++
++<section name="Quick start guide">
++<p>
++This is the quick introduction guide to Joda-Time and the features on offer.
++Its designed for those of you who are too impatient to read the full
++<a href="userguide.html">user guide</a>.
++</p>
++
++<subsection name="Date and Time">
++<p>
++Joda-Time includes these key datetime classes:
++<ul>
++<li><a href="api-release/org/joda/time/DateTime.html"><code>DateTime</code></a> - Immutable replacement for JDK <code>Calendar</code></li>
++<li><a href="api-release/org/joda/time/MutableDateTime.html"><code>MutableDateTime</code></a> - Mutable replacement for JDK <code>Calendar</code></li>
++<li><a href="api-release/org/joda/time/DateMidnight.html"><code>DateMidnight</code></a> - Immutable class representing a date where the time is forced to midnight</li>
++<li><a href="api-release/org/joda/time/YearMonthDay.html"><code>YearMonthDay</code></a> - Immutable class representing a local date without a time</li>
++<li><a href="api-release/org/joda/time/TimeOfDay.html"><code>TimeOfDay</code></a> - Immutable class representing a time without a date</li>
++</ul>
++</p>
++
++<p>
++Each datetime class provides a variety of constructors.
++These include the <code>Object</code> constructor.
++This allows you to construct, for example, <code>DateTime</code> from
++the following objects:
++<ul>
++<li><code>Date</code> - a JDK instant</li>
++<li><code>Calendar</code> - a JDK calendar</li>
++<li><code>String</code> - in ISO8601 format</li>
++<li><code>Long</code> - in milliseconds</li>
++<li>any Joda-Time datetime class</li>
++</ul>
++This list is extensible. In other words Joda-Time sacrifices a little type-safety
++for extensibility. It does mean however, that converting from a JDK <code>Date</code>
++or <code>Calendar</code> to a Joda-Time class is easy - simply pass the JDK class
++into the constructor.
++</p>
++
++<p>
++Each datetime class provides simple easy methods
++to access the datetime <a href="field.html">fields</a>. For example, to access
++the month you can use:
++<source>
++  DateTime dt = new DateTime();
++  int month = dt.getMonthofYear();
++</source>
++</p>
++
++<p>
++In addition to the basic get methods, each datetime class provides property
++methods for each field. These provide access to the full wealth of Joda-Time
++functionality. For example, to access details about a month or year:
++<source>
++  DateTime dt = new DateTime();
++  String monthName = dt.monthofYear().getAsText();
++  String frenchShortName = dt.monthofYear().getAsShortText(Locale.FRENCH);
++  boolean isLeapYear = dt.year().isLeap();
++</source>
++These property fields also allow you to get an updated copy with a field set,
++added to or rounded.
++<source>
++  DateTime dt = new DateTime();
++  DateTime tenthOfMonth = dt.monthofYear().setCopy(10);
++  DateTime twoDaysLater = dt.monthofYear().addToCopy(2);
++</source>
++In these examples, the original datetime is unaltered, because it is immutable.
++</p>
++</subsection>
++
++<subsection name="Calendar systems and time zones">
++<p>
++Joda-Time provides support for multiple calendar systems and the full range
++of time zones.
++The <a href="api-release/org/joda/time/Chronology.html"><code>Chronology</code></a>
++and <a href="api-release/org/joda/time/DateTimeZone.html"><code>DateTimeZone</code></a>
++classes provide this support.
++</p>
++<p>
++Joda-Time defaults to using the ISO calendar system (the calendar used by most
++of the business world) and the default time zone of your machine.
++These default values can be overridden whenever necessary.
++Please note that the ISO calendar system is historically inaccurate before 1583.
++</p>
++<p>
++Joda-Time uses a pluggable mechanism for calendars. (The JDK uses subclasses
++such as <code>GregorianCalendar</code>.)
++To obtain a Joda-Time calendar, use one of the factory methods on <code>Chronology</code>.
++<source>
++  Chronology coptic = Chronology.getCoptic();
++</source>
++</p>
++<p>
++Time zones are implemented as part of the chronology.
++To obtain a Joda-Time chronology in the Tokyo time zone, you can use.
++<source>
++  DateTimeZone zone = DateTimeZone.forID("Asia/Tokyo");
++  Chronology gregorianJuian = Chronology.getGJ(zone);
++</source>
++</p>
++</subsection>
++
++<subsection name="Intervals and time periods">
++<p>
++Joda-Time provides support for intervals and time periods.
++</p>
++<p>
++An interval is represented by the
++<a href="api-release/org/joda/time/Interval.html"><code>Inteval</code></a> class.
++It holds a start and end datetime, and allows operations based around that
++range of time.
++</p>
++<p>
++A time period is represented by the
++<a href="api-release/org/joda/time/Period.html"><code>Period</code></a> class.
++This holds a period such as 6 months, 3 days and 7 hours.
++You can create a <code>Period</code> directly, or derive it from an interval.
++</p>
++<p>
++A time duration is represented by the
++<a href="api-release/org/joda/time/Duration.html"><code>Duration</code></a> class.
++This holds an exact duration in milliseconds.
++You can create a <code>Duration</code> directly, or derive it from an interval.
++</p>
++<p>
++Although a period and a duration may seem similar, they operate differently.
++For example, consider adding one day to a <code>DateTime</code> at the daylight
++savings cutover.
++<source>
++  DateTime dt = new DateTime(2005, 3, 26, 12, 0, 0, 0);
++  DateTime plusPeriod = dt.plus(Period.days(1));
++  DateTime plusDuration = dt.plus(new Duration(24L*60L*60L*1000L));
++</source>
++Adding a period will add 23 hours in this case, not 24 because of the daylight
++savings change, thus the time of the result will stil be midday.
++Adding a duration will add 24 hours no matter what, thus the time of the result
++will change to 13:00.
++</p>
++</subsection>
++</section>
++</body>
++</document>
+
+From 73628a6c6c1f7301c25127d8411f0674a67e7f43 Mon Sep 17 00:00:00 2001
+From: Brian S O'Neill <bronee@gmail.com>
+Date: Sat, 19 Feb 2005 19:38:09 +0000
+Subject: [PATCH 08/12] Fix typos.
+
+git-svn-id: https://joda-time.svn.sourceforge.net/svnroot/joda-time/trunk@728 1e1cfbb7-5c0e-0410-a2f0-f98d92ec03a1
+---
+ JodaTime/xdocs/quickstart.xml | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/JodaTime/xdocs/quickstart.xml b/JodaTime/xdocs/quickstart.xml
+index 01b909ffb..7b7e7055b 100644
+--- a/JodaTime/xdocs/quickstart.xml
++++ b/JodaTime/xdocs/quickstart.xml
+@@ -52,7 +52,7 @@ to access the datetime <a href="field.html">fields</a>. For example, to access
+ the month you can use:
+ <source>
+   DateTime dt = new DateTime();
+-  int month = dt.getMonthofYear();
++  int month = dt.getMonthOfYear();
+ </source>
+ </p>
+ 
+@@ -62,16 +62,16 @@ methods for each field. These provide access to the full wealth of Joda-Time
+ functionality. For example, to access details about a month or year:
+ <source>
+   DateTime dt = new DateTime();
+-  String monthName = dt.monthofYear().getAsText();
+-  String frenchShortName = dt.monthofYear().getAsShortText(Locale.FRENCH);
++  String monthName = dt.monthOfYear().getAsText();
++  String frenchShortName = dt.monthOfYear().getAsShortText(Locale.FRENCH);
+   boolean isLeapYear = dt.year().isLeap();
+ </source>
+ These property fields also allow you to get an updated copy with a field set,
+ added to or rounded.
+ <source>
+   DateTime dt = new DateTime();
+-  DateTime tenthOfMonth = dt.monthofYear().setCopy(10);
+-  DateTime twoDaysLater = dt.monthofYear().addToCopy(2);
++  DateTime tenthOfMonth = dt.monthOfYear().setCopy(10);
++  DateTime twoDaysLater = dt.monthOfYear().addToCopy(2);
+ </source>
+ In these examples, the original datetime is unaltered, because it is immutable.
+ </p>
+@@ -141,7 +141,7 @@ savings cutover.
+   DateTime plusDuration = dt.plus(new Duration(24L*60L*60L*1000L));
+ </source>
+ Adding a period will add 23 hours in this case, not 24 because of the daylight
+-savings change, thus the time of the result will stil be midday.
++savings change, thus the time of the result will still be midday.
+ Adding a duration will add 24 hours no matter what, thus the time of the result
+ will change to 13:00.
+ </p>
+
+From a35abb59b1a59b85eba8c1d19d0abdb3c7b486d9 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Sun, 20 Feb 2005 22:14:30 +0000
+Subject: [PATCH 09/12] Add CVS version info
+
+git-svn-id: https://joda-time.svn.sourceforge.net/svnroot/joda-time/trunk@729 1e1cfbb7-5c0e-0410-a2f0-f98d92ec03a1
+---
+ JodaTime/project.xml | 22 ++++++++++++++++++++++
+ 1 file changed, 22 insertions(+)
+
+diff --git a/JodaTime/project.xml b/JodaTime/project.xml
+index 705e995e4..207b64b0c 100644
+--- a/JodaTime/project.xml
++++ b/JodaTime/project.xml
+@@ -43,6 +43,28 @@
+     <connection>scm:cvs:pserver:anonymous@cvs.sourceforge.net:/cvsroot/joda-time:JodaTime</connection>
+     <url>http://cvs.sourceforge.net/viewcvs.py/joda-time/JodaTime/</url>
+   </repository>
++  <versions>
++    <version>
++      <id>0.95</id>
++      <name>0.95</name>
++      <tag>v0_9_500</tag>
++    </version>
++    <version>
++      <id>0.98</id>
++      <name>0.98</name>
++      <tag>v0_9_800</tag>
++    </version>
++    <version>
++      <id>0.99</id>
++      <name>0.99</name>
++      <tag>v0_9_900</tag>
++    </version>
++    <version>
++      <id>1.0</id>
++      <name>1.0</name>
++      <tag>v1_0_000</tag>
++    </version>
++  </versions>
+   
+   <mailingLists>
+     <mailingList>
+
+From 161445448170c2a4ab4f16f9bc13c68e92ac5c5b Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Mon, 21 Feb 2005 00:55:25 +0000
+Subject: [PATCH 10/12] Remove junit as a dependency (maven finds it
+ automatically now)
+
+git-svn-id: https://joda-time.svn.sourceforge.net/svnroot/joda-time/trunk@730 1e1cfbb7-5c0e-0410-a2f0-f98d92ec03a1
+---
+ JodaTime/project.xml | 5 -----
+ 1 file changed, 5 deletions(-)
+
+diff --git a/JodaTime/project.xml b/JodaTime/project.xml
+index 207b64b0c..078e492e3 100644
+--- a/JodaTime/project.xml
++++ b/JodaTime/project.xml
+@@ -115,11 +115,6 @@
+   </contributors>
+ 
+   <dependencies>
+-    <dependency>
+-      <id>junit</id>
+-      <groupId>junit</groupId>
+-      <version>3.8.1</version>
+-    </dependency>
+   </dependencies>
+ 
+   <build>
+
+From b87ac3b95ef4ca3fde725b568371c10779bf1427 Mon Sep 17 00:00:00 2001
+From: Brian S O'Neill <bronee@gmail.com>
+Date: Tue, 22 Feb 2005 04:55:56 +0000
+Subject: [PATCH 11/12] Javadoc fixes.
+
+git-svn-id: https://joda-time.svn.sourceforge.net/svnroot/joda-time/trunk@731 1e1cfbb7-5c0e-0410-a2f0-f98d92ec03a1
+---
+ JodaTime/src/java/org/joda/time/chrono/BaseChronology.java   | 4 ++--
+ JodaTime/src/java/org/joda/time/chrono/BaseGJChronology.java | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/JodaTime/src/java/org/joda/time/chrono/BaseChronology.java b/JodaTime/src/java/org/joda/time/chrono/BaseChronology.java
+index 7354c7222..9783042b2 100644
+--- a/JodaTime/src/java/org/joda/time/chrono/BaseChronology.java
++++ b/JodaTime/src/java/org/joda/time/chrono/BaseChronology.java
+@@ -30,10 +30,10 @@
+ import org.joda.time.field.UnsupportedDurationField;
+ 
+ /**
+- * AbstractChronology provides a skeleton implementation for chronology
++ * BaseChronology provides a skeleton implementation for chronology
+  * classes. Many utility methods are defined, but all fields are unsupported.
+  * <p>
+- * AbstractChronology is thread-safe and immutable, and all subclasses must be
++ * BaseChronology is thread-safe and immutable, and all subclasses must be
+  * as well.
+  *
+  * @author Brian S O'Neill
+diff --git a/JodaTime/src/java/org/joda/time/chrono/BaseGJChronology.java b/JodaTime/src/java/org/joda/time/chrono/BaseGJChronology.java
+index c93f47429..1d1ef11b9 100644
+--- a/JodaTime/src/java/org/joda/time/chrono/BaseGJChronology.java
++++ b/JodaTime/src/java/org/joda/time/chrono/BaseGJChronology.java
+@@ -38,7 +38,7 @@
+  * Most of the utility methods required by subclasses are package-private,
+  * reflecting the intention that they be defined in the same package.
+  * <p>
+- * AbstractGJChronology is thread-safe and immutable, and all subclasses must
++ * BaseGJChronology is thread-safe and immutable, and all subclasses must
+  * be as well.
+  *
+  * @author Stephen Colebourne
+
+From c47221f56c7805f5f22e1465562428f36c02768b Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Tue, 22 Feb 2005 09:29:37 +0000
+Subject: [PATCH 12/12] Tidy up docs for 1.0
+
+git-svn-id: https://joda-time.svn.sourceforge.net/svnroot/joda-time/trunk@732 1e1cfbb7-5c0e-0410-a2f0-f98d92ec03a1
+---
+ JodaTime/xdocs/index.xml        | 26 +++++++--------------
+ JodaTime/xdocs/upgradeto100.xml | 41 ++++++++++++++++++++++++++++++++-
+ 2 files changed, 48 insertions(+), 19 deletions(-)
+
+diff --git a/JodaTime/xdocs/index.xml b/JodaTime/xdocs/index.xml
+index 00bf3dea2..18262637c 100644
+--- a/JodaTime/xdocs/index.xml
++++ b/JodaTime/xdocs/index.xml
+@@ -34,17 +34,7 @@ public boolean isJoinedInLastThreeMonths(<b>DateTime</b> datetimeJoined) {
+ public boolean isBirthdayInLeapYear(<b>YearMonthDay</b> dateOfBirth) {
+   return dateOfBirth.year().isLeap();
+ }
+-<!--
+-<b>DateTime</b> dt = new DateTime();
+-int year = dt.getYear();
+-String monthText = dt.monthOfYear().getAsText();
+-boolean leap = dt.year().isLeap();
+-<b>Period</b> oneMonthSixDays = new Period().withMonths(1).withDays(6);
+-DateTime laterDate = dt.plus(oneMonthSixDays);
+-<b>Interval</b> interval = new Interval(dt, laterDate);
+-<b>YearMonthDay</b> time = new YearMonthDay(2005, 2, 14);
+-<b>TimeOfDay</b> time = new TimeOfDay(12, 30);
+---></source>
++</source>
+ </p>
+ </section>
+ 
+@@ -111,16 +101,16 @@ Various documentation is available:
+ 
+ <section name="Releases">
+ <p>
+-<a href="http://sourceforge.net/project/showfiles.php?group_id=97367">Release 0.99</a>
++<a href="http://sourceforge.net/project/showfiles.php?group_id=97367">Release 1.0</a>
+ is the current latest release.
+-This release is a stable release that has extensive testing suites.
+-As a result of these testing suites, the main API has been firmed up and is not intended to change beyond now.
++This release is considered stable and worthy of the 1.0 tag.
++It has extensive testing suites and has been used in production.
++We now recommend JDK 1.3 or later, and have performed no testing on earlier JDKs.
+ </p>
+ <p>
+-We now recommend JDK 1.3 or later, and have performed no testing on earlier JDKs.
+-Version 1.0 is currently scheduled for late-February.
+-When the final 1.0 release is made, our intention is to support the release as would be expected,
+-using deprecations and maintaining binary compatibility.
++We will support the 1.x product line using standard Java mechanisms.
++The main public API will remain backwards compatible for both source and binary.
++The version number will change to 2.0 to indicate a change in compatibility.
+ </p>
+ </section>
+ 
+diff --git a/JodaTime/xdocs/upgradeto100.xml b/JodaTime/xdocs/upgradeto100.xml
+index 92b1dbd6c..b29f007ec 100644
+--- a/JodaTime/xdocs/upgradeto100.xml
++++ b/JodaTime/xdocs/upgradeto100.xml
+@@ -13,7 +13,46 @@
+ These are the release notes and advice for upgrading Joda-Time from
+ version 0.99 to version 1.0.
+ <source>
+-	TODO
++Joda-Time version 1.0
++---------------------
++
++Joda-Time is a date and time handling library that seeks to replace the JDK
++Date and Calendar classes.
++
++This is the first full release of Joda-Time.
++There have been numerous beta releases over an extended period of time.
++
++We recommend JDK 1.3 or later, and have performed no testing on earlier JDKs.
++
++Joda-Time is licensed under the business-friendly Apache License Version 2.
++This is the same license as all of Apache, plus other open source projects such as Spring.
++The intent is to make the code available to the Java community with the minimum
++of restrictions. If the license cause you problems please contact the mailing list.
++
++
++Incompatible changes since 0.99
++-------------------------------
++Deprecated methods removed.
++See http://joda-time.sourceforge.net/upgradeto099.html for 0.98 to 0.99 changes
++
++
++Deprecations since 0.99
++-----------------------
++None
++See http://joda-time.sourceforge.net/upgradeto099.html for 0.98 to 0.99 changes
++
++
++Bug fixes since 0.99
++--------------------
++None
++See http://joda-time.sourceforge.net/upgradeto099.html for 0.98 to 0.99 changes
++
++
++Enhancements since 0.99
++-----------------------
++None
++See http://joda-time.sourceforge.net/upgradeto099.html for 0.98 to 0.99 changes
++
+ </source>
+ </p>
+ </section>

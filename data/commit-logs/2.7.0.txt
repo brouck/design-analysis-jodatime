@@ -1,0 +1,2728 @@
+From 8a64e3ece8613f75e535c15aa3a08d85cfff6de1 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Mon, 1 Dec 2014 14:47:26 +0000
+Subject: [PATCH 01/16] Bump version
+
+---
+ pom.xml | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/pom.xml b/pom.xml
+index b4d61dd1d..443c83d89 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -9,7 +9,7 @@
+   <artifactId>joda-time</artifactId>
+   <packaging>jar</packaging>
+   <name>Joda-Time</name>
+-  <version>2.6</version>
++  <version>2.7-SNAPSHOT</version>
+   <description>Date and time library to replace JDK date handling</description>
+   <url>http://www.joda.org/joda-time/</url>
+ 
+
+From 350ad252473d93eab2fc2d05433248de4e55a7a0 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Mon, 1 Dec 2014 14:48:17 +0000
+Subject: [PATCH 02/16] Remove reference to Apache Ant build tool
+
+---
+ src/site/xdoc/installation.xml | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/src/site/xdoc/installation.xml b/src/site/xdoc/installation.xml
+index 7d073321d..5a15eddf1 100644
+--- a/src/site/xdoc/installation.xml
++++ b/src/site/xdoc/installation.xml
+@@ -45,8 +45,7 @@ The release notes for upgraders can be found here:
+ </p>
+ <p>
+ If you want to build Joda-Time from source you will need
+-<a href="http://ant.apache.org">Apache Ant</a> or <a href="http://maven.apache.org">Apache Maven</a>.
+-Search to find out more about building using those tools.
++<a href="http://maven.apache.org">Apache Maven</a>.
+ </p>
+ </section>
+ </body>
+
+From 60d3a2e263a75c525a8197dcc592d99a84e39037 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Tue, 2 Dec 2014 13:50:43 +0000
+Subject: [PATCH 03/16] Update website
+
+---
+ pom.xml                         |  36 ++++--
+ src/site/markdown/index.md      | 169 ++++++++++++++++++++++++++++
+ src/site/resources/css/site.css | 158 +++++++-------------------
+ src/site/site.xml               | 177 ++++++++++++++++++++---------
+ src/site/xdoc/cal.xml           |  30 +++++
+ src/site/xdoc/field.xml         |  16 +--
+ src/site/xdoc/index.xml         | 192 --------------------------------
+ src/site/xdoc/key.xml           |  30 +++++
+ src/site/xdoc/privacy.xml       |  49 --------
+ 9 files changed, 426 insertions(+), 431 deletions(-)
+ create mode 100644 src/site/markdown/index.md
+ create mode 100644 src/site/xdoc/cal.xml
+ delete mode 100644 src/site/xdoc/index.xml
+ create mode 100644 src/site/xdoc/key.xml
+ delete mode 100644 src/site/xdoc/privacy.xml
+
+diff --git a/pom.xml b/pom.xml
+index 443c83d89..4e8828baf 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -382,6 +382,18 @@
+         <configuration>
+           <skipDeploy>true</skipDeploy>
+         </configuration>
++        <dependencies>
++          <dependency>
++            <groupId>lt.velykis.maven.skins</groupId>
++            <artifactId>reflow-velocity-tools</artifactId>
++            <version>1.1.1</version>
++          </dependency>
++          <dependency>
++            <groupId>org.apache.velocity</groupId>
++            <artifactId>velocity</artifactId>
++            <version>1.7</version>
++          </dependency>
++        </dependencies>
+       </plugin>
+       <plugin><!-- invoke with mvn site-deploy -->
+         <groupId>com.github.github</groupId>
+@@ -624,18 +636,6 @@
+            <showSuccess>true</showSuccess>
+         </configuration>
+       </plugin>
+-      <plugin>
+-        <groupId>org.apache.maven.plugins</groupId>
+-        <artifactId>maven-jxr-plugin</artifactId>
+-        <version>${maven-jxr-plugin.version}</version>
+-        <reportSets>
+-          <reportSet>
+-            <reports>
+-              <report>jxr</report>
+-            </reports>
+-          </reportSet>
+-        </reportSets>
+-      </plugin>
+     </plugins>
+   </reporting>
+ 
+@@ -659,6 +659,15 @@
+ 
+   <!-- ==================================================================== -->
+   <profiles>
++    <profile>
++      <id>java8</id>
++      <activation>
++        <jdk>1.8</jdk>
++      </activation>
++      <properties>
++        <additionalparam>-Xdoclint:none</additionalparam>
++      </properties>
++    </profile>
+     <profile>
+       <id>repo-sign-artifacts</id>
+       <activation>
+@@ -704,6 +713,9 @@
+           </plugin>
+         </plugins>
+       </build>
++      <properties>
++        <additionalparam></additionalparam>
++      </properties>
+     </profile>
+   </profiles>
+ 
+diff --git a/src/site/markdown/index.md b/src/site/markdown/index.md
+new file mode 100644
+index 000000000..0d1dd7495
+--- /dev/null
++++ b/src/site/markdown/index.md
+@@ -0,0 +1,169 @@
++## <i></i> About
++
++**Joda-Time** provides a quality replacement for the Java date and time classes.
++
++Joda-Time is the *de facto* standard date and time library for Java.
++From Java SE 8 onwards, users are asked to migrate to `java.time` (JSR-310).
++
++Joda-Time is licensed under the business-friendly [Apache 2.0 licence](license.html).
++
++
++## <i></i> Features
++
++A selection of key features:
++
++* `LocalDate` - date without time
++* `LocalTime` - time without date
++* `Instant` - an instantaneous point on the time-line
++* `DateTime` - full date and time with time-zone
++* `DateTimeZone` - a better time-zone
++* `Duration` and `Period` - amounts of time
++* `Interval` - the time between two instants
++* A comprehensive and flexible formatter-parser
++
++
++## <i></i> Documentation
++
++Various documentation is available:
++
++* The [getting started](quickstart.html) guide
++* The helpful [user guide](userguide.html)
++* The [key concepts](key.html) and [chronology](cal.html) guides
++* The [Javadoc](apidocs/index.html)
++* The list of [FAQ](faq.html)s.
++* The [change notes](installation.html) for each release
++* The [GitHub](https://github.com/JodaOrg/joda-time) source repository
++
++
++---
++
++## <i></i> Why Joda Time?
++
++The standard date and time classes prior to Java SE 8 are poor.
++By tackling this problem head-on, Joda-Time has become the de facto standard date and time library for Java.
++Note that from Java SE 8 onwards, users are asked to migrate to `java.time` (JSR-310).
++
++The design allows for multiple calendar systems, while still providing a simple API.
++The "default" calendar is the [ISO8601](cal_iso.html) standard which is used by many other standards.
++The Gregorian, Julian, Buddhist, Coptic, Ethiopic and Islamic calendar systems are also included.
++Supporting classes include time zone, duration, format and parsing.
++
++As a flavour of Joda-Time, here's some example code:
++
++<div class="source">
++<pre>
++public boolean isAfterPayDay(<a href="apidocs/org/joda/time/DateTime.html"><b>DateTime</b></a> datetime) {
++  if (datetime.getMonthOfYear() == 2) {   // February is month 2!!
++    return datetime.getDayOfMonth() > 26;
++  }
++  return datetime.getDayOfMonth() > 28;
++}
++
++public <a href="apidocs/org/joda/time/Days.html"><b>Days</b></a> daysToNewYear(<a href="apidocs/org/joda/time/LocalDate.html"><b>LocalDate</b></a> fromDate) {
++  <a href="apidocs/org/joda/time/LocalDate.html"><b>LocalDate</b></a> newYear = fromDate.plusYears(1).withDayOfYear(1);
++  return <a href="apidocs/org/joda/time/Days.html"><b>Days</b></a>.daysBetween(fromDate, newYear);
++}
++
++public boolean isRentalOverdue(<a href="apidocs/org/joda/time/DateTime.html"><b>DateTime</b></a> datetimeRented) {
++  <a href="apidocs/org/joda/time/Period.html"><b>Period</b></a> rentalPeriod = new <a href="apidocs/org/joda/time/Period.html"><b>Period</b></a>().withDays(2).withHours(12);
++  return datetimeRented.plus(rentalPeriod).isBeforeNow();
++}
++
++public String getBirthMonthText(<a href="apidocs/org/joda/time/LocalDate.html"><b>LocalDate</b></a> dateOfBirth) {
++  return dateOfBirth.monthOfYear().getAsText(Locale.ENGLISH);
++}
++</pre>
++</div>
++
++
++## <i></i> Rationale
++
++Here are some of our reasons for developing and using Joda-Time:
++
++* <b>Easy to Use</b>.
++Calendar makes accessing 'normal' dates difficult, due to the lack of simple methods.
++Joda-Time has straightforward <a href="field.html">field accessors</a> such as
++<code>getYear()</code> or <code>getDayOfWeek()</code>.
++* <b>Easy to Extend</b>.
++The JDK supports multiple calendar systems via subclasses of <code>Calendar</code>.
++This is clunky, and in practice it is very difficult to write another calendar system.
++Joda-Time supports multiple calendar systems via a pluggable system based on the
++<code>Chronology</code> class.
++* <b>Comprehensive Feature Set</b>.
++The library is intended to provide all the functionality that is required for date-time
++calculations. It already provides out-of-the-box features, such as support for oddball
++date formats, which are difficult to replicate with the JDK.
++* <b>Up-to-date Time Zone calculations</b>.
++The <a href="timezones.html">time zone implementation</a> is based on
++the public <a href="http://www.iana.org/time-zones">tz database</a>, which is
++updated several times a year. New Joda-Time releases incorporate all changes
++made to this database. Should the changes be needed earlier,
++<a href="tz_update.html">manually updating the zone data</a> is easy.
++* <b>Calendar support</b>.
++The library currently provides 8 calendar systems. More will be added in the future.
++* <b>Easy interoperability</b>.
++The library internally uses a millisecond instant which is identical to the JDK and similar
++to other common time representations. This makes interoperability easy, and Joda-Time comes
++with out-of-the-box JDK interoperability.
++* <b>Better Performance Characteristics</b>.
++Calendar has strange performance characteristics as it recalculates fields at unexpected moments.
++Joda-Time does only the minimal calculation for the field that is being accessed.
++* <b>Good Test Coverage</b>.
++Joda-Time has a comprehensive set of developer tests, providing assurance of the library's quality.
++* <b>Complete Documentation</b>.
++There is a full <a href="userguide.html">User Guide</a> which provides an overview and covers
++common usage scenarios. The <a href="apidocs/index.html">javadoc</a>
++is extremely detailed and covers the rest of the API.
++* <b>Maturity</b>.
++The library has been under active development since 2002.
++Although it continues to be improved with the addition of new features and
++bug-fixes, it is a mature and reliable code base.
++A number of <a href="related.html">related projects</a> are now available.
++* <b>Open Source</b>.
++Joda-Time is licenced under the business friendly <a href="license.html">Apache License Version 2.0</a>.
++
++---
++
++## <i></i> Releases
++
++[Release 2.6](download.html) is the current latest release.
++This release is considered stable and worthy of the 2.x tag.
++See the [upgrade notes](upgradeto260.html) for full details.
++
++Joda-Time requires Java SE 5 or later and has [no dependencies](dependencies.html).
++There is a *compile-time* dependency on [Joda-Convert](http://www.joda.org/joda-convert/),
++but this is not required at runtime thanks to the magic of annotations.
++
++Available in [Maven Central](http://search.maven.org/#artifactdetails%7Cjoda-time%7Cjoda-time%7C2.6%7Cjar).
++
++```xml
++<dependency>
++  <groupId>org.joda</groupId>
++  <artifactId>joda-time</artifactId>
++  <version>2.6</version>
++</dependency>
++```
++
++The 2.x product line will be supported using standard Java mechanisms.
++The main public API will remain backwards compatible for both source and binary in the 2.x stream.
++The version number will change to 3.0 to indicate a significant change in compatibility.
++
++Joda-Time v2.x is an evolution of the 1.x codebase, not a major rewrite.
++It is almost completely source and binary compatible with version 1.x.
++Key changes included the use of Java SE 5 or later, generics, and the removal of some (but not all)
++deprecated methods. See the [upgrade notes](upgradeto200.html) for full details when upgrading from 1.x
++including information on the corner cases that are not compatible.
++The ancient release [1.6.2](https://sourceforge.net/projects/joda-time/files/joda-time/1.6.2/) was
++the last release to support Java SE 4 and the last v1.x release
++
++
++---
++
++### Support
++
++Support on bugs, library usage or enhancement requests is available on a best efforts basis.
++
++To suggest enhancements or contribute, please [fork the source code](https://github.com/JodaOrg/joda-time)
++on GitHub and send a Pull Request.
++
++Alternatively, use GitHub [issues](https://github.com/JodaOrg/joda-time/issues).
+diff --git a/src/site/resources/css/site.css b/src/site/resources/css/site.css
+index 89f79bf15..6fb258da0 100644
+--- a/src/site/resources/css/site.css
++++ b/src/site/resources/css/site.css
+@@ -1,127 +1,53 @@
+-body, td, select, input, li{
+-  font-family: Helvetica, Arial, sans-serif;
+-  font-size: 13px;
+-  background-color: #fff;
+-}
+-a {
+-  text-decoration: none;
+-}
+-a:link {
+-  color:#009;
+-}
+-a:visited  {
+-  color:#009;
+-}
+-a:active, a:hover {
+-  text-decoration: underline;
+-}
+-a.externalLink, a.externalLink:link, a.externalLink:visited, a.externalLink:active, a.externalLink:hover {
+-  background: url(../images/external.png) right center no-repeat;
+-  padding-right: 15px;
+-}
+-a.newWindow, a.newWindow:link, a.newWindow:visited, a.newWindow:active, a.newWindow:hover {
+-  background: url(../images/newwindow.png) right center no-repeat;
+-  padding-right: 18px;
+-}
+-h2 {
+-  font-family: Verdana, Helvetica, Arial, sans-serif;
+-  padding: 4px 4px 4px 6px;
+-  border: 1px solid #999;
+-  color: #006;
+-  background-color: #eef;
+-  font-weight:bold;
+-  font-size: 16px;
+-  margin-top: 4px;
+-  margin-bottom: 6px;
+-}
+-h3 {
+-  padding: 4px 4px 4px 6px;
+-  border: 1px solid #aaa;
+-  color: #006;
+-  background-color: #eee;
+-  font-weight: normal;
+-  font-size: 14px;
+-  margin-top: 4px;
+-  margin-bottom: 6px;
+-}
+-p, ul {
+-  font-size: 13px;
+-  margin-top: 4px;
+-  margin-bottom: 6px;
+-}
+-#banner {
+-  background-color: #eef;
+-  border-bottom: 1px solid #aaa;
+-  padding: 8px;
+-}
+-#bannerLeft, #bannerRight {
+-  font-size: 30px;
+-  color:black;
+-  padding: 0px 5px;
+-}
+-#banner a:hover {
+-  text-decoration:none;
+-}
+-#breadcrumbs {
+-  padding-top: 1px;
+-  padding-bottom: 2px;
+-  border-bottom: 1px solid #aaa;
+-  background-color: #ddf;
+-}
+-#leftColumn {
+-  margin: 8px 0 8px 4px;
+-  border: 1px solid #999;
+-  background-color: #eef;
+-}
+-#navcolumn {
+-  padding: 6px 4px 0 6px;
+-}
+-#navcolumn h5 {
+-  font-size: 12px;
+-  border-bottom: 1px solid #aaaaaa;
+-  padding-top: 2px;
+-  font-weight: normal;
++/* Fix broken definition that causes hyperlinks to break */
++h1[id]:before,
++h2[id]:before,
++h3[id]:before,
++h4[id]:before,
++h5[id]:before,
++h6[id]:before,
++a[name]:before {
++ height:0px;
++ margin:0px;
++}
++/* Blacker text */
++body {
++ color: #222;
+ }
+-#navcolumn li {
+-  font-size: 12px;
+-  padding-left: 12px;
+-  background-color: #eef;
++code, pre {
++ color: #444;
+ }
+-#navcolumn a:active, #navcolumn a:hover {
+-  text-decoration: none;
++.dropdown-menu>li>a {
++ color: #666;
+ }
+-#lastPublished {
+-  font-size: 10px;
++/* Sidebar had too much padding at the top */
++.well {
++ padding-top: 6px;
++ padding-bottom: 36px;
+ }
+-table.bodyTable th {
+-  color: white;
+-  background-color: #bbb;
+-  text-align: left;
+-  font-weight: bold;
+-  font-size: 13px;
++/* Font Awesome icons by CSS as markdown class is stripped */
++h2 i {
++ display: inline-block;
++ font: normal normal normal 14px/1 FontAwesome;
++ font-size: inherit;
++ text-rendering: auto;
++ -webkit-font-smoothing: antialiased;
++ -moz-osx-font-smoothing: grayscale;
+ }
+-
+-table.bodyTable th, table.bodyTable td {
+-  font-size: 13px;
++h2#About i:before {
++ content: "\f015";
+ }
+-
+-table.bodyTable tr.a {
+-  background-color: #ddd;
++h2#Features i:before {
++ content: "\f0d0";
+ }
+-
+-table.bodyTable tr.b {
+-  background-color: #eee;
++h2#Documentation i:before {
++ content: "\f02d";
+ }
+-
+-.source {
+-  border: 1px solid #999;
+-  padding: 8px;
+-  margin: 6px;
++h2#Releases i:before {
++ content: "\f02c";
+ }
+-#footer {
+-  background-color: #eef;
+-  border-top: 1px solid #999;
++h2#Why_Joda_Time i:before {
++ content: "\f19c";
+ }
+-body {
+-  padding-bottom: 0px;
++h2#Rationale i:before {
++ content: "\f0eb";
+ }
+diff --git a/src/site/site.xml b/src/site/site.xml
+index a0290bdd8..e9dafe8bc 100644
+--- a/src/site/site.xml
++++ b/src/site/site.xml
+@@ -1,54 +1,133 @@
+ <?xml version="1.0" encoding="ISO-8859-1"?>
+ <project name="Joda-Time">
+-  <publishDate position="navigation-bottom" format="yyyy-MM-dd"/>
+-  <bannerLeft>
+-    <name>Joda.org</name>
+-    <href>http://www.joda.org/</href>
+-  </bannerLeft>
+-  <bannerRight>
+-    <name>Joda-Time</name>
+-    <href>http://www.joda.org/joda-time/</href>
+-  </bannerRight>
++  <publishDate position="bottom" format="yyyy-MM-dd"/>
++  <version position="bottom"/>
++  <googleAnalyticsAccountId>UA-1425975-4</googleAnalyticsAccountId>
++
++  <skin>
++    <groupId>lt.velykis.maven.skins</groupId>
++    <artifactId>reflow-maven-skin</artifactId>
++    <version>1.1.1</version>
++  </skin>
++
++  <custom>
++    <reflowSkin>
++      <smoothScroll>false</smoothScroll>
++      <highlightJs>true</highlightJs>
++      <highlightJsTheme>github</highlightJsTheme>
++      <imgLightbox>false</imgLightbox>
++      <theme>bootswatch-cosmo</theme>
++      <brand>
++        <name>Joda-Time</name>
++        <href>index.html</href>
++      </brand>
++      <topNav>Documentation|Releases|Development|Related|Joda</topNav>
++      <bottomNav>
++        <column>Information</column>
++        <column>Releases|Related</column>
++        <column>Development</column>
++        <column>Reports</column>
++      </bottomNav>
++      <bottomDescription><![CDATA[
++        Basic date-time types for Java
++      ]]></bottomDescription>
++      <toc>false</toc>
++      <breadcrumbs>false</breadcrumbs>
++      <markPageHeader>false</markPageHeader>
++      <highlightJs>false</highlightJs>
++      <pages>
++        <index>
++          <sections>
++            <columns>3</columns>
++            <columns>2</columns>
++            <body />
++            <sidebar />
++          </sections>
++          <shortTitle>Home</shortTitle>
++          <highlightJs>true</highlightJs>
++        </index>
++        <quickstart>
++          <highlightJs>true</highlightJs>
++        </quickstart>
++        <userguide>
++          <highlightJs>true</highlightJs>
++        </userguide>
++        <key_instant>
++          <highlightJs>true</highlightJs>
++        </key_instant>
++        <key_partial>
++          <highlightJs>true</highlightJs>
++        </key_partial>
++        <key_interval>
++          <highlightJs>true</highlightJs>
++        </key_interval>
++        <key_duration>
++          <highlightJs>true</highlightJs>
++        </key_duration>
++        <key_period>
++          <highlightJs>true</highlightJs>
++        </key_period>
++        <key_chronology>
++          <highlightJs>true</highlightJs>
++        </key_chronology>
++        <key_format>
++          <highlightJs>true</highlightJs>
++        </key_format>
++      </pages>
++    </reflowSkin>
++  </custom>
+ 
+   <body>
+-    <links>
+-      <item name="Joda-Time" href="index.html"/>
+-      <item name="JSP tags" href="http://www.joda.org/joda-time-jsptags/"/>
+-      <item name="Hibernate" href="http://www.joda.org/joda-time-hibernate/"/>
+-      <item name="I18N" href="http://www.joda.org/joda-time-i18n/"/>
+-    </links>
++    <head>
++      <link href="http://netdna.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.css" rel="stylesheet"/>
++      <link rel="author" href="https://plus.google.com/113137868744510231215"/>
++    </head>
+ 
+-    <menu name="Joda-Time">
+-      <item name="Overview" href="index.html"/>
++    <menu name="Documentation">
++      <item name="Home" href="index.html"/>
+       <item name="Quick start guide" href="quickstart.html"/>
+       <item name="User guide" href="userguide.html"/>
++      <item name="Key concepts" href="key.html">
++        <item name="Instant" href="key_instant.html"/>
++        <item name="Partial" href="key_partial.html"/>
++        <item name="Interval" href="key_interval.html"/>
++        <item name="Duration" href="key_duration.html"/>
++        <item name="Period" href="key_period.html"/>
++        <item name="Chronology" href="key_chronology.html"/>
++        <item name="Formatting" href="key_format.html"/>
++        <item name="Time zone update" href="tz_update.html"/>
++      </item>
++      <item name="Chronologies" href="cal.html">
++        <item name="ISO8601" href="cal_iso.html"/>
++        <item name="Buddhist" href="cal_buddhist.html"/>
++        <item name="Coptic" href="cal_coptic.html"/>
++        <item name="Ethiopic" href="cal_ethiopic.html"/>
++        <item name="Gregorian" href="cal_gregorian.html"/>
++        <item name="GregorianJulian" href="cal_gj.html"/>
++       <item name="Islamic" href="cal_islamic.html"/>
++        <item name="Julian" href="cal_julian.html"/>
++      </item>
+       <item name="FAQ" href="faq.html"/>
+-      <item name="Related projects" href="related.html"/>
+       <item name="Javadoc" href="apidocs/index.html"/>
+       <item name="License" href="license.html"/>
+-      <item name="Download" href="download.html"/>
+     </menu>
+ 
+-    <menu name="Key concepts">
+-      <item name="Instant" href="key_instant.html"/>
+-      <item name="Partial" href="key_partial.html"/>
+-      <item name="Interval" href="key_interval.html"/>
+-      <item name="Duration" href="key_duration.html"/>
+-      <item name="Period" href="key_period.html"/>
+-      <item name="Chronology" href="key_chronology.html"/>
+-      <item name="Formatting" href="key_format.html"/>
+-      <item name="Time zone update" href="tz_update.html"/>
++    <menu name="Information">
++      <item name="Home" href="index.html"/>
++      <item name="Quick start guide" href="quickstart.html"/>
++      <item name="User guide" href="userguide.html"/>
++      <item name="FAQ" href="faq.html"/>
++      <item name="Related projects" href="related.html"/>
++      <item name="Javadoc" href="apidocs/index.html"/>
++      <item name="License" href="license.html"/>
++      <item name="Key concepts" href="key.html"/>
++      <item name="Chronologies" href="cal.html"/>
+     </menu>
+ 
+-    <menu name="Chronologies">
+-      <item name="ISO8601" href="cal_iso.html"/>
+-      <item name="Buddhist" href="cal_buddhist.html"/>
+-      <item name="Coptic" href="cal_coptic.html"/>
+-      <item name="Ethiopic" href="cal_ethiopic.html"/>
+-      <item name="Gregorian" href="cal_gregorian.html"/>
+-      <item name="GregorianJulian" href="cal_gj.html"/>
+-      <item name="Islamic" href="cal_islamic.html"/>
+-      <item name="Julian" href="cal_julian.html"/>
++    <menu name="Releases">
++      <item name="Release notes" href="installation.html"/>
++      <item name="Dependency info" href="dependency-info.html"/>
++      <item name="Download" href="download.html"/>
+     </menu>
+ 
+     <menu name="Development">
+@@ -57,26 +136,20 @@
+       <item name="Test results" href="surefire-report.html"/>
+     </menu>
+ 
++    <menu name="Related">
++      <item name="Related projects" href="related.html"/>
++      <item name="JSP tags" href="http://www.joda.org/joda-time-jsptags/"/>
++      <item name="Hibernate" href="http://www.joda.org/joda-time-hibernate/"/>
++      <item name="I18N" href="http://www.joda.org/joda-time-i18n/"/>
++    </menu>
++
+     <menu name="Joda">
+-      <item name="Joda home" href="http://www.joda.org"/>
++      <item name="Home" href="http://www.joda.org"/>
+       <item name="Beans" href="http://www.joda.org/joda-beans/"/>
+-      <item name="Collect" href="http://www.joda.org/joda-collect/"/>
+       <item name="Convert" href="http://www.joda.org/joda-convert/"/>
+       <item name="Money" href="http://www.joda.org/joda-money/"/>
+-      <item name="Primitives" href="http://www.joda.org/joda-primitives/"/>
+     </menu>
+ 
+-    <menu ref="reports"/>
+-
+-    <menu name="Website">
+-      <item name="Privacy" href="privacy.html"/>
+-    </menu>
++    <menu name="Reports" ref="reports"/>
+   </body>
+-
+-  <poweredBy>
+-    <logo name="Maven" href="http://maven.apache.org/"
+-          img="http://maven.apache.org/images/logos/maven-feather.png"/>
+-    <logo name="GitHub" href="https://github.com/JodaOrg/joda-time"
+-          img="http://www.joda.org/images/github.png"/>
+-  </poweredBy>
+ </project>
+diff --git a/src/site/xdoc/cal.xml b/src/site/xdoc/cal.xml
+new file mode 100644
+index 000000000..5c984e5b8
+--- /dev/null
++++ b/src/site/xdoc/cal.xml
+@@ -0,0 +1,30 @@
++<?xml version="1.0" encoding="ISO-8859-1"?>
++
++<document>
++
++ <properties>
++  <title>Java date and time API - Calendar systems</title>
++  <author>Stephen Colebourne</author>
++ </properties>
++
++ <body>
++
++<section name="Calendar systems">
++
++<p>
++Documentation on the calendar systems in Joda-Time:
++</p>
++<ul>
++<li><a href="cal_buddhist.html">Buddhist</a></li>
++<li><a href="cal_coptic.html">Coptic</a></li>
++<li><a href="cal_ethiopic.html">Ethiopic</a></li>
++<li><a href="cal_gj.html">Gregorian-Julian cutover</a></li>
++<li><a href="cal_gregorian.html">Gregorian</a></li>
++<li><a href="cal_islamic.html">Islamic</a></li>
++<li><a href="cal_iso.html">ISO</a></li>
++<li><a href="cal_julian.html">Julian</a></li>
++</ul>
++</section>
++
++</body>
++</document>
+diff --git a/src/site/xdoc/field.xml b/src/site/xdoc/field.xml
+index 54754e905..1f6e33c90 100644
+--- a/src/site/xdoc/field.xml
++++ b/src/site/xdoc/field.xml
+@@ -314,17 +314,13 @@ The definition of these varies by chronology:
+ </p>
+ <table border="1">
+ <tr>
+-<th></th>
+-<th colspan="3">GJ</th>
+-<th colspan="3">ISO</th>
+-</tr><tr>
+ <th>year of era</th>
+-<th>year</th>
+-<th>century of era</th>
+-<th>year of century</th>
+-<th>year</th>
+-<th>century of era</th>
+-<th>year of century</th>
++<th>GJ year</th>
++<th>GJ century of era</th>
++<th>GJ year of century</th>
++<th>ISO year</th>
++<th>ISO century of era</th>
++<th>ISO year of century</th>
+ </tr><tr>
+ <td align="center">101 BCE</td>
+ <td align="center">-101</td>
+diff --git a/src/site/xdoc/index.xml b/src/site/xdoc/index.xml
+deleted file mode 100644
+index 4e425b979..000000000
+--- a/src/site/xdoc/index.xml
++++ /dev/null
+@@ -1,192 +0,0 @@
+-<?xml version="1.0" encoding="ISO-8859-1"?>
+-
+-<document>
+-
+- <properties>
+-  <title>Java date and time API - Home</title>
+-  <author>Stephen Colebourne</author>
+-  <author>Al Major</author>
+- </properties>
+-
+- <body>
+-
+-<section name="Joda-Time - Java date and time API">
+-<p>
+-Joda-Time provides a quality replacement for the Java <em>date</em>
+-and <em>time</em> classes. The design allows for multiple <em>calendar</em>
+-systems, while still providing a simple API.
+-The 'default' calendar is the <a href="cal_iso.html">ISO8601</a> standard which
+-is used by XML. The Gregorian, Julian, Buddhist, Coptic, Ethiopic and Islamic systems
+-are also included, and we welcome further additions. Supporting classes include
+-time zone, duration, format and parsing.
+-</p>
+-<p>
+-As a flavour of Joda-Time, here's some example code:
+-<source>
+-public boolean isAfterPayDay(<a href="apidocs/org/joda/time/DateTime.html"><b>DateTime</b></a> datetime) {
+-  if (datetime.getMonthOfYear() == 2) {   // February is month 2!!
+-    return datetime.getDayOfMonth() > 26;
+-  }
+-  return datetime.getDayOfMonth() > 28;
+-}
+-
+-public <a href="apidocs/org/joda/time/Days.html"><b>Days</b></a> daysToNewYear(<a href="apidocs/org/joda/time/LocalDate.html"><b>LocalDate</b></a> fromDate) {
+-  <a href="apidocs/org/joda/time/LocalDate.html"><b>LocalDate</b></a> newYear = fromDate.plusYears(1).withDayOfYear(1);
+-  return <a href="apidocs/org/joda/time/Days.html"><b>Days</b></a>.daysBetween(fromDate, newYear);
+-}
+-
+-public boolean isRentalOverdue(<a href="apidocs/org/joda/time/DateTime.html"><b>DateTime</b></a> datetimeRented) {
+-  <a href="apidocs/org/joda/time/Period.html"><b>Period</b></a> rentalPeriod = new <a href="apidocs/org/joda/time/Period.html"><b>Period</b></a>().withDays(2).withHours(12);
+-  return datetimeRented.plus(rentalPeriod).isBeforeNow();
+-}
+-
+-public String getBirthMonthText(<a href="apidocs/org/joda/time/LocalDate.html"><b>LocalDate</b></a> dateOfBirth) {
+-  return dateOfBirth.monthOfYear().getAsText(Locale.ENGLISH);
+-}
+-</source>
+-Version 2.6 was released on 2014-12-01 -
+-<a href="download.html">Download now</a>
+-</p>
+-</section>
+-
+-
+-<section name="Why Joda-Time?">
+-<p>
+-Joda-Time has been created to radically change date and time handling in Java.
+-The JDK classes Date and Calendar are very badly designed, have had numerous bugs
+-and have odd performance effects.
+-Here are some of our reasons for developing and using Joda-Time:
+-<ul>
+-<li><b>Easy to Use</b>.
+-Calendar makes accessing 'normal' dates difficult, due to the lack of simple methods.
+-Joda-Time has straightforward <a href="field.html">field accessors</a> such as
+-<code>getYear()</code> or <code>getDayOfWeek()</code>.</li>
+-
+-<li><b>Easy to Extend</b>.
+-The JDK supports multiple calendar systems via subclasses of <code>Calendar</code>.
+-This is clunky, and in practice it is very difficult to write another calendar system.
+-Joda-Time supports multiple calendar systems via a pluggable system based on the
+-<code>Chronology</code> class.</li>
+-
+-<li><b>Comprehensive Feature Set</b>.
+-The library is intended to provide all the functionality that is required for date-time
+-calculations. It already provides out-of-the-box features, such as support for oddball
+-date formats, which are difficult to replicate with the JDK.</li>
+-
+-<li><b>Up-to-date Time Zone calculations</b>.
+-The <a href="timezones.html">time zone implementation</a> is based on
+-the public <a href="http://www.iana.org/time-zones">tz database</a>, which is
+-updated several times a year. New Joda-Time releases incorporate all changes
+-made to this database. Should the changes be needed earlier,
+-<a href="tz_update.html">manually updating the zone data</a> is easy.</li>
+-
+-<li><b>Calendar support</b>.
+-The library currently provides 8 calendar systems. More will be added in the future.</li>
+-
+-<li><b>Easy interoperability</b>.
+-The library internally uses a millisecond instant which is identical to the JDK and similar
+-to other common time representations. This makes interoperability easy, and Joda-Time comes
+-with out-of-the-box JDK interoperability.</li>
+-
+-<li><b>Better Performance Characteristics</b>.
+-Calendar has strange performance characteristics as it recalculates fields at unexpected moments.
+-Joda-Time does only the minimal calculation for the field that is being accessed.</li>
+-
+-<li><b>Good Test Coverage</b>.
+-Joda-Time has a comprehensive set of developer tests, providing assurance of the library's quality.</li>
+-
+-<li><b>Complete Documentation</b>.
+-There is a full <a href="userguide.html">User Guide</a> which provides an overview and covers
+-common usage scenarios. The <a href="apidocs/index.html">javadoc</a>
+-is extremely detailed and covers the rest of the API.</li>
+-
+-<li><b>Maturity</b>.
+-The library has been under active development since 2002.
+-Although it continues to be improved with the addition of new features and
+-bug-fixes, it is a mature and reliable code base.
+-A number of <a href="related.html">related projects</a> are now available.</li>
+-
+-<li><b>Open Source</b>.
+-Joda-Time is licenced under the business friendly <a href="license.html">Apache License Version 2.0</a>.</li>
+-</ul>
+-</p>
+-</section>
+-
+-
+-<section name="Documentation">
+-<p>
+-Various documentation is available:
+-<ul>
+-<li>Two user guides - <a href="quickstart.html">quick</a> and <a href="userguide.html">full</a></li>
+-<li>The key concepts and chronology documents in the left navigation area</li>
+-<li>The <a href="apidocs/index.html">Javadoc</a></li>
+-<li>Information on <a href="installation.html">downloading and installing</a> Joda-Time including release notes</li>
+-<li>The <a href="faq.html">FAQ</a> list</li>
+-<li>The <a href="https://github.com/JodaOrg/joda-time">GitHub</a> source repository</li>
+-</ul>
+-</p>
+-</section>
+-
+-
+-<section name="Releases">
+-<p>
+-<a href="download.html">Release 2.6</a>
+-is the current latest release.
+-This release is an evolution of the 1.x codebase, not a major rewrite.
+-It is considered stable and worthy of the 2.x tag.
+-</p>
+-<p>
+-Version 2.6 is a bugfix release compatible with version 2.x.
+-See the <a href="upgradeto260.html">upgrade notes</a> for full details.
+-</p>
+-<p>
+-Version 2.x is almost completely source and binary compatible with version 1.x.
+-Key changes include the use of JDK 1.5 or later, generics, and the removal of some (but not all)
+-deprecated methods. See the <a href="upgradeto200.html">upgrade notes</a> for full details
+-including information on the corner cases that are not compatible.
+-</p>
+-<p>
+-We will support the 2.x product line using standard Java mechanisms.
+-The main public API will remain backwards compatible for both source and binary in the 2.x stream.
+-The version number will change to 3.0 to indicate a significant change in compatibility.
+-</p>
+-<p>
+-Available in <a href="http://search.maven.org/#artifactdetails|joda-time|joda-time|2.6|jar">Maven Central</a>.
+-</p>
+-
+-<p>
+-<a href="https://sourceforge.net/projects/joda-time/files/joda-time/1.6.2/">Release 1.6.2</a>
+-is the last v1.x release.
+-It is compatible with JDK 1.4.
+-Given that v2.x is essentially compatible with v1.6.2, there are no current plans for further
+-releases in the v1.x product line.
+-</p>
+-
+-</section>
+-
+-
+-<section name="Support">
+-<p>
+-Support on bugs, library usage or enhancement requests is available on a best efforts basis.
+-</p>
+-<p>
+-To suggest enhancements or contribute, please <a href="https://github.com/JodaOrg/joda-time">fork the source code</a> on GitHub.
+-Alternatively, use GitHub <a href="https://github.com/JodaOrg/joda-time/issues">issues</a>.
+-</p>
+-<p>
+-The older mechanisms of the joda-interest <a href="mail-lists.html">mailing list</a>
+-and the joda-time <a href="http://sourceforge.net/projects/joda-time/forums/forum/337835">forums</a>
+-do still exist, but are deprecated.
+-</p>
+-<p>
+-<br />
+-</p>
+-<p>
+-<br />
+-</p>
+-<p>
+-<br />
+-</p>
+-</section>
+-</body>
+-</document>
+diff --git a/src/site/xdoc/key.xml b/src/site/xdoc/key.xml
+new file mode 100644
+index 000000000..718962d3d
+--- /dev/null
++++ b/src/site/xdoc/key.xml
+@@ -0,0 +1,30 @@
++<?xml version="1.0" encoding="ISO-8859-1"?>
++
++<document>
++
++ <properties>
++  <title>Java date and time API - Key concepts</title>
++  <author>Stephen Colebourne</author>
++ </properties>
++
++ <body>
++
++<section name="Key concepts">
++
++<p>
++Documentation on the key concepts in Joda-Time:
++</p>
++<ul>
++<li><a href="key_instant.html">Instant</a></li>
++<li><a href="key_partial.html">Partial</a></li>
++<li><a href="key_interval.html">Interval</a></li>
++<li><a href="key_duration.html">Duration</a></li>
++<li><a href="key_period.html">Period</a></li>
++<li><a href="key_chronology.html">Chronology</a></li>
++<li><a href="key_format.html">Format</a></li>
++<li><a href="tz_update.html">Time zone update</a></li>
++</ul>
++</section>
++
++</body>
++</document>
+diff --git a/src/site/xdoc/privacy.xml b/src/site/xdoc/privacy.xml
+deleted file mode 100644
+index 9d82bae01..000000000
+--- a/src/site/xdoc/privacy.xml
++++ /dev/null
+@@ -1,49 +0,0 @@
+-<?xml version="1.0" encoding="ISO-8859-1"?>
+-
+-<document>
+- <properties>
+-  <title>Privacy</title>
+- </properties>
+-<body>
+-
+-<!-- ========================================================================= -->
+-
+-<section name="Privacy">
+-<p>
+-Information about your use of this website is collected using cookies.
+-The collected information consists of the following:
+-<br />
+-   1. The IP address from which you access the website;<br />
+-   2. The type of browser and operating system you use to access our site;<br />
+-   3. The date and time you access our site;<br />
+-   4. The pages you visit; and<br />
+-   5. The addresses of pages from where you followed a link to our site.<br />
+-</p>
+-<p>
+-Part of this information is gathered using a tracking cookie set by the 
+-<a href="http://www.google.com/analytics/">Google Analytics</a> service
+-and handled by Google as described in their 
+-<a href="http://www.google.com/privacy.html">privacy policy</a>. See your browser documentation for
+-instructions on how to disable the cookie if you prefer not to share this data with Google.
+-</p>
+-<p>
+-We use the gathered information to help us make our site more useful to visitors and to better
+-understand how and when our site is used. We do not track or collect personally identifiable information
+-or associate gathered data with any personally identifying information from other sources.
+-</p>
+-<p>
+-By using this website, you consent to the collection of this data in the manner and for the purpose described above.
+-<br />
+-</p>
+-<!-- <p>
+-This website also makes use of targetted adverts supplied by
+-<a href="https://www.google.com/adsense">Google Adsense</a>.
+-To achieve this targetting, Google utilises cookies which collect the same information described above.
+-The cookies identfy your usage of many different internet websites, not just this one, and may be used
+-in conjunction with other advertising networks.
+-For more details on the Adsense program, and to find out your options to control how the data
+-is used please <a href="http://www.google.com/privacy_ads.html">click here</a>.
+-</p>-->
+-</section>
+-</body>
+-</document>
+
+From d923b950c58a65eb542fa2b197f889236476d2fc Mon Sep 17 00:00:00 2001
+From: Ed Wagstaff <edwardwagstaff@gmail.com>
+Date: Thu, 4 Dec 2014 22:09:25 +0000
+Subject: [PATCH 04/16] Update documentation on Chronology to include
+ IslamicChronology in the list of included chronologies.
+
+---
+ src/main/java/org/joda/time/Chronology.java | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/src/main/java/org/joda/time/Chronology.java b/src/main/java/org/joda/time/Chronology.java
+index 592f7b70d..de752fa51 100644
+--- a/src/main/java/org/joda/time/Chronology.java
++++ b/src/main/java/org/joda/time/Chronology.java
+@@ -38,6 +38,7 @@
+  * <li>Buddhist - The Buddhist calendar system which is an offset in years from GJ
+  * <li>Coptic - The Coptic calendar system which defines 30 day months
+  * <li>Ethiopic - The Ethiopic calendar system which defines 30 day months
++ * <li>Islamic - The Islamic, or Hijri, lunar calendar system
+  * </ul>
+  * Hopefully future releases will contain more chronologies.
+  * <p>
+@@ -55,6 +56,7 @@
+  * @see org.joda.time.chrono.CopticChronology
+  * @see org.joda.time.chrono.BuddhistChronology
+  * @see org.joda.time.chrono.EthiopicChronology
++ * @see org.joda.time.chrono.IslamicChronology
+  *
+  * @author Stephen Colebourne
+  * @author Brian S O'Neill
+
+From 76425421522a32aecb8d5ccb0b4098f0544ed96d Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Fri, 5 Dec 2014 08:58:21 +0000
+Subject: [PATCH 05/16] Update pom.xml following pull request
+
+---
+ pom.xml | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/pom.xml b/pom.xml
+index 4e8828baf..6e382107b 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -203,6 +203,10 @@
+       <name>Bram Van Dam</name>
+       <url>https://github.com/codematters</url>
+     </contributor>
++    <contributor>
++      <name>Ed Wagstaff</name>
++      <url>https://github.com/edwag</url>
++    </contributor>
+     <contributor>
+       <name>Maxim Zhao</name>
+     </contributor>
+
+From 5ee3b78500f67b464bc647d5834c62d05086b52c Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Fri, 5 Dec 2014 18:11:20 +0000
+Subject: [PATCH 06/16] Fix maven co-ordinates
+
+Fixes #214
+---
+ src/site/markdown/index.md | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/site/markdown/index.md b/src/site/markdown/index.md
+index 0d1dd7495..7c26eafba 100644
+--- a/src/site/markdown/index.md
++++ b/src/site/markdown/index.md
+@@ -138,7 +138,7 @@ Available in [Maven Central](http://search.maven.org/#artifactdetails%7Cjoda-tim
+ 
+ ```xml
+ <dependency>
+-  <groupId>org.joda</groupId>
++  <groupId>joda-time</groupId>
+   <artifactId>joda-time</artifactId>
+   <version>2.6</version>
+ </dependency>
+
+From e26b8246bb2d2826c5c357e59e47e252e2eba755 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Thu, 18 Dec 2014 13:03:55 +0000
+Subject: [PATCH 07/16] Update website
+
+---
+ src/site/markdown/index.md       |   9 +-
+ src/site/markdown/quickstart.md  | 147 +++++++++++++++++++++++++++++
+ src/site/xdoc/cal.xml            |   2 +-
+ src/site/xdoc/key_chronology.xml |   4 +
+ src/site/xdoc/key_instant.xml    |   6 +-
+ src/site/xdoc/quickstart.xml     | 155 -------------------------------
+ src/site/xdoc/userguide.xml      |   2 +-
+ 7 files changed, 162 insertions(+), 163 deletions(-)
+ create mode 100644 src/site/markdown/quickstart.md
+ delete mode 100644 src/site/xdoc/quickstart.xml
+
+diff --git a/src/site/markdown/index.md b/src/site/markdown/index.md
+index 7c26eafba..23cd384a7 100644
+--- a/src/site/markdown/index.md
++++ b/src/site/markdown/index.md
+@@ -100,7 +100,7 @@ updated several times a year. New Joda-Time releases incorporate all changes
+ made to this database. Should the changes be needed earlier,
+ <a href="tz_update.html">manually updating the zone data</a> is easy.
+ * <b>Calendar support</b>.
+-The library currently provides 8 calendar systems. More will be added in the future.
++The library provides [8 calendar systems](cal.html).
+ * <b>Easy interoperability</b>.
+ The library internally uses a millisecond instant which is identical to the JDK and similar
+ to other common time representations. This makes interoperability easy, and Joda-Time comes
+@@ -116,8 +116,7 @@ common usage scenarios. The <a href="apidocs/index.html">javadoc</a>
+ is extremely detailed and covers the rest of the API.
+ * <b>Maturity</b>.
+ The library has been under active development since 2002.
+-Although it continues to be improved with the addition of new features and
+-bug-fixes, it is a mature and reliable code base.
++It is a mature and reliable code base.
+ A number of <a href="related.html">related projects</a> are now available.
+ * <b>Open Source</b>.
+ Joda-Time is licenced under the business friendly <a href="license.html">Apache License Version 2.0</a>.
+@@ -166,4 +165,8 @@ Support on bugs, library usage or enhancement requests is available on a best ef
+ To suggest enhancements or contribute, please [fork the source code](https://github.com/JodaOrg/joda-time)
+ on GitHub and send a Pull Request.
+ 
++Note that Joda-Time is considered to be a largely "finished" project.
++No major enhancements are planned.
++If using Java SE 8, please migrate to `java.time` (JSR-310).
++
+ Alternatively, use GitHub [issues](https://github.com/JodaOrg/joda-time/issues).
+diff --git a/src/site/markdown/quickstart.md b/src/site/markdown/quickstart.md
+new file mode 100644
+index 000000000..d89a08b43
+--- /dev/null
++++ b/src/site/markdown/quickstart.md
+@@ -0,0 +1,147 @@
++## Quick start guide
++
++This guide provides a quick introduction to Joda-Time.
++For more information, see the full [user guide](userguide.html).
++
++### Date and Time
++
++Date and time is a surprisingly complex domain.
++The many classes in Joda-Time are designed to allow the nuances of the domain to be fully expressed.
++
++The five date-time classes that will be used most are:
++
++* [`Instant`](apidocs/org/joda/time/Instant.html) - Immutable class representing an instantaneous point on the time-line
++* [`DateTime`](apidocs/org/joda/time/DateTime.html) - Immutable replacement for JDK `Calendar`
++* [`LocalDate`](apidocs/org/joda/time/LocalDate.html) - Immutable class representing a local date without a time (no time-zone)
++* [`LocalTime`](apidocs/org/joda/time/LocalTime.html) - Immutable class representing a time without a date (no time-zone)
++* [`LocalDateTime`](apidocs/org/joda/time/LocalDateTime.html) - Immutable class representing a local date and time (no time-zone)
++
++An `Instant` is a good class to use for the timestamp of an event, as there is no calendar system or time-zone to worry about.
++A `LocalDate` is a good class to use to represent a date of birth, as there is no need to refer to the time of day.
++A `LocalTime` is a good class to use to represent the time of day that a shop opens or closes.
++A `DateTime` is a good class to use as a general purpose replacement for the JDK `Calendar` class, where
++the time-zone information is important.
++For more detail, see the documentation on [instants](key_instant.html) and [partials](key_partial.html).
++
++
++### Using the Date and Time classes
++
++Each date-time class provides a variety of constructors.
++These include the `Object` constructor.
++This allows you to construct an instance from a variety of different objects:
++For example, a `DateTime` can be constructed from the following objects:
++
++* `Date` - a JDK instant
++* `Calendar` - a JDK calendar
++* `String` - in ISO8601 format
++* `Long` - in milliseconds
++* any Joda-Time date-time class
++
++The use of an `Object` constructor is a little unusual, but it is used because the
++list of types that can be converted is extensible.
++The main advantage is that converting from a JDK `Date` or `Calendar` to a Joda-Time
++class is easy - simply pass the JDK class into the constructor.
++For example, this code converts a `java.util.Date` to a `DateTime`:
++
++```
++  java.util.Date juDate = new Date();
++  DateTime dt = new DateTime(juDate);
++```
++
++Each date-time class provides simple easy methods
++to access the date-time [fields](field.html).
++For example, to access the month and year you can use:
++
++```
++  DateTime dt = new DateTime();
++  int month = dt.getMonthOfYear();  // where January is 1 and December is 12
++  int year = dt.getYear();
++```
++
++All the main date-time classes are immutable, like `String`, and cannot be changed
++after creation. However, simple methods have been provided to alter field values
++in a newly created object. For example, to set the year, or add 2 hours you can use:
++
++```
++  DateTime dt = new DateTime();
++  DateTime year2000 = dt.withYear(2000);
++  DateTime twoHoursLater = dt.plusHours(2);
++```
++
++In addition to the basic get methods, each date-time class provides property
++methods for each field. These provide access to the full wealth of Joda-Time
++functionality. For example, to access details about a month or year:
++
++```
++  DateTime dt = new DateTime();
++  String monthName = dt.monthOfYear().getAsText();
++  String frenchShortName = dt.monthOfYear().getAsShortText(Locale.FRENCH);
++  boolean isLeapYear = dt.year().isLeap();
++  DateTime rounded = dt.dayOfMonth().roundFloorCopy();
++```
++
++### Calendar systems and time-zones
++
++Joda-Time provides support for multiple [calendar systems](key_chronology.html) and the full range of time-zones.
++The [`Chronology`](apidocs/org/joda/time/Chronology.html)
++and [`DateTimeZone`](apidocs/org/joda/time/DateTimeZone.html)
++classes provide this support.
++
++Joda-Time defaults to using the ISO calendar system, which is the *de facto* civil calendar
++used by the world. The default time-zone is the same as the default of the JDK.
++These default values can be overridden whenever necessary.
++Please note that the ISO calendar system is historically inaccurate before 1583.
++
++Joda-Time uses a pluggable mechanism for calendars.
++By contrast, the JDK uses subclasses such as `GregorianCalendar`.
++This code obtains a Joda-Time chronology by calling one of the factory methods on the `Chronology` implementation:
++
++```
++  Chronology coptic = CopticChronology.getInstance();
++```
++
++Time zones are implemented as part of the chronology.
++The code obtains a Joda-Time chronology in the Tokyo time-zone:
++
++```
++  DateTimeZone zone = DateTimeZone.forID("Asia/Tokyo");
++  Chronology gregorianJuian = GJChronology.getInstance(zone);
++```
++
++### Intervals and time periods
++
++Joda-Time provides support for intervals and time periods.
++
++An [interval](key_interval.html) is represented by the [`Interval`](apidocs/org/joda/time/Interval.html) class.
++It holds a start and end date-time, and allows operations based around that range of time.
++
++A time [period](key_period.html) is represented by the [`Period`](apidocs/org/joda/time/Period.html) class.
++This holds a period such as 6 months, 3 days and 7 hours.
++You can create a `Period` directly, or derive it from an interval.
++
++A time [duration](key_duration.html) is represented by the [`Duration`](apidocs/org/joda/time/Duration.html) class.
++This holds an exact duration in milliseconds.
++You can create a `Duration` directly, or derive it from an interval.
++
++Although a period and a duration may seem similar, they operate differently.
++For example, consider adding one day to a `DateTime` at the daylight savings cutover:
++
++```
++  DateTime dt = new DateTime(2005, 3, 26, 12, 0, 0, 0);
++  DateTime plusPeriod = dt.plus(Period.days(1));
++  DateTime plusDuration = dt.plus(new Duration(24L*60L*60L*1000L));
++```
++
++Adding a period will add 23 hours in this case, not 24 because of the daylight
++savings change, thus the time of the result will still be midday.
++Adding a duration will add 24 hours no matter what, thus the time of the result will change to 13:00.
++
++### More information
++
++See the following for more information:
++
++* The [full user guide](userguide.html)
++* The [key concepts](key.html)
++* The [available calendar systems](cal.html)
++* The [FAQs](faq.html)
++* The [Javadoc](apidocs/index.html)
+diff --git a/src/site/xdoc/cal.xml b/src/site/xdoc/cal.xml
+index 5c984e5b8..5e1589e3a 100644
+--- a/src/site/xdoc/cal.xml
++++ b/src/site/xdoc/cal.xml
+@@ -12,7 +12,7 @@
+ <section name="Calendar systems">
+ 
+ <p>
+-Documentation on the calendar systems in Joda-Time:
++Joda-Time provide 8 calendar systems:
+ </p>
+ <ul>
+ <li><a href="cal_buddhist.html">Buddhist</a></li>
+diff --git a/src/site/xdoc/key_chronology.xml b/src/site/xdoc/key_chronology.xml
+index 6ba6256f4..b5286afd3 100644
+--- a/src/site/xdoc/key_chronology.xml
++++ b/src/site/xdoc/key_chronology.xml
+@@ -49,6 +49,10 @@ Thus there is an initial setup cost when using Joda-Time, but after that only
+ the main API instance classes (DateTime, Interval, Period, etc.) have creation and
+ garbage collector costs.
+ </p>
++<p>
++Reference documentation is provided for each of the <a href="cal.html">8 calendar systems</a>
++that Joda-Time includes.
++</p>
+ 
+ </section>
+ 
+diff --git a/src/site/xdoc/key_instant.xml b/src/site/xdoc/key_instant.xml
+index 91775a112..2aee21d98 100644
+--- a/src/site/xdoc/key_instant.xml
++++ b/src/site/xdoc/key_instant.xml
+@@ -50,11 +50,11 @@ and is intended for time zone and calendar neutral data transfer</li>
+ <li><a href="apidocs/org/joda/time/DateTime.html">DateTime</a> -
+ The most commonly used class in the library, and an immutable representation of a
+ date and time with calendar and time zone</li>
+-<li><a href="apidocs/org/joda/time/DateMidnight.html">DateMidnight</a> -
+-Similar to <code>DateTime</code> and also immutable but with the time component
+-forced to be midnight (at the start of a day)</li>
+ <li><a href="apidocs/org/joda/time/MutableDateTime.html">MutableDateTime</a> -
+ A mutable representation of date and time with calendar and time zone</li>
++<li><a href="apidocs/org/joda/time/DateMidnight.html">DateMidnight</a> -
++A deprecated implementation, similar to <code>DateTime</code> but with the time component
++forced to be midnight (at the start of a day)</li>
+ </ul>
+ We recommend the immutable implementations for general usage.
+ </p>
+diff --git a/src/site/xdoc/quickstart.xml b/src/site/xdoc/quickstart.xml
+deleted file mode 100644
+index 998929c67..000000000
+--- a/src/site/xdoc/quickstart.xml
++++ /dev/null
+@@ -1,155 +0,0 @@
+-<?xml version="1.0" encoding="ISO-8859-1"?>
+-
+-<document>
+- <properties>
+-  <title>Java date and time API - Quick start guide</title>
+-  <author>Stephen Colebourne</author>
+- </properties>
+-<body>
+-
+-<!-- ========================================================================= -->
+-
+-<section name="Quick start guide">
+-<p>
+-This is the quick introduction guide to Joda-Time and the features on offer.
+-Its designed for those of you who are too impatient to read the full
+-<a href="userguide.html">user guide</a>.
+-</p>
+-
+-<subsection name="Date and Time">
+-<p>
+-Joda-Time includes these key datetime classes:
+-<ul>
+-<li><a href="apidocs/org/joda/time/DateTime.html"><code>DateTime</code></a> - Immutable replacement for JDK <code>Calendar</code></li>
+-<li><a href="apidocs/org/joda/time/DateMidnight.html"><code>DateMidnight</code></a> - Immutable class representing a date where the time is forced to midnight</li>
+-<li><a href="apidocs/org/joda/time/LocalDate.html"><code>LocalDate</code></a> - Immutable class representing a local date without a time (no time zone)</li>
+-<li><a href="apidocs/org/joda/time/LocalTime.html"><code>LocalTime</code></a> - Immutable class representing a time without a date (no time zone)</li>
+-<li><a href="apidocs/org/joda/time/LocalDateTime.html"><code>LocalDateTime</code></a> - Immutable class representing a local date and time (no time zone)</li>
+-</ul>
+-</p>
+-
+-<p>
+-Each datetime class provides a variety of constructors.
+-These include the <code>Object</code> constructor.
+-This allows you to construct, for example, <code>DateTime</code> from
+-the following objects:
+-<ul>
+-<li><code>Date</code> - a JDK instant</li>
+-<li><code>Calendar</code> - a JDK calendar</li>
+-<li><code>String</code> - in ISO8601 format</li>
+-<li><code>Long</code> - in milliseconds</li>
+-<li>any Joda-Time datetime class</li>
+-</ul>
+-This list is extensible. In other words Joda-Time sacrifices a little type-safety
+-for extensibility. It does mean however, that converting from a JDK <code>Date</code>
+-or <code>Calendar</code> to a Joda-Time class is easy - simply pass the JDK class
+-into the constructor.
+-</p>
+-
+-<p>
+-Each datetime class provides simple easy methods
+-to access the datetime <a href="field.html">fields</a>. For example, to access
+-the month you can use:
+-<source>
+-  DateTime dt = new DateTime();
+-  int month = dt.getMonthOfYear();
+-</source>
+-</p>
+-
+-<p>
+-All the main datetime classes are immutable (like String) and cannot be changed
+-after creation. However, simple methods have been provided to alter field values
+-in a newly created object. For example, to set the year, or add 2 hours you can use:
+-<source>
+-  DateTime dt = new DateTime();
+-  DateTime year2000 = dt.withYear(2000);
+-  DateTime twoHoursLater = dt.plusHours(2);
+-</source>
+-</p>
+-
+-<p>
+-In addition to the basic get methods, each datetime class provides property
+-methods for each field. These provide access to the full wealth of Joda-Time
+-functionality. For example, to access details about a month or year:
+-<source>
+-  DateTime dt = new DateTime();
+-  String monthName = dt.monthOfYear().getAsText();
+-  String frenchShortName = dt.monthOfYear().getAsShortText(Locale.FRENCH);
+-  boolean isLeapYear = dt.year().isLeap();
+-  DateTime rounded = dt.dayOfMonth().roundFloorCopy();
+-</source>
+-</p>
+-</subsection>
+-
+-<subsection name="Calendar systems and time zones">
+-<p>
+-Joda-Time provides support for multiple calendar systems and the full range
+-of time zones.
+-The <a href="apidocs/org/joda/time/Chronology.html"><code>Chronology</code></a>
+-and <a href="apidocs/org/joda/time/DateTimeZone.html"><code>DateTimeZone</code></a>
+-classes provide this support.
+-</p>
+-<p>
+-Joda-Time defaults to using the ISO calendar system (the calendar used by most
+-of the business world) and the default time zone of your machine.
+-These default values can be overridden whenever necessary.
+-Please note that the ISO calendar system is historically inaccurate before 1583.
+-</p>
+-<p>
+-Joda-Time uses a pluggable mechanism for calendars. (The JDK uses subclasses
+-such as <code>GregorianCalendar</code>.)
+-To obtain a Joda-Time calendar, use one of the factory methods on <code>Chronology</code>.
+-<source>
+-  Chronology coptic = CopticChronology.getInstance();
+-</source>
+-</p>
+-<p>
+-Time zones are implemented as part of the chronology.
+-To obtain a Joda-Time chronology in the Tokyo time zone, you can use.
+-<source>
+-  DateTimeZone zone = DateTimeZone.forID("Asia/Tokyo");
+-  Chronology gregorianJuian = GJChronology.getInstance(zone);
+-</source>
+-</p>
+-</subsection>
+-
+-<subsection name="Intervals and time periods">
+-<p>
+-Joda-Time provides support for intervals and time periods.
+-</p>
+-<p>
+-An interval is represented by the
+-<a href="apidocs/org/joda/time/Interval.html"><code>Interval</code></a> class.
+-It holds a start and end datetime, and allows operations based around that
+-range of time.
+-</p>
+-<p>
+-A time period is represented by the
+-<a href="apidocs/org/joda/time/Period.html"><code>Period</code></a> class.
+-This holds a period such as 6 months, 3 days and 7 hours.
+-You can create a <code>Period</code> directly, or derive it from an interval.
+-</p>
+-<p>
+-A time duration is represented by the
+-<a href="apidocs/org/joda/time/Duration.html"><code>Duration</code></a> class.
+-This holds an exact duration in milliseconds.
+-You can create a <code>Duration</code> directly, or derive it from an interval.
+-</p>
+-<p>
+-Although a period and a duration may seem similar, they operate differently.
+-For example, consider adding one day to a <code>DateTime</code> at the daylight
+-savings cutover.
+-<source>
+-  DateTime dt = new DateTime(2005, 3, 26, 12, 0, 0, 0);
+-  DateTime plusPeriod = dt.plus(Period.days(1));
+-  DateTime plusDuration = dt.plus(new Duration(24L*60L*60L*1000L));
+-</source>
+-Adding a period will add 23 hours in this case, not 24 because of the daylight
+-savings change, thus the time of the result will still be midday.
+-Adding a duration will add 24 hours no matter what, thus the time of the result
+-will change to 13:00.
+-</p>
+-</subsection>
+-</section>
+-</body>
+-</document>
+diff --git a/src/site/xdoc/userguide.xml b/src/site/xdoc/userguide.xml
+index 45976325f..a1f63d080 100644
+--- a/src/site/xdoc/userguide.xml
++++ b/src/site/xdoc/userguide.xml
+@@ -146,7 +146,7 @@ of this class can be modified and are not thread-safe.
+ </p>
+ <p>
+ Other implementations of <code>ReadableInstant</code> include <code>Instant</code>
+-and <code>DateMidnight</code>.
++and the deprecated <code>DateMidnight</code>.
+ </p>
+ 
+ <subsection name="Fields">
+
+From b5f433357184e6090507e41c8c66ab683d621e52 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Mon, 29 Dec 2014 11:13:42 +0000
+Subject: [PATCH 08/16] Update related projects page
+
+---
+ src/site/markdown/related.md | 22 +++++++++++++++++
+ src/site/xdoc/related.xml    | 46 ------------------------------------
+ 2 files changed, 22 insertions(+), 46 deletions(-)
+ create mode 100644 src/site/markdown/related.md
+ delete mode 100644 src/site/xdoc/related.xml
+
+diff --git a/src/site/markdown/related.md b/src/site/markdown/related.md
+new file mode 100644
+index 000000000..4e2cb58c8
+--- /dev/null
++++ b/src/site/markdown/related.md
+@@ -0,0 +1,22 @@
++## Related projects
++
++Here are links to a number of projects related to **Joda-Time**.
++These projects are independent - no guarantees of quality are given!
++
++* [Extended Hibernate support](http://usertype.sourceforge.net/) - A set of classes to link Joda-Time to databases using Hibernate.
++* [Original Hibernate support](http://www.joda.org/joda-time-hibernate/) - The original set of classes to link Joda-Time to databases using Hibernate (UserType project is newer and better maintained).
++* [JSP tag support](http://www.joda.org/joda-time-jsptags/) - A tag library in the style of JSTL to allow Joda-Time classes to be used in JSP.
++* [I18N support](http://www.joda.org/joda-time-i18n/) - A simple library that provides additional internationalization data for Joda-Time.
++* [ObjectLab Holiday calculation](http://objectlabkit.sourceforge.net/) - Support for working and non-working days, plus how to calculate and resolve holidays, from a finance industry perspective.
++* [Jollyday holiday calculation](http://jollyday.sourceforge.net/) - Provides classes to handle calculation of holidays.
++* [Recurrance (RFC 2445)](http://code.google.com/p/google-rfc-2445/) - Support for the RFC2445 recurrence specification, as found in iCal.
++* [DataNucleus support](https://github.com/datanucleus/datanucleus-jodatime) - A library providing persistence via the DataNucleus platform.
++* [JAXB](http://blog.bdoughan.com/2011/05/jaxb-and-joda-time-dates-and-times.html) - Notes on Joda-Time and JAXB.
++* [P2 update site](https://github.com/muuki88/joda-osgi) - Eclipse P2 update site.
++* [External Study Trails user guide](http://www.studytrails.com/java/jodatime/)
++* [Humanize](https://github.com/mfornos/humanize) - Human stylized text for date and time.
++* [Joda-Time for Android](https://github.com/dlew/joda-time-android) -
++Version for Android.
++
++If your open source library provides a value added feature on top of Joda-Time,
++then let us know! Just send a pull request to edit this page.
+diff --git a/src/site/xdoc/related.xml b/src/site/xdoc/related.xml
+deleted file mode 100644
+index 34b3dae5d..000000000
+--- a/src/site/xdoc/related.xml
++++ /dev/null
+@@ -1,46 +0,0 @@
+-<?xml version="1.0" encoding="ISO-8859-1"?>
+-
+-<document>
+-
+- <properties>
+-  <title>Java date and time API - Related projects</title>
+-  <author>Stephen Colebourne</author>
+- </properties>
+-
+- <body>
+-
+-<section name="Related projects">
+-<p>
+-A number of libraries and applications are now built using Joda-Time.
+-</p>
+-<ul>
+-<li><a href="http://usertype.sourceforge.net/">Extended Hibernate support</a>
+-A set of classes to link Joda-Time to databases using Hibernate.</li>
+-<li><a href="http://www.joda.org/joda-time-hibernate/">Original Hibernate support</a>
+-The original set of classes to link Joda-Time to databases using Hibernate (UserType project is newer and better maintained).</li>
+-<li><a href="http://www.joda.org/joda-time-jsptags/">JSP tag support</a>
+-A tag library in the style of JSTL to allow Joda-Time classes to be used in JSP.</li>
+-<li><a href="http://www.joda.org/joda-time-i18n/">I18N support</a>
+-A simple library that provides additional internationalization data for Joda-Time.</li>
+-<li><a href="http://objectlabkit.sourceforge.net/">ObjectLab Holiday calculation</a>
+-Support for working and non-working days, plus how to calculate and resolve holidays, from a finance industry perspective.</li>
+-<li><a href="http://jollyday.sourceforge.net/">Jollyday holiday calculation</a>
+-Provides classes to handle calculation of holidays.</li>
+-<li><a href="http://code.google.com/p/google-rfc-2445/">Recurrance (RFC 2445)</a>
+-Support for the RFC2445 recurrence specification, as found in iCal.</li>
+-<li><a href="https://github.com/datanucleus/datanucleus-jodatime">DataNucleus support</a>
+-A library providing persistence via the DataNucleus platform.</li>
+-<li><a href="http://blog.bdoughan.com/2011/05/jaxb-and-joda-time-dates-and-times.html">JAXB</a>
+-Notes on Joda-Time and JAXB.</li>
+-<li><a href="https://github.com/muuki88/joda-osgi">P2 update site</a>
+-Eclipse P2 update site.</li>
+-<li><a href="http://www.studytrails.com/java/jodatime/">External Study Trails user guide</a></li>
+-</ul>
+-<p>
+-If your open source library provides a value added feature on top of Joda-Time, then let us know!
+-</p>
+-
+-</section>
+-
+-</body>
+-</document>
+
+From d209bca3fc3bc17b4a53c7844974411ccd7f271e Mon Sep 17 00:00:00 2001
+From: William Delanoue <william.delanoue@deveryware.net>
+Date: Fri, 2 Jan 2015 16:54:50 +0100
+Subject: [PATCH 09/16] javadoc
+
+---
+ src/main/java/org/joda/time/DateTimeUtils.java | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/main/java/org/joda/time/DateTimeUtils.java b/src/main/java/org/joda/time/DateTimeUtils.java
+index 318823b90..6f00bda41 100644
+--- a/src/main/java/org/joda/time/DateTimeUtils.java
++++ b/src/main/java/org/joda/time/DateTimeUtils.java
+@@ -554,7 +554,7 @@ public long getMillis() {
+         
+         /**
+          * Constructor.
+-         * @param offsetMillis  the millis offset
++         * @param fixedMillis  the millis value
+          */
+         FixedMillisProvider(long fixedMillis) {
+             iMillis = fixedMillis;
+
+From ca8f807b99b16ce5cc51444ce17ca12abdc7ff80 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Sun, 4 Jan 2015 22:11:17 +0000
+Subject: [PATCH 10/16] Added new system property for time-zone loading
+
+New system property "org.joda.time.DateTimeZone.Folder"
+If set, then it is treated as a file system folder
+to load time-zone data from using ZoneInfoProvider
+Fixes #37
+---
+ RELEASE-NOTES.txt                             |   5 ++
+ pom.xml                                       |   1 +
+ src/main/java/org/joda/time/DateTimeZone.java |  71 +++++++++++++-----
+ .../java/org/joda/time/TestDateTimeZone.java  |  15 ++++
+ src/test/resources/tzdata/CET                 | Bin 0 -> 337 bytes
+ src/test/resources/tzdata/ZoneInfoMap         | Bin 0 -> 13 bytes
+ 6 files changed, 73 insertions(+), 19 deletions(-)
+ create mode 100644 src/test/resources/tzdata/CET
+ create mode 100644 src/test/resources/tzdata/ZoneInfoMap
+
+diff --git a/RELEASE-NOTES.txt b/RELEASE-NOTES.txt
+index 9291aa994..0895e26b8 100644
+--- a/RELEASE-NOTES.txt
++++ b/RELEASE-NOTES.txt
+@@ -18,6 +18,11 @@ of restrictions. If the license causes you problems please contact the mailing l
+ 
+ Enhancements since 2.5
+ ----------------------
++- Added new system property for time-zone loading [#37]
++  Added system property "org.joda.time.DateTimeZone.Folder".
++  If set, then it is treated as a file system folder to load time-zone data from.
++  The folder is loaded using ZoneInfoProvider and must be the unzipped output of ZoneInfoCompiler.
++  The default behaviour is unchanged, with default time-zone data included in the jar file.
+ 
+ 
+ Compatibility with 2.5
+diff --git a/pom.xml b/pom.xml
+index 6e382107b..9357b88b4 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -256,6 +256,7 @@
+         <version>1.2.1</version>
+         <executions>
+           <execution>
++            <id>compile-tzdb</id>
+             <phase>compile</phase>
+             <goals>
+               <goal>java</goal>
+diff --git a/src/main/java/org/joda/time/DateTimeZone.java b/src/main/java/org/joda/time/DateTimeZone.java
+index eab959d8c..556520138 100644
+--- a/src/main/java/org/joda/time/DateTimeZone.java
++++ b/src/main/java/org/joda/time/DateTimeZone.java
+@@ -15,6 +15,7 @@
+  */
+ package org.joda.time;
+ 
++import java.io.File;
+ import java.io.IOException;
+ import java.io.ObjectInputStream;
+ import java.io.ObjectOutputStream;
+@@ -78,6 +79,19 @@
+  * However, the factory that accepts a TimeZone will attempt to convert from
+  * the old short id to a suitable long id.
+  * <p>
++ * There are four approaches to loading time-zone data, which are tried in this order:
++ * <ol>
++ * <li>load the specific {@link Provider} specified by the system property
++ *   {@code org.joda.time.DateTimeZone.Provider}.
++ * <li>load {@link ZoneInfoProvider} using the data in the filing system folder
++ *   pointed to by system property {@code org.joda.time.DateTimeZone.Folder}.
++ * <li>load {@link ZoneInfoProvider} using the data in the classpath location
++ *   {@code org/joda/time/tz/data}.
++ * <li>load {@link UTCProvider}
++ * </ol>
++ * <p>
++ * Unless you override the standard behaviour, the default if the third approach.
++ * <p>
+  * DateTimeZone is thread-safe and immutable, and all subclasses must be as
+  * well.
+  * 
+@@ -431,9 +445,10 @@ public static void setProvider(Provider provider) throws SecurityException {
+      * Sets the zone provider factory without performing the security check.
+      * 
+      * @param provider  provider to use, or null for default
++     * @return the provider
+      * @throws IllegalArgumentException if the provider is invalid
+      */
+-    private static void validateProvider(Provider provider) {
++    private static Provider validateProvider(Provider provider) {
+         Set<String> ids = provider.getAvailableIDs();
+         if (ids == null || ids.size() == 0) {
+             throw new IllegalArgumentException("The provider doesn't have any available ids");
+@@ -444,25 +459,35 @@ private static void validateProvider(Provider provider) {
+         if (!UTC.equals(provider.getZone("UTC"))) {
+             throw new IllegalArgumentException("Invalid UTC zone provided");
+         }
++        return provider;
+     }
+ 
+     /**
+      * Gets the default zone provider.
+      * <p>
+-     * Tries the system property <code>org.joda.time.DateTimeZone.Provider</code>.
+-     * Then tries a <code>ZoneInfoProvider</code> using the data in <code>org/joda/time/tz/data</code>.
+-     * Then uses <code>UTCProvider</code>.
++     * This tries four approaches to loading data:
++     * <ol>
++     * <li>loads the provider identifier by the system property
++     *   <code>org.joda.time.DateTimeZone.Provider</code>.
++     * <li>load <code>ZoneInfoProvider</code> using the data in the filing system folder
++     *   pointed to by system property <code>org.joda.time.DateTimeZone.Folder</code>.
++     * <li>loads <code>ZoneInfoProvider</code> using the data in the classpath location
++     *   <code>org/joda/time/tz/data</code>.
++     * <li>loads <code>UTCProvider</code>.
++     * </ol>
++     * <p>
++     * Unless you override the standard behaviour, the default if the third approach.
+      * 
+      * @return the default name provider
+      */
+     private static Provider getDefaultProvider() {
+-        Provider provider = null;
+-
++        // approach 1
+         try {
+             String providerClass = System.getProperty("org.joda.time.DateTimeZone.Provider");
+             if (providerClass != null) {
+                 try {
+-                    provider = (Provider) Class.forName(providerClass).newInstance();
++                    Provider provider = (Provider) Class.forName(providerClass).newInstance();
++                    return validateProvider(provider);
+                 } catch (Exception ex) {
+                     throw new RuntimeException(ex);
+                 }
+@@ -470,21 +495,29 @@ private static Provider getDefaultProvider() {
+         } catch (SecurityException ex) {
+             // ignored
+         }
+-
+-        if (provider == null) {
+-            try {
+-                provider = new ZoneInfoProvider("org/joda/time/tz/data");
+-            } catch (Exception ex) {
+-                ex.printStackTrace();
++        // approach 2
++        try {
++            String dataFolder = System.getProperty("org.joda.time.DateTimeZone.Folder");
++            if (dataFolder != null) {
++                try {
++                    Provider provider = new ZoneInfoProvider(new File(dataFolder));
++                    return validateProvider(provider);
++                } catch (Exception ex) {
++                    throw new RuntimeException(ex);
++                }
+             }
++        } catch (SecurityException ex) {
++            // ignored
+         }
+-
+-        if (provider == null) {
+-            provider = new UTCProvider();
+-        } else {
+-            validateProvider(provider);
++        // approach 3
++        try {
++            Provider provider = new ZoneInfoProvider("org/joda/time/tz/data");
++            return validateProvider(provider);
++        } catch (Exception ex) {
++            ex.printStackTrace();
+         }
+-        return provider;
++        // approach 4
++        return new UTCProvider();
+     }
+ 
+     //-----------------------------------------------------------------------
+diff --git a/src/test/java/org/joda/time/TestDateTimeZone.java b/src/test/java/org/joda/time/TestDateTimeZone.java
+index 13a97988b..5335fc2a6 100644
+--- a/src/test/java/org/joda/time/TestDateTimeZone.java
++++ b/src/test/java/org/joda/time/TestDateTimeZone.java
+@@ -495,6 +495,21 @@ public void testProvider() {
+             DateTimeZone.setProvider(null);
+             assertEquals(ZoneInfoProvider.class, DateTimeZone.getProvider().getClass());
+         }
++        
++        try {
++            System.setProperty("org.joda.time.DateTimeZone.Folder", "src/test/resources/tzdata");
++            DateTimeZone.setProvider(null);
++            assertEquals(ZoneInfoProvider.class, DateTimeZone.getProvider().getClass());
++            assertEquals(2, DateTimeZone.getAvailableIDs().size());
++            assertEquals(true, DateTimeZone.getAvailableIDs().contains("UTC"));
++            assertEquals(true, DateTimeZone.getAvailableIDs().contains("CET"));
++            
++        } finally {
++            System.getProperties().remove("org.joda.time.DateTimeZone.Folder");
++            DateTimeZone.setProvider(null);
++            assertEquals(ZoneInfoProvider.class, DateTimeZone.getProvider().getClass());
++            assertEquals(true, DateTimeZone.getAvailableIDs().size() > 2);
++        }
+     }
+ 
+     public void testProvider_badClassName() {
+diff --git a/src/test/resources/tzdata/CET b/src/test/resources/tzdata/CET
+new file mode 100644
+index 0000000000000000000000000000000000000000..a330e9dfaf06a0e71473109e610a7802a32870fb
+GIT binary patch
+literal 337
+zcmZ=}U}9i#b`1_;V0Ly5VPIg;{NDg1L4b*g(ZR~(4hs{5gB`C8i05Py1LC=v$bfiW
+z#$Y)=<2fK+P}ClfT$nLfF3Jcj7iR>POELoMOEUt?Wf_9y@(jUpMTTIxvWOaxDOC|R
+zAXDnX|A2T+;d?;5ws5dqS2$R%FAOX<DGV$(EetF-D-0|*FBB}dC=@KWtmY2LlvOoz
+zK&Gs#i2?C8)yRN&+p58GyQ;x*`>MfmhpNGH$Ev_`r>ekm=c>SRmloE5^j){x12lz^
+VshIgcI|B<O=$MMRz#MQ00sz<FOilm*
+
+literal 0
+HcmV?d00001
+
+diff --git a/src/test/resources/tzdata/ZoneInfoMap b/src/test/resources/tzdata/ZoneInfoMap
+new file mode 100644
+index 0000000000000000000000000000000000000000..1394f67d8b59c02038a679d0b6e125510ed7e36c
+GIT binary patch
+literal 13
+ScmZQzWMFo74Pjtp00IC93jpE(
+
+literal 0
+HcmV?d00001
+
+
+From 3f84a37f67d1f1ad72ad10f253f91d4a929f9dfa Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Sun, 4 Jan 2015 22:44:06 +0000
+Subject: [PATCH 11/16] Add no-tzdb jar file
+
+A second project output
+Same files, just no tzdb data (or ZoneInfoCompiler)
+Fixes #220
+---
+ RELEASE-NOTES.txt |  8 ++++++++
+ pom.xml           | 37 +++++++++++++++++++++++++++++++++----
+ 2 files changed, 41 insertions(+), 4 deletions(-)
+
+diff --git a/RELEASE-NOTES.txt b/RELEASE-NOTES.txt
+index 0895e26b8..3f29a5c60 100644
+--- a/RELEASE-NOTES.txt
++++ b/RELEASE-NOTES.txt
+@@ -24,6 +24,14 @@ Enhancements since 2.5
+   The folder is loaded using ZoneInfoProvider and must be the unzipped output of ZoneInfoCompiler.
+   The default behaviour is unchanged, with default time-zone data included in the jar file.
+ 
++- Produce jar file without time-zone data [#220]
++  A second jar file is now located in Maven Central with the classifier "no-tzdb".
++  This is the same as the main joda-time jar file, except that the tzdb data and ZoneInfoCompiler are omitted.
++  This is intended for use by Android, but could be used in other environments.
++  If using this alternative jar, a time-zone system property must be set, either
++  "org.joda.time.DateTimeZone.Provider" or "org.joda.time.DateTimeZone.Folder".
++  The default behaviour in the standard jar file is unchanged, with time-zone data included in the jar file.
++
+ 
+ Compatibility with 2.5
+ ----------------------
+diff --git a/pom.xml b/pom.xml
+index 9357b88b4..6752a54ba 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -304,16 +304,45 @@
+       <plugin>
+         <groupId>org.apache.maven.plugins</groupId>
+         <artifactId>maven-jar-plugin</artifactId>
++        <executions>
++          <execution>
++            <id>default-jar</id>
++            <configuration>
++              <archive>
++                <manifestFile>src/conf/MANIFEST.MF</manifestFile>
++                <manifestEntries>
++                  <Time-Zone-Database-Version>${tz.database.version}</Time-Zone-Database-Version>
++                  <Implementation-Title>Joda-Time-No-TZDB</Implementation-Title>
++                </manifestEntries>
++              </archive>
++            </configuration>
++          </execution>
++          <execution>
++            <id>no-tzdb</id>
++            <phase>package</phase>
++            <goals>
++              <goal>jar</goal>
++            </goals>
++            <configuration>
++              <classifier>no-tzdb</classifier>
++              <archive>
++                <manifestEntries>
++                  <Implementation-Title>Joda-Time-No-TZDB</Implementation-Title>
++                </manifestEntries>
++              </archive>
++              <excludes>
++                <exclude>org/joda/time/tz/data/**</exclude>
++                <exclude>org/joda/time/tz/ZoneInfoCompiler*</exclude>
++              </excludes>
++            </configuration>
++          </execution>
++        </executions>
+         <configuration>
+           <archive>
+-            <manifestFile>src/conf/MANIFEST.MF</manifestFile>
+             <manifest>
+               <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+               <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
+             </manifest>
+-            <manifestEntries>
+-              <Time-Zone-Database-Version>${tz.database.version}</Time-Zone-Database-Version>
+-            </manifestEntries>
+           </archive>
+         </configuration>
+       </plugin>
+
+From c6a92aebb9ba03440e4225dd3db205d46a49995e Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Sun, 4 Jan 2015 23:17:41 +0000
+Subject: [PATCH 12/16] Add DateTime.withDate and DateTime.withTime
+
+Fixes #213
+---
+ RELEASE-NOTES.txt                             |  3 ++
+ src/main/java/org/joda/time/DateTime.java     | 30 +++++++++++++++++++
+ .../org/joda/time/TestDateTime_Basics.java    | 28 ++++++++++++++++-
+ 3 files changed, 60 insertions(+), 1 deletion(-)
+
+diff --git a/RELEASE-NOTES.txt b/RELEASE-NOTES.txt
+index 0895e26b8..fc71b5ef8 100644
+--- a/RELEASE-NOTES.txt
++++ b/RELEASE-NOTES.txt
+@@ -18,6 +18,9 @@ of restrictions. If the license causes you problems please contact the mailing l
+ 
+ Enhancements since 2.5
+ ----------------------
++- Add DateTime.withDate(LocalDate) and DateTime.withTime(LocalTime) [#213]
++  This was possible using DateTime.withFields(ReadablePartial) but the new methods are clearer
++
+ - Added new system property for time-zone loading [#37]
+   Added system property "org.joda.time.DateTimeZone.Folder".
+   If set, then it is treated as a file system folder to load time-zone data from.
+diff --git a/src/main/java/org/joda/time/DateTime.java b/src/main/java/org/joda/time/DateTime.java
+index 14117b22b..c595c0e7c 100644
+--- a/src/main/java/org/joda/time/DateTime.java
++++ b/src/main/java/org/joda/time/DateTime.java
+@@ -730,6 +730,21 @@ public DateTime withDate(int year, int monthOfYear, int dayOfMonth) {
+         return withMillis(instant);
+     }
+ 
++    /**
++     * Returns a copy of this datetime with the specified date, retaining the time fields.
++     * <p>
++     * This instance is immutable and unaffected by this method call.
++     *
++     * @param date  the local date
++     * @return a copy of this datetime with a different date
++     * @throws IllegalArgumentException if the time-of-day is invalid for the date
++     * @throws NullPointerException if the date is null
++     */
++    public DateTime withDate(LocalDate date) {
++        return withDate(
++            date.getYear(), date.getMonthOfYear(), date.getDayOfMonth());
++    }
++
+     /**
+      * Returns a copy of this datetime with the specified time, retaining the date fields.
+      * <p>
+@@ -759,6 +774,21 @@ public DateTime withTime(int hourOfDay, int minuteOfHour, int secondOfMinute, in
+         return withMillis(instant);
+     }
+ 
++    /**
++     * Returns a copy of this datetime with the specified time, retaining the date fields.
++     * <p>
++     * This instance is immutable and unaffected by this method call.
++     *
++     * @param time  the local time
++     * @return a copy of this datetime with a different time
++     * @throws IllegalArgumentException if the time-of-day is invalid for the date
++     * @throws NullPointerException if the time is null
++     */
++    public DateTime withTime(LocalTime time) {
++        return withTime(
++            time.getHourOfDay(), time.getMinuteOfHour(), time.getSecondOfMinute(), time.getMillisOfSecond());
++    }
++
+     /**
+      * Returns a copy of this datetime with the time set to the start of the day.
+      * <p>
+diff --git a/src/test/java/org/joda/time/TestDateTime_Basics.java b/src/test/java/org/joda/time/TestDateTime_Basics.java
+index 5e103ba81..12649fa60 100644
+--- a/src/test/java/org/joda/time/TestDateTime_Basics.java
++++ b/src/test/java/org/joda/time/TestDateTime_Basics.java
+@@ -839,7 +839,20 @@ public void testWithDate_int_int_int() {
+         } catch (IllegalArgumentException ex) {}
+     }
+     
+-    public void testWithTime_int_int_int() {
++    public void testWithDate_LocalDate() {
++        DateTime test = new DateTime(2002, 4, 5, 1, 2, 3, 4, ISO_UTC);
++        DateTime result = test.withDate(new LocalDate(2003, 5, 6));
++        DateTime expected = new DateTime(2003, 5, 6, 1, 2, 3, 4, ISO_UTC);
++        assertEquals(expected, result);
++        
++        test = new DateTime(TEST_TIME1);
++        try {
++            test.withDate(new LocalDate(2003, 13, 1));
++            fail();
++        } catch (IllegalArgumentException ex) {}
++    }
++    
++    public void testWithTime_int_int_int_int() {
+         DateTime test = new DateTime(TEST_TIME1 - 12345L, BUDDHIST_UTC);
+         DateTime result = test.withTime(12, 24, 0, 0);
+         assertEquals(TEST_TIME1, result.getMillis());
+@@ -852,6 +865,19 @@ public void testWithTime_int_int_int() {
+         } catch (IllegalArgumentException ex) {}
+     }
+     
++    public void testWithTime_LocalTime() {
++        DateTime test = new DateTime(TEST_TIME1 - 12345L, BUDDHIST_UTC);
++        DateTime result = test.withTime(new LocalTime(12, 24, 0, 0));
++        assertEquals(TEST_TIME1, result.getMillis());
++        assertEquals(BUDDHIST_UTC, result.getChronology());
++        
++        test = new DateTime(TEST_TIME1);
++        try {
++            test.withTime(new LocalTime(25, 1, 1, 1));
++            fail();
++        } catch (IllegalArgumentException ex) {}
++    }
++    
+     @SuppressWarnings("deprecation")
+     public void testWithFields_RPartial() {
+         DateTime test = new DateTime(2004, 5, 6, 7, 8, 9, 0);
+
+From 87278482070aa5ba3b64f2a8e1406c69e4381657 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Mon, 5 Jan 2015 00:00:49 +0000
+Subject: [PATCH 13/16] Fix Asia/Dhaka time-zone
+
+Problem caused by time-zone ending at 24:00 on December 31st
+Model change as being as 23:59:59.999
+Fixes #208
+---
+ RELEASE-NOTES.txt                             |  4 ++++
+ .../org/joda/time/tz/ZoneInfoCompiler.java    | 21 ++++++++++++-------
+ 2 files changed, 17 insertions(+), 8 deletions(-)
+
+diff --git a/RELEASE-NOTES.txt b/RELEASE-NOTES.txt
+index fc71b5ef8..0805760c0 100644
+--- a/RELEASE-NOTES.txt
++++ b/RELEASE-NOTES.txt
+@@ -63,6 +63,10 @@ Bug fixes since 2.5
+   Data returned still depends on the JDK data, not the tzdb
+   Thus, tzdb may say AEST for Sydney Australia, but if the JDK still has EST, then that is what you get
+ 
++- Fix Asia/Dhaka time-zone [#208]
++  Problem caused by time-zone ending at 24:00 on December 31st
++  Model change as being as 23:59:59.999
++
+ - Fix time-zone compilation tests
+ 
+ 
+diff --git a/src/main/java/org/joda/time/tz/ZoneInfoCompiler.java b/src/main/java/org/joda/time/tz/ZoneInfoCompiler.java
+index ac196ee3a..b03549fd5 100644
+--- a/src/main/java/org/joda/time/tz/ZoneInfoCompiler.java
++++ b/src/main/java/org/joda/time/tz/ZoneInfoCompiler.java
+@@ -581,14 +581,19 @@ public void parseDataFile(BufferedReader in) throws IOException {
+                         str = st.nextToken();
+                         zoneChar = parseZoneChar(str.charAt(str.length() - 1));
+                         if (str.equals("24:00")) {
+-                            LocalDate date = (day == -1 ?
+-                                    new LocalDate(2001, month, 1).plusMonths(1) :
+-                                    new LocalDate(2001, month, day).plusDays(1));
+-                            advance = (day != -1 && dayOfWeek != 0);
+-                            month = date.getMonthOfYear();
+-                            day = date.getDayOfMonth();
+-                            if (dayOfWeek != 0) {
+-                                dayOfWeek = ((dayOfWeek - 1 + 1) % 7) + 1;
++                            // handle end of year
++                            if (month == 12 && day == 31) {
++                                millis = parseTime("23:59:59.999");
++                            } else {
++                                LocalDate date = (day == -1 ?
++                                        new LocalDate(2001, month, 1).plusMonths(1) :
++                                        new LocalDate(2001, month, day).plusDays(1));
++                                advance = (day != -1 && dayOfWeek != 0);
++                                month = date.getMonthOfYear();
++                                day = date.getDayOfMonth();
++                                if (dayOfWeek != 0) {
++                                    dayOfWeek = ((dayOfWeek - 1 + 1) % 7) + 1;
++                                }
+                             }
+                         } else {
+                             millis = parseTime(str);
+
+From e0958a6e0e98d656c0da5d523f4d7fca58e116d1 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Sun, 11 Jan 2015 23:24:55 +0000
+Subject: [PATCH 14/16] Ensure period formatting locale used
+
+PeriodFormatter.withLocale() now uses the locale to change the pattern
+PeriodFormat.wordBased() now pushes the locale into the formatter
+Fixes #187
+Fixes #191
+---
+ RELEASE-NOTES.txt                             |  6 ++
+ .../org/joda/time/format/PeriodFormat.java    | 86 ++++++++++++++++---
+ .../org/joda/time/format/PeriodFormatter.java |  6 +-
+ .../joda/time/format/TestPeriodFormat.java    | 41 +++++++++
+ 4 files changed, 128 insertions(+), 11 deletions(-)
+
+diff --git a/RELEASE-NOTES.txt b/RELEASE-NOTES.txt
+index e9b58d644..ef9ab42a5 100644
+--- a/RELEASE-NOTES.txt
++++ b/RELEASE-NOTES.txt
+@@ -75,6 +75,12 @@ Bug fixes since 2.5
+   Problem caused by time-zone ending at 24:00 on December 31st
+   Model change as being as 23:59:59.999
+ 
++- Fix PeriodFormatter.withLocale to operate on word-based formatting [#187, #191]
++  Previously, PeriodFormatter.withLocale() had no effect on word-based formatting
++  Now, the locale used when calling PeriodFormat.wordBased(locale) is passed to the PeriodFormatter.
++  In addition, if PeriodFormatter.withLocale(locale) is called, then the word-based pattern will
++  change to a pattern appropriate for that locale.
++
+ - Fix time-zone compilation tests
+ 
+ 
+diff --git a/src/main/java/org/joda/time/format/PeriodFormat.java b/src/main/java/org/joda/time/format/PeriodFormat.java
+index 54101b606..b763c9644 100644
+--- a/src/main/java/org/joda/time/format/PeriodFormat.java
++++ b/src/main/java/org/joda/time/format/PeriodFormat.java
+@@ -15,12 +15,17 @@
+  */
+ package org.joda.time.format;
+ 
++import java.io.IOException;
++import java.io.Writer;
+ import java.util.Enumeration;
+ import java.util.Locale;
+ import java.util.ResourceBundle;
+ import java.util.concurrent.ConcurrentHashMap;
+ import java.util.concurrent.ConcurrentMap;
+ 
++import org.joda.time.ReadWritablePeriod;
++import org.joda.time.ReadablePeriod;
++
+ /**
+  * Factory that creates instances of PeriodFormatter.
+  * <p>
+@@ -197,18 +202,27 @@ public static PeriodFormatter wordBased() {
+     public static PeriodFormatter wordBased(Locale locale) {
+         PeriodFormatter pf = FORMATTERS.get(locale);
+         if (pf == null) {
+-            ResourceBundle b = ResourceBundle.getBundle(BUNDLE_NAME, locale);
+-            if (containsKey(b, "PeriodFormat.regex.separator")) {
+-                pf = buildRegExFormatter(b);
+-            } else {
+-                pf = buildNonRegExFormatter(b);
++            DynamicWordBased dynamic = new DynamicWordBased(buildWordBased(locale));
++            pf = new PeriodFormatter(dynamic, dynamic, locale, null);
++            PeriodFormatter existing = FORMATTERS.putIfAbsent(locale, pf);
++            if (existing != null) {
++                pf = existing;
+             }
+-            FORMATTERS.putIfAbsent(locale, pf);
+         }
+         return pf;
+     }
+ 
+-    private static PeriodFormatter buildRegExFormatter(ResourceBundle b) {
++    //-----------------------------------------------------------------------
++    private static PeriodFormatter buildWordBased(Locale locale) {
++        ResourceBundle b = ResourceBundle.getBundle(BUNDLE_NAME, locale);
++        if (containsKey(b, "PeriodFormat.regex.separator")) {
++            return buildRegExFormatter(b, locale);
++        } else {
++            return buildNonRegExFormatter(b, locale);
++        }
++    }
++
++    private static PeriodFormatter buildRegExFormatter(ResourceBundle b, Locale locale) {
+         String[] variants = retrieveVariants(b);
+         String regExSeparator = b.getString("PeriodFormat.regex.separator");
+         
+@@ -291,10 +305,10 @@ private static PeriodFormatter buildRegExFormatter(ResourceBundle b) {
+         } else {
+             builder.appendSuffix(b.getString("PeriodFormat.millisecond"), b.getString("PeriodFormat.milliseconds"));
+         }
+-        return builder.toFormatter();
++        return builder.toFormatter().withLocale(locale);
+     }
+ 
+-    private static PeriodFormatter buildNonRegExFormatter(ResourceBundle b) {
++    private static PeriodFormatter buildNonRegExFormatter(ResourceBundle b, Locale locale) {
+         String[] variants = retrieveVariants(b);
+         return new PeriodFormatterBuilder()
+             .appendYears()
+@@ -320,7 +334,7 @@ private static PeriodFormatter buildNonRegExFormatter(ResourceBundle b) {
+             .appendSeparator(b.getString("PeriodFormat.commaspace"), b.getString("PeriodFormat.spaceandspace"), variants)
+             .appendMillis()
+             .appendSuffix(b.getString("PeriodFormat.millisecond"), b.getString("PeriodFormat.milliseconds"))
+-            .toFormatter();
++            .toFormatter().withLocale(locale);
+     }
+ 
+     private static String[] retrieveVariants(ResourceBundle b) {
+@@ -338,4 +352,56 @@ private static boolean containsKey(ResourceBundle bundle, String key) {
+         return false;
+     }
+ 
++    //-----------------------------------------------------------------------
++    /**
++     * Printer/parser that reacts to the locale and changes the word-based
++     * pattern if necessary.
++     */
++    static class DynamicWordBased
++            implements PeriodPrinter, PeriodParser {
++
++        /** The formatter with the locale selected at construction time. */
++        private final PeriodFormatter iFormatter;
++
++        DynamicWordBased(PeriodFormatter formatter) {
++            iFormatter = formatter;
++        }
++
++        public int countFieldsToPrint(ReadablePeriod period, int stopAt, Locale locale) {
++            return getPrinter(locale).countFieldsToPrint(period, stopAt, locale);
++        }
++
++        public int calculatePrintedLength(ReadablePeriod period, Locale locale) {
++            return getPrinter(locale).calculatePrintedLength(period, locale);
++        }
++
++        public void printTo(StringBuffer buf, ReadablePeriod period, Locale locale) {
++            getPrinter(locale).printTo(buf, period, locale);
++        }
++
++        public void printTo(Writer out, ReadablePeriod period, Locale locale) throws IOException {
++            getPrinter(locale).printTo(out, period, locale);
++        }
++
++        private PeriodPrinter getPrinter(Locale locale) {
++            if (locale != null && !locale.equals(iFormatter.getLocale())) {
++                return wordBased(locale).getPrinter();
++            }
++            return iFormatter.getPrinter();
++        }
++
++        public int parseInto(
++                ReadWritablePeriod period, String periodStr,
++                int position, Locale locale) {
++            return getParser(locale).parseInto(period, periodStr, position, locale);
++        }
++
++        private PeriodParser getParser(Locale locale) {
++            if (locale != null && !locale.equals(iFormatter.getLocale())) {
++                return wordBased(locale).getParser();
++            }
++            return iFormatter.getParser();
++        }
++    }
++
+ }
+diff --git a/src/main/java/org/joda/time/format/PeriodFormatter.java b/src/main/java/org/joda/time/format/PeriodFormatter.java
+index 5a80b31bc..a69035dbb 100644
+--- a/src/main/java/org/joda/time/format/PeriodFormatter.java
++++ b/src/main/java/org/joda/time/format/PeriodFormatter.java
+@@ -99,7 +99,7 @@ public PeriodFormatter(
+      * @param locale  the locale to use
+      * @param type  the parse period type
+      */
+-    private PeriodFormatter(
++    PeriodFormatter(
+             PeriodPrinter printer, PeriodParser parser,
+             Locale locale, PeriodType type) {
+         super();
+@@ -153,6 +153,8 @@ public PeriodParser getParser() {
+      * <p>
+      * A PeriodFormatter is immutable, so a new instance is returned,
+      * and the original is unaltered and still usable.
++     * <p>
++     * A null locale indicates that no specific locale override is in use.
+      * 
+      * @param locale  the locale to use
+      * @return the new formatter
+@@ -166,6 +168,8 @@ public PeriodFormatter withLocale(Locale locale) {
+ 
+     /**
+      * Gets the locale that will be used for printing and parsing.
++     * <p>
++     * A null locale indicates that no specific locale override is in use.
+      * 
+      * @return the locale to use
+      */
+diff --git a/src/test/java/org/joda/time/format/TestPeriodFormat.java b/src/test/java/org/joda/time/format/TestPeriodFormat.java
+index a2064ce2d..739ea264a 100644
+--- a/src/test/java/org/joda/time/format/TestPeriodFormat.java
++++ b/src/test/java/org/joda/time/format/TestPeriodFormat.java
+@@ -609,4 +609,45 @@ public void test_wordBased_pl_from_fr() {
+         Period p = new Period(0, 0, 0, 1, 5, 6, 7, 8);
+         assertEquals("1 dzie\u0144, 5 godzin, 6 minut, 7 sekund i 8 milisekund", PeriodFormat.wordBased(PL).print(p));
+     }
++
++    //-----------------------------------------------------------------------
++    public void test_getDefault_localeValue() {
++        PeriodFormatter pf = PeriodFormat.getDefault();
++        assertEquals(Locale.ENGLISH, pf.getLocale());
++    }
++
++    public void test_wordBased_localeValue() {
++        PeriodFormatter pf = PeriodFormat.wordBased();
++        assertEquals(DE, pf.getLocale());
++    }
++
++    public void test_wordBasedWithLocale_localeValue() {
++        PeriodFormatter pf = PeriodFormat.wordBased(FR);
++        assertEquals(FR, pf.getLocale());
++    }
++
++    //-----------------------------------------------------------------------
++    public void test_wordBased_en_withLocale_pt() {
++        Period p = Period.days(2).withHours(5);
++        PeriodFormatter format1 = PeriodFormat.wordBased(EN);
++        assertEquals("2 days and 5 hours", format1.print(p));
++        assertEquals(p, format1.parsePeriod("2 days and 5 hours"));
++        assertEquals(EN, format1.getLocale());
++        
++        PeriodFormatter format2 = format1.withLocale(PT);
++        assertEquals("2 dias e 5 horas", format2.print(p));
++        assertEquals(p, format2.parsePeriod("2 dias e 5 horas"));
++        assertEquals(PT, format2.getLocale());
++        
++        PeriodFormatter format3 = format1.withLocale(DE);
++        assertEquals("2 Tage und 5 Stunden", format3.print(p));
++        assertEquals(p, format3.parsePeriod("2 Tage und 5 Stunden"));
++        assertEquals(DE, format3.getLocale());
++        
++        PeriodFormatter format4 = format1.withLocale(null);
++        assertEquals("2 days and 5 hours", format4.print(p));
++        assertEquals(p, format4.parsePeriod("2 days and 5 hours"));
++        assertEquals(null, format4.getLocale());
++    }
++
+ }
+
+From 8f11578a01f3d87510d58052fe7097dcfa0dae8a Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Mon, 12 Jan 2015 00:16:34 +0000
+Subject: [PATCH 15/16] Fix release notes
+
+---
+ RELEASE-NOTES.txt | 29 +++++++----------------------
+ 1 file changed, 7 insertions(+), 22 deletions(-)
+
+diff --git a/RELEASE-NOTES.txt b/RELEASE-NOTES.txt
+index ef9ab42a5..e3ad6faa2 100644
+--- a/RELEASE-NOTES.txt
++++ b/RELEASE-NOTES.txt
+@@ -1,4 +1,4 @@
+-Joda-Time version 2.6
++Joda-Time version 2.7
+ ---------------------
+ 
+ Joda-Time is a date and time handling library that seeks to replace the JDK
+@@ -16,7 +16,7 @@ of restrictions. If the license causes you problems please contact the mailing l
+ ** http://www.joda.org/joda-time/related.html **
+ 
+ 
+-Enhancements since 2.5
++Enhancements since 2.6
+ ----------------------
+ - Add DateTime.withDate(LocalDate) and DateTime.withTime(LocalTime) [#213]
+   This was possible using DateTime.withFields(ReadablePartial) but the new methods are clearer
+@@ -36,7 +36,7 @@ Enhancements since 2.5
+   The default behaviour in the standard jar file is unchanged, with time-zone data included in the jar file.
+ 
+ 
+-Compatibility with 2.5
++Compatibility with 2.6
+ ----------------------
+ Build system - Yes
+ 
+@@ -46,31 +46,18 @@ Source compatible - Yes
+ 
+ Serialization compatible - Yes
+ 
+-Data compatible - Yes, except
+- - DateTimeZone data updated to version 2014j
++Data compatible - Yes
++ - DateTimeZone data still at version 2014j
+ 
+ Semantic compatible - Yes
+ 
+ 
+-Deprecations since 2.5
++Deprecations since 2.6
+ ----------------------
+ 
+ 
+-Bug fixes since 2.5
++Bug fixes since 2.6
+ -------------------
+-- Handle complex prefix/suffix combinations [#194, #203]
+-  For example, 'M' for months and 'm' for minutes.
+-  Parser is generally case insensitive, but handles this specific case sensitivity
+-
+-- Attempt to tackle an Android deadlock [#196]
+-  Use dedicated lock objects instead of locking on the class object
+-
+-- Fix name provider [#176]
+-  Name provider relied on tzdb short names matching JDK data names
+-  This has ceased to be true due to recent changes in tzdb, so changed to a different algorithm
+-  Data returned still depends on the JDK data, not the tzdb
+-  Thus, tzdb may say AEST for Sydney Australia, but if the JDK still has EST, then that is what you get
+-
+ - Fix Asia/Dhaka time-zone [#208]
+   Problem caused by time-zone ending at 24:00 on December 31st
+   Model change as being as 23:59:59.999
+@@ -81,8 +68,6 @@ Bug fixes since 2.5
+   In addition, if PeriodFormatter.withLocale(locale) is called, then the word-based pattern will
+   change to a pattern appropriate for that locale.
+ 
+-- Fix time-zone compilation tests
+-
+ 
+ Scala
+ --------
+
+From 780f9626fd473e20ea6bcf65a917fcbcb92cff29 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Mon, 12 Jan 2015 00:20:35 +0000
+Subject: [PATCH 16/16] Release v2.7
+
+---
+ README.md                      |  4 +-
+ pom.xml                        |  2 +-
+ src/conf/MANIFEST.MF           | 20 +++----
+ src/site/markdown/index.md     |  8 +--
+ src/site/xdoc/installation.xml |  1 +
+ src/site/xdoc/upgradeto270.xml | 96 ++++++++++++++++++++++++++++++++++
+ 6 files changed, 114 insertions(+), 17 deletions(-)
+ create mode 100644 src/site/xdoc/upgradeto270.xml
+
+diff --git a/README.md b/README.md
+index 5ca4d2db5..b7059a367 100644
+--- a/README.md
++++ b/README.md
+@@ -46,11 +46,11 @@ Various documentation is available:
+ 
+ 
+ ### Releases
+-[Release 2.6](http://www.joda.org/joda-time/download.html) is the current latest release.
++[Release 2.7](http://www.joda.org/joda-time/download.html) is the current latest release.
+ This release is considered stable and worthy of the 1.x tag.
+ It depends on JDK 1.5 or later.
+ 
+-Available in the [Maven Central repository](http://search.maven.org/#artifactdetails|joda-time|joda-time|2.6|jar)
++Available in the [Maven Central repository](http://search.maven.org/#artifactdetails|joda-time|joda-time|2.7|jar)
+ 
+ 
+ ### Related projects
+diff --git a/pom.xml b/pom.xml
+index 6752a54ba..c411a2856 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -9,7 +9,7 @@
+   <artifactId>joda-time</artifactId>
+   <packaging>jar</packaging>
+   <name>Joda-Time</name>
+-  <version>2.7-SNAPSHOT</version>
++  <version>2.7</version>
+   <description>Date and time library to replace JDK date handling</description>
+   <url>http://www.joda.org/joda-time/</url>
+ 
+diff --git a/src/conf/MANIFEST.MF b/src/conf/MANIFEST.MF
+index 9a308438d..2440984dd 100644
+--- a/src/conf/MANIFEST.MF
++++ b/src/conf/MANIFEST.MF
+@@ -2,22 +2,22 @@ Package: org.joda.time
+ Extension-Name: joda-time
+ Specification-Title: Joda-Time
+ Specification-Vendor: Joda.org
+-Specification-Version: 2.6
++Specification-Version: 2.7
+ Implementation-Vendor: Joda.org
+ Implementation-Title: org.joda.time
+-Implementation-Version: 2.6
++Implementation-Version: 2.7
+ Implementation-Vendor-Id: org.joda
+ Bundle-ManifestVersion: 2
+ Bundle-Vendor: Joda.org
+ Bundle-Name: Joda-Time
+ Bundle-SymbolicName: joda-time
+-Bundle-Version: 2.6
+-Export-Package: org.joda.time;version=2.6,
+- org.joda.time.base;version=2.6,
+- org.joda.time.chrono;version=2.6,
+- org.joda.time.convert;version=2.6,
+- org.joda.time.field;version=2.6,
+- org.joda.time.format;version=2.6,
+- org.joda.time.tz;version=2.6
++Bundle-Version: 2.7
++Export-Package: org.joda.time;version=2.7,
++ org.joda.time.base;version=2.7,
++ org.joda.time.chrono;version=2.7,
++ org.joda.time.convert;version=2.7,
++ org.joda.time.field;version=2.7,
++ org.joda.time.format;version=2.7,
++ org.joda.time.tz;version=2.7
+ Bundle-License: Apache 2.0
+ Bundle-DocURL: http://www.joda.org/joda-time/
+diff --git a/src/site/markdown/index.md b/src/site/markdown/index.md
+index 23cd384a7..033707bf2 100644
+--- a/src/site/markdown/index.md
++++ b/src/site/markdown/index.md
+@@ -125,21 +125,21 @@ Joda-Time is licenced under the business friendly <a href="license.html">Apache
+ 
+ ## <i></i> Releases
+ 
+-[Release 2.6](download.html) is the current latest release.
++[Release 2.7](download.html) is the current latest release.
+ This release is considered stable and worthy of the 2.x tag.
+-See the [upgrade notes](upgradeto260.html) for full details.
++See the [upgrade notes](upgradeto270.html) for full details.
+ 
+ Joda-Time requires Java SE 5 or later and has [no dependencies](dependencies.html).
+ There is a *compile-time* dependency on [Joda-Convert](http://www.joda.org/joda-convert/),
+ but this is not required at runtime thanks to the magic of annotations.
+ 
+-Available in [Maven Central](http://search.maven.org/#artifactdetails%7Cjoda-time%7Cjoda-time%7C2.6%7Cjar).
++Available in [Maven Central](http://search.maven.org/#artifactdetails%7Cjoda-time%7Cjoda-time%7C2.7%7Cjar).
+ 
+ ```xml
+ <dependency>
+   <groupId>joda-time</groupId>
+   <artifactId>joda-time</artifactId>
+-  <version>2.6</version>
++  <version>2.7</version>
+ </dependency>
+ ```
+ 
+diff --git a/src/site/xdoc/installation.xml b/src/site/xdoc/installation.xml
+index 5a15eddf1..53723e196 100644
+--- a/src/site/xdoc/installation.xml
++++ b/src/site/xdoc/installation.xml
+@@ -22,6 +22,7 @@ of the source code suitable for linking to the jar file in IDEs such as Eclipse.
+ <p>
+ The release notes for upgraders can be found here:
+ <ul>
++<li><a href="upgradeto270.html">Version 2.7</a> - upgrade from Version 2.6</li>
+ <li><a href="upgradeto260.html">Version 2.6</a> - upgrade from Version 2.5</li>
+ <li><a href="upgradeto250.html">Version 2.5</a> - upgrade from Version 2.4</li>
+ <li><a href="upgradeto240.html">Version 2.4</a> - upgrade from Version 2.3</li>
+diff --git a/src/site/xdoc/upgradeto270.xml b/src/site/xdoc/upgradeto270.xml
+new file mode 100644
+index 000000000..45bfd0324
+--- /dev/null
++++ b/src/site/xdoc/upgradeto270.xml
+@@ -0,0 +1,96 @@
++<?xml version="1.0" encoding="ISO-8859-1"?>
++
++<document>
++ <properties>
++  <title>Java date and time API - Upgrade from 2.6 to 2.7</title>
++  <author>Stephen Colebourne</author>
++ </properties>
++
++<body>
++
++<section name="Upgrade">
++<p>
++These are the release notes and advice for upgrading Joda-Time from version 2.6 to version 2.7.
++<source>
++Joda-Time version 2.7
++---------------------
++
++Joda-Time is a date and time handling library that seeks to replace the JDK
++Date and Calendar classes.
++
++This release contains enhancements, bug fixes and a time zone update.
++The release runs on JDK 5 or later.
++
++Joda-Time is licensed under the business-friendly Apache License Version 2.
++This is the same license as all of Apache, plus other open source projects such as Spring.
++The intent is to make the code available to the Java community with the minimum
++of restrictions. If the license causes you problems please contact the mailing list.
++
++**  Please also check out our related projects   **
++** http://www.joda.org/joda-time/related.html **
++
++
++Enhancements since 2.6
++----------------------
++- Add DateTime.withDate(LocalDate) and DateTime.withTime(LocalTime) [#213]
++  This was possible using DateTime.withFields(ReadablePartial) but the new methods are clearer
++
++- Added new system property for time-zone loading [#37]
++  Added system property "org.joda.time.DateTimeZone.Folder".
++  If set, then it is treated as a file system folder to load time-zone data from.
++  The folder is loaded using ZoneInfoProvider and must be the unzipped output of ZoneInfoCompiler.
++  The default behaviour is unchanged, with default time-zone data included in the jar file.
++
++- Produce jar file without time-zone data [#220]
++  A second jar file is now located in Maven Central with the classifier "no-tzdb".
++  This is the same as the main joda-time jar file, except that the tzdb data and ZoneInfoCompiler are omitted.
++  This is intended for use by Android, but could be used in other environments.
++  If using this alternative jar, a time-zone system property must be set, either
++  "org.joda.time.DateTimeZone.Provider" or "org.joda.time.DateTimeZone.Folder".
++  The default behaviour in the standard jar file is unchanged, with time-zone data included in the jar file.
++
++
++Compatibility with 2.6
++----------------------
++Build system - Yes
++
++Binary compatible - Yes
++
++Source compatible - Yes
++
++Serialization compatible - Yes
++
++Data compatible - Yes
++ - DateTimeZone data still at version 2014j
++
++Semantic compatible - Yes
++
++
++Deprecations since 2.6
++----------------------
++
++
++Bug fixes since 2.6
++-------------------
++- Fix Asia/Dhaka time-zone [#208]
++  Problem caused by time-zone ending at 24:00 on December 31st
++  Model change as being as 23:59:59.999
++
++- Fix PeriodFormatter.withLocale to operate on word-based formatting [#187, #191]
++  Previously, PeriodFormatter.withLocale() had no effect on word-based formatting
++  Now, the locale used when calling PeriodFormat.wordBased(locale) is passed to the PeriodFormatter.
++  In addition, if PeriodFormatter.withLocale(locale) is called, then the word-based pattern will
++  change to a pattern appropriate for that locale.
++
++
++Scala
++--------
++Joda-Time uses annotations from Joda-Convert.
++In the Java programming language, this dependency is optional, however in Scala it is not.
++Scala users must manually add the Joda-Convert v1.2 dependency.
++</source>
++</p>
++</section>
++
++</body>
++</document>

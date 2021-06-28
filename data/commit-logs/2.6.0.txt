@@ -1,0 +1,2789 @@
+From 562c8783667b48dadd32f994e9793eb5c66c3dfd Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Fri, 3 Oct 2014 16:09:45 +0100
+Subject: [PATCH 01/13] Update github site plugin
+
+Also need egit repo in settings.xml
+---
+ pom.xml | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/pom.xml b/pom.xml
+index ee50f35ac..7e85f4afd 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -382,7 +382,7 @@
+       <plugin><!-- invoke with mvn site-deploy -->
+         <groupId>com.github.github</groupId>
+         <artifactId>site-maven-plugin</artifactId>
+-        <version>0.9</version>
++        <version>0.10</version>
+         <executions>
+           <execution>
+             <id>github-site</id>
+
+From 99b73f9e56b251f853b2c5a6c89d9b27241c7797 Mon Sep 17 00:00:00 2001
+From: Valentin Nastasache <vnastasache@voipfuture.com>
+Date: Thu, 23 Oct 2014 13:09:33 +0200
+Subject: [PATCH 02/13] Corrected Java doc for AbstractDuration#isLongerThan
+ and AbstractDuration#isShorterThan.
+
+---
+ src/main/java/org/joda/time/base/AbstractDuration.java | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/main/java/org/joda/time/base/AbstractDuration.java b/src/main/java/org/joda/time/base/AbstractDuration.java
+index 4d7aeffbc..554dc5e8d 100644
+--- a/src/main/java/org/joda/time/base/AbstractDuration.java
++++ b/src/main/java/org/joda/time/base/AbstractDuration.java
+@@ -120,7 +120,7 @@ public boolean isEqual(ReadableDuration duration) {
+      * Is the length of this duration longer than the duration passed in.
+      *
+      * @param duration  another duration to compare to, null means zero milliseconds
+-     * @return true if this duration is equal to than the duration passed in
++     * @return true if this duration is longer than the duration passed in
+      */
+     public boolean isLongerThan(ReadableDuration duration) {
+         if (duration == null) {
+@@ -133,7 +133,7 @@ public boolean isLongerThan(ReadableDuration duration) {
+      * Is the length of this duration shorter than the duration passed in.
+      *
+      * @param duration  another duration to compare to, null means zero milliseconds
+-     * @return true if this duration is equal to than the duration passed in
++     * @return true if this duration is shorter than the duration passed in
+      */
+     public boolean isShorterThan(ReadableDuration duration) {
+         if (duration == null) {
+
+From 0e0cefa8a4209ae79563b953db515f3046594a57 Mon Sep 17 00:00:00 2001
+From: Kwang Kim <kwangbkim@outlook.com>
+Date: Sat, 15 Nov 2014 16:45:32 -0500
+Subject: [PATCH 03/13] Fixed typo convertor -> converter
+
+---
+ src/main/java/org/joda/time/convert/AbstractConverter.java  | 6 +++---
+ src/main/java/org/joda/time/convert/ConverterManager.java   | 2 +-
+ src/main/java/org/joda/time/convert/DurationConverter.java  | 2 +-
+ .../org/joda/time/convert/ReadableDurationConverter.java    | 2 +-
+ .../org/joda/time/convert/ReadableInstantConverter.java     | 2 +-
+ 5 files changed, 7 insertions(+), 7 deletions(-)
+
+diff --git a/src/main/java/org/joda/time/convert/AbstractConverter.java b/src/main/java/org/joda/time/convert/AbstractConverter.java
+index 81b11745b..2bcd94d70 100644
+--- a/src/main/java/org/joda/time/convert/AbstractConverter.java
++++ b/src/main/java/org/joda/time/convert/AbstractConverter.java
+@@ -40,7 +40,7 @@ protected AbstractConverter() {
+ 
+     //-----------------------------------------------------------------------
+     /**
+-     * Extracts the millis from an object of this convertor's type.
++     * Extracts the millis from an object of this converter's type.
+      * <p>
+      * This implementation returns the current time.
+      * 
+@@ -54,7 +54,7 @@ public long getInstantMillis(Object object, Chronology chrono) {
+ 
+     //-----------------------------------------------------------------------
+     /**
+-     * Extracts the chronology from an object of this convertor's type
++     * Extracts the chronology from an object of this converter's type
+      * where the time zone is specified.
+      * <p>
+      * This implementation returns the ISO chronology.
+@@ -68,7 +68,7 @@ public Chronology getChronology(Object object, DateTimeZone zone) {
+     }
+ 
+     /**
+-     * Extracts the chronology from an object of this convertor's type
++     * Extracts the chronology from an object of this converter's type
+      * where the chronology is specified.
+      * <p>
+      * This implementation returns the chronology specified, or the
+diff --git a/src/main/java/org/joda/time/convert/ConverterManager.java b/src/main/java/org/joda/time/convert/ConverterManager.java
+index 0b029aab9..db12dab7c 100644
+--- a/src/main/java/org/joda/time/convert/ConverterManager.java
++++ b/src/main/java/org/joda/time/convert/ConverterManager.java
+@@ -26,7 +26,7 @@
+  * interval converters.
+  * <p>
+  * This class is threadsafe, so adding/removing converters can be done at any
+- * time. Updating the set of convertors is relatively expensive, and so should
++ * time. Updating the set of converters is relatively expensive, and so should
+  * not be performed often.
+  * <p>
+  * The default instant converters are:
+diff --git a/src/main/java/org/joda/time/convert/DurationConverter.java b/src/main/java/org/joda/time/convert/DurationConverter.java
+index eb9847e08..93aca0453 100644
+--- a/src/main/java/org/joda/time/convert/DurationConverter.java
++++ b/src/main/java/org/joda/time/convert/DurationConverter.java
+@@ -25,7 +25,7 @@
+ public interface DurationConverter extends Converter {
+ 
+     /**
+-     * Extracts the millis from an object of this convertor's type.
++     * Extracts the millis from an object of this converter's type.
+      * 
+      * @param object  the object to convert, must not be null
+      * @return the millisecond duration
+diff --git a/src/main/java/org/joda/time/convert/ReadableDurationConverter.java b/src/main/java/org/joda/time/convert/ReadableDurationConverter.java
+index 1d6e7beb4..866dc6a6b 100644
+--- a/src/main/java/org/joda/time/convert/ReadableDurationConverter.java
++++ b/src/main/java/org/joda/time/convert/ReadableDurationConverter.java
+@@ -44,7 +44,7 @@ protected ReadableDurationConverter() {
+ 
+     //-----------------------------------------------------------------------
+     /**
+-     * Extracts the millis from an object of this convertor's type.
++     * Extracts the millis from an object of this converter's type.
+      * 
+      * @param object  the object to convert, must not be null
+      * @return the millisecond value
+diff --git a/src/main/java/org/joda/time/convert/ReadableInstantConverter.java b/src/main/java/org/joda/time/convert/ReadableInstantConverter.java
+index cc02b0aaf..7819e18e3 100644
+--- a/src/main/java/org/joda/time/convert/ReadableInstantConverter.java
++++ b/src/main/java/org/joda/time/convert/ReadableInstantConverter.java
+@@ -88,7 +88,7 @@ public Chronology getChronology(Object object, Chronology chrono) {
+     }
+ 
+     /**
+-     * Extracts the millis from an object of this convertor's type.
++     * Extracts the millis from an object of this converter's type.
+      * 
+      * @param object  the ReadableInstant to convert, must not be null
+      * @param chrono  the non-null result of getChronology
+
+From 5ba208f505bfba9155fcb28a6ae3f54b962438a4 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Thu, 20 Nov 2014 20:00:22 +0000
+Subject: [PATCH 04/13] Bump version
+
+---
+ RELEASE-NOTES.txt | 51 +++++++----------------------------------------
+ pom.xml           |  2 +-
+ 2 files changed, 8 insertions(+), 45 deletions(-)
+
+diff --git a/RELEASE-NOTES.txt b/RELEASE-NOTES.txt
+index b08000467..9c60c97d8 100644
+--- a/RELEASE-NOTES.txt
++++ b/RELEASE-NOTES.txt
+@@ -1,4 +1,4 @@
+-Joda-Time version 2.5
++Joda-Time version 2.6
+ ---------------------
+ 
+ Joda-Time is a date and time handling library that seeks to replace the JDK
+@@ -16,69 +16,32 @@ of restrictions. If the license causes you problems please contact the mailing l
+ ** http://www.joda.org/joda-time/related.html **
+ 
+ 
+-Enhancements since 2.4
++Enhancements since 2.5
+ ----------------------
+-- Add regex based Period formatting [#166]
+-  Regex based formatting allows for languages with more complex rules, such as Polish
+ 
+-- Add time-zone database version to manifest [#176, #183]
+-  The version is available as key 'Time-Zone-Database-Version'
+ 
+-
+-Compatibility with 2.4
++Compatibility with 2.5
+ ----------------------
+ Build system - Yes
+ 
+ Binary compatible - Yes
+ 
+-Source compatible - Yes, except
+- - The constant DateTimeZone.UTC has changed implementation type
+-   It used to be a FixedDateTimeZone, now it is a UTCDateTimeZone
+-   This avoids a potential deadlock scenario
+-   Serialization is unaffected
+-   This change will only be observable if you cast the UTC constant to FixedDateTimeZone
++Source compatible - Yes
+ 
+ Serialization compatible - Yes
+ 
+ Data compatible - Yes, except
+  - DateTimeZone data updated to version 2014h
+- - Bug in time zone compilation fixed
+ 
+-Semantic compatible - Yes, except
+- - LocalDate.toDateTime(LocalTime) and LocalDate.toDateTime(LocalTime, DateTimeZone)
+-   If you pass a null LocalTime to the method, no changes have been made
+-   If you pass a non-null LocalTime then behaviour during daylight saving gap and overlap has changed
+-   During a daylight saving gap the exception has changed from IllegalFieldValueException to IllegalInstantException
+-   During a daylight saving overlap the earlier offset is selected
+-   Previously, the earlier offset was chosen east of Greenwich and the later offset west of Greenwich
++Semantic compatible - Yes
+ 
+ 
+-Deprecations since 2.4
++Deprecations since 2.5
+ ----------------------
+ 
+ 
+-Bug fixes since 2.4
++Bug fixes since 2.5
+ -------------------
+-- Time zone compiler failed to correctly process 24:00 [#173, #182]
+-  This caused reported time to be wrong in Africa/Cairo (and possibly others)
+-
+-- Additional overflow check for Duration constructor [#159]
+-  Handle MIN/MAX value better.
+-
+-- Handle complex prefix/suffix combinations [#154, #169]
+-  For example, 'm' for minutes and 'ms' for milliseconds
+-  which both start with 'm'
+-
+-- Fix deadlock [#171]
+-  Referencing DateTimeZone and FixedDateTimeZone from two threads at startup could deadlock
+-  Add package scoped UTCDateTimeZone class to avoid this
+-
+-- Use of current time when converting from LocalDate [#177]
+-  LocalDate.toDateTime(LocalTime) and LocalDate.toDateTime(LocalTime, DateTimeZone)
+-  These methods used DateTimeUtils.currentTimeMillis() in all cases, rather than just when LocalTime was null
+-  Behaviour when LocalTiem is null has been left unchanged
+-  When LocalTime is non-null, it no longer uses DateTimeUtils.currentTimeMillis()
+-  This change resulted in the semantic change detailed above
+ 
+ 
+ Scala
+diff --git a/pom.xml b/pom.xml
+index 7e85f4afd..5c72ea520 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -9,7 +9,7 @@
+   <artifactId>joda-time</artifactId>
+   <packaging>jar</packaging>
+   <name>Joda-Time</name>
+-  <version>2.5</version>
++  <version>2.6-SNAPSHOT</version>
+   <description>Date and time library to replace JDK date handling</description>
+   <url>http://www.joda.org/joda-time/</url>
+ 
+
+From 81cec147d0fe5d6ced2bf59283e557a0cc60baea Mon Sep 17 00:00:00 2001
+From: Jim Gough <jpgough@gmail.com>
+Date: Mon, 10 Nov 2014 20:44:16 +0530
+Subject: [PATCH 05/13] Formatter previously ignored case sensitivity when
+ working with M and m, for months and minutes leading to an incorrect result.
+ Aims to resolve issue #194
+
+---
+ .../time/format/PeriodFormatterBuilder.java   |  2 +-
+ .../format/TestPeriodFormatterBuilder.java    | 20 +++++++++++++++++++
+ 2 files changed, 21 insertions(+), 1 deletion(-)
+
+diff --git a/src/main/java/org/joda/time/format/PeriodFormatterBuilder.java b/src/main/java/org/joda/time/format/PeriodFormatterBuilder.java
+index 4d7551b2c..44f10dbc6 100644
+--- a/src/main/java/org/joda/time/format/PeriodFormatterBuilder.java
++++ b/src/main/java/org/joda/time/format/PeriodFormatterBuilder.java
+@@ -1059,7 +1059,7 @@ public int scan(String periodStr, final int position) {
+             int sourceLength = periodStr.length();
+             search:
+             for (int pos = position; pos < sourceLength; pos++) {
+-                if (periodStr.regionMatches(true, pos, text, 0, textLength)) {
++                if (periodStr.regionMatches(false, pos, text, 0, textLength)) {
+                     if (!matchesOtherAffix(textLength, periodStr, pos)) {
+                         return pos;
+                     }
+diff --git a/src/test/java/org/joda/time/format/TestPeriodFormatterBuilder.java b/src/test/java/org/joda/time/format/TestPeriodFormatterBuilder.java
+index 4cb1bccfd..c597cfdc5 100644
+--- a/src/test/java/org/joda/time/format/TestPeriodFormatterBuilder.java
++++ b/src/test/java/org/joda/time/format/TestPeriodFormatterBuilder.java
+@@ -1135,4 +1135,24 @@ public void testBug2495455() {
+         pfmt2.parsePeriod("PT1003199059S");
+     }
+ 
++    public void testMonthsAndMinutesAreConsideredSeparateAndCaseIsNotIgnored() {
++        PeriodFormatter formatter = builder
++                .appendYears().appendSuffix("Y").appendSeparator(" ")
++                .appendMonths().appendSuffix("M").appendSeparator(" ")
++                .appendWeeks().appendSuffix("W").appendSeparator(" ")
++                .appendDays().appendSuffix("D").appendSeparator(" ")
++                .appendHours().appendSuffix("h").appendSeparator(" ")
++                .appendMinutes().appendSuffix("m").appendSeparator(" ")
++                .appendSeconds().appendSuffix("s")
++                .toFormatter();
++
++        String oneMonth = Period.months(1).toString(formatter);
++        assertEquals("1M", oneMonth);
++        Period period = formatter.parsePeriod(oneMonth);
++        assertEquals(Period.months(1), period);
++        String oneMinute = Period.minutes(1).toString(formatter);
++        assertEquals("1m", oneMinute);
++        period = formatter.parsePeriod(oneMinute);
++        assertEquals(Period.minutes(1), period);
++    }
+ }
+
+From dbda260e5c2bfac5c20813c1a7645e8f15f89a6d Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Thu, 20 Nov 2014 20:07:01 +0000
+Subject: [PATCH 06/13] Handle complex prefix/suffix combinations
+
+For example, 'M' for months and 'm' for minutes.
+Parser is generally case insensitive, but handle this specific case
+Fixes #194
+Fixes #203
+---
+ RELEASE-NOTES.txt                             |  3 ++
+ pom.xml                                       |  4 ++
+ .../time/format/PeriodFormatterBuilder.java   | 23 ++++++-----
+ .../format/TestPeriodFormatterBuilder.java    | 38 ++++++++++++++++---
+ 4 files changed, 53 insertions(+), 15 deletions(-)
+
+diff --git a/RELEASE-NOTES.txt b/RELEASE-NOTES.txt
+index 9c60c97d8..643c0a0c3 100644
+--- a/RELEASE-NOTES.txt
++++ b/RELEASE-NOTES.txt
+@@ -42,6 +42,9 @@ Deprecations since 2.5
+ 
+ Bug fixes since 2.5
+ -------------------
++- Handle complex prefix/suffix combinations [#194, #203]
++  For example, 'M' for months and 'm' for minutes.
++  Parser is generally case insensitive, but handles this specific case sensitivity
+ 
+ 
+ Scala
+diff --git a/pom.xml b/pom.xml
+index 5c72ea520..a806ed69e 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -88,6 +88,10 @@
+     <contributor>
+       <name>Sean Geoghegan</name>
+     </contributor>
++    <contributor>
++      <name>Jim Gough</name>
++      <url>https://github.com/jpgough</url>
++    </contributor>
+     <contributor>
+       <name>Craig Gidney</name>
+       <url>https://github.com/Strilanc</url>
+diff --git a/src/main/java/org/joda/time/format/PeriodFormatterBuilder.java b/src/main/java/org/joda/time/format/PeriodFormatterBuilder.java
+index 44f10dbc6..6b81cf8b0 100644
+--- a/src/main/java/org/joda/time/format/PeriodFormatterBuilder.java
++++ b/src/main/java/org/joda/time/format/PeriodFormatterBuilder.java
+@@ -973,19 +973,23 @@ public void finish(Set<PeriodFieldAffix> periodFieldAffixesToIgnore) {
+             if (iOtherAffixes == null) {
+                 // Calculate the shortest affix in this instance.
+                 int shortestAffixLength = Integer.MAX_VALUE;
++                String shortestAffix = null;
+                 for (String affix : getAffixes()) {
+                     if (affix.length() < shortestAffixLength) {
+                         shortestAffixLength = affix.length();
++                        shortestAffix = affix;
+                     }
+                 }
+                 
+                 // Pick only affixes that are longer than the shortest affix in this instance.
+                 // This will reduce the number of parse operations and thus speed up the PeriodFormatter.
++                // also need to pick affixes that differ only in case (but not those that are identical)
+                 Set<String> affixesToIgnore = new HashSet<String>();
+                 for (PeriodFieldAffix periodFieldAffixToIgnore : periodFieldAffixesToIgnore) {
+                     if (periodFieldAffixToIgnore != null) {
+                         for (String affixToIgnore : periodFieldAffixToIgnore.getAffixes()) {
+-                            if (affixToIgnore.length() > shortestAffixLength) {
++                            if (affixToIgnore.length() > shortestAffixLength ||
++                                    (affixToIgnore.equalsIgnoreCase(shortestAffix) && !affixToIgnore.equals(shortestAffix))) {
+                                 affixesToIgnore.add(affixToIgnore);
+                             }
+                         }                       
+@@ -1007,10 +1011,12 @@ public void finish(Set<PeriodFieldAffix> periodFieldAffixesToIgnore) {
+          */
+         protected boolean matchesOtherAffix(int textLength, String periodStr, int position) {
+             if (iOtherAffixes != null) {
++                // ignore case when affix length differs
++                // match case when affix length is same
+                 for (String affixToIgnore : iOtherAffixes) {
+                     int textToIgnoreLength = affixToIgnore.length();
+-                    if (textLength < textToIgnoreLength
+-                            && periodStr.regionMatches(true, position, affixToIgnore, 0, textToIgnoreLength)) {
++                    if ((textLength < textToIgnoreLength && periodStr.regionMatches(true, position, affixToIgnore, 0, textToIgnoreLength)) ||
++                            (textLength == textToIgnoreLength && periodStr.regionMatches(false, position, affixToIgnore, 0, textToIgnoreLength))) {
+                         return true;
+                     }
+                 }
+@@ -1059,7 +1065,7 @@ public int scan(String periodStr, final int position) {
+             int sourceLength = periodStr.length();
+             search:
+             for (int pos = position; pos < sourceLength; pos++) {
+-                if (periodStr.regionMatches(false, pos, text, 0, textLength)) {
++                if (periodStr.regionMatches(true, pos, text, 0, textLength)) {
+                     if (!matchesOtherAffix(textLength, periodStr, pos)) {
+                         return pos;
+                     }
+@@ -1119,14 +1125,12 @@ public int parse(String periodStr, int position) {
+                 text2 = temp;
+             }
+ 
+-            if (periodStr.regionMatches
+-                (true, position, text1, 0, text1.length())) {
++            if (periodStr.regionMatches(true, position, text1, 0, text1.length())) {
+                 if (!matchesOtherAffix(text1.length(), periodStr, position)) {
+                     return position + text1.length();
+                 }
+             }
+-            if (periodStr.regionMatches
+-                (true, position, text2, 0, text2.length())) {
++            if (periodStr.regionMatches(true, position, text2, 0, text2.length())) {
+                 if (!matchesOtherAffix(text2.length(), periodStr, position)) {
+                     return position + text2.length();
+                 }
+@@ -2042,8 +2046,7 @@ public int parseInto(
+                 for (int i=0; i < length; i++) {
+                     String parsedForm = parsedForms[i];
+                     if ((parsedForm == null || parsedForm.length() == 0) ||
+-                        periodStr.regionMatches
+-                        (true, position, parsedForm, 0, parsedForm.length())) {
++                        periodStr.regionMatches(true, position, parsedForm, 0, parsedForm.length())) {
+                         
+                         parsedFormLength = (parsedForm == null ? 0 : parsedForm.length());
+                         position += parsedFormLength;
+diff --git a/src/test/java/org/joda/time/format/TestPeriodFormatterBuilder.java b/src/test/java/org/joda/time/format/TestPeriodFormatterBuilder.java
+index c597cfdc5..90fce1903 100644
+--- a/src/test/java/org/joda/time/format/TestPeriodFormatterBuilder.java
++++ b/src/test/java/org/joda/time/format/TestPeriodFormatterBuilder.java
+@@ -347,6 +347,8 @@ public void testFormatPrefixSimple4IgnoringPrefix() {
+         assertEquals("ms1", oneMS);
+         Period period = f.parsePeriod(oneMS);
+         assertEquals(Period.millis(1), period);
++        period = f.parsePeriod(oneMS.toUpperCase(Locale.ENGLISH));
++        assertEquals(Period.millis(1), period);
+     }
+ 
+     public void testPluralAffixParseOrder() {
+@@ -354,6 +356,8 @@ public void testPluralAffixParseOrder() {
+         String twoDays = Period.days(2).toString(f);
+         Period period = f.parsePeriod(twoDays);
+         assertEquals(Period.days(2), period);
++        period = f.parsePeriod(twoDays.toUpperCase(Locale.ENGLISH));
++        assertEquals(Period.days(2), period);
+     }
+ 
+     public void testFormatPrefixPlural1() {
+@@ -402,11 +406,15 @@ public void testFormatPrefixPlural4IgnoringPrefix() {
+         assertEquals("mss1", oneMS);
+         Period period = f.parsePeriod(oneMS);
+         assertEquals(Period.millis(1), period);
++        period = f.parsePeriod(oneMS.toUpperCase(Locale.ENGLISH));
++        assertEquals(Period.millis(1), period);
+         
+         String twoMS = Period.millis(2).toString(f);
+         assertEquals("msss2", twoMS);
+         Period period2 = f.parsePeriod(twoMS);
+         assertEquals(Period.millis(2), period2);
++        period = f.parsePeriod(twoMS.toUpperCase(Locale.ENGLISH));
++        assertEquals(Period.millis(2), period2);
+     }
+     
+     public void testRegExAffixParseOrder() {
+@@ -415,6 +423,8 @@ public void testRegExAffixParseOrder() {
+         String twoDays = Period.days(2).toString(f);
+         Period period = f.parsePeriod(twoDays);
+         assertEquals(Period.days(2), period);
++        period = f.parsePeriod(twoDays.toUpperCase(Locale.ENGLISH));
++        assertEquals(Period.days(2), period);
+     }
+ 
+     public void testFormatPrefixRegEx1() {
+@@ -481,11 +491,15 @@ public void testFormatPrefixRegEx4IgnoringPrefix() {
+         assertEquals("mss1", oneMS);
+         Period period = f.parsePeriod(oneMS);
+         assertEquals(Period.millis(1), period);
++        period = f.parsePeriod(oneMS.toUpperCase(Locale.ENGLISH));
++        assertEquals(Period.millis(1), period);
+         
+         String twoMS = Period.millis(2).toString(f);
+         assertEquals("msss2", twoMS);
+         Period period2 = f.parsePeriod(twoMS);
+         assertEquals(Period.millis(2), period2);
++        period = f.parsePeriod(twoMS.toUpperCase(Locale.ENGLISH));
++        assertEquals(Period.millis(2), period2);
+     }
+ 
+     //-----------------------------------------------------------------------
+@@ -498,6 +512,8 @@ public void testFormatPrefixComposite1() {
+         assertEquals("days:2", oneMS);
+         Period period = f.parsePeriod(oneMS);
+         assertEquals(Period.days(2), period);
++        period = f.parsePeriod(oneMS.toUpperCase(Locale.ENGLISH));
++        assertEquals(Period.days(2), period);
+     }
+ 
+     //-----------------------------------------------------------------------
+@@ -546,6 +562,8 @@ public void testFormatPrefixSimple5IgnoringPrefix() {
+         assertEquals("1ms", oneMS);
+         Period period = f.parsePeriod(oneMS);
+         assertEquals(Period.millis(1), period);
++        period = f.parsePeriod(oneMS.toUpperCase(Locale.ENGLISH));
++        assertEquals(Period.millis(1), period);
+     }
+ 
+     public void testFormatPrefixSimple6IgnoringPrefix() {
+@@ -555,6 +573,8 @@ public void testFormatPrefixSimple6IgnoringPrefix() {
+         assertEquals("1ms", oneMS);
+         Period period = f.parsePeriod(oneMS);
+         assertEquals(Period.millis(1), period);
++        period = f.parsePeriod(oneMS.toUpperCase(Locale.ENGLISH));
++        assertEquals(Period.millis(1), period);
+     }
+ 
+     public void testFormatSuffixPlural1() {
+@@ -610,11 +630,15 @@ public void testFormatSuffixPlural4IgnoringPrefix() {
+         assertEquals("1mss", oneMS);
+         Period period = f.parsePeriod(oneMS);
+         assertEquals(Period.millis(1), period);
++        period = f.parsePeriod(oneMS.toUpperCase(Locale.ENGLISH));
++        assertEquals(Period.millis(1), period);
+         
+         String twoMS = Period.millis(2).toString(f);
+         assertEquals("2msss", twoMS);
+         Period period2 = f.parsePeriod(twoMS);
+         assertEquals(Period.millis(2), period2);
++        period = f.parsePeriod(twoMS.toUpperCase(Locale.ENGLISH));
++        assertEquals(Period.millis(2), period);
+     }
+ 
+     public void testFormatSuffixRegEx1() {
+@@ -698,11 +722,15 @@ public void testFormatSuffixRegEx5IgnoringAffix() {
+         assertEquals("1mss", oneMS);
+         Period period = f.parsePeriod(oneMS);
+         assertEquals(Period.millis(1), period);
++        period = f.parsePeriod(oneMS.toUpperCase(Locale.ENGLISH));
++        assertEquals(Period.millis(1), period);
+         
+         String twoMS = Period.millis(2).toString(f);
+         assertEquals("2msss", twoMS);
+         Period period2 = f.parsePeriod(twoMS);
+         assertEquals(Period.millis(2), period2);
++        period = f.parsePeriod(twoMS.toUpperCase(Locale.ENGLISH));
++        assertEquals(Period.millis(2), period);
+     }
+     //-----------------------------------------------------------------------
+     public void testFormatSuffixComposite1() {
+@@ -714,6 +742,8 @@ public void testFormatSuffixComposite1() {
+         assertEquals("2days", oneMS);
+         Period period = f.parsePeriod(oneMS);
+         assertEquals(Period.days(2), period);
++        period = f.parsePeriod(oneMS.toUpperCase(Locale.ENGLISH));
++        assertEquals(Period.days(2), period);
+     }
+ 
+     public void testFormatSuffixComposite5IgnoringAffix() {
+@@ -726,6 +756,8 @@ public void testFormatSuffixComposite5IgnoringAffix() {
+         assertEquals("1ms", oneMS);
+         Period period = f.parsePeriod(oneMS);
+         assertEquals(Period.millis(1), period);
++        period = f.parsePeriod(oneMS.toUpperCase(Locale.ENGLISH));
++        assertEquals(Period.millis(1), period);
+     }
+     
+     //-----------------------------------------------------------------------
+@@ -1133,17 +1165,13 @@ public void testBug2495455() {
+             .toFormatter();
+         pfmt1.parsePeriod("PT1003199059S");
+         pfmt2.parsePeriod("PT1003199059S");
++        pfmt2.parsePeriod("pt1003199059S");
+     }
+ 
+     public void testMonthsAndMinutesAreConsideredSeparateAndCaseIsNotIgnored() {
+         PeriodFormatter formatter = builder
+-                .appendYears().appendSuffix("Y").appendSeparator(" ")
+                 .appendMonths().appendSuffix("M").appendSeparator(" ")
+-                .appendWeeks().appendSuffix("W").appendSeparator(" ")
+-                .appendDays().appendSuffix("D").appendSeparator(" ")
+-                .appendHours().appendSuffix("h").appendSeparator(" ")
+                 .appendMinutes().appendSuffix("m").appendSeparator(" ")
+-                .appendSeconds().appendSuffix("s")
+                 .toFormatter();
+ 
+         String oneMonth = Period.months(1).toString(formatter);
+
+From f8f04177791256fc7397614167975d966617b4c1 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Thu, 20 Nov 2014 20:25:36 +0000
+Subject: [PATCH 07/13] Fix tests to allow old/new tz data to compile
+
+Still not happy with the activities of the TZDB maintainer
+---
+ src/test/java/org/joda/time/TestDateTimeZone.java | 9 +++------
+ 1 file changed, 3 insertions(+), 6 deletions(-)
+
+diff --git a/src/test/java/org/joda/time/TestDateTimeZone.java b/src/test/java/org/joda/time/TestDateTimeZone.java
+index d780c4b93..01447710d 100644
+--- a/src/test/java/org/joda/time/TestDateTimeZone.java
++++ b/src/test/java/org/joda/time/TestDateTimeZone.java
+@@ -19,7 +19,6 @@
+ import java.io.ByteArrayOutputStream;
+ import java.io.ObjectInputStream;
+ import java.io.ObjectOutputStream;
+-import java.io.PrintStream;
+ import java.lang.reflect.Modifier;
+ import java.security.AllPermission;
+ import java.security.CodeSource;
+@@ -264,6 +263,7 @@ public void testForID_String_old() {
+         map.put("AGT", "America/Argentina/Buenos_Aires");
+         map.put("BET", "America/Sao_Paulo");
+         map.put("ART", "Africa/Cairo");
++        map.put("CAT", "Africa/Harare");
+         map.put("EAT", "Africa/Addis_Ababa");
+         map.put("NET", "Asia/Yerevan");
+         map.put("PLT", "Asia/Karachi");
+@@ -280,17 +280,14 @@ public void testForID_String_old() {
+             String value = map.get(key);
+             TimeZone juZone = TimeZone.getTimeZone(key);
+             DateTimeZone zone = DateTimeZone.forTimeZone(juZone);
+-            assertEquals(value, zone.getID());
++            assertEquals(DateTimeZone.forID(value), zone);
+ //            System.out.println(juZone);
+ //            System.out.println(juZone.getDisplayName());
+ //            System.out.println(zone);
+ //            System.out.println("------");
+         }
+         // gee thanks time-zone db maintainer for damaging the database
+-        // and breaking the long-standing  association with CAT
+-        TimeZone juZone = TimeZone.getTimeZone("CAT");
+-        DateTimeZone zone = DateTimeZone.forTimeZone(juZone);
+-        assertTrue(zone.getID().equals("Africa/Harare") || zone.getID().equals("Africa/Maputo"));
++        // and breaking the long-standing  association with CAT/EAT
+     }
+ 
+     //-----------------------------------------------------------------------
+
+From 3ee33d28c378e5ecf05a5c8bd20b8fed7876ee5a Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Thu, 20 Nov 2014 20:25:36 +0000
+Subject: [PATCH 08/13] Update to time-zone data 2014j
+
+---
+ RELEASE-NOTES.txt                             |   2 +-
+ pom.xml                                       |   2 +-
+ src/main/java/org/joda/time/tz/src/Readme.txt |   2 +-
+ src/main/java/org/joda/time/tz/src/africa     |  79 +++------
+ src/main/java/org/joda/time/tz/src/asia       | 167 ++++++++++++------
+ .../java/org/joda/time/tz/src/australasia     |  56 ++++--
+ src/main/java/org/joda/time/tz/src/europe     |  30 +++-
+ .../java/org/joda/time/tz/src/northamerica    |  42 ++---
+ .../java/org/joda/time/tz/src/southamerica    |  18 +-
+ 9 files changed, 240 insertions(+), 158 deletions(-)
+
+diff --git a/RELEASE-NOTES.txt b/RELEASE-NOTES.txt
+index 643c0a0c3..019718110 100644
+--- a/RELEASE-NOTES.txt
++++ b/RELEASE-NOTES.txt
+@@ -31,7 +31,7 @@ Source compatible - Yes
+ Serialization compatible - Yes
+ 
+ Data compatible - Yes, except
+- - DateTimeZone data updated to version 2014h
++ - DateTimeZone data updated to version 2014j
+ 
+ Semantic compatible - Yes
+ 
+diff --git a/pom.xml b/pom.xml
+index a806ed69e..caeee3025 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -749,6 +749,6 @@
+     <!-- Other properties -->
+     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+-    <tz.database.version>2014h</tz.database.version>
++    <tz.database.version>2014j</tz.database.version>
+   </properties>
+ </project>
+diff --git a/src/main/java/org/joda/time/tz/src/Readme.txt b/src/main/java/org/joda/time/tz/src/Readme.txt
+index 79985252b..11f8cc830 100644
+--- a/src/main/java/org/joda/time/tz/src/Readme.txt
++++ b/src/main/java/org/joda/time/tz/src/Readme.txt
+@@ -1,2 +1,2 @@
+ The data files in this directory were obtained from the public IANA time zone database,
+-http://www.iana.org/time-zones, version 2014h.
++http://www.iana.org/time-zones, version 2014j.
+diff --git a/src/main/java/org/joda/time/tz/src/africa b/src/main/java/org/joda/time/tz/src/africa
+index b17c62b7e..1b9bf50da 100644
+--- a/src/main/java/org/joda/time/tz/src/africa
++++ b/src/main/java/org/joda/time/tz/src/africa
+@@ -6,20 +6,19 @@
+ # tz@iana.org for general use in the future).  For more, please see
+ # the file CONTRIBUTING in the tz distribution.
+ 
+-# From Paul Eggert (2013-02-21):
++# From Paul Eggert (2014-10-31):
+ #
+-# A good source for time zone historical data outside the U.S. is
++# Unless otherwise specified, the source for data through 1990 is:
+ # Thomas G. Shanks and Rique Pottenger, The International Atlas (6th edition),
+ # San Diego: ACS Publications, Inc. (2003).
++# Unfortunately this book contains many errors and cites no sources.
+ #
+ # Gwillim Law writes that a good source
+ # for recent time zone data is the International Air Transport
+ # Association's Standard Schedules Information Manual (IATA SSIM),
+ # published semiannually.  Law sent in several helpful summaries
+-# of the IATA's data after 1990.
+-#
+-# Except where otherwise noted, Shanks & Pottenger is the source for
+-# entries through 1990, and IATA SSIM is the source for entries afterwards.
++# of the IATA's data after 1990.  Except where otherwise noted,
++# IATA SSIM is the source for entries after 1990.
+ #
+ # Another source occasionally used is Edward W. Whitman, World Time Differences,
+ # Whitman Publishing Co, 2 Niagara Av, Ealing, London (undated), which
+@@ -65,7 +64,6 @@
+ #	 3:00	CAST	Central Africa Summer Time (no longer used)
+ #	 3:00	SAST	South Africa Summer Time (no longer used)
+ #	 3:00	EAT	East Africa Time
+-#	 4:00	EAST	East Africa Summer Time (no longer used)
+ 
+ # Algeria
+ # Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
+@@ -146,9 +144,7 @@ Zone	Africa/Ndjamena	1:00:12 -	LMT	1912        # N'Djamena
+ 			1:00	-	WAT
+ 
+ # Comoros
+-# Zone	NAME		GMTOFF	RULES	FORMAT	[UNTIL]
+-Zone	Indian/Comoro	2:53:04 -	LMT	1911 Jul # Moroni, Gran Comoro
+-			3:00	-	EAT
++# See Africa/Nairobi.
+ 
+ # Democratic Republic of the Congo
+ # See Africa/Lagos for the western part and Africa/Maputo for the eastern.
+@@ -172,9 +168,7 @@ Link Africa/Abidjan Africa/Sao_Tome	# São Tomé and Príncipe
+ Link Africa/Abidjan Atlantic/St_Helena	# St Helena
+ 
+ # Djibouti
+-# Zone	NAME		GMTOFF	RULES	FORMAT	[UNTIL]
+-Zone	Africa/Djibouti	2:52:36 -	LMT	1911 Jul
+-			3:00	-	EAT
++# See Africa/Nairobi.
+ 
+ ###############################################################################
+ 
+@@ -387,27 +381,8 @@ Zone	Africa/Cairo	2:05:09 -	LMT	1900 Oct
+ # See Africa/Lagos.
+ 
+ # Eritrea
+-# Zone	NAME		GMTOFF	RULES	FORMAT	[UNTIL]
+-Zone	Africa/Asmara	2:35:32 -	LMT	1870
+-			2:35:32	-	AMT	1890        # Asmara Mean Time
+-			2:35:20	-	ADMT	1936 May  5 # Adis Dera MT
+-			3:00	-	EAT
+-
+ # Ethiopia
+-# From Paul Eggert (2014-07-31):
+-# Like the Swahili of Kenya and Tanzania, many Ethiopians keep a
+-# 12-hour clock starting at our 06:00, so their "8 o'clock" is our
+-# 02:00 or 14:00.  Keep this in mind when you ask the time in Amharic.
+-#
+-# Shanks & Pottenger write that Ethiopia had six narrowly-spaced time
+-# zones between 1870 and 1890, that they merged to 38E50 (2:35:20) in
+-# 1890, and that they switched to 3:00 on 1936-05-05.  Perhaps 38E50
+-# was for Adis Dera.  Quite likely the Shanks data entries are wrong
+-# anyway.
+-# Zone	NAME		GMTOFF	RULES	FORMAT	[UNTIL]
+-Zone Africa/Addis_Ababa	2:34:48 -	LMT	1870
+-			2:35:20	-	ADMT	1936 May  5 # Adis Dera MT
+-			3:00	-	EAT
++# See Africa/Nairobi.
+ 
+ # Gabon
+ # See Africa/Lagos.
+@@ -451,6 +426,15 @@ Zone	Africa/Nairobi	2:27:16	-	LMT	1928 Jul
+ 			2:30	-	BEAT	1940
+ 			2:45	-	BEAUT	1960
+ 			3:00	-	EAT
++Link Africa/Nairobi Africa/Addis_Ababa	 # Ethiopia
++Link Africa/Nairobi Africa/Asmara	 # Eritrea
++Link Africa/Nairobi Africa/Dar_es_Salaam # Tanzania
++Link Africa/Nairobi Africa/Djibouti
++Link Africa/Nairobi Africa/Kampala	 # Uganda
++Link Africa/Nairobi Africa/Mogadishu	 # Somalia
++Link Africa/Nairobi Indian/Antananarivo	 # Madagascar
++Link Africa/Nairobi Indian/Comoro
++Link Africa/Nairobi Indian/Mayotte
+ 
+ # Lesotho
+ # See Africa/Johannesburg.
+@@ -528,11 +512,7 @@ Zone	Africa/Tripoli	0:52:44 -	LMT	1920
+ 			2:00	-	EET
+ 
+ # Madagascar
+-# Zone	NAME		GMTOFF	RULES	FORMAT	[UNTIL]
+-Zone Indian/Antananarivo 3:10:04 -	LMT	1911 Jul
+-			3:00	-	EAT	1954 Feb 27 23:00s
+-			3:00	1:00	EAST	1954 May 29 23:00s
+-			3:00	-	EAT
++# See Africa/Nairobi.
+ 
+ # Malawi
+ # See Africa/Maputo.
+@@ -635,9 +615,7 @@ Zone Indian/Mauritius	3:50:00 -	LMT	1907 # Port Louis
+ # no information; probably like Indian/Mauritius
+ 
+ # Mayotte
+-# Zone	NAME		GMTOFF	RULES	FORMAT	[UNTIL]
+-Zone	Indian/Mayotte	3:00:56 -	LMT	1911 Jul # Mamoutzou
+-			3:00	-	EAT
++# See Africa/Nairobi.
+ 
+ # Morocco
+ # See the 'europe' file for Spanish Morocco (Africa/Ceuta).
+@@ -1049,11 +1027,7 @@ Zone	Indian/Mahe	3:41:48 -	LMT	1906 Jun # Victoria
+ # See Africa/Abidjan.
+ 
+ # Somalia
+-# Zone	NAME		GMTOFF	RULES	FORMAT	[UNTIL]
+-Zone Africa/Mogadishu	3:01:28 -	LMT	1893 Nov
+-			3:00	-	EAT	1931
+-			2:30	-	BEAT	1957
+-			3:00	-	EAT
++# See Africa/Nairobi.
+ 
+ # South Africa
+ # Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
+@@ -1096,11 +1070,7 @@ Link Africa/Khartoum Africa/Juba
+ # See Africa/Johannesburg.
+ 
+ # Tanzania
+-# Zone	NAME		GMTOFF	RULES	FORMAT	[UNTIL]
+-Zone Africa/Dar_es_Salaam 2:37:08 -	LMT	1931
+-			3:00	-	EAT	1948
+-			2:45	-	BEAUT	1961
+-			3:00	-	EAT
++# See Africa/Nairobi.
+ 
+ # Togo
+ # See Africa/Abidjan.
+@@ -1206,12 +1176,7 @@ Zone	Africa/Tunis	0:40:44 -	LMT	1881 May 12
+ 			1:00	Tunisia	CE%sT
+ 
+ # Uganda
+-# Zone	NAME		GMTOFF	RULES	FORMAT	[UNTIL]
+-Zone	Africa/Kampala	2:09:40 -	LMT	1928 Jul
+-			3:00	-	EAT	1930
+-			2:30	-	BEAT	1948
+-			2:45	-	BEAUT	1957
+-			3:00	-	EAT
++# See Africa/Nairobi.
+ 
+ # Zambia
+ # Zimbabwe
+diff --git a/src/main/java/org/joda/time/tz/src/asia b/src/main/java/org/joda/time/tz/src/asia
+index 0be896b1c..1a2bd12ad 100644
+--- a/src/main/java/org/joda/time/tz/src/asia
++++ b/src/main/java/org/joda/time/tz/src/asia
+@@ -6,20 +6,19 @@
+ # tz@iana.org for general use in the future).  For more, please see
+ # the file CONTRIBUTING in the tz distribution.
+ 
+-# From Paul Eggert (2013-08-11):
++# From Paul Eggert (2014-10-31):
+ #
+-# A good source for time zone historical data outside the U.S. is
++# Unless otherwise specified, the source for data through 1990 is:
+ # Thomas G. Shanks and Rique Pottenger, The International Atlas (6th edition),
+ # San Diego: ACS Publications, Inc. (2003).
++# Unfortunately this book contains many errors and cites no sources.
+ #
+ # Gwillim Law writes that a good source
+ # for recent time zone data is the International Air Transport
+ # Association's Standard Schedules Information Manual (IATA SSIM),
+ # published semiannually.  Law sent in several helpful summaries
+-# of the IATA's data after 1990.
+-#
+-# Except where otherwise noted, Shanks & Pottenger is the source for
+-# entries through 1990, and IATA SSIM is the source for entries afterwards.
++# of the IATA's data after 1990.  Except where otherwise noted,
++# IATA SSIM is the source for entries after 1990.
+ #
+ # Another source occasionally used is Edward W. Whitman, World Time Differences,
+ # Whitman Publishing Co, 2 Niagara Av, Ealing, London (undated), which
+@@ -47,10 +46,11 @@
+ #	3:30 IRST IRDT	Iran
+ #	4:00 GST	Gulf*
+ #	5:30 IST	India
+-#	7:00 ICT	Indochina*
++#	7:00 ICT	Indochina, most times and locations*
+ #	7:00 WIB	west Indonesia (Waktu Indonesia Barat)
+ #	8:00 WITA	central Indonesia (Waktu Indonesia Tengah)
+ #	8:00 CST	China
++#	8:00 IDT	Indochina, 1943-45, 1947-55, 1960-75 (some locations)*
+ #	8:00 JWST	Western Standard Time (Japan, 1896/1937)*
+ #	9:00 JCST	Central Standard Time (Japan, 1896/1937)
+ #	9:00 WIT	east Indonesia (Waktu Indonesia Timur)
+@@ -271,12 +271,8 @@ Zone	Asia/Rangoon	6:24:40 -	LMT	1880        # or Yangon
+ 			6:30	-	MMT	# Myanmar Time
+ 
+ # Cambodia
+-# Zone	NAME		GMTOFF	RULES	FORMAT	[UNTIL]
+-Zone	Asia/Phnom_Penh	6:59:40 -	LMT	1906 Jun  9
+-			7:06:20	-	SMT	1911 Mar 11  0:01 # Saigon MT?
+-			7:00	-	ICT	1912 May
+-			8:00	-	ICT	1931 May
+-			7:00	-	ICT
++# See Asia/Bangkok.
++
+ 
+ # China
+ 
+@@ -1666,44 +1662,70 @@ Zone	Asia/Bishkek	4:58:24 -	LMT	1924 May  2
+ # Korea (North and South)
+ 
+ # From Annie I. Bang (2006-07-10):
+-# http://www.koreaherald.co.kr/SITE/data/html_dir/2006/07/10/200607100012.asp
+-# The Ministry of Commerce, Industry and Energy has already
+-# commissioned a research project [to reintroduce DST] and has said
+-# the system may begin as early as 2008....  Korea ran a daylight
+-# saving program from 1949-61 but stopped it during the 1950-53 Korean War.
++# http://www.koreaherald.com/view.php?ud=200607100012
++# Korea ran a daylight saving program from 1949-61 but stopped it
++# during the 1950-53 Korean War.  The system was temporarily enforced
++# between 1987 and 1988 ...
++
++# From Sanghyuk Jung (2014-10-29):
++# http://mm.icann.org/pipermail/tz/2014-October/021830.html
++# According to the Korean Wikipedia
++# http://ko.wikipedia.org/wiki/한국_표준시
++# [oldid=12896437 2014-09-04 08:03 UTC]
++# DST in Republic of Korea was as follows....  And I checked old
++# newspapers in Korean, all articles correspond with data in Wikipedia.
++# For example, the article in 1948 (Korean Language) proved that DST
++# started at June 1 in that year.  For another example, the article in
++# 1988 said that DST started at 2:00 AM in that year.
+ 
+-# From Shanks & Pottenger:
+ # Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
+-Rule	ROK	1960	only	-	May	15	0:00	1:00	D
+-Rule	ROK	1960	only	-	Sep	13	0:00	0	S
+-Rule	ROK	1987	1988	-	May	Sun>=8	0:00	1:00	D
+-Rule	ROK	1987	1988	-	Oct	Sun>=8	0:00	0	S
+-
+-# From Paul Eggert (2014-07-01):
+-# The following entries are from Shanks & Pottenger, except that I
+-# guessed that time zone abbreviations through 1945 followed the same
++Rule	ROK	1948	only	-	Jun	 1	0:00	1:00	D
++Rule	ROK	1948	only	-	Sep	13	0:00	0	S
++Rule	ROK	1949	only	-	Apr	 3	0:00	1:00	D
++Rule	ROK	1949	1951	-	Sep	Sun>=8	0:00	0	S
++Rule	ROK	1950	only	-	Apr	 1	0:00	1:00	D
++Rule	ROK	1951	only	-	May	 6	0:00	1:00	D
++Rule	ROK	1955	only	-	May	 5	0:00	1:00	D
++Rule	ROK	1955	only	-	Sep	 9	0:00	0	S
++Rule	ROK	1956	only	-	May	20	0:00	1:00	D
++Rule	ROK	1956	only	-	Sep	30	0:00	0	S
++Rule	ROK	1957	1960	-	May	Sun>=1	0:00	1:00	D
++Rule	ROK	1957	1960	-	Sep	Sun>=18	0:00	0	S
++Rule	ROK	1987	1988	-	May	Sun>=8	2:00	1:00	D
++Rule	ROK	1987	1988	-	Oct	Sun>=8	3:00	0	S
++
++# From Paul Eggert (2014-10-30):
++# The Korean Wikipedia entry gives the following sources for UT offsets:
++#
++# 1908: Official Journal Article No. 3994 (Edict No. 5)
++# 1912: Governor-General of Korea Official Gazette Issue No. 367
++#       (Announcement No. 338)
++# 1954: Presidential Decree No. 876 (1954-03-17)
++# 1961: Law No. 676 (1961-08-07)
++# 1987: Law No. 3919 (1986-12-31)
++#
++# The Wikipedia entry also has confusing information about a change
++# to UT+9 in April 1910, but then what would be the point of the later change
++# to UT+9 on 1912-01-01?  Omit the 1910 change for now.
++#
++# I guessed that time zone abbreviations through 1945 followed the same
+ # rules as discussed under Taiwan, with nominal switches from JST to KST
+ # when the respective cities were taken over by the Allies after WWII.
++#
++# For Pyongyang we have no information; guess no changes since World War II.
+ 
+ # Zone	NAME		GMTOFF	RULES	FORMAT	[UNTIL]
+-Zone	Asia/Seoul	8:27:52	-	LMT	1890
+-			8:30	-	KST	1904 Dec
+-			9:00	-	JCST	1928
+-			8:30	-	KST	1932
++Zone	Asia/Seoul	8:27:52	-	LMT	1908 Apr  1
++			8:30	-	KST	1912 Jan  1
+ 			9:00	-	JCST	1937 Oct  1
+ 			9:00	-	JST	1945 Sep  8
+ 			9:00	-	KST	1954 Mar 21
+-			8:00	ROK	K%sT	1961 Aug 10
+-			8:30	-	KST	1968 Oct
++			8:30	ROK	K%sT	1961 Aug 10
+ 			9:00	ROK	K%sT
+-Zone	Asia/Pyongyang	8:23:00 -	LMT	1890
+-			8:30	-	KST	1904 Dec
+-			9:00	-	JCST	1928
+-			8:30	-	KST	1932
++Zone	Asia/Pyongyang	8:23:00 -	LMT	1908 Apr  1
++			8:30	-	KST	1912 Jan  1
+ 			9:00	-	JCST	1937 Oct  1
+ 			9:00	-	JST	1945 Aug 24
+-			9:00	-	KST	1954 Mar 21
+-			8:00	-	KST	1961 Aug 10
+ 			9:00	-	KST
+ 
+ ###############################################################################
+@@ -1714,12 +1736,8 @@ Zone	Asia/Kuwait	3:11:56 -	LMT	1950
+ 			3:00	-	AST
+ 
+ # Laos
+-# Zone	NAME		GMTOFF	RULES	FORMAT	[UNTIL]
+-Zone	Asia/Vientiane	6:50:24 -	LMT	1906 Jun  9       # or Viangchan
+-			7:06:20	-	SMT	1911 Mar 11  0:01 # Saigon MT?
+-			7:00	-	ICT	1912 May
+-			8:00	-	ICT	1931 May
+-			7:00	-	ICT
++# See Asia/Bangkok.
++
+ 
+ # Lebanon
+ # Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
+@@ -2732,6 +2750,8 @@ Zone	Asia/Dushanbe	4:35:12 -	LMT	1924 May  2
+ Zone	Asia/Bangkok	6:42:04	-	LMT	1880
+ 			6:42:04	-	BMT	1920 Apr # Bangkok Mean Time
+ 			7:00	-	ICT
++Link Asia/Bangkok Asia/Phnom_Penh	# Cambodia
++Link Asia/Bangkok Asia/Vientiane	# Laos
+ 
+ # Turkmenistan
+ # From Shanks & Pottenger.
+@@ -2769,22 +2789,65 @@ Zone	Asia/Tashkent	4:37:11 -	LMT	1924 May  2
+ 
+ # Vietnam
+ 
+-# From Paul Eggert (2013-02-21):
++# From Paul Eggert (2014-10-04):
+ # Milne gives 7:16:56 for the meridian of Saigon in 1899, as being
+ # used in Lower Laos, Cambodia, and Annam.  But this is quite a ways
+ # from Saigon's location.  For now, ignore this and stick with Shanks
+-# and Pottenger.
++# and Pottenger for LMT before 1906.
+ 
+ # From Arthur David Olson (2008-03-18):
+ # The English-language name of Vietnam's most populous city is "Ho Chi Minh
+ # City"; use Ho_Chi_Minh below to avoid a name of more than 14 characters.
+ 
+-# From Shanks & Pottenger:
++# From Paul Eggert (2014-10-21) after a heads-up from Trần Ngọc Quân:
++# Trần Tiến Bình's authoritative book "Lịch Việt Nam: thế kỷ XX-XXI (1901-2100)"
++# (Nhà xuất bản Văn Hoá - Thông Tin, Hanoi, 2005), pp 49-50,
++# is quoted verbatim in:
++# http://www.thoigian.com.vn/?mPage=P80D01
++# is translated by Brian Inglis in:
++# http://mm.icann.org/pipermail/tz/2014-October/021654.html
++# and is the basis for the information below.
++#
++# The 1906 transition was effective July 1 and standardized Indochina to
++# Phù Liễn Observatory, legally 104 deg. 17'17" east of Paris.
++# It's unclear whether this meant legal Paris Mean Time (00:09:21) or
++# the Paris Meridian (2 deg. 20'14.03" E); the former yields 07:06:30.1333...
++# and the latter 07:06:29.333... so either way it rounds to 07:06:30,
++# which is used below even though the modern-day Phù Liễn Observatory
++# is closer to 07:06:31.  Abbreviate Phù Liễn Mean Time as PLMT.
++#
++# The following transitions occurred in Indochina in general (before 1954)
++# and in South Vietnam in particular (after 1954):
++# To 07:00 on 1911-05-01.
++# To 08:00 on 1942-12-31 at 23:00.
++# To 09:00 in 1945-03-14 at 23:00.
++# To 07:00 on 1945-09-02 in Vietnam.
++# To 08:00 on 1947-04-01 in French-controlled Indochina.
++# To 07:00 on 1955-07-01 in South Vietnam.
++# To 08:00 on 1959-12-31 at 23:00 in South Vietnam.
++# To 07:00 on 1975-06-13 in South Vietnam.
++#
++# Trần cites the following sources; it's unclear which supplied the info above.
++#
++# Hoàng Xuân Hãn: "Lịch và lịch Việt Nam". Tập san Khoa học Xã hội,
++# No. 9, Paris, February 1982.
++#
++# Lê Thành Lân: "Lịch và niên biểu lịch sử hai mươi thế kỷ (0001-2010)",
++# NXB Thống kê, Hanoi, 2000.
++#
++# Lê Thành Lân: "Lịch hai thế kỷ (1802-2010) và các lịch vĩnh cửu",
++# NXB Thuận Hoá, Huế, 1995.
++
+ # Zone	NAME		GMTOFF	RULES	FORMAT	[UNTIL]
+-Zone	Asia/Ho_Chi_Minh	7:06:40 -	LMT	1906 Jun  9
+-			7:06:20	-	SMT	1911 Mar 11  0:01 # Saigon MT?
+-			7:00	-	ICT	1912 May
+-			8:00	-	ICT	1931 May
++Zone Asia/Ho_Chi_Minh	7:06:40 -	LMT	1906 Jul  1
++			7:06:30	-	PLMT	1911 May  1
++			7:00	-	ICT	1942 Dec 31 23:00
++			8:00	-	IDT	1945 Mar 14 23:00
++			9:00	-	JST	1945 Sep  2
++			7:00	-	ICT	1947 Apr  1
++			8:00	-	IDT	1955 Jul  1
++			7:00	-	ICT	1959 Dec 31 23:00
++			8:00	-	IDT	1975 Jun 13
+ 			7:00	-	ICT
+ 
+ # Yemen
+diff --git a/src/main/java/org/joda/time/tz/src/australasia b/src/main/java/org/joda/time/tz/src/australasia
+index 5ea1f186b..911e68176 100644
+--- a/src/main/java/org/joda/time/tz/src/australasia
++++ b/src/main/java/org/joda/time/tz/src/australasia
+@@ -331,20 +331,27 @@ Zone	Indian/Cocos	6:27:40	-	LMT	1900
+ # Fiji will end DST on 2014-01-19 02:00:
+ # http://www.fiji.gov.fj/Media-Center/Press-Releases/DAYLIGHT-SAVINGS-TO-END-THIS-MONTH-%281%29.aspx
+ 
+-# From Paul Eggert (2014-01-10):
+-# For now, guess that Fiji springs forward the Sunday before the fourth
+-# Monday in October, and springs back the penultimate Sunday in January.
+-# This is ad hoc, but matches recent practice.
++# From Ken Rylander (2014-10-20):
++# DST will start Nov. 2 this year.
++# http://www.fiji.gov.fj/Media-Center/Press-Releases/DAYLIGHT-SAVING-STARTS-ON-SUNDAY,-NOVEMBER-2ND.aspx
++
++# From Paul Eggert (2014-10-20):
++# For now, guess DST from 02:00 the first Sunday in November to
++# 03:00 the first Sunday on or after January 18.  Although ad hoc, it
++# matches this year's plan and seems more likely to match future
++# practice than guessing no DST.
+ 
+ # Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
+ Rule	Fiji	1998	1999	-	Nov	Sun>=1	2:00	1:00	S
+ Rule	Fiji	1999	2000	-	Feb	lastSun	3:00	0	-
+ Rule	Fiji	2009	only	-	Nov	29	2:00	1:00	S
+ Rule	Fiji	2010	only	-	Mar	lastSun	3:00	0	-
+-Rule	Fiji	2010	max	-	Oct	Sun>=21	2:00	1:00	S
++Rule	Fiji	2010	2013	-	Oct	Sun>=21	2:00	1:00	S
+ Rule	Fiji	2011	only	-	Mar	Sun>=1	3:00	0	-
+ Rule	Fiji	2012	2013	-	Jan	Sun>=18	3:00	0	-
+-Rule	Fiji	2014	max	-	Jan	Sun>=18	2:00	0	-
++Rule	Fiji	2014	only	-	Jan	Sun>=18	2:00	0	-
++Rule	Fiji	2014	max	-	Nov	Sun>=1	2:00	1:00	S
++Rule	Fiji	2015	max	-	Jan	Sun>=18	3:00	0	-
+ # Zone	NAME		GMTOFF	RULES	FORMAT	[UNTIL]
+ Zone	Pacific/Fiji	11:55:44 -	LMT	1915 Oct 26 # Suva
+ 			12:00	Fiji	FJ%sT	# Fiji Time
+@@ -519,6 +526,30 @@ Zone Pacific/Palau	8:57:56 -	LMT	1901 # Koror
+ Zone Pacific/Port_Moresby 9:48:40 -	LMT	1880
+ 			9:48:32	-	PMMT	1895 # Port Moresby Mean Time
+ 			10:00	-	PGT	# Papua New Guinea Time
++#
++# From Paul Eggert (2014-10-13):
++# Base the Bougainville entry on the Arawa-Kieta region, which appears to have
++# the most people even though it was devastated in the Bougainville Civil War.
++#
++# Although Shanks gives 1942-03-15 / 1943-11-01 for JST, these dates
++# are apparently rough guesswork from the starts of military campaigns.
++# The World War II entries below are instead based on Arawa-Kieta.
++# The Japanese occupied Kieta in July 1942,
++# according to the Pacific War Online Encyclopedia
++# http://pwencycl.kgbudge.com/B/o/Bougainville.htm
++# and seem to have controlled it until their 1945-08-21 surrender.
++#
++# The Autonomous Region of Bougainville plans to switch from UTC+10 to UTC+11
++# on 2014-12-28 at 02:00.  They call UTC+11 "Bougainville Standard Time";
++# abbreviate this as BST.  See:
++# http://www.bougainville24.com/bougainville-issues/bougainville-gets-own-timezone/
++#
++Zone Pacific/Bougainville 10:22:16 -	LMT	1880
++			 9:48:32 -	PMMT	1895
++			10:00	-	PGT	1942 Jul
++			 9:00	-	JST	1945 Aug 21
++			10:00	-	PGT	2014 Dec 28  2:00
++			11:00	-	BST
+ 
+ # Pitcairn
+ # Zone	NAME		GMTOFF	RULES	FORMAT	[UNTIL]
+@@ -766,19 +797,19 @@ Zone	Pacific/Wallis	12:15:20 -	LMT	1901
+ # tz@iana.org for general use in the future).  For more, please see
+ # the file CONTRIBUTING in the tz distribution.
+ 
+-# From Paul Eggert (2013-02-21):
+-# A good source for time zone historical data outside the U.S. is
++# From Paul Eggert (2014-10-31):
++#
++# Unless otherwise specified, the source for data through 1990 is:
+ # Thomas G. Shanks and Rique Pottenger, The International Atlas (6th edition),
+ # San Diego: ACS Publications, Inc. (2003).
++# Unfortunately this book contains many errors and cites no sources.
+ #
+ # Gwillim Law writes that a good source
+ # for recent time zone data is the International Air Transport
+ # Association's Standard Schedules Information Manual (IATA SSIM),
+ # published semiannually.  Law sent in several helpful summaries
+-# of the IATA's data after 1990.
+-#
+-# Except where otherwise noted, Shanks & Pottenger is the source for
+-# entries through 1990, and IATA SSIM is the source for entries afterwards.
++# of the IATA's data after 1990.  Except where otherwise noted,
++# IATA SSIM is the source for entries after 1990.
+ #
+ # Another source occasionally used is Edward W. Whitman, World Time Differences,
+ # Whitman Publishing Co, 2 Niagara Av, Ealing, London (undated), which
+@@ -803,6 +834,7 @@ Zone	Pacific/Wallis	12:15:20 -	LMT	1901
+ #	 10:00	AEST	AEDT	Eastern Australia
+ #	 10:00	ChST		Chamorro
+ #	 10:30	LHST	LHDT	Lord Howe*
++#	 11:00	BST		Bougainville*
+ #	 11:30	NZMT	NZST	New Zealand through 1945
+ #	 12:00	NZST	NZDT	New Zealand 1946-present
+ #	 12:15	CHAST		Chatham through 1945*
+diff --git a/src/main/java/org/joda/time/tz/src/europe b/src/main/java/org/joda/time/tz/src/europe
+index 6b20b9287..5e78c5499 100644
+--- a/src/main/java/org/joda/time/tz/src/europe
++++ b/src/main/java/org/joda/time/tz/src/europe
+@@ -6,16 +6,19 @@
+ # tz@iana.org for general use in the future).  For more, please see
+ # the file CONTRIBUTING in the tz distribution.
+ 
+-# From Paul Eggert (2014-05-31):
+-# A good source for time zone historical data outside the U.S. is
++# From Paul Eggert (2014-10-31):
++#
++# Unless otherwise specified, the source for data through 1990 is:
+ # Thomas G. Shanks and Rique Pottenger, The International Atlas (6th edition),
+ # San Diego: ACS Publications, Inc. (2003).
++# Unfortunately this book contains many errors and cites no sources.
+ #
+ # Gwillim Law writes that a good source
+ # for recent time zone data is the International Air Transport
+ # Association's Standard Schedules Information Manual (IATA SSIM),
+ # published semiannually.  Law sent in several helpful summaries
+-# of the IATA's data after 1990.
++# of the IATA's data after 1990.  Except where otherwise noted,
++# IATA SSIM is the source for entries after 1990.
+ #
+ # A reliable and entertaining source about time zones is
+ # Derek Howse, Greenwich time and longitude, Philip Wilson Publishers (1997).
+@@ -72,7 +75,7 @@
+ #        1:00       CET CEST CEMT Central Europe
+ #        1:00:14    SET           Swedish (1879-1899)*
+ #        2:00       EET EEST      Eastern Europe
+-#        3:00       FET           Further-eastern Europe*
++#        3:00       FET           Further-eastern Europe (2011-2014)*
+ #        3:00       MSK MSD  MSM* Moscow
+ 
+ # From Peter Ilieve (1994-12-04),
+@@ -287,6 +290,14 @@
+ #   "Timeball on the ballast office is down.  Dunsink time."
+ #   -- James Joyce, Ulysses
+ 
++# "Countess Markievicz ... claimed that the [1916] abolition of Dublin Mean Time
++# was among various actions undertaken by the 'English' government that
++# would 'put the whole country into the SF (Sinn Féin) camp'.  She claimed
++# Irish 'public feeling (was) outraged by forcing of English time on us'."
++# -- Parsons M. Dublin lost its time zone - and 25 minutes - after 1916 Rising.
++# Irish Times 2014-10-27.
++# http://www.irishtimes.com/news/politics/dublin-lost-its-time-zone-and-25-minutes-after-1916-rising-1.1977411
++
+ # From Joseph S. Myers (2005-01-26):
+ # Irish laws are available online at <http://www.irishstatutebook.ie>.
+ # These include various relating to legal time, for example:
+@@ -594,6 +605,7 @@ Rule	Russia	1992	only	-	Sep	lastSat	 23:00	0	-
+ Rule	Russia	1993	2010	-	Mar	lastSun	 2:00s	1:00	S
+ Rule	Russia	1993	1995	-	Sep	lastSun	 2:00s	0	-
+ Rule	Russia	1996	2010	-	Oct	lastSun	 2:00s	0	-
++# As described below, Russia's 2014 change affects Zone data, not Rule data.
+ 
+ # From Alexander Krivenyshev (2011-06-14):
+ # According to Kremlin press service, Russian President Dmitry Medvedev
+@@ -724,6 +736,13 @@ Zone	Europe/Vienna	1:05:21 -	LMT	1893 Apr
+ # http://www.belta.by/ru/all_news/society/V-Belarusi-otmenjaetsja-perexod-na-sezonnoe-vremja_i_572952.html
+ # http://naviny.by/rubrics/society/2011/09/16/ic_articles_116_175144/
+ # http://news.tut.by/society/250578.html
++#
++# From Alexander Bokovoy (2014-10-09):
++# Belarussian government decided against changing to winter time....
++# http://eng.belta.by/all_news/society/Belarus-decides-against-adjusting-time-in-Russias-wake_i_76335.html
++# From Paul Eggert (2014-10-08):
++# Hence Belarus can share time zone abbreviations with Moscow again.
++#
+ # Zone	NAME		GMTOFF	RULES	FORMAT	[UNTIL]
+ Zone	Europe/Minsk	1:50:16 -	LMT	1880
+ 			1:50	-	MMT	1924 May  2 # Minsk Mean Time
+@@ -736,7 +755,8 @@ Zone	Europe/Minsk	1:50:16 -	LMT	1880
+ 			2:00	-	EET	1992 Mar 29  0:00s
+ 			2:00	1:00	EEST	1992 Sep 27  0:00s
+ 			2:00	Russia	EE%sT	2011 Mar 27  2:00s
+-			3:00	-	FET
++			3:00	-	FET	2014 Oct 26  1:00s
++			3:00	-	MSK
+ 
+ # Belgium
+ #
+diff --git a/src/main/java/org/joda/time/tz/src/northamerica b/src/main/java/org/joda/time/tz/src/northamerica
+index 3d725055d..c91430c03 100644
+--- a/src/main/java/org/joda/time/tz/src/northamerica
++++ b/src/main/java/org/joda/time/tz/src/northamerica
+@@ -991,19 +991,19 @@ Zone America/Menominee	-5:50:27 -	LMT	1885 Sep 18 12:00
+ ################################################################################
+ 
+ 
+-# From Paul Eggert (2006-03-22):
+-# A good source for time zone historical data outside the U.S. is
++# From Paul Eggert (2014-10-31):
++#
++# Unless otherwise specified, the source for data through 1990 is:
+ # Thomas G. Shanks and Rique Pottenger, The International Atlas (6th edition),
+ # San Diego: ACS Publications, Inc. (2003).
++# Unfortunately this book contains many errors and cites no sources.
+ #
+ # Gwillim Law writes that a good source
+ # for recent time zone data is the International Air Transport
+ # Association's Standard Schedules Information Manual (IATA SSIM),
+ # published semiannually.  Law sent in several helpful summaries
+-# of the IATA's data after 1990.
+-#
+-# Except where otherwise noted, Shanks & Pottenger is the source for
+-# entries through 1990, and IATA SSIM is the source for entries afterwards.
++# of the IATA's data after 1990.  Except where otherwise noted,
++# IATA SSIM is the source for entries after 1990.
+ #
+ # Other sources occasionally used include:
+ #
+@@ -1101,17 +1101,16 @@ Zone America/Menominee	-5:50:27 -	LMT	1885 Sep 18 12:00
+ # An amendment to the Interpretation Act was registered on February 19/2007....
+ # http://action.attavik.ca/home/justice-gn/attach/2007/gaz02part2.pdf
+ 
+-# From Paul Eggert (2006-04-25):
++# From Paul Eggert (2014-10-18):
+ # H. David Matthews and Mary Vincent's map
+ # "It's about TIME", _Canadian Geographic_ (September-October 1998)
+-# http://www.canadiangeographic.ca/Magazine/SO98/geomap.asp
++# http://www.canadiangeographic.ca/Magazine/SO98/alacarte.asp
+ # contains detailed boundaries for regions observing nonstandard
+ # time and daylight saving time arrangements in Canada circa 1998.
+ #
+-# INMS, the Institute for National Measurement Standards in Ottawa, has
+-# information about standard and daylight saving time zones in Canada.
+-# http://inms-ienm.nrc-cnrc.gc.ca/en/time_services/daylight_saving_e.php
+-# (updated periodically).
++# National Research Council Canada maintains info about time zones and DST.
++# http://www.nrc-cnrc.gc.ca/eng/services/time/time_zones.html
++# http://www.nrc-cnrc.gc.ca/eng/services/time/faq/index.html#Q5
+ # Its unofficial information is often taken from Matthews and Vincent.
+ 
+ # From Paul Eggert (2006-06-27):
+@@ -1976,10 +1975,7 @@ Zone America/Creston	-7:46:04 -	LMT	1884
+ # [Also see <http://www.nunatsiaq.com/nunavut/nvt10309_06.html> (2001-03-09).]
+ 
+ # From Gwillim Law (2005-05-21):
+-# According to maps at
+-# http://inms-ienm.nrc-cnrc.gc.ca/images/time_services/TZ01SWE.jpg
+-# http://inms-ienm.nrc-cnrc.gc.ca/images/time_services/TZ01SSE.jpg
+-# (both dated 2003), and
++# According to ...
+ # http://www.canadiangeographic.ca/Magazine/SO98/geomap.asp
+ # (from a 1998 Canadian Geographic article), the de facto and de jure time
+ # for Southampton Island (at the north end of Hudson Bay) is UTC-5 all year
+@@ -1988,9 +1984,11 @@ Zone America/Creston	-7:46:04 -	LMT	1884
+ # predates the creation of Nunavut, it probably goes back many years....
+ # The Inuktitut name of Coral Harbour is Sallit, but it's rarely used.
+ #
+-# From Paul Eggert (2005-07-26):
++# From Paul Eggert (2014-10-17):
+ # For lack of better information, assume that Southampton Island observed
+-# daylight saving only during wartime.
++# daylight saving only during wartime.  Gwillim Law's email also
++# mentioned maps now maintained by National Research Council Canada;
++# see above for an up-to-date link.
+ 
+ # From Chris Walton (2007-03-01):
+ # ... the community of Resolute (located on Cornwallis Island in
+@@ -3133,13 +3131,17 @@ Zone America/Miquelon	-3:44:40 -	LMT	1911 May 15 # St Pierre
+ # From Paul Eggert (2014-08-19):
+ # The 2014-08-13 Cabinet meeting decided to stay on UTC-4 year-round.  See:
+ # http://tcweeklynews.com/daylight-savings-time-to-be-maintained-p5353-127.htm
+-# Model this as a switch from EST/EDT to AST on 2014-11-02 at 02:00.
++# Model this as a switch from EST/EDT to AST ...
++# From Chris Walton (2014-11-04):
++# ... the TCI government appears to have delayed the switch to
++# "permanent daylight saving time" by one year....
++# http://tcweeklynews.com/time-change-to-go-ahead-this-november-p5437-127.htm
+ #
+ # Zone	NAME		GMTOFF	RULES	FORMAT	[UNTIL]
+ Zone America/Grand_Turk	-4:44:32 -	LMT	1890
+ 			-5:07:11 -	KMT	1912 Feb # Kingston Mean Time
+ 			-5:00	-	EST	1979
+-			-5:00	US	E%sT	2014 Nov  2  2:00
++			-5:00	US	E%sT	2015 Nov Sun>=1 2:00
+ 			-4:00	-	AST
+ 
+ # British Virgin Is
+diff --git a/src/main/java/org/joda/time/tz/src/southamerica b/src/main/java/org/joda/time/tz/src/southamerica
+index e2466461d..bdc29c214 100644
+--- a/src/main/java/org/joda/time/tz/src/southamerica
++++ b/src/main/java/org/joda/time/tz/src/southamerica
+@@ -6,23 +6,23 @@
+ # tz@iana.org for general use in the future).  For more, please see
+ # the file CONTRIBUTING in the tz distribution.
+ 
+-# From Paul Eggert (2006-03-22):
+-# A good source for time zone historical data outside the U.S. is
++# From Paul Eggert (2014-10-31):
++#
++# Unless otherwise specified, the source for data through 1990 is:
+ # Thomas G. Shanks and Rique Pottenger, The International Atlas (6th edition),
+ # San Diego: ACS Publications, Inc. (2003).
+-#
+-# For data circa 1899, a common source is:
+-# Milne J. Civil time. Geogr J. 1899 Feb;13(2):173-94.
+-# http://www.jstor.org/stable/1774359
++# Unfortunately this book contains many errors and cites no sources.
+ #
+ # Gwillim Law writes that a good source
+ # for recent time zone data is the International Air Transport
+ # Association's Standard Schedules Information Manual (IATA SSIM),
+ # published semiannually.  Law sent in several helpful summaries
+-# of the IATA's data after 1990.
++# of the IATA's data after 1990.  Except where otherwise noted,
++# IATA SSIM is the source for entries after 1990.
+ #
+-# Except where otherwise noted, Shanks & Pottenger is the source for
+-# entries through 1990, and IATA SSIM is the source for entries afterwards.
++# For data circa 1899, a common source is:
++# Milne J. Civil time. Geogr J. 1899 Feb;13(2):173-94.
++# http://www.jstor.org/stable/1774359
+ #
+ # Earlier editions of these tables used the North American style (e.g. ARST and
+ # ARDT for Argentine Standard and Daylight Time), but the following quote
+
+From f1bbc28a1da528d06cc0b0c18ec26053e5d6cbe3 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Thu, 20 Nov 2014 20:45:35 +0000
+Subject: [PATCH 09/13] Attempt to tackle an Android deadlock
+
+Use dedicated lock objects instead of locking on the class object
+See #196
+---
+ RELEASE-NOTES.txt                             |   3 +
+ src/main/java/org/joda/time/DateTimeZone.java | 140 ++++++++++--------
+ 2 files changed, 81 insertions(+), 62 deletions(-)
+
+diff --git a/RELEASE-NOTES.txt b/RELEASE-NOTES.txt
+index 019718110..709d02255 100644
+--- a/RELEASE-NOTES.txt
++++ b/RELEASE-NOTES.txt
+@@ -46,6 +46,9 @@ Bug fixes since 2.5
+   For example, 'M' for months and 'm' for minutes.
+   Parser is generally case insensitive, but handles this specific case sensitivity
+ 
++- Attempt to tackle an Android deadlock [#196]
++  Use dedicated lock objects instead of locking on the class object
++
+ 
+ Scala
+ --------
+diff --git a/src/main/java/org/joda/time/DateTimeZone.java b/src/main/java/org/joda/time/DateTimeZone.java
+index c0abda877..6193d2a33 100644
+--- a/src/main/java/org/joda/time/DateTimeZone.java
++++ b/src/main/java/org/joda/time/DateTimeZone.java
+@@ -101,14 +101,24 @@
+     private static NameProvider cNameProvider;
+     /** The set of ID strings. */
+     private static Set<String> cAvailableIDs;
++
++    /** Lock object to avoid locking on DateTimeZone.class. */
++    private static final Object cDefaultLock = new Object();
+     /** The default time zone. */
+     private static volatile DateTimeZone cDefault;
++
++    /** Lock object to avoid locking on DateTimeZone.class. */
++    private static final Object cOffsetFormatterLock = new Object();
+     /** A formatter for printing and parsing zones. */
+     private static DateTimeFormatter cOffsetFormatter;
+ 
++    /** Lock object to avoid locking on DateTimeZone.class. */
++    private static final Object iFixedOffsetCacheLock = new Object();
+     /** Cache that maps fixed offset strings to softly referenced DateTimeZones */
+     private static Map<String, SoftReference<DateTimeZone>> iFixedOffsetCache;
+ 
++    /** Lock object to avoid locking on DateTimeZone.class. */
++    private static final Object cZoneIdConversionLock = new Object();
+     /** Cache of old zone IDs to new zone IDs */
+     private static Map<String, String> cZoneIdConversion;
+ 
+@@ -133,7 +143,7 @@
+     public static DateTimeZone getDefault() {
+         DateTimeZone zone = cDefault;
+         if (zone == null) {
+-            synchronized(DateTimeZone.class) {
++            synchronized(cDefaultLock) {
+                 zone = cDefault;
+                 if (zone == null) {
+                     DateTimeZone temp = null;
+@@ -179,7 +189,7 @@ public static void setDefault(DateTimeZone zone) throws SecurityException {
+         if (zone == null) {
+             throw new IllegalArgumentException("The datetime zone must not be null");
+         }
+-        synchronized(DateTimeZone.class) {
++        synchronized(cDefaultLock) {
+             cDefault = zone;
+         }
+     }
+@@ -376,24 +386,26 @@ public static DateTimeZone forTimeZone(TimeZone zone) {
+      * @param offset  the offset in millis
+      * @return the zone
+      */
+-    private static synchronized DateTimeZone fixedOffsetZone(String id, int offset) {
++    private static DateTimeZone fixedOffsetZone(String id, int offset) {
+         if (offset == 0) {
+             return DateTimeZone.UTC;
+         }
+-        if (iFixedOffsetCache == null) {
+-            iFixedOffsetCache = new HashMap<String, SoftReference<DateTimeZone>>();
+-        }
+-        DateTimeZone zone;
+-        Reference<DateTimeZone> ref = iFixedOffsetCache.get(id);
+-        if (ref != null) {
+-            zone = ref.get();
+-            if (zone != null) {
+-                return zone;
++        synchronized (iFixedOffsetCacheLock) {
++            if (iFixedOffsetCache == null) {
++                iFixedOffsetCache = new HashMap<String, SoftReference<DateTimeZone>>();
++            }
++            DateTimeZone zone;
++            Reference<DateTimeZone> ref = iFixedOffsetCache.get(id);
++            if (ref != null) {
++                zone = ref.get();
++                if (zone != null) {
++                    return zone;
++                }
+             }
++            zone = new FixedDateTimeZone(id, null, offset, offset);
++            iFixedOffsetCache.put(id, new SoftReference<DateTimeZone>(zone));
++            return zone;
+         }
+-        zone = new FixedDateTimeZone(id, null, offset, offset);
+-        iFixedOffsetCache.put(id, new SoftReference<DateTimeZone>(zone));
+-        return zone;
+     }
+ 
+     /**
+@@ -582,47 +594,49 @@ private static NameProvider getDefaultNameProvider() {
+      * @param id  the old style id
+      * @return the new style id, null if not found
+      */
+-    private static synchronized String getConvertedId(String id) {
+-        Map<String, String> map = cZoneIdConversion;
+-        if (map == null) {
+-            // Backwards compatibility with TimeZone.
+-            map = new HashMap<String, String>();
+-            map.put("GMT", "UTC");
+-            map.put("WET", "WET");
+-            map.put("CET", "CET");
+-            map.put("MET", "CET");
+-            map.put("ECT", "CET");
+-            map.put("EET", "EET");
+-            map.put("MIT", "Pacific/Apia");
+-            map.put("HST", "Pacific/Honolulu");  // JDK 1.1 compatible
+-            map.put("AST", "America/Anchorage");
+-            map.put("PST", "America/Los_Angeles");
+-            map.put("MST", "America/Denver");  // JDK 1.1 compatible
+-            map.put("PNT", "America/Phoenix");
+-            map.put("CST", "America/Chicago");
+-            map.put("EST", "America/New_York");  // JDK 1.1 compatible
+-            map.put("IET", "America/Indiana/Indianapolis");
+-            map.put("PRT", "America/Puerto_Rico");
+-            map.put("CNT", "America/St_Johns");
+-            map.put("AGT", "America/Argentina/Buenos_Aires");
+-            map.put("BET", "America/Sao_Paulo");
+-            map.put("ART", "Africa/Cairo");
+-            map.put("CAT", "Africa/Harare");
+-            map.put("EAT", "Africa/Addis_Ababa");
+-            map.put("NET", "Asia/Yerevan");
+-            map.put("PLT", "Asia/Karachi");
+-            map.put("IST", "Asia/Kolkata");
+-            map.put("BST", "Asia/Dhaka");
+-            map.put("VST", "Asia/Ho_Chi_Minh");
+-            map.put("CTT", "Asia/Shanghai");
+-            map.put("JST", "Asia/Tokyo");
+-            map.put("ACT", "Australia/Darwin");
+-            map.put("AET", "Australia/Sydney");
+-            map.put("SST", "Pacific/Guadalcanal");
+-            map.put("NST", "Pacific/Auckland");
+-            cZoneIdConversion = map;
+-        }
+-        return map.get(id);
++    private static String getConvertedId(String id) {
++        synchronized (cZoneIdConversionLock) {
++            Map<String, String> map = cZoneIdConversion;
++            if (map == null) {
++                // Backwards compatibility with TimeZone.
++                map = new HashMap<String, String>();
++                map.put("GMT", "UTC");
++                map.put("WET", "WET");
++                map.put("CET", "CET");
++                map.put("MET", "CET");
++                map.put("ECT", "CET");
++                map.put("EET", "EET");
++                map.put("MIT", "Pacific/Apia");
++                map.put("HST", "Pacific/Honolulu");  // JDK 1.1 compatible
++                map.put("AST", "America/Anchorage");
++                map.put("PST", "America/Los_Angeles");
++                map.put("MST", "America/Denver");  // JDK 1.1 compatible
++                map.put("PNT", "America/Phoenix");
++                map.put("CST", "America/Chicago");
++                map.put("EST", "America/New_York");  // JDK 1.1 compatible
++                map.put("IET", "America/Indiana/Indianapolis");
++                map.put("PRT", "America/Puerto_Rico");
++                map.put("CNT", "America/St_Johns");
++                map.put("AGT", "America/Argentina/Buenos_Aires");
++                map.put("BET", "America/Sao_Paulo");
++                map.put("ART", "Africa/Cairo");
++                map.put("CAT", "Africa/Harare");
++                map.put("EAT", "Africa/Addis_Ababa");
++                map.put("NET", "Asia/Yerevan");
++                map.put("PLT", "Asia/Karachi");
++                map.put("IST", "Asia/Kolkata");
++                map.put("BST", "Asia/Dhaka");
++                map.put("VST", "Asia/Ho_Chi_Minh");
++                map.put("CTT", "Asia/Shanghai");
++                map.put("JST", "Asia/Tokyo");
++                map.put("ACT", "Australia/Darwin");
++                map.put("AET", "Australia/Sydney");
++                map.put("SST", "Pacific/Guadalcanal");
++                map.put("NST", "Pacific/Auckland");
++                cZoneIdConversion = map;
++            }
++            return map.get(id);
++        }
+     }
+ 
+     private static int parseOffset(String str) {
+@@ -694,13 +708,15 @@ private static String printOffset(int offset) {
+      * 
+      * @return the formatter
+      */
+-    private static synchronized DateTimeFormatter offsetFormatter() {
+-        if (cOffsetFormatter == null) {
+-            cOffsetFormatter = new DateTimeFormatterBuilder()
+-                .appendTimeZoneOffset(null, true, 2, 4)
+-                .toFormatter();
++    private static DateTimeFormatter offsetFormatter() {
++        synchronized (cOffsetFormatterLock) {
++            if (cOffsetFormatter == null) {
++                cOffsetFormatter = new DateTimeFormatterBuilder()
++                    .appendTimeZoneOffset(null, true, 2, 4)
++                    .toFormatter();
++            }
++            return cOffsetFormatter;
+         }
+-        return cOffsetFormatter;
+     }
+ 
+     // Instance fields and methods
+
+From 0a7eed9c47188e104079587966094770b80a4047 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Fri, 21 Nov 2014 01:26:30 +0000
+Subject: [PATCH 10/13] Refactor time-zone locking to use atomics
+
+Reduce use of locks overall
+Simplify logic to have less interactions
+See #196
+---
+ .../java/org/joda/time/DateTimeUtils.java     |  68 ++--
+ src/main/java/org/joda/time/DateTimeZone.java | 338 ++++++++----------
+ .../java/org/joda/time/tz/UTCProvider.java    |   7 +-
+ .../org/joda/time/tz/ZoneInfoProvider.java    |  10 +-
+ .../java/org/joda/time/TestDateTimeZone.java  |   2 +-
+ 5 files changed, 211 insertions(+), 214 deletions(-)
+
+diff --git a/src/main/java/org/joda/time/DateTimeUtils.java b/src/main/java/org/joda/time/DateTimeUtils.java
+index 391cafd71..318823b90 100644
+--- a/src/main/java/org/joda/time/DateTimeUtils.java
++++ b/src/main/java/org/joda/time/DateTimeUtils.java
+@@ -22,6 +22,7 @@
+ import java.util.LinkedHashMap;
+ import java.util.Locale;
+ import java.util.Map;
++import java.util.concurrent.atomic.AtomicReference;
+ 
+ import org.joda.time.chrono.ISOChronology;
+ 
+@@ -41,32 +42,12 @@
+     private static final SystemMillisProvider SYSTEM_MILLIS_PROVIDER = new SystemMillisProvider();
+     /** The millisecond provider currently in use. */
+     private static volatile MillisProvider cMillisProvider = SYSTEM_MILLIS_PROVIDER;
+-    /** The millisecond provider currently in use. */
+-    private static volatile Map<String, DateTimeZone> cZoneNames;
+-    static {
+-        // names from RFC-822 / JDK
+-        // this is all very US-centric and dubious, but perhaps it will help some
+-        Map<String, DateTimeZone> map = new LinkedHashMap<String, DateTimeZone>();
+-        map.put("UT", DateTimeZone.UTC);
+-        map.put("UTC", DateTimeZone.UTC);
+-        map.put("GMT", DateTimeZone.UTC);
+-        put(map, "EST", "America/New_York");
+-        put(map, "EDT", "America/New_York");
+-        put(map, "CST", "America/Chicago");
+-        put(map, "CDT", "America/Chicago");
+-        put(map, "MST", "America/Denver");
+-        put(map, "MDT", "America/Denver");
+-        put(map, "PST", "America/Los_Angeles");
+-        put(map, "PDT", "America/Los_Angeles");
+-        cZoneNames = Collections.unmodifiableMap(map);
+-    }
+-    private static void put(Map<String, DateTimeZone> map, String name, String id) {
+-        try {
+-            map.put(name, DateTimeZone.forID(id));
+-        } catch (RuntimeException ex) {
+-            // ignore
+-        }
+-    }
++    /**
++     * The default names.
++     * This is lazily initialized to reduce risks of race conditions at startup.
++     */
++    private static final AtomicReference<Map<String, DateTimeZone>> cZoneNames =
++                    new AtomicReference<Map<String,DateTimeZone>>();
+ 
+     /**
+      * Restrictive constructor
+@@ -426,7 +407,14 @@ public static final DateFormatSymbols getDateFormatSymbols(Locale locale) {
+      * @since 2.2
+      */
+     public static final Map<String, DateTimeZone> getDefaultTimeZoneNames() {
+-        return cZoneNames;
++        Map<String, DateTimeZone> names = cZoneNames.get();
++        if (names == null) {
++            names = buildDefaultTimeZoneNames();
++            if (!cZoneNames.compareAndSet(null, names)) {
++                names = cZoneNames.get();
++            }
++        }
++        return names;
+     }
+ 
+     /**
+@@ -438,9 +426,33 @@ public static final DateFormatSymbols getDateFormatSymbols(Locale locale) {
+      * @since 2.2
+      */
+     public static final void setDefaultTimeZoneNames(Map<String, DateTimeZone> names) {
+-        cZoneNames = Collections.unmodifiableMap(new HashMap<String, DateTimeZone>(names));
++        cZoneNames.set(Collections.unmodifiableMap(new HashMap<String, DateTimeZone>(names)));
+     }
+ 
++    private static Map<String, DateTimeZone> buildDefaultTimeZoneNames() {
++        // names from RFC-822 / JDK
++        // this is all very US-centric and dubious, but perhaps it will help some
++        Map<String, DateTimeZone> map = new LinkedHashMap<String, DateTimeZone>();
++        map.put("UT", DateTimeZone.UTC);
++        map.put("UTC", DateTimeZone.UTC);
++        map.put("GMT", DateTimeZone.UTC);
++        put(map, "EST", "America/New_York");
++        put(map, "EDT", "America/New_York");
++        put(map, "CST", "America/Chicago");
++        put(map, "CDT", "America/Chicago");
++        put(map, "MST", "America/Denver");
++        put(map, "MDT", "America/Denver");
++        put(map, "PST", "America/Los_Angeles");
++        put(map, "PDT", "America/Los_Angeles");
++        return Collections.unmodifiableMap(map);
++    }
++    private static void put(Map<String, DateTimeZone> map, String name, String id) {
++        try {
++            map.put(name, DateTimeZone.forID(id));
++        } catch (RuntimeException ex) {
++            // ignore
++        }
++    }
+     //-------------------------------------------------------------------------
+     /**
+      * Calculates the astronomical Julian Day for an instant.
+diff --git a/src/main/java/org/joda/time/DateTimeZone.java b/src/main/java/org/joda/time/DateTimeZone.java
+index 6193d2a33..a45a7c6bf 100644
+--- a/src/main/java/org/joda/time/DateTimeZone.java
++++ b/src/main/java/org/joda/time/DateTimeZone.java
+@@ -20,13 +20,13 @@
+ import java.io.ObjectOutputStream;
+ import java.io.ObjectStreamException;
+ import java.io.Serializable;
+-import java.lang.ref.Reference;
+-import java.lang.ref.SoftReference;
++import java.util.Collections;
+ import java.util.HashMap;
+ import java.util.Locale;
+ import java.util.Map;
+ import java.util.Set;
+ import java.util.TimeZone;
++import java.util.concurrent.atomic.AtomicReference;
+ 
+ import org.joda.convert.FromString;
+ import org.joda.convert.ToString;
+@@ -95,37 +95,24 @@
+     /** Maximum offset. */
+     private static final int MAX_MILLIS = (86400 * 1000) - 1;
+ 
+-    /** The instance that is providing time zones. */
+-    private static Provider cProvider;
+-    /** The instance that is providing time zone names. */
+-    private static NameProvider cNameProvider;
+-    /** The set of ID strings. */
+-    private static Set<String> cAvailableIDs;
+-
+-    /** Lock object to avoid locking on DateTimeZone.class. */
+-    private static final Object cDefaultLock = new Object();
+-    /** The default time zone. */
+-    private static volatile DateTimeZone cDefault;
+-
+-    /** Lock object to avoid locking on DateTimeZone.class. */
+-    private static final Object cOffsetFormatterLock = new Object();
+-    /** A formatter for printing and parsing zones. */
+-    private static DateTimeFormatter cOffsetFormatter;
+-
+-    /** Lock object to avoid locking on DateTimeZone.class. */
+-    private static final Object iFixedOffsetCacheLock = new Object();
+-    /** Cache that maps fixed offset strings to softly referenced DateTimeZones */
+-    private static Map<String, SoftReference<DateTimeZone>> iFixedOffsetCache;
+-
+-    /** Lock object to avoid locking on DateTimeZone.class. */
+-    private static final Object cZoneIdConversionLock = new Object();
+-    /** Cache of old zone IDs to new zone IDs */
+-    private static Map<String, String> cZoneIdConversion;
+-
+-    static {
+-        setProvider0(null);
+-        setNameProvider0(null);
+-    }
++    /**
++     * The instance that is providing time zones.
++     * This is lazily initialized to reduce risks of race conditions at startup.
++     */
++    private static final AtomicReference<Provider> cProvider =
++                    new AtomicReference<Provider>();
++    /**
++     * The instance that is providing time zone names.
++     * This is lazily initialized to reduce risks of race conditions at startup.
++     */
++    private static final AtomicReference<NameProvider> cNameProvider =
++                    new AtomicReference<NameProvider>();
++    /**
++     * The default time zone.
++     * This is lazily initialized to reduce risks of race conditions at startup.
++     */
++    private static final AtomicReference<DateTimeZone> cDefault =
++                    new AtomicReference<DateTimeZone>();
+ 
+     //-----------------------------------------------------------------------
+     /**
+@@ -141,32 +128,28 @@
+      * @return the default datetime zone object
+      */
+     public static DateTimeZone getDefault() {
+-        DateTimeZone zone = cDefault;
++        DateTimeZone zone = cDefault.get();
+         if (zone == null) {
+-            synchronized(cDefaultLock) {
+-                zone = cDefault;
+-                if (zone == null) {
+-                    DateTimeZone temp = null;
+-                    try {
+-                        try {
+-                            String id = System.getProperty("user.timezone");
+-                            if (id != null) {  // null check avoids stack overflow
+-                                temp = forID(id);
+-                            }
+-                        } catch (RuntimeException ex) {
+-                            // ignored
+-                        }
+-                        if (temp == null) {
+-                            temp = forTimeZone(TimeZone.getDefault());
+-                        }
+-                    } catch (IllegalArgumentException ex) {
+-                        // ignored
+-                    }
+-                    if (temp == null) {
+-                        temp = UTC;
++            try {
++                try {
++                    String id = System.getProperty("user.timezone");
++                    if (id != null) {  // null check avoids stack overflow
++                        zone = forID(id);
+                     }
+-                    cDefault = zone = temp;
++                } catch (RuntimeException ex) {
++                    // ignored
+                 }
++                if (zone == null) {
++                    zone = forTimeZone(TimeZone.getDefault());
++                }
++            } catch (IllegalArgumentException ex) {
++                // ignored
++            }
++            if (zone == null) {
++                zone = UTC;
++            }
++            if (!cDefault.compareAndSet(null, zone)) {
++                zone = cDefault.get();
+             }
+         }
+         return zone;
+@@ -189,9 +172,7 @@ public static void setDefault(DateTimeZone zone) throws SecurityException {
+         if (zone == null) {
+             throw new IllegalArgumentException("The datetime zone must not be null");
+         }
+-        synchronized(cDefaultLock) {
+-            cDefault = zone;
+-        }
++        cDefault.set(zone);
+     }
+ 
+     //-----------------------------------------------------------------------
+@@ -218,7 +199,7 @@ public static DateTimeZone forID(String id) {
+         if (id.equals("UTC")) {
+             return DateTimeZone.UTC;
+         }
+-        DateTimeZone zone = cProvider.getZone(id);
++        DateTimeZone zone = getProvider().getZone(id);
+         if (zone != null) {
+             return zone;
+         }
+@@ -351,11 +332,12 @@ public static DateTimeZone forTimeZone(TimeZone zone) {
+         // Convert from old alias before consulting provider since they may differ.
+         DateTimeZone dtz = null;
+         String convId = getConvertedId(id);
++        Provider provider = getProvider();
+         if (convId != null) {
+-            dtz = cProvider.getZone(convId);
++            dtz = provider.getZone(convId);
+         }
+         if (dtz == null) {
+-            dtz = cProvider.getZone(id);
++            dtz = provider.getZone(id);
+         }
+         if (dtz != null) {
+             return dtz;
+@@ -390,22 +372,7 @@ private static DateTimeZone fixedOffsetZone(String id, int offset) {
+         if (offset == 0) {
+             return DateTimeZone.UTC;
+         }
+-        synchronized (iFixedOffsetCacheLock) {
+-            if (iFixedOffsetCache == null) {
+-                iFixedOffsetCache = new HashMap<String, SoftReference<DateTimeZone>>();
+-            }
+-            DateTimeZone zone;
+-            Reference<DateTimeZone> ref = iFixedOffsetCache.get(id);
+-            if (ref != null) {
+-                zone = ref.get();
+-                if (zone != null) {
+-                    return zone;
+-                }
+-            }
+-            zone = new FixedDateTimeZone(id, null, offset, offset);
+-            iFixedOffsetCache.put(id, new SoftReference<DateTimeZone>(zone));
+-            return zone;
+-        }
++        return new FixedDateTimeZone(id, null, offset, offset);
+     }
+ 
+     /**
+@@ -414,7 +381,7 @@ private static DateTimeZone fixedOffsetZone(String id, int offset) {
+      * @return an unmodifiable Set of String IDs
+      */
+     public static Set<String> getAvailableIDs() {
+-        return cAvailableIDs;
++        return getProvider().getAvailableIDs();
+     }
+ 
+     //-----------------------------------------------------------------------
+@@ -427,7 +394,14 @@ private static DateTimeZone fixedOffsetZone(String id, int offset) {
+      * @return the provider
+      */
+     public static Provider getProvider() {
+-        return cProvider;
++        Provider provider = cProvider.get();
++        if (provider == null) {
++            provider = getDefaultProvider();
++            if (!cProvider.compareAndSet(null, provider)) {
++                provider = cProvider.get();
++            }
++        }
++        return provider;
+     }
+ 
+     /**
+@@ -445,7 +419,12 @@ public static void setProvider(Provider provider) throws SecurityException {
+         if (sm != null) {
+             sm.checkPermission(new JodaTimePermission("DateTimeZone.setProvider"));
+         }
+-        setProvider0(provider);
++        if (provider == null) {
++            provider = getDefaultProvider();
++        } else {
++            validateProvider(provider);
++        }
++        cProvider.set(provider);
+     }
+ 
+     /**
+@@ -454,14 +433,10 @@ public static void setProvider(Provider provider) throws SecurityException {
+      * @param provider  provider to use, or null for default
+      * @throws IllegalArgumentException if the provider is invalid
+      */
+-    private static void setProvider0(Provider provider) {
+-        if (provider == null) {
+-            provider = getDefaultProvider();
+-        }
++    private static void validateProvider(Provider provider) {
+         Set<String> ids = provider.getAvailableIDs();
+         if (ids == null || ids.size() == 0) {
+-            throw new IllegalArgumentException
+-                ("The provider doesn't have any available ids");
++            throw new IllegalArgumentException("The provider doesn't have any available ids");
+         }
+         if (!ids.contains("UTC")) {
+             throw new IllegalArgumentException("The provider doesn't support UTC");
+@@ -469,8 +444,6 @@ private static void setProvider0(Provider provider) {
+         if (!UTC.equals(provider.getZone("UTC"))) {
+             throw new IllegalArgumentException("Invalid UTC zone provided");
+         }
+-        cProvider = provider;
+-        cAvailableIDs = ids;
+     }
+ 
+     /**
+@@ -508,8 +481,9 @@ private static Provider getDefaultProvider() {
+ 
+         if (provider == null) {
+             provider = new UTCProvider();
++        } else {
++            validateProvider(provider);
+         }
+-
+         return provider;
+     }
+ 
+@@ -523,7 +497,14 @@ private static Provider getDefaultProvider() {
+      * @return the provider
+      */
+     public static NameProvider getNameProvider() {
+-        return cNameProvider;
++        NameProvider nameProvider = cNameProvider.get();
++        if (nameProvider == null) {
++            nameProvider = getDefaultNameProvider();
++            if (!cNameProvider.compareAndSet(null, nameProvider)) {
++                nameProvider = cNameProvider.get();
++            }
++        }
++        return nameProvider;
+     }
+ 
+     /**
+@@ -541,20 +522,10 @@ public static void setNameProvider(NameProvider nameProvider) throws SecurityExc
+         if (sm != null) {
+             sm.checkPermission(new JodaTimePermission("DateTimeZone.setNameProvider"));
+         }
+-        setNameProvider0(nameProvider);
+-    }
+-
+-    /**
+-     * Sets the name provider factory without performing the security check.
+-     * 
+-     * @param nameProvider  provider to use, or null for default
+-     * @throws IllegalArgumentException if the provider is invalid
+-     */
+-    private static void setNameProvider0(NameProvider nameProvider) {
+         if (nameProvider == null) {
+             nameProvider = getDefaultNameProvider();
+         }
+-        cNameProvider = nameProvider;
++        cNameProvider.set(nameProvider);
+     }
+ 
+     /**
+@@ -595,69 +566,17 @@ private static NameProvider getDefaultNameProvider() {
+      * @return the new style id, null if not found
+      */
+     private static String getConvertedId(String id) {
+-        synchronized (cZoneIdConversionLock) {
+-            Map<String, String> map = cZoneIdConversion;
+-            if (map == null) {
+-                // Backwards compatibility with TimeZone.
+-                map = new HashMap<String, String>();
+-                map.put("GMT", "UTC");
+-                map.put("WET", "WET");
+-                map.put("CET", "CET");
+-                map.put("MET", "CET");
+-                map.put("ECT", "CET");
+-                map.put("EET", "EET");
+-                map.put("MIT", "Pacific/Apia");
+-                map.put("HST", "Pacific/Honolulu");  // JDK 1.1 compatible
+-                map.put("AST", "America/Anchorage");
+-                map.put("PST", "America/Los_Angeles");
+-                map.put("MST", "America/Denver");  // JDK 1.1 compatible
+-                map.put("PNT", "America/Phoenix");
+-                map.put("CST", "America/Chicago");
+-                map.put("EST", "America/New_York");  // JDK 1.1 compatible
+-                map.put("IET", "America/Indiana/Indianapolis");
+-                map.put("PRT", "America/Puerto_Rico");
+-                map.put("CNT", "America/St_Johns");
+-                map.put("AGT", "America/Argentina/Buenos_Aires");
+-                map.put("BET", "America/Sao_Paulo");
+-                map.put("ART", "Africa/Cairo");
+-                map.put("CAT", "Africa/Harare");
+-                map.put("EAT", "Africa/Addis_Ababa");
+-                map.put("NET", "Asia/Yerevan");
+-                map.put("PLT", "Asia/Karachi");
+-                map.put("IST", "Asia/Kolkata");
+-                map.put("BST", "Asia/Dhaka");
+-                map.put("VST", "Asia/Ho_Chi_Minh");
+-                map.put("CTT", "Asia/Shanghai");
+-                map.put("JST", "Asia/Tokyo");
+-                map.put("ACT", "Australia/Darwin");
+-                map.put("AET", "Australia/Sydney");
+-                map.put("SST", "Pacific/Guadalcanal");
+-                map.put("NST", "Pacific/Auckland");
+-                cZoneIdConversion = map;
+-            }
+-            return map.get(id);
+-        }
++        return LazyInit.CONVERSION_MAP.get(id);
+     }
+ 
++    /**
++     * Parses an offset from the string.
++     * 
++     * @param str  the string
++     * @return the offset millis
++     */
+     private static int parseOffset(String str) {
+-        // Can't use a real chronology if called during class
+-        // initialization. Offset parser doesn't need it anyhow.
+-        Chronology chrono = new BaseChronology() {
+-            private static final long serialVersionUID = -3128740902654445468L;
+-            public DateTimeZone getZone() {
+-                return null;
+-            }
+-            public Chronology withUTC() {
+-                return this;
+-            }
+-            public Chronology withZone(DateTimeZone zone) {
+-                return this;
+-            }
+-            public String toString() {
+-                return getClass().getName();
+-            }
+-        };
+-        return -(int) offsetFormatter().withChronology(chrono).parseMillis(str);
++        return -(int) LazyInit.OFFSET_FORMATTER.parseMillis(str);
+     }
+ 
+     /**
+@@ -703,22 +622,6 @@ private static String printOffset(int offset) {
+         return buf.toString();
+     }
+ 
+-    /**
+-     * Gets a printer/parser for managing the offset id formatting.
+-     * 
+-     * @return the formatter
+-     */
+-    private static DateTimeFormatter offsetFormatter() {
+-        synchronized (cOffsetFormatterLock) {
+-            if (cOffsetFormatter == null) {
+-                cOffsetFormatter = new DateTimeFormatterBuilder()
+-                    .appendTimeZoneOffset(null, true, 2, 4)
+-                    .toFormatter();
+-            }
+-            return cOffsetFormatter;
+-        }
+-    }
+-
+     // Instance fields and methods
+     //--------------------------------------------------------------------
+ 
+@@ -792,7 +695,7 @@ public String getShortName(long instant, Locale locale) {
+         if (nameKey == null) {
+             return iID;
+         }
+-        String name = cNameProvider.getShortName(locale, iID, nameKey);
++        String name = getNameProvider().getShortName(locale, iID, nameKey);
+         if (name != null) {
+             return name;
+         }
+@@ -832,7 +735,7 @@ public String getName(long instant, Locale locale) {
+         if (nameKey == null) {
+             return iID;
+         }
+-        String name = cNameProvider.getName(locale, iID, nameKey);
++        String name = getNameProvider().getName(locale, iID, nameKey);
+         if (name != null) {
+             return name;
+         }
+@@ -1349,4 +1252,79 @@ private Object readResolve() throws ObjectStreamException {
+         }
+     }
+ 
++    //-------------------------------------------------------------------------
++    /**
++     * Lazy initialization to avoid a synchronization lock.
++     */
++    static final class LazyInit {
++
++        /** Cache of old zone IDs to new zone IDs */
++        static final Map<String, String> CONVERSION_MAP = buildMap();
++        /** Time zone offset formatter. */
++        static final DateTimeFormatter OFFSET_FORMATTER = buildFormatter();
++
++        private static DateTimeFormatter buildFormatter() {
++            // Can't use a real chronology if called during class
++            // initialization. Offset parser doesn't need it anyhow.
++            Chronology chrono = new BaseChronology() {
++                private static final long serialVersionUID = -3128740902654445468L;
++                public DateTimeZone getZone() {
++                    return null;
++                }
++                public Chronology withUTC() {
++                    return this;
++                }
++                public Chronology withZone(DateTimeZone zone) {
++                    return this;
++                }
++                public String toString() {
++                    return getClass().getName();
++                }
++            };
++            return new DateTimeFormatterBuilder()
++                .appendTimeZoneOffset(null, true, 2, 4)
++                .toFormatter()
++                .withChronology(chrono);
++        }
++
++        private static Map<String, String> buildMap() {
++            // Backwards compatibility with TimeZone.
++            Map<String, String> map = new HashMap<String, String>();
++            map.put("GMT", "UTC");
++            map.put("WET", "WET");
++            map.put("CET", "CET");
++            map.put("MET", "CET");
++            map.put("ECT", "CET");
++            map.put("EET", "EET");
++            map.put("MIT", "Pacific/Apia");
++            map.put("HST", "Pacific/Honolulu");  // JDK 1.1 compatible
++            map.put("AST", "America/Anchorage");
++            map.put("PST", "America/Los_Angeles");
++            map.put("MST", "America/Denver");  // JDK 1.1 compatible
++            map.put("PNT", "America/Phoenix");
++            map.put("CST", "America/Chicago");
++            map.put("EST", "America/New_York");  // JDK 1.1 compatible
++            map.put("IET", "America/Indiana/Indianapolis");
++            map.put("PRT", "America/Puerto_Rico");
++            map.put("CNT", "America/St_Johns");
++            map.put("AGT", "America/Argentina/Buenos_Aires");
++            map.put("BET", "America/Sao_Paulo");
++            map.put("ART", "Africa/Cairo");
++            map.put("CAT", "Africa/Harare");
++            map.put("EAT", "Africa/Addis_Ababa");
++            map.put("NET", "Asia/Yerevan");
++            map.put("PLT", "Asia/Karachi");
++            map.put("IST", "Asia/Kolkata");
++            map.put("BST", "Asia/Dhaka");
++            map.put("VST", "Asia/Ho_Chi_Minh");
++            map.put("CTT", "Asia/Shanghai");
++            map.put("JST", "Asia/Tokyo");
++            map.put("ACT", "Australia/Darwin");
++            map.put("AET", "Australia/Sydney");
++            map.put("SST", "Pacific/Guadalcanal");
++            map.put("NST", "Pacific/Auckland");
++            return Collections.unmodifiableMap(map);
++        }
++    }
++
+ }
+diff --git a/src/main/java/org/joda/time/tz/UTCProvider.java b/src/main/java/org/joda/time/tz/UTCProvider.java
+index a2b40a3b0..70662e4de 100644
+--- a/src/main/java/org/joda/time/tz/UTCProvider.java
++++ b/src/main/java/org/joda/time/tz/UTCProvider.java
+@@ -30,6 +30,11 @@
+  */
+ public final class UTCProvider implements Provider {
+ 
++    /**
++     * The available IDs.
++     */
++    private static final Set<String> AVAILABLE_IDS = Collections.singleton("UTC");
++
+     /**
+      * Constructor.
+      */
+@@ -52,7 +57,7 @@ public DateTimeZone getZone(String id) {
+      * Returns a singleton collection containing only <code>"UTC"</code>.
+      */    
+     public Set<String> getAvailableIDs() {
+-        return Collections.singleton("UTC");
++        return AVAILABLE_IDS;
+     }
+ 
+ }
+diff --git a/src/main/java/org/joda/time/tz/ZoneInfoProvider.java b/src/main/java/org/joda/time/tz/ZoneInfoProvider.java
+index 3e0e980e7..6c0cc5e14 100644
+--- a/src/main/java/org/joda/time/tz/ZoneInfoProvider.java
++++ b/src/main/java/org/joda/time/tz/ZoneInfoProvider.java
+@@ -21,6 +21,7 @@
+ import java.io.IOException;
+ import java.io.InputStream;
+ import java.lang.ref.SoftReference;
++import java.util.Collections;
+ import java.util.Map;
+ import java.util.Set;
+ import java.util.TreeSet;
+@@ -47,6 +48,8 @@
+     private final ClassLoader iLoader;
+     /** Maps ids to strings or SoftReferences to DateTimeZones. */
+     private final Map<String, Object> iZoneInfoMap;
++    /** Maps ids to strings or SoftReferences to DateTimeZones. */
++    private final Set<String> iZoneInfoKeys;
+ 
+     /**
+      * ZoneInfoProvider searches the given directory for compiled data files.
+@@ -69,6 +72,7 @@ public ZoneInfoProvider(File fileDir) throws IOException {
+         iLoader = null;
+ 
+         iZoneInfoMap = loadZoneInfoMap(openResource("ZoneInfoMap"));
++        iZoneInfoKeys = Collections.unmodifiableSortedSet(new TreeSet<String>(iZoneInfoMap.keySet()));
+     }
+ 
+     /**
+@@ -121,6 +125,7 @@ private ZoneInfoProvider(String resourcePath,
+         iLoader = loader;
+ 
+         iZoneInfoMap = loadZoneInfoMap(openResource("ZoneInfoMap"));
++        iZoneInfoKeys = Collections.unmodifiableSortedSet(new TreeSet<String>(iZoneInfoMap.keySet()));
+     }
+ 
+     //-----------------------------------------------------------------------
+@@ -165,10 +170,7 @@ public DateTimeZone getZone(String id) {
+      * @return the zone ids
+      */
+     public Set<String> getAvailableIDs() {
+-        // Return a copy of the keys rather than an umodifiable collection.
+-        // This prevents ConcurrentModificationExceptions from being thrown by
+-        // some JVMs if zones are opened while this set is iterated over.
+-        return new TreeSet<String>(iZoneInfoMap.keySet());
++        return iZoneInfoKeys;
+     }
+ 
+     /**
+diff --git a/src/test/java/org/joda/time/TestDateTimeZone.java b/src/test/java/org/joda/time/TestDateTimeZone.java
+index 01447710d..13a97988b 100644
+--- a/src/test/java/org/joda/time/TestDateTimeZone.java
++++ b/src/test/java/org/joda/time/TestDateTimeZone.java
+@@ -1036,7 +1036,7 @@ public void testSerialization2() throws Exception {
+         DateTimeZone result = (DateTimeZone) ois.readObject();
+         ois.close();
+         
+-        assertSame(zone, result);
++        assertEquals(zone, result);
+     }
+ 
+     public void testCommentParse() throws Exception {
+
+From 70b440b9bbf31035a3ffbb5835ec7a5639a9e8e0 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Mon, 1 Dec 2014 14:19:55 +0000
+Subject: [PATCH 11/13] Fix name provider
+
+Name provider relied on tzdb short names matching JDK data names
+This has ceased to be true due to recent changes in tzdb
+Add improved matching based on summer/winter
+Data returned still depends on the JDK data, not the tzdb
+Fixes #175
+---
+ RELEASE-NOTES.txt                             |  8 +++
+ src/main/java/org/joda/time/DateTimeZone.java | 16 +++++-
+ .../org/joda/time/tz/DefaultNameProvider.java | 57 +++++++++++++++++++
+ 3 files changed, 79 insertions(+), 2 deletions(-)
+
+diff --git a/RELEASE-NOTES.txt b/RELEASE-NOTES.txt
+index 709d02255..9291aa994 100644
+--- a/RELEASE-NOTES.txt
++++ b/RELEASE-NOTES.txt
+@@ -49,6 +49,14 @@ Bug fixes since 2.5
+ - Attempt to tackle an Android deadlock [#196]
+   Use dedicated lock objects instead of locking on the class object
+ 
++- Fix name provider [#176]
++  Name provider relied on tzdb short names matching JDK data names
++  This has ceased to be true due to recent changes in tzdb, so changed to a different algorithm
++  Data returned still depends on the JDK data, not the tzdb
++  Thus, tzdb may say AEST for Sydney Australia, but if the JDK still has EST, then that is what you get
++
++- Fix time-zone compilation tests
++
+ 
+ Scala
+ --------
+diff --git a/src/main/java/org/joda/time/DateTimeZone.java b/src/main/java/org/joda/time/DateTimeZone.java
+index a45a7c6bf..eab959d8c 100644
+--- a/src/main/java/org/joda/time/DateTimeZone.java
++++ b/src/main/java/org/joda/time/DateTimeZone.java
+@@ -695,7 +695,13 @@ public String getShortName(long instant, Locale locale) {
+         if (nameKey == null) {
+             return iID;
+         }
+-        String name = getNameProvider().getShortName(locale, iID, nameKey);
++        String name;
++        NameProvider np = getNameProvider();
++        if (np instanceof DefaultNameProvider) {
++            name = ((DefaultNameProvider) np).getShortName(locale, iID, nameKey, isStandardOffset(instant));
++        } else {
++            name = np.getShortName(locale, iID, nameKey);
++        }
+         if (name != null) {
+             return name;
+         }
+@@ -735,7 +741,13 @@ public String getName(long instant, Locale locale) {
+         if (nameKey == null) {
+             return iID;
+         }
+-        String name = getNameProvider().getName(locale, iID, nameKey);
++        String name;
++        NameProvider np = getNameProvider();
++        if (np instanceof DefaultNameProvider) {
++            name = ((DefaultNameProvider) np).getName(locale, iID, nameKey, isStandardOffset(instant));
++        } else {
++            name = np.getName(locale, iID, nameKey);
++        }
+         if (name != null) {
+             return name;
+         }
+diff --git a/src/main/java/org/joda/time/tz/DefaultNameProvider.java b/src/main/java/org/joda/time/tz/DefaultNameProvider.java
+index 89e673982..da17cd00a 100644
+--- a/src/main/java/org/joda/time/tz/DefaultNameProvider.java
++++ b/src/main/java/org/joda/time/tz/DefaultNameProvider.java
+@@ -35,10 +35,14 @@
+ public class DefaultNameProvider implements NameProvider {
+     // locale -> (id -> (nameKey -> [shortName, name]))
+     private HashMap<Locale, Map<String, Map<String, Object>>> iByLocaleCache = createCache();
++    private HashMap<Locale, Map<String, Map<Boolean, Object>>> iByLocaleCache2 = createCache();
+ 
+     public DefaultNameProvider() {
+     }
+ 
++    //-----------------------------------------------------------------------
++    // retained original code for name lookup, not used in normal code
++    // this code could be refactored to avoid duplication, but leaving it as is ensures backward compatibility
+     public String getShortName(Locale locale, String id, String nameKey) {
+         String[] nameSet = getNameSet(locale, id, nameKey);
+         return nameSet == null ? null : nameSet[0];
+@@ -95,6 +99,59 @@ public String getName(Locale locale, String id, String nameKey) {
+         return (String[]) byNameKeyCache.get(nameKey);
+     }
+ 
++    //-----------------------------------------------------------------------
++    // change lookup to operate on boolean standard/summer time flag
++    // handles changes to the nameKey better
++    public String getShortName(Locale locale, String id, String nameKey, boolean standardTime) {
++        String[] nameSet = getNameSet(locale, id, nameKey, standardTime);
++        return nameSet == null ? null : nameSet[0];
++    }
++    
++    public String getName(Locale locale, String id, String nameKey, boolean standardTime) {
++        String[] nameSet = getNameSet(locale, id, nameKey, standardTime);
++        return nameSet == null ? null : nameSet[1];
++    }
++
++    private synchronized String[] getNameSet(Locale locale, String id, String nameKey, boolean standardTime) {
++        if (locale == null || id == null || nameKey == null) {
++            return null;
++        }
++
++        Map<String, Map<Boolean, Object>> byIdCache = iByLocaleCache2.get(locale);
++        if (byIdCache == null) {
++            iByLocaleCache2.put(locale, byIdCache = createCache());
++        }
++
++        Map<Boolean, Object> byNameKeyCache = byIdCache.get(id);
++        if (byNameKeyCache == null) {
++            byIdCache.put(id, byNameKeyCache = createCache());
++            
++            String[][] zoneStringsEn = DateTimeUtils.getDateFormatSymbols(Locale.ENGLISH).getZoneStrings();
++            String[] setEn = null;
++            for (String[] strings : zoneStringsEn) {
++              if (strings != null && strings.length == 5 && id.equals(strings[0])) {
++                setEn = strings;
++                break;
++              }
++            }
++            String[][] zoneStringsLoc = DateTimeUtils.getDateFormatSymbols(locale).getZoneStrings();
++            String[] setLoc = null;
++            for (String[] strings : zoneStringsLoc) {
++              if (strings != null && strings.length == 5 && id.equals(strings[0])) {
++                setLoc = strings;
++                break;
++              }
++            }
++            
++            if (setEn != null && setLoc != null) {
++              byNameKeyCache.put(Boolean.TRUE, new String[] {setLoc[2], setLoc[1]});
++              byNameKeyCache.put(Boolean.FALSE, new String[] {setLoc[4], setLoc[3]});
++            }
++        }
++        return (String[]) byNameKeyCache.get(Boolean.valueOf(standardTime));
++    }
++
++    //-----------------------------------------------------------------------
+     private HashMap createCache() {
+         return new HashMap(7);
+     }
+
+From 56e660f275e12cce6ebfb0911bef21204fd0f1e8 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Mon, 1 Dec 2014 14:24:26 +0000
+Subject: [PATCH 12/13] Adjust travis versions to test on
+
+---
+ .travis.yml | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/.travis.yml b/.travis.yml
+index 9d8811f6f..55d71cb97 100644
+--- a/.travis.yml
++++ b/.travis.yml
+@@ -7,6 +7,6 @@
+ language: java
+ 
+ jdk: 
++  - oraclejdk8
+   - oraclejdk7
+-  - openjdk7
+   - openjdk6
+
+From 60fd89df9d362047035484217b4c161a360e58a5 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Mon, 1 Dec 2014 14:26:40 +0000
+Subject: [PATCH 13/13] Release v2.6
+
+---
+ README.md                      |  4 +-
+ pom.xml                        |  2 +-
+ src/conf/MANIFEST.MF           | 20 ++++----
+ src/site/xdoc/index.xml        | 20 ++------
+ src/site/xdoc/installation.xml |  1 +
+ src/site/xdoc/upgradeto260.xml | 85 ++++++++++++++++++++++++++++++++++
+ 6 files changed, 104 insertions(+), 28 deletions(-)
+ create mode 100644 src/site/xdoc/upgradeto260.xml
+
+diff --git a/README.md b/README.md
+index 9aa868de7..5ca4d2db5 100644
+--- a/README.md
++++ b/README.md
+@@ -46,11 +46,11 @@ Various documentation is available:
+ 
+ 
+ ### Releases
+-[Release 2.5](http://www.joda.org/joda-time/download.html) is the current latest release.
++[Release 2.6](http://www.joda.org/joda-time/download.html) is the current latest release.
+ This release is considered stable and worthy of the 1.x tag.
+ It depends on JDK 1.5 or later.
+ 
+-Available in the [Maven Central repository](http://search.maven.org/#artifactdetails|joda-time|joda-time|2.5|jar)
++Available in the [Maven Central repository](http://search.maven.org/#artifactdetails|joda-time|joda-time|2.6|jar)
+ 
+ 
+ ### Related projects
+diff --git a/pom.xml b/pom.xml
+index caeee3025..b4d61dd1d 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -9,7 +9,7 @@
+   <artifactId>joda-time</artifactId>
+   <packaging>jar</packaging>
+   <name>Joda-Time</name>
+-  <version>2.6-SNAPSHOT</version>
++  <version>2.6</version>
+   <description>Date and time library to replace JDK date handling</description>
+   <url>http://www.joda.org/joda-time/</url>
+ 
+diff --git a/src/conf/MANIFEST.MF b/src/conf/MANIFEST.MF
+index 96eba7b3d..9a308438d 100644
+--- a/src/conf/MANIFEST.MF
++++ b/src/conf/MANIFEST.MF
+@@ -2,22 +2,22 @@ Package: org.joda.time
+ Extension-Name: joda-time
+ Specification-Title: Joda-Time
+ Specification-Vendor: Joda.org
+-Specification-Version: 2.5
++Specification-Version: 2.6
+ Implementation-Vendor: Joda.org
+ Implementation-Title: org.joda.time
+-Implementation-Version: 2.5
++Implementation-Version: 2.6
+ Implementation-Vendor-Id: org.joda
+ Bundle-ManifestVersion: 2
+ Bundle-Vendor: Joda.org
+ Bundle-Name: Joda-Time
+ Bundle-SymbolicName: joda-time
+-Bundle-Version: 2.5
+-Export-Package: org.joda.time;version=2.5,
+- org.joda.time.base;version=2.5,
+- org.joda.time.chrono;version=2.5,
+- org.joda.time.convert;version=2.5,
+- org.joda.time.field;version=2.5,
+- org.joda.time.format;version=2.5,
+- org.joda.time.tz;version=2.5
++Bundle-Version: 2.6
++Export-Package: org.joda.time;version=2.6,
++ org.joda.time.base;version=2.6,
++ org.joda.time.chrono;version=2.6,
++ org.joda.time.convert;version=2.6,
++ org.joda.time.field;version=2.6,
++ org.joda.time.format;version=2.6,
++ org.joda.time.tz;version=2.6
+ Bundle-License: Apache 2.0
+ Bundle-DocURL: http://www.joda.org/joda-time/
+diff --git a/src/site/xdoc/index.xml b/src/site/xdoc/index.xml
+index 0f098e719..4e425b979 100644
+--- a/src/site/xdoc/index.xml
++++ b/src/site/xdoc/index.xml
+@@ -44,17 +44,7 @@ public String getBirthMonthText(<a href="apidocs/org/joda/time/LocalDate.html"><
+   return dateOfBirth.monthOfYear().getAsText(Locale.ENGLISH);
+ }
+ </source>
+-<!--
+-public boolean isDoubleShift(<a href="apidocs/org/joda/time/LocalTime.html"><b>LocalTime</b></a> startTime, <a href="apidocs/org/joda/time/LocalTime.html"><b>LocalTime</b></a> endTime) {
+-  <a href="apidocs/org/joda/time/Hours.html"><b>Hours</b></a> hoursBetween = <a href="apidocs/org/joda/time/Hours.html"><b>Hours</b></a>.hoursBetween(time1, time2);
+-  return hoursBetween.isGreaterThan(<a href="apidocs/org/joda/time/Hours.html"><b>Hours</b></a>.EIGHT);
+-}
+-public boolean isJoinedInLastThreeMonths(<a href="apidocs/org/joda/time/DateTime.html"><b>DateTime</b></a> datetimeJoined) {
+-  <a href="apidocs/org/joda/time/Interval.html"><b>Interval</b></a> last3Months = new <a href="apidocs/org/joda/time/Interval.html"><b>Interval</b></a>(<a href="apidocs/org/joda/time/Months.html"><b>Months</b></a>.THREE, new <a href="apidocs/org/joda/time/DateTime.html"><b>DateTime</b></a>());
+-  return last3Months.contains(datetimeJoined);
+-}
+--->
+-Version 2.5 was released on 2014-10-03 -
++Version 2.6 was released on 2014-12-01 -
+ <a href="download.html">Download now</a>
+ </p>
+ </section>
+@@ -140,14 +130,14 @@ Various documentation is available:
+ 
+ <section name="Releases">
+ <p>
+-<a href="download.html">Release 2.5</a>
++<a href="download.html">Release 2.6</a>
+ is the current latest release.
+ This release is an evolution of the 1.x codebase, not a major rewrite.
+ It is considered stable and worthy of the 2.x tag.
+ </p>
+ <p>
+-Version 2.5 is a bugfix release compatible with version 2.x.
+-See the <a href="upgradeto250.html">upgrade notes</a> for full details.
++Version 2.6 is a bugfix release compatible with version 2.x.
++See the <a href="upgradeto260.html">upgrade notes</a> for full details.
+ </p>
+ <p>
+ Version 2.x is almost completely source and binary compatible with version 1.x.
+@@ -161,7 +151,7 @@ The main public API will remain backwards compatible for both source and binary
+ The version number will change to 3.0 to indicate a significant change in compatibility.
+ </p>
+ <p>
+-Available in <a href="http://search.maven.org/#artifactdetails|joda-time|joda-time|2.5|jar">Maven Central</a>.
++Available in <a href="http://search.maven.org/#artifactdetails|joda-time|joda-time|2.6|jar">Maven Central</a>.
+ </p>
+ 
+ <p>
+diff --git a/src/site/xdoc/installation.xml b/src/site/xdoc/installation.xml
+index 6b6270833..7d073321d 100644
+--- a/src/site/xdoc/installation.xml
++++ b/src/site/xdoc/installation.xml
+@@ -22,6 +22,7 @@ of the source code suitable for linking to the jar file in IDEs such as Eclipse.
+ <p>
+ The release notes for upgraders can be found here:
+ <ul>
++<li><a href="upgradeto260.html">Version 2.6</a> - upgrade from Version 2.5</li>
+ <li><a href="upgradeto250.html">Version 2.5</a> - upgrade from Version 2.4</li>
+ <li><a href="upgradeto240.html">Version 2.4</a> - upgrade from Version 2.3</li>
+ <li><a href="upgradeto230.html">Version 2.3</a> - upgrade from Version 2.2</li>
+diff --git a/src/site/xdoc/upgradeto260.xml b/src/site/xdoc/upgradeto260.xml
+new file mode 100644
+index 000000000..796370e5d
+--- /dev/null
++++ b/src/site/xdoc/upgradeto260.xml
+@@ -0,0 +1,85 @@
++<?xml version="1.0" encoding="ISO-8859-1"?>
++
++<document>
++ <properties>
++  <title>Java date and time API - Upgrade from 2.5 to 2.6</title>
++  <author>Stephen Colebourne</author>
++ </properties>
++
++<body>
++
++<section name="Upgrade">
++<p>
++These are the release notes and advice for upgrading Joda-Time from version 2.5 to version 2.6.
++<source>
++Joda-Time version 2.6
++---------------------
++
++Joda-Time is a date and time handling library that seeks to replace the JDK
++Date and Calendar classes.
++
++This release contains enhancements, bug fixes and a time zone update.
++The release runs on JDK 5 or later.
++
++Joda-Time is licensed under the business-friendly Apache License Version 2.
++This is the same license as all of Apache, plus other open source projects such as Spring.
++The intent is to make the code available to the Java community with the minimum
++of restrictions. If the license causes you problems please contact the mailing list.
++
++**  Please also check out our related projects   **
++** http://www.joda.org/joda-time/related.html **
++
++
++Enhancements since 2.5
++----------------------
++
++
++Compatibility with 2.5
++----------------------
++Build system - Yes
++
++Binary compatible - Yes
++
++Source compatible - Yes
++
++Serialization compatible - Yes
++
++Data compatible - Yes, except
++ - DateTimeZone data updated to version 2014j
++
++Semantic compatible - Yes
++
++
++Deprecations since 2.5
++----------------------
++
++
++Bug fixes since 2.5
++-------------------
++- Handle complex prefix/suffix combinations [#194, #203]
++  For example, 'M' for months and 'm' for minutes.
++  Parser is generally case insensitive, but handles this specific case sensitivity
++
++- Attempt to tackle an Android deadlock [#196]
++  Use dedicated lock objects instead of locking on the class object
++
++- Fix name provider [#176]
++  Name provider relied on tzdb short names matching JDK data names
++  This has ceased to be true due to recent changes in tzdb, so changed to a different algorithm
++  Data returned still depends on the JDK data, not the tzdb
++  Thus, tzdb may say AEST for Sydney Australia, but if the JDK still has EST, then that is what you get
++
++- Fix time-zone compilation tests
++
++
++Scala
++--------
++Joda-Time uses annotations from Joda-Convert.
++In the Java programming language, this dependency is optional, however in Scala it is not.
++Scala users must manually add the Joda-Convert v1.2 dependency.
++</source>
++</p>
++</section>
++
++</body>
++</document>

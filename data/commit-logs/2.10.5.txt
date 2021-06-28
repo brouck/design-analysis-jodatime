@@ -1,0 +1,427 @@
+From 710285089f3ddc476cf439c634f596dbc3c683c0 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Fri, 20 Sep 2019 13:11:54 +0100
+Subject: [PATCH 1/8] Bump version
+
+---
+ pom.xml | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/pom.xml b/pom.xml
+index 33c3bdaff..67f260df3 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -8,7 +8,7 @@
+   <artifactId>joda-time</artifactId>
+   <packaging>jar</packaging>
+   <name>Joda-Time</name>
+-  <version>2.10.4</version>
++  <version>2.10.5-SNAPSHOT</version>
+   <description>Date and time library to replace JDK date handling</description>
+   <url>https://www.joda.org/joda-time/</url>
+ 
+
+From 5515b522d285b68f53f85fdc8a554c42fceb1867 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Fri, 20 Sep 2019 15:16:45 +0100
+Subject: [PATCH 2/8] Update Travis build
+
+---
+ .travis.yml | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/.travis.yml b/.travis.yml
+index a1af7f519..ec2eb2dfe 100644
+--- a/.travis.yml
++++ b/.travis.yml
+@@ -14,8 +14,8 @@ install:
+ script:
+   - mvn install site -e -B
+ after_success:
+-  - if [[ $TRAVIS_TAG =~ ^website.*$ ]] && [ "$TRAVIS_JDK_VERSION" == "oraclejdk8" ]; then chmod +x ./.github/website.sh; .github/website.sh; fi
+-  - if [[ $TRAVIS_TAG =~ ^v.*$ ]] && [ "$TRAVIS_PULL_REQUEST" == "false" ] && [ "$TRAVIS_JDK_VERSION" == "oraclejdk8" ]; then chmod +x ./.github/website.sh; .github/website.sh; fi
++  - if [[ $TRAVIS_TAG =~ ^website.*$ ]] && [ "$TRAVIS_JDK_VERSION" == "openjdk8" ]; then chmod +x ./.github/website.sh; .github/website.sh; fi
++  - if [[ $TRAVIS_TAG =~ ^v.*$ ]] && [ "$TRAVIS_PULL_REQUEST" == "false" ] && [ "$TRAVIS_JDK_VERSION" == "openjdk8" ]; then chmod +x ./.github/website.sh; .github/website.sh; fi
+ # secure keys for GITHUB_TOKEN
+ env:
+   global:
+
+From d6bb3fbe6c0a2ed4ad89cd47068a2135d91affde Mon Sep 17 00:00:00 2001
+From: "Stephen Colebourne (CI)" <scolebourne@joda.org>
+Date: Sat, 12 Oct 2019 13:48:34 +0100
+Subject: [PATCH 3/8] Add enterprise landing page
+
+---
+ src/site/markdown/enterprise.md | 52 +++++++++++++++++++++++++++++++++
+ src/site/resources/css/site.css | 32 ++++++++++++++++++++
+ src/site/site.xml               |  2 +-
+ 3 files changed, 85 insertions(+), 1 deletion(-)
+ create mode 100644 src/site/markdown/enterprise.md
+
+diff --git a/src/site/markdown/enterprise.md b/src/site/markdown/enterprise.md
+new file mode 100644
+index 000000000..5fe104abe
+--- /dev/null
++++ b/src/site/markdown/enterprise.md
+@@ -0,0 +1,52 @@
++## Joda-Time for Enterprise
++
++### Available as part of the Tidelift Subscription
++
++**Tidelift** is working with the maintainers of **Joda-Time** and thousands of other open source projects to deliver
++commercial support and maintenance for the open source dependencies you use to build your applications. 
++Save time, reduce risk, and improve code health, while paying the maintainers of the exact dependencies you use.
++
++<button class="btn-learnmore" type="button">[LEARN MORE][1]</button>
++<button class="btn-requestdemo" type="button">[REQUEST A DEMO][2]</button>
++
++### Enterprise-ready open source software - managed for you
++
++The Tidelift Subscription is a managed open source subscription for application dependencies covering millions
++of open source projects across JavaScript, Python, Java, PHP, Ruby, .NET, and more.
++
++Your subscription includes:
++
++* **Security updates**<br />
++Tidelift’s security response team coordinates patches for new breaking security vulnerabilities and alerts
++immediately through a private channel, so your software supply chain is always secure.
++
++* **Licensing verification and indemnification**<br />
++Tidelift verifies license information to enable easy policy enforcement and adds intellectual property
++indemnification to cover creators and users in case something goes wrong. You always have a 100% up-to-date
++bill of materials for your dependencies to share with your legal team, customers, or partners.
++
++* **Maintenance and code improvement**<br />
++Tidelift ensures the software you rely on keeps working as long as you need it to work.
++Your managed dependencies are actively maintained and we recruit additional maintainers where required.
++
++* **Package selection and version guidance**<br />
++We help you choose the best open source packages from the start—and then guide you through updates to stay on
++the best releases as new issues arise.
++
++* **Roadmap input**<br />
++Take a seat at the table with the creators behind the software you use. Tidelift’s participating maintainers
++earn more income as their software is used by more subscribers, so they’re interested in knowing what you need.
++
++* **Tooling and cloud integration**<br />
++Tidelift works with GitHub, GitLab, BitBucket, and more.
++We support every cloud platform (and other deployment targets, too).
++
++The end result? All of the capabilities you expect from commercial-grade software, for the full breadth
++of open source you use. That means less time grappling with esoteric open source trivia, and more
++time building your own applications—and your business.
++
++<button class="btn-learnmore" type="button">[LEARN MORE][1]</button>
++<button class="btn-requestdemo" type="button">[REQUEST A DEMO][2]</button>
++
++[1]: https://tidelift.com/subscription/pkg/maven-joda-time-joda-time?utm_source=maven-joda-time-joda-time&utm_medium=referral&utm_campaign=enterprise
++[2]: https://tidelift.com/subscription/request-a-demo?utm_source=maven-joda-time-joda-time&utm_medium=referral&utm_campaign=enterprise
+diff --git a/src/site/resources/css/site.css b/src/site/resources/css/site.css
+index a6b341cd9..413e2aad2 100644
+--- a/src/site/resources/css/site.css
++++ b/src/site/resources/css/site.css
+@@ -55,3 +55,35 @@ h2#Why_Joda_Time i:before {
+ h2#Rationale i:before {
+  content: "\f0eb";
+ }
++
++/* Enterprise page */
++h2#Joda-Time_for_Enterprise~div > p:last-child {
++ text-align: center;
++ margin-top: 1.1em;
++ margin-bottom: 1.2em;
++}
++button.btn-learnmore, button.btn-requestdemo {
++ width: 14em;
++ font-size: 1.2em;
++ text-align: center;
++ padding-top: 0.3em;
++ padding-bottom: 0.3em;
++ border-radius: 3px;
++ border-style: solid;
++}
++button.btn-learnmore {
++ color: #f6914d;
++ background-color: white;
++ border-color: #f6914d;
++}
++button.btn-learnmore a {
++ color: #f6914d;
++}
++button.btn-requestdemo {
++ color: white;
++ background-color: #f6914d;
++ border-color: #f6914d;
++}
++button.btn-requestdemo a {
++ color: white;
++}
+diff --git a/src/site/site.xml b/src/site/site.xml
+index c946cf166..001b0c6cd 100644
+--- a/src/site/site.xml
++++ b/src/site/site.xml
+@@ -154,7 +154,7 @@
+     </menu>
+ 
+     <menu name="For Enterprise">
+-      <item name="Tidelift" href="https://tidelift.com/subscription/pkg/maven-joda-time-joda-time?utm_source=maven-joda-time-joda-time&amp;utm_medium=referral&amp;utm_campaign=nav"/>
++      <item name="Tidelift" href="enterprise.html"/>
+     </menu>
+ 
+     <menu name="Reports" ref="reports"/>
+
+From b886dfa2e3202e98066a0404a35cc5a344715228 Mon Sep 17 00:00:00 2001
+From: "Stephen Colebourne (CI)" <scolebourne@joda.org>
+Date: Sat, 12 Oct 2019 14:40:05 +0100
+Subject: [PATCH 4/8] Add OpenCollective link
+
+---
+ src/site/markdown/index.md | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/src/site/markdown/index.md b/src/site/markdown/index.md
+index d6e171e15..d87f87bba 100644
+--- a/src/site/markdown/index.md
++++ b/src/site/markdown/index.md
+@@ -180,6 +180,8 @@ Please use [Stack Overflow](https://stackoverflow.com/questions/tagged/jodatime)
+ GitHub [issues](https://github.com/JodaOrg/joda-time/issues) and [pull requests](https://github.com/JodaOrg/joda-time/pulls)
+ should be used when you want to help advance the project.
+ 
++Any donations to support the project are accepted via [OpenCollective](https://opencollective.com/joda).
++
+ Note that Joda-Time is considered to be a largely "finished" project.
+ No major enhancements are planned.
+ If using Java SE 8, please migrate to `java.time` (JSR-310).
+
+From adacfb63848c437aa128a1e8de7bbda2dba5f5a4 Mon Sep 17 00:00:00 2001
+From: "Stephen Colebourne (CI)" <scolebourne@joda.org>
+Date: Sat, 12 Oct 2019 15:48:00 +0100
+Subject: [PATCH 5/8] Clarify support for parsing
+
+ISODateTimeFormat.forFields() often does not support parsing
+Fixes #513
+---
+ src/main/java/org/joda/time/format/ISODateTimeFormat.java | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/src/main/java/org/joda/time/format/ISODateTimeFormat.java b/src/main/java/org/joda/time/format/ISODateTimeFormat.java
+index 49488ed62..906dadb1e 100644
+--- a/src/main/java/org/joda/time/format/ISODateTimeFormat.java
++++ b/src/main/java/org/joda/time/format/ISODateTimeFormat.java
+@@ -79,6 +79,8 @@ protected ISODateTimeFormat() {
+      * formatter that best fits. This can be useful for outputting
+      * less-common ISO styles, such as YearMonth (YYYY-MM) or MonthDay (--MM-DD).
+      * <p>
++     * Note that parsing is often not supported by the resulting formatter, especially in basic mode.
++     * <p>
+      * The list provided may have overlapping fields, such as dayOfWeek and
+      * dayOfMonth. In this case, the style is chosen based on the following
+      * list, thus in the example, the calendar style is chosen as dayOfMonth
+
+From cc0a4e656e8a8229c20a2f8e85bc13906119df0d Mon Sep 17 00:00:00 2001
+From: "Stephen Colebourne (CI)" <scolebourne@joda.org>
+Date: Thu, 24 Oct 2019 14:12:03 +0100
+Subject: [PATCH 6/8] Update enterprise website
+
+---
+ README.md                  | 6 ++++--
+ src/site/markdown/index.md | 1 +
+ 2 files changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/README.md b/README.md
+index b8c34bc8b..8577241e9 100644
+--- a/README.md
++++ b/README.md
+@@ -83,6 +83,7 @@ Related projects at GitHub:
+ Other related projects:
+ - https://www.joda.org/joda-time/related.html
+ 
++
+ ### For enterprise
+ Available as part of the Tidelift Subscription.
+ 
+@@ -92,12 +93,13 @@ If you want the flexibility of open source and the confidence of commercial-grad
+ 
+ [Learn more](https://tidelift.com/subscription/pkg/maven-joda-time-joda-time?utm_source=maven-joda-time-joda-time&utm_medium=github)
+ 
++
+ ### Support
+ Please use [Stack Overflow](https://stackoverflow.com/questions/tagged/jodatime) for general usage questions.
+ GitHub [issues](https://github.com/JodaOrg/joda-time/issues) and [pull requests](https://github.com/JodaOrg/joda-time/pulls)
+ should be used when you want to help advance the project.
+-Commercial support is available via the
+-[Tidelift subscription](https://tidelift.com/subscription/pkg/maven-joda-time-joda-time?utm_source=maven-joda-time-joda-time&utm_medium=referral&utm_campaign=readme).
++
++Any donations to support the project are accepted via [OpenCollective](https://opencollective.com/joda).
+ 
+ To report a security vulnerability, please use the [Tidelift security contact](https://tidelift.com/security).
+ Tidelift will coordinate the fix and disclosure.
+diff --git a/src/site/markdown/index.md b/src/site/markdown/index.md
+index d87f87bba..8dc3df9e4 100644
+--- a/src/site/markdown/index.md
++++ b/src/site/markdown/index.md
+@@ -160,6 +160,7 @@ including information on the corner cases that are not compatible.
+ The ancient release [1.6.2](https://sourceforge.net/projects/joda-time/files/joda-time/1.6.2/) was
+ the last release to support Java SE 4 and the last v1.x release.
+ 
++Java module name: `org.joda.time`.
+ 
+ ---
+ 
+
+From fcfd55d6ed15626a200a983f693d372ff7ec5c53 Mon Sep 17 00:00:00 2001
+From: "Stephen Colebourne (CI)" <scolebourne@joda.org>
+Date: Thu, 24 Oct 2019 14:53:30 +0100
+Subject: [PATCH 7/8] Update Joda-Convert
+
+Latest version compatible for Java 6
+---
+ pom.xml | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/pom.xml b/pom.xml
+index 67f260df3..f63e90f45 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -730,7 +730,7 @@
+     <dependency>
+       <groupId>org.joda</groupId>
+       <artifactId>joda-convert</artifactId>
+-      <version>1.2</version>
++      <version>1.9.2</version>
+       <scope>compile</scope>
+       <optional>true</optional><!-- mandatory in Scala -->
+     </dependency>
+
+From c1d26c00a37683b26a78fa0e1ed27114ada4e091 Mon Sep 17 00:00:00 2001
+From: "Stephen Colebourne (CI)" <scolebourne@joda.org>
+Date: Thu, 24 Oct 2019 15:06:21 +0100
+Subject: [PATCH 8/8] Release v2.10.5
+
+---
+ README.md                  |  7 +++----
+ pom.xml                    |  2 +-
+ src/changes/changes.xml    |  5 +++++
+ src/conf/MANIFEST.MF       | 18 +++++++++---------
+ src/site/markdown/index.md |  4 ++--
+ 5 files changed, 20 insertions(+), 16 deletions(-)
+
+diff --git a/README.md b/README.md
+index 8577241e9..95c81f72c 100644
+--- a/README.md
++++ b/README.md
+@@ -51,7 +51,7 @@ Various documentation is available:
+ 
+ 
+ ### Releases
+-[Release 2.10.4](https://www.joda.org/joda-time/download.html) is the current latest release.
++[Release 2.10.5](https://www.joda.org/joda-time/download.html) is the current latest release.
+ This release is considered stable and worthy of the 2.x tag.
+ It depends on JDK 1.5 or later.
+ 
+@@ -62,13 +62,13 @@ Available in the [Maven Central repository](https://search.maven.org/search?q=g:
+ <dependency>
+   <groupId>joda-time</groupId>
+   <artifactId>joda-time</artifactId>
+-  <version>2.10.4</version>
++  <version>2.10.5</version>
+ </dependency>
+ ```
+ 
+ **Gradle configuration:**
+ ```groovy
+-compile 'joda-time:joda-time:2.10.4'
++compile 'joda-time:joda-time:2.10.5'
+ ```
+ 
+ ![Tidelift dependency check](https://tidelift.com/badges/github/JodaOrg/joda-time)
+@@ -111,5 +111,4 @@ Tidelift will coordinate the fix and disclosure.
+ * Commit and push
+ * Ensure on Java SE 8
+ * `mvn clean deploy -Doss.repo -Dgpg.passphrase=""`
+-* Release project in [Nexus](https://oss.sonatype.org)
+ * Website will be built and released by Travis
+diff --git a/pom.xml b/pom.xml
+index f63e90f45..33987d122 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -8,7 +8,7 @@
+   <artifactId>joda-time</artifactId>
+   <packaging>jar</packaging>
+   <name>Joda-Time</name>
+-  <version>2.10.5-SNAPSHOT</version>
++  <version>2.10.5</version>
+   <description>Date and time library to replace JDK date handling</description>
+   <url>https://www.joda.org/joda-time/</url>
+ 
+diff --git a/src/changes/changes.xml b/src/changes/changes.xml
+index d183061d6..111afecf6 100644
+--- a/src/changes/changes.xml
++++ b/src/changes/changes.xml
+@@ -8,6 +8,11 @@
+   <body>
+ 
+     <!-- types are add, fix, remove, update -->
++    <release version="2.10.5" date="2019-10-24" description="v2.10.5">
++      <action dev="jodastephen" type="update">
++        Updated Joda-Convert version.
++      </action>
++    </release>
+     <release version="2.10.4" date="2019-09-20" description="v2.10.4">
+       <action dev="bradarndt" type="update">
+         DateTimeZone data updated to version 2019c.
+diff --git a/src/conf/MANIFEST.MF b/src/conf/MANIFEST.MF
+index 717ecc63d..f8eafc982 100644
+--- a/src/conf/MANIFEST.MF
++++ b/src/conf/MANIFEST.MF
+@@ -5,19 +5,19 @@ Specification-Vendor: Joda.org
+ Specification-Version: 2.10
+ Implementation-Vendor: Joda.org
+ Implementation-Title: org.joda.time
+-Implementation-Version: 2.10.4
++Implementation-Version: 2.10.5
+ Implementation-Vendor-Id: org.joda
+ Bundle-ManifestVersion: 2
+ Bundle-Vendor: Joda.org
+ Bundle-Name: Joda-Time
+ Bundle-SymbolicName: joda-time
+-Bundle-Version: 2.10.4
+-Export-Package: org.joda.time;version=2.10.4,
+- org.joda.time.base;version=2.10.4,
+- org.joda.time.chrono;version=2.10.4,
+- org.joda.time.convert;version=2.10.4,
+- org.joda.time.field;version=2.10.4,
+- org.joda.time.format;version=2.10.4,
+- org.joda.time.tz;version=2.10.4
++Bundle-Version: 2.10.5
++Export-Package: org.joda.time;version=2.10.5,
++ org.joda.time.base;version=2.10.5,
++ org.joda.time.chrono;version=2.10.5,
++ org.joda.time.convert;version=2.10.5,
++ org.joda.time.field;version=2.10.5,
++ org.joda.time.format;version=2.10.5,
++ org.joda.time.tz;version=2.10.5
+ Bundle-License: Apache 2.0
+ Bundle-DocURL: https://www.joda.org/joda-time/
+diff --git a/src/site/markdown/index.md b/src/site/markdown/index.md
+index 8dc3df9e4..7a3360b88 100644
+--- a/src/site/markdown/index.md
++++ b/src/site/markdown/index.md
+@@ -130,7 +130,7 @@ Joda-Time is licenced under the business friendly <a href="licenses.html">Apache
+ 
+ ## <i></i> Releases
+ 
+-[Release 2.10.4](download.html) is the current latest release.
++[Release 2.10.5](download.html) is the current latest release.
+ This release is considered stable and worthy of the 2.x tag.
+ See the [change notes](changes-report.html) for full details.
+ 
+@@ -144,7 +144,7 @@ Available in [Maven Central](https://search.maven.org/search?q=g:joda-time%20AND
+ <dependency>
+   <groupId>joda-time</groupId>
+   <artifactId>joda-time</artifactId>
+-  <version>2.10.4</version>
++  <version>2.10.5</version>
+ </dependency>
+ ```
+ 

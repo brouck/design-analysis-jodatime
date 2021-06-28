@@ -1,0 +1,1524 @@
+From 5f7236c72bd8a5ef8d58e86216a08c9bc97a7798 Mon Sep 17 00:00:00 2001
+From: Brian S O'Neill <bronee@gmail.com>
+Date: Thu, 1 Nov 2007 15:30:24 +0000
+Subject: [PATCH 01/12] Updated tz database to version 2007i.
+
+git-svn-id: https://joda-time.svn.sourceforge.net/svnroot/joda-time/trunk@1285 1e1cfbb7-5c0e-0410-a2f0-f98d92ec03a1
+---
+ .../src/java/org/joda/time/tz/src/Readme.txt  |  2 +-
+ JodaTime/src/java/org/joda/time/tz/src/asia   | 28 +++++++++++++++++--
+ .../java/org/joda/time/tz/src/northamerica    | 22 +++++++++++++--
+ 3 files changed, 46 insertions(+), 6 deletions(-)
+
+diff --git a/JodaTime/src/java/org/joda/time/tz/src/Readme.txt b/JodaTime/src/java/org/joda/time/tz/src/Readme.txt
+index 5ab7443e8..7a481e305 100644
+--- a/JodaTime/src/java/org/joda/time/tz/src/Readme.txt
++++ b/JodaTime/src/java/org/joda/time/tz/src/Readme.txt
+@@ -1,2 +1,2 @@
+ The data files in this directory were obtained from the public tz database,
+-http://www.twinsun.com/tz/tz-link.htm, version 2007h.
++http://www.twinsun.com/tz/tz-link.htm, version 2007i.
+diff --git a/JodaTime/src/java/org/joda/time/tz/src/asia b/JodaTime/src/java/org/joda/time/tz/src/asia
+index 0683c749d..f92ad89ae 100644
+--- a/JodaTime/src/java/org/joda/time/tz/src/asia
++++ b/JodaTime/src/java/org/joda/time/tz/src/asia
+@@ -1,4 +1,4 @@
+-# @(#)asia	8.12
++# @(#)asia	8.13
+ # <pre>
+ 
+ # This data is by no means authoritative; if you think you know better,
+@@ -1771,7 +1771,31 @@ Rule	Syria	2006	only	-	Sep	22	0:00	0	-
+ # For lack of better info, assume the rule changed to "last Friday in March"
+ # this year.
+ Rule	Syria	2007	max	-	Mar	lastFri	0:00	1:00	S
+-Rule	Syria	2007	max	-	Oct	 1	0:00	0	-
++# From Jesper Norgard (2007-10-27):
++# The sister center ICARDA of my work CIMMYT is confirming that Syria DST will
++# not take place 1.st November at 0:00 o'clock but 1.st November at 24:00 or
++# rather Midnight between Thursday and Friday. This does make more sence than
++# having it between Wednesday and Thursday (two workdays in Syria) since the
++# weekend in Syria is not Saturday and Sunday, but Friday and Saturday. So now
++# it is implemented at midnight of the last workday before weekend...
++# 
++# From Steffen Thorsen (2007-10-27):
++# Jesper Norgaard Welen wrote:
++# 
++# > "Winter local time in Syria will be observed at midnight of Thursday 1
++# > November 2007, and the clock will be put back 1 hour."
++# 
++# I found confirmation on this in this gov.sy-article (Arabic):
++# http://wehda.alwehda.gov.sy/_print_veiw.asp?FileName=12521710520070926111247
++# 
++# which using Google's translate tools says:
++# Council of Ministers also approved the commencement of work on 
++# identifying the winter time as of Friday, 2/11/2007 where the 60th 
++# minute delay at midnight Thursday 1/11/2007.
++#
++# From Arthur David Olson (2007-10-30):
++# My best guess for the future is first Friday in November.
++Rule	Syria	2007	max	-	Nov	 Fri>=1	0:00	0	-
+ # Zone	NAME		GMTOFF	RULES	FORMAT	[UNTIL]
+ Zone	Asia/Damascus	2:25:12 -	LMT	1920	# Dimashq
+ 			2:00	Syria	EE%sT
+diff --git a/JodaTime/src/java/org/joda/time/tz/src/northamerica b/JodaTime/src/java/org/joda/time/tz/src/northamerica
+index 99c21e463..ce34d6fda 100644
+--- a/JodaTime/src/java/org/joda/time/tz/src/northamerica
++++ b/JodaTime/src/java/org/joda/time/tz/src/northamerica
+@@ -1,4 +1,4 @@
+-# @(#)northamerica	8.18
++# @(#)northamerica	8.19
+ # <pre>
+ 
+ # also includes Central America and the Caribbean
+@@ -2187,6 +2187,23 @@ Zone America/Costa_Rica	-5:36:20 -	LMT	1890		# San Jose
+ # says Cuban clocks will advance at midnight on March 10.
+ # For lack of better information, assume Cuba will use US rules,
+ # except that it switches at midnight standard time as usual.
++#
++# From Steffen Thorsen (2007-10-25):
++# Carlos Alberto Fonseca Arauz informed me that Cuba will end DST one week 
++# earlier - on the last Sunday of October, just like in 2006.
++# 
++# He supplied these references:
++# 
++# http://www.prensalatina.com.mx/article.asp?ID=%7B4CC32C1B-A9F7-42FB-8A07-8631AFC923AF%7D&language=ES
++# http://actualidad.terra.es/sociedad/articulo/cuba_llama_ahorrar_energia_cambio_1957044.htm
++# 
++# From Alex Kryvenishev (2007-10-25):
++# Here is also article from Granma (Cuba):
++# 
++# [Regira] el Horario Normal desde el [proximo] domingo 28 de octubre
++# http://www.granma.cubaweb.cu/2007/10/24/nacional/artic07.html
++# 
++# http://www.worldtimezone.com/dst_news/dst_news_cuba03.html
+ 
+ # Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
+ Rule	Cuba	1928	only	-	Jun	10	0:00	1:00	D
+@@ -2218,9 +2235,8 @@ Rule	Cuba	1997	only	-	Oct	12	0:00s	0	S
+ Rule	Cuba	1998	1999	-	Mar	lastSun	0:00s	1:00	D
+ Rule	Cuba	1998	2003	-	Oct	lastSun	0:00s	0	S
+ Rule	Cuba	2000	2006	-	Apr	Sun>=1	0:00s	1:00	D
+-Rule	Cuba	2006	only	-	Oct	lastSun	0:00s	0	S
++Rule	Cuba	2006	max	-	Oct	lastSun	0:00s	0	S
+ Rule	Cuba	2007	max	-	Mar	Sun>=8	0:00s	1:00	D
+-Rule	Cuba	2007	max	-	Nov	Sun>=1	0:00s	0	S
+ 
+ # Zone	NAME		GMTOFF	RULES	FORMAT	[UNTIL]
+ Zone	America/Havana	-5:29:28 -	LMT	1890
+
+From 7b910262bf9370bc76d2ab7ca51014081c1257ff Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Fri, 2 Nov 2007 15:50:59 +0000
+Subject: [PATCH 02/12] Post release 1.5
+
+git-svn-id: https://joda-time.svn.sourceforge.net/svnroot/joda-time/trunk@1286 1e1cfbb7-5c0e-0410-a2f0-f98d92ec03a1
+---
+ JodaTime/project.xml | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/JodaTime/project.xml b/JodaTime/project.xml
+index 0b7c0dc25..93205ec08 100644
+--- a/JodaTime/project.xml
++++ b/JodaTime/project.xml
+@@ -7,7 +7,7 @@
+   <groupId>joda-time</groupId>
+   <artifactId>joda-time</artifactId>
+   <name>Joda time</name>
+-  <currentVersion>1.5</currentVersion>
++  <currentVersion>1.6-SNAPSHOT</currentVersion>
+   <organization>
+     <name>Joda.org</name>
+     <url>http://www.joda.org</url>
+
+From 66134183bf05f3225bebe79697f7ee94f1fb1378 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Fri, 2 Nov 2007 15:51:41 +0000
+Subject: [PATCH 03/12] Change "Users guide" to "User guide"
+
+git-svn-id: https://joda-time.svn.sourceforge.net/svnroot/joda-time/trunk@1287 1e1cfbb7-5c0e-0410-a2f0-f98d92ec03a1
+---
+ JodaTime/xdocs/navigation.xml | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/JodaTime/xdocs/navigation.xml b/JodaTime/xdocs/navigation.xml
+index 9a8ea4f60..ecf4317a5 100644
+--- a/JodaTime/xdocs/navigation.xml
++++ b/JodaTime/xdocs/navigation.xml
+@@ -16,7 +16,7 @@
+     <menu name="Joda Time">
+       <item name="Overview" href="/index.html"/>
+       <item name="Quick start guide" href="/quickstart.html"/>
+-      <item name="Users guide" href="/userguide.html"/>
++      <item name="User guide" href="/userguide.html"/>
+       <item name="FAQ" href="/faq.html"/>
+       <item name="Related projects" href="/related.html"/>
+       <item name="Javadoc (Release)" href="/api-release/index.html"/>
+
+From e9009a119feba190a05a084b554ff5d3923a3ac1 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Fri, 2 Nov 2007 15:52:50 +0000
+Subject: [PATCH 04/12] Assorted minor fixes, from Bob Japenga
+
+git-svn-id: https://joda-time.svn.sourceforge.net/svnroot/joda-time/trunk@1288 1e1cfbb7-5c0e-0410-a2f0-f98d92ec03a1
+---
+ JodaTime/xdocs/userguide.xml | 16 +++++++++++++---
+ 1 file changed, 13 insertions(+), 3 deletions(-)
+
+diff --git a/JodaTime/xdocs/userguide.xml b/JodaTime/xdocs/userguide.xml
+index 75d505a00..3bd9f3112 100644
+--- a/JodaTime/xdocs/userguide.xml
++++ b/JodaTime/xdocs/userguide.xml
+@@ -338,6 +338,16 @@ The TimeZone implementation is based on data provided by the public
+ otherwise known as the Olson database.
+ A full list of timezone ids can be found <a href="timezones.html">here</a>
+ </p>
++<p>
++Joda-Time provides a default time zone which is used in many operations when a
++time zone is not specified. This is similar in concept to the default time zone
++of the <code>java.util.TimeZone</code> class. The value can be accessed and updated
++via static methods:
++<source>
++DateTimeZone defaultZone = DateTimeZone.getDefault();
++DateTimeZone.setDefault(myZone);
++</source>
++</p>
+ </section>
+ 
+ <!-- ========================================================================= -->
+@@ -581,7 +591,7 @@ As you would expect, all the methods we showed above in the day-of-week example
+ can be applied to any of these properties. For example, to extract the standard
+ month, day and year fields from a datetime, we can write
+ <source>
+-    String month = dt.monthOfYear().getText();
++    String month = dt.monthOfYear().getAsText();
+     int maxDay = dt.dayOfMonth().getMaximumValue();
+     boolean leapYear = dt.yearOfEra().isLeap();
+ </source>
+@@ -913,14 +923,14 @@ provided on the datetime classes such as DateTime.
+ <source>
+     DateTime dt = new DateTime();
+     String a = dt.toString();
+-    String b = dt.toString("dd:mm:yy");
++    String b = dt.toString("dd:MM:yy");
+     String c = dt.toString("EEE", Locale.FRENCH);
+     DateTimeFormatter fmt = ...;
+     String d = dt.toString(fmt);
+ </source>
+ Each of the four results demonstrates a different way to use the formatters.
+ Result <code>a</code> is the standard ISO8601 string for the DateTime.
+-Result <code>b</code> will output using the pattern 'dd:mm:yy' (note that
++Result <code>b</code> will output using the pattern 'dd:MM:yy' (note that
+ patterns are cached internally).
+ Result <code>c</code> will output using the pattern 'EEE' in French.
+ Result <code>d</code> will output using the specified formatter, and is thus
+
+From ce6ca2dfa12f9a5c1f1451bf3df910a630c2d636 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Wed, 7 Nov 2007 23:56:18 +0000
+Subject: [PATCH 05/12] Post release 1.5
+
+git-svn-id: https://joda-time.svn.sourceforge.net/svnroot/joda-time/trunk@1289 1e1cfbb7-5c0e-0410-a2f0-f98d92ec03a1
+---
+ JodaTime/RELEASE-NOTES.txt  | 153 +++---------------------------------
+ JodaTime/build.xml          |   4 +-
+ JodaTime/project.properties |   2 +-
+ 3 files changed, 13 insertions(+), 146 deletions(-)
+
+diff --git a/JodaTime/RELEASE-NOTES.txt b/JodaTime/RELEASE-NOTES.txt
+index 72638c19f..b35645c54 100644
+--- a/JodaTime/RELEASE-NOTES.txt
++++ b/JodaTime/RELEASE-NOTES.txt
+@@ -1,4 +1,4 @@
+-Joda-Time version 1.5
++Joda-Time version 1.6
+ ---------------------
+ 
+ Joda-Time is a date and time handling library that seeks to replace the JDK
+@@ -18,163 +18,30 @@ of restrictions. If the license causes you problems please contact the mailing l
+ * http://joda-time.sourceforge.net/related.html *
+ 
+ 
+-Enhancements since 1.4
++Enhancements since 1.5
+ ----------------------
+-- LocalDate
+-  - add toDateTimeAtStartOfDay(), toDateTimeAtStartOfDay(DateTimeZone)
+-  methods to replace toDateTimeAtMidnight() which avoid issues with time zones
+-  that do not have midnight at spring DST cutover
+ 
+-- LocalDate
+-  - add toLocalDateTime()
+-    provide mechanism to create LocalDateTime from LocalDate and LocalTime
+ 
+-- Performance enhancement for LocalDate, LocalTime and LocalDateTime
+-  - equals, compareTo, Period construction
+-
+-- Partial
+-  - add isMatch(ReadablePartial)
+-    provide mechanism to match a Partial, such as 'Friday the Thirteenth' to
+-    another partial, such as a LocalDate
+-
+-- Period
+-  - add toStandardDuration()
+-  - add toStandardWeeks(), toStandardDays(), toStandardHours(),
+-    toStandardMinutes(), toStandardSeconds()
+-  methods to convert a period to other types using the standard
+-  conversions (7 day week, 24 hour day, ...)
+-
+-- Period
+-  - add plus(ReadablePeriod), minus(ReadablePeriod)
+-  methods to add and subtract whole periods rather than just single fields
+-
+-- Period
+-  - add normalizedStandard(), normalizedStandard(PeriodType)
+-  methods to normalize the period back to standard field ranges, such as
+-  normalizing 1 year 15 months to 2 years 3 months
+-
+-- Period.toString(PeriodFormatter), MutablePeriod.toString(PeriodFormatter)
+-  - allow periods to be directly formatted, as with datetimes
+-
+-- DateTimeZone
+-  - add isStandardOffset()
+-  assists in determining if DST applies
+-
+-- Interval
+-  - add (long,long,DateTimeZone) constructor
+-  constructor emphasises that intervals include a time zone
+-
+-- DateTimeFormatterBuilder
+-  - add appendFixedDecimal(DateTimeFieldType,int),
+-        appendFixedSignedDecimal(DateTimeFieldType,int)
+-  methods for printing and parsing fields which must have a fixed number of digits
+-
+-
+-Compatibility with 1.4
++Compatibility with 1.5
+ ----------------------
+-Binary compatible - Yes, except
+-  - Internal class LenientDateTimeField has an incompatible change to
+-    getInstance() and the constructor
+-  - Internal class DateTimeZoneBuilder has an incompatible change to
+-    toDateTime() and writeTo()
+-
+-Source compatible - Yes, except
+-  - Internal class LenientDateTimeField has an incompatible change to
+-    getInstance() and the constructor
+-  - Internal class DateTimeZoneBuilder has an incompatible change to
+-    toDateTime() and writeTo()
++Binary compatible - Yes
++
++Source compatible - Yes
+ 
+ Serialization compatible - Yes
+ 
+ Data compatible - Yes, except
+-  - Format of time zone data files changed slightly to fix bug
+-    This mainly affects Australia
+-  - DateTimeZone data updated to version 2007h
++  - DateTimeZone data updated to version 2007i
+ 
+ Semantic compatible - Yes
+ 
+ 
+-Deprecations since 1.4
++Deprecations since 1.5
+ ----------------------
+-- YearMonthDay
+-  - use LocalDate
+-- TimeOfDay
+-  - use LocalTime
+-  - LocalDate and LocalTime have a much better internal implementation and have
+-    been available since v1.3. Both have been effectively deprecated in the javadoc
+-    for over a year to enable a gentle transition. In this release, they are now
+-    formally deprecated, however they won't be removed until a v2.0 which won't
+-    occur until 2009 at the earliest.
+-
+-- LocalDate.toDateTimeAtMidnight()
+-  LocalDate.toDateTimeAtMidnight(DateTimeZone)
+-  - use toDateTimeAtStartOfDay() instead because it avoids exceptions
+-
+-
+-Bug fixes since 1.4
+--------------------
+-- Daylight savings cutover in Spring incorrect
+-  A problem with DST cutover in Spring meant that the result of many
+-  methods would be different depending on whether the time zone was in the
+-  Eastern or Western hemisphere. Now, the DST cutover is consistent, such
+-  that if a time is requested within the cutover, it will be pushed forwards
+-  into summer time. [1710316, 1747219, 1755158]
+-
+-- LenientChronology and time zones
+-  LenientChronology could throw exceptions when the time being created
+-  didn't exist dies to the time zone [1755161]
+-
+-- LocalDate/LocalTime constructors did not set internal state correctly
+-  This problem was exposed when Days.daysBetween() and similar methods
+-  failed to give the right results
+ 
+-- Period.plusXxx(), minusXxx(), withXxx()
+-  Fix to throw correct exception as per javadoc (UnsupportedOperationException) when
+-  changing an unsupported field
+ 
+-- ZoneInfoProvider now returns a copy of its internal state on getAvailableIDs
+-  This avoids race conditions on some JVMs
+-
+-- Period formating threw NegativeArraySizeException during formatting
+-  This happened for certain period values, notably zero
+-
+-- Period formatting could end up in an infinite loop on IBM JDK 1.4.2
+-  This appears to be an IBM JDK issue, not a Joda-Time issue, but we should
+-  not have ended up in an infinite loop whatever happens
+-
+-- DateTimeZone did not properly convert fixed offset zones to java.util.TimeZone [1682152]
+-
+-- DateTimeZone names were incorrect when abbreviation is the same in winter
+-  and summer, notably in Australia [1716305]
+-
+-- Avoid compilation issue reported by Apache Harmony [1699760]
+-
+-- LenientChronology might incorrectly adjust a valid hour field near DST transition
+-
+-- DateTimeFormat javadoc now explains time zone parsing restriction better [OpenDiscussion 1721909]
+-
+-- Period javadoc now explains toDurationFrom() and toDurationTo() better
+-
+-- DateTime/Instant/LocalDateTime javadoc improved
+-
+-- DateTimeZone
+-  Clarify javadoc of forTimeZone to indicate that application created
+-  SimpleTimeZone rules are not parsed [1705180]
+-
+-- Defect in localized Gregorian/Julian symbol cache severely impacted formatting
+-  performance when using null (default) locale.
+-
+-- DateTimeFormatter specified with locale of null could produce mismatched
+-  symbols if default locale changed concurrently.
+-
+-- DateTime parsing of text failed when the text for the locale contained characters
+-  other than letters. [1788282]
+-  For French, the short text for months ends with '.'.
+-  For Korean, the text for months contains a number.
+-  The parser was also too greedy, and would absorb all letters it found, preventing
+-  parsing a format such as '23JunSat' (month followed by day of week, or any other text).
+-  The parser has been rewritten to only match the text that can be produced by the
+-  formatter.
++Bug fixes since 1.5
++-------------------
+ 
+ 
+ Feedback
+diff --git a/JodaTime/build.xml b/JodaTime/build.xml
+index cc0222195..bb58e5685 100644
+--- a/JodaTime/build.xml
++++ b/JodaTime/build.xml
+@@ -27,8 +27,8 @@
+   <property name="component.title"         value="Joda date and time"/>
+ 
+   <!-- The current version number of this component -->
+-  <property name="component.version"       value="1.5"/>
+-  <property name="previous.version"        value="1.4"/>
++  <property name="component.version"       value="1.6"/>
++  <property name="previous.version"        value="1.5"/>
+ 
+   <!-- The current version number of this component -->
+   <property name="component.fullname"      value="${component.name}-${component.version}"/>
+diff --git a/JodaTime/project.properties b/JodaTime/project.properties
+index 3fabc925f..66e739439 100644
+--- a/JodaTime/project.properties
++++ b/JodaTime/project.properties
+@@ -17,7 +17,7 @@ maven.javadoc.public=true
+ maven.javadoc.package=false
+ maven.javadoc.private=false
+ 
+-maven.jdiff.old.tag=v1_4_000
++maven.jdiff.old.tag=v1_5_000
+ maven.jdiff.new.tag=CURRENT
+ 
+ maven.repo.remote=http://repo1.maven.org/maven, http://emma.sourceforge.net/maven/ 
+\ No newline at end of file
+
+From 8ae44bbe3724e42114be9781ead32d131a302c45 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Thu, 15 Nov 2007 00:21:46 +0000
+Subject: [PATCH 06/12] Pre Release 1.0.1
+
+git-svn-id: https://joda-time.svn.sourceforge.net/svnroot/joda-time/trunk@1291 1e1cfbb7-5c0e-0410-a2f0-f98d92ec03a1
+---
+ JodaTimeContrib/jsptags/RELEASE-NOTES.txt     |  28 ++--
+ JodaTimeContrib/jsptags/build.xml             | 133 ++++--------------
+ JodaTimeContrib/jsptags/project.properties    |   5 +
+ JodaTimeContrib/jsptags/project.xml           |  38 +++--
+ .../jsptags/src/conf/manifest-additions.txt   |   1 +
+ JodaTimeContrib/jsptags/xdocs/changes.xml     |   6 +
+ JodaTimeContrib/jsptags/xdocs/index.xml       |  10 +-
+ JodaTimeContrib/jsptags/xdocs/navigation.xml  |   1 +
+ JodaTimeContrib/jsptags/xdocs/userguide.xml   |   4 +-
+ 9 files changed, 84 insertions(+), 142 deletions(-)
+
+diff --git a/JodaTimeContrib/jsptags/RELEASE-NOTES.txt b/JodaTimeContrib/jsptags/RELEASE-NOTES.txt
+index 3ff3c9d76..f93f417e0 100644
+--- a/JodaTimeContrib/jsptags/RELEASE-NOTES.txt
++++ b/JodaTimeContrib/jsptags/RELEASE-NOTES.txt
+@@ -1,10 +1,10 @@
+-Joda-Time JSP tags contributed project version 1.1
+---------------------------------------------------
++Joda-Time JSP tags contributed project version 1.0.1
++----------------------------------------------------
+ 
+ Joda-Time is a date and time handling library that seeks to replace the JDK
+ Date and Calendar classes.
+ 
+-This is the 1.1 release of the JSP tag library support classes.
++This is the 1.0.1 release of the JSP tag library support classes.
+ These classes were converted from code at Jakarta Taglibs by Jim Newsham.
+ Please check the NOTICE.txt for the Apache credit.
+ 
+@@ -23,6 +23,7 @@ and DateTimeZone objects.
+ 
+ Changes since 1.0
+ -----------------
++Fix missing directory tag in project.xml
+ 
+ 
+ Build
+@@ -49,7 +50,10 @@ Example:
+   <% pageContext.setAttribute("now", new org.joda.time.DateTime()); %>
+   <joda:format value="${now}" style="SM"/>
+ 
+-Formats ReadableInstant (including DateTime) and ReadablePartial (including YearMonthDay and TimeOfDay) objects.  The var and scope attributes can be used to set the value of a variable instead of printing the result.  The time zone may be specified using an attribute, en enclosing <joda:dateTimeZone/> tag,  preceding <joda:timeZone/> tag, or via the "org.joda.time.dateTimeZone" scoped variable.
++Formats ReadableInstant (including DateTime) and ReadablePartial (including LocalDateTime, LocalDate and LocalTime) objects.
++The var and scope attributes can be used to set the value of a variable instead of printing the result.
++The time zone may be specified using an attribute, en enclosing <joda:dateTimeZone/> tag,
++preceding <joda:timeZone/> tag, or via the "org.joda.time.dateTimeZone" scoped variable.
+ 
+ Attributes:
+ 
+@@ -68,11 +72,15 @@ Example:
+   <joda:parseDateTime var="parsed" pattern="yy/M/d" value="05/11/19"/>
+   <joda:format value="${parsed}" style="L-"/>
+ 
+-Parses a string into a DateTime object.  The var and scope attributes can be used to set the value of a variable instead of printing the result.  The time zone may be specified using an attribute, en enclosing <joda:dateTimeZone/> tag,  preceding <joda:timeZone/> tag, or via the "org.joda.time.dateTimeZone" scoped variable.
++Parses a string into a DateTime object.
++The var and scope attributes can be used to set the value of a variable instead of printing the result.
++The time zone may be specified using an attribute, en enclosing <joda:dateTimeZone/> tag,
++preceding <joda:timeZone/> tag, or via the "org.joda.time.dateTimeZone" scoped variable.
+ 
+ Attributes:
+ 
+-value (required; unless value is nested within tag).  Must be a string which can be parsed into a DateTime according to the parsing options specified.
++value (required; unless value is nested within tag).
++ Must be a string which can be parsed into a DateTime according to the parsing options specified.
+ var.  The scoped variable to set.
+ scope.  The scope of the variable to set.
+ locale.  The locale to use for parsing.
+@@ -90,7 +98,8 @@ Example:
+     <joda:format value="${datetime}"/>
+   </joda:dateTimeZone>
+ 
+-Provides a default time zone to all <joda:format/> tags which are nested within it.  The <joda:format/> tag may override this value with an explicit dateTimeZone attribute.
++Provides a default time zone to all <joda:format/> tags which are nested within it.
++The <joda:format/> tag may override this value with an explicit dateTimeZone attribute.
+ 
+ Attributes:
+ 
+@@ -105,7 +114,10 @@ Example.
+   <joda:dateTimeZone value="${bkk}"/>
+   <joda:format value="${datetime}"/>
+ 
+-Sets the time zone object in the given scoped variable.  If var is not specified, it will be stored in a scoped variable called "org.joda.time.dateTimeZone".  The <joda:format/> tag will default to using a time zone stored under this name if it does not have a dateTimeZone attribute and is not nested within a <joda:dateTimeZone/> tag.
++Sets the time zone object in the given scoped variable.
++If var is not specified, it will be stored in a scoped variable called "org.joda.time.dateTimeZone".
++The <joda:format/> tag will default to using a time zone stored under this name if it does not have
++a dateTimeZone attribute and is not nested within a <joda:dateTimeZone/> tag.
+ 
+ Attributes:
+ 
+diff --git a/JodaTimeContrib/jsptags/build.xml b/JodaTimeContrib/jsptags/build.xml
+index 267824d4b..ec8d2a78d 100644
+--- a/JodaTimeContrib/jsptags/build.xml
++++ b/JodaTimeContrib/jsptags/build.xml
+@@ -1,46 +1,28 @@
+ <?xml version="1.0" encoding="UTF-8"?>
+ 
+-<!--build.xml generated by maven from project.xml version 1.0
+-  on date December 20 2005, time 0019-->
++<!--build.xml generated by maven from project.xml version 1.0.1
++  on date November 14 2007, time 2326-->
+ 
+ <project default="jar" name="joda-time-jsptags" basedir=".">
+-  <!--Load local and user build preferences-->
+-
+-  <property file="build.properties">
+-  </property>
+-  <property file="${user.home}/build.properties">
+-  </property>
+-  <!--Build properties-->
+-
+-  <property name="defaulttargetdir" value="${basedir}/target">
+-  </property>
+-  <property name="libdir" value="${user.home}/.maven/repository">
++  <property name="defaulttargetdir" value="target">
+   </property>
+-  <property name="classesdir" value="${basedir}/target/classes">
++  <property name="libdir" value="target/lib">
+   </property>
+-  <property name="distdir" value="${basedir}/dist">
++  <property name="classesdir" value="target/classes">
+   </property>
+-  <property name="javadocdir" value="${basedir}/dist/docs/api">
++  <property name="testclassesdir" value="target/test-classes">
+   </property>
+-  <property name="final.name" value="joda-time-jsptags-1.1">
++  <property name="distdir" value="dist">
+   </property>
+-  <property name="proxy.host" value="">
++  <property name="javadocdir" value="dist/docs/api">
+   </property>
+-  <property name="proxy.port" value="">
+-  </property>
+-  <property name="proxy.username" value="">
+-  </property>
+-  <property name="proxy.password" value="">
++  <property name="final.name" value="joda-time-jsptags-1.0.1">
+   </property>
+   <path id="build.classpath">
+-    <pathelement location="${libdir}/joda-time/jars/joda-time-1.2.jar">
+-    </pathelement>
+-    <pathelement location="${libdir}/servletapi/jars/servlet-api-2.4.jar">
+-    </pathelement>
+-    <pathelement location="${libdir}/jspapi/jars/jsp-api-2.0.jar">
+-    </pathelement>
+-    <pathelement location="${libdir}/jstl/jars/jstl-1.1.2.jar">
+-    </pathelement>
++    <fileset dir="${libdir}">
++      <include name="**/*.jar">
++      </include>
++    </fileset>
+   </path>
+   <target name="init" description="o Initializes some properties">
+     <mkdir dir="${libdir}">
+@@ -53,25 +35,13 @@
+ 
+     <available property="Junit.present" classname="junit.framework.Test">
+     </available>
+-    <!--Test if user defined a proxy-->
+-
+-    <condition property="useProxy">
+-      <and>
+-        <isset property="proxy.host">
+-        </isset>
+-        <not>
+-          <equals trim="true" arg2="" arg1="${proxy.host}">
+-          </equals>
+-        </not>
+-      </and>
+-    </condition>
+   </target>
+   <target name="compile" description="o Compile the code" depends="get-deps">
+     <mkdir dir="${classesdir}">
+     </mkdir>
+     <javac destdir="${classesdir}" deprecation="true" debug="true" optimize="false" excludes="**/package.html">
+       <src>
+-        <pathelement location="${basedir}/src/java">
++        <pathelement location="src/java">
+         </pathelement>
+       </src>
+       <classpath refid="build.classpath">
+@@ -80,7 +50,7 @@
+     <mkdir dir="${classesdir}/META-INF">
+     </mkdir>
+     <copy todir="${classesdir}/META-INF">
+-      <fileset dir="${basedir}/.">
++      <fileset dir=".">
+         <include name="NOTICE.txt">
+         </include>
+       </fileset>
+@@ -88,7 +58,7 @@
+     <mkdir dir="${classesdir}/META-INF">
+     </mkdir>
+     <copy todir="${classesdir}/META-INF">
+-      <fileset dir="${basedir}/src/conf">
++      <fileset dir="src/conf">
+         <include name="joda.tld">
+         </include>
+       </fileset>
+@@ -136,78 +106,29 @@
+     </tstamp>
+     <property name="copyright" value="Copyright &amp;copy;  Joda.org. All Rights Reserved.">
+     </property>
+-    <property name="title" value="Joda time JSP tags support 1.1 API">
++    <property name="title" value="Joda time JSP tags support 1.0.1 API">
+     </property>
+-    <javadoc use="true" private="true" destdir="${javadocdir}" author="true" version="true" sourcepath="${basedir}/src/java" packagenames="org.joda.time.contrib.jsptag.*">
++    <javadoc use="true" private="true" destdir="${javadocdir}" author="true" version="true" sourcepath="src/java" packagenames="org.joda.time.contrib.jsptag.*">
+       <classpath>
+         <path refid="build.classpath">
+         </path>
+       </classpath>
+     </javadoc>
+   </target>
+-  <target name="get-dep-joda-time.jar" description="o Download the dependency : joda-time.jar" unless="joda-time.jar" depends="init,setProxy,noProxy,get-custom-dep-joda-time.jar">
+-    <mkdir dir="${libdir}/joda-time/jars/">
+-    </mkdir>
+-    <get dest="${libdir}/joda-time/jars/joda-time-1.2.jar" usetimestamp="true" ignoreerrors="true" src="http://www.ibiblio.org/maven/joda-time/jars/joda-time-1.2.jar">
+-    </get>
+-  </target>
+-  <target name="get-custom-dep-joda-time.jar" if="joda-time.jar" depends="init,setProxy,noProxy">
+-    <mkdir dir="${libdir}/joda-time/jars/">
+-    </mkdir>
+-    <get dest="${libdir}/joda-time/jars/joda-time-1.2.jar" usetimestamp="true" ignoreerrors="true" src="${joda-time.jar}">
+-    </get>
+-  </target>
+-  <target name="get-dep-servlet-api.jar" description="o Download the dependency : servlet-api.jar" unless="servlet-api.jar" depends="init,setProxy,noProxy,get-custom-dep-servlet-api.jar">
+-    <mkdir dir="${libdir}/servletapi/jars/">
+-    </mkdir>
+-    <get dest="${libdir}/servletapi/jars/servlet-api-2.4.jar" usetimestamp="true" ignoreerrors="true" src="http://www.ibiblio.org/maven/servletapi/jars/servlet-api-2.4.jar">
+-    </get>
+-  </target>
+-  <target name="get-custom-dep-servlet-api.jar" if="servlet-api.jar" depends="init,setProxy,noProxy">
+-    <mkdir dir="${libdir}/servletapi/jars/">
+-    </mkdir>
+-    <get dest="${libdir}/servletapi/jars/servlet-api-2.4.jar" usetimestamp="true" ignoreerrors="true" src="${servlet-api.jar}">
+-    </get>
+-  </target>
+-  <target name="get-dep-jsp-api.jar" description="o Download the dependency : jsp-api.jar" unless="jsp-api.jar" depends="init,setProxy,noProxy,get-custom-dep-jsp-api.jar">
+-    <mkdir dir="${libdir}/jspapi/jars/">
+-    </mkdir>
+-    <get dest="${libdir}/jspapi/jars/jsp-api-2.0.jar" usetimestamp="true" ignoreerrors="true" src="http://www.ibiblio.org/maven/jspapi/jars/jsp-api-2.0.jar">
++  <target name="get-deps" unless="noget" depends="init">
++    <!--Proxy settings works only with a JDK 1.2 and higher.-->
++
++    <setproxy>
++    </setproxy>
++    <get dest="${libdir}/joda-time-1.5.jar" usetimestamp="true" ignoreerrors="true" src="http://repo1.maven.org/maven/joda-time/jars/joda-time-1.5.jar">
+     </get>
+-  </target>
+-  <target name="get-custom-dep-jsp-api.jar" if="jsp-api.jar" depends="init,setProxy,noProxy">
+-    <mkdir dir="${libdir}/jspapi/jars/">
+-    </mkdir>
+-    <get dest="${libdir}/jspapi/jars/jsp-api-2.0.jar" usetimestamp="true" ignoreerrors="true" src="${jsp-api.jar}">
++    <get dest="${libdir}/servlet-api-2.4.jar" usetimestamp="true" ignoreerrors="true" src="http://repo1.maven.org/maven/servletapi/jars/servlet-api-2.4.jar">
+     </get>
+-  </target>
+-  <target name="get-dep-jstl.jar" description="o Download the dependency : jstl.jar" unless="jstl.jar" depends="init,setProxy,noProxy,get-custom-dep-jstl.jar">
+-    <mkdir dir="${libdir}/jstl/jars/">
+-    </mkdir>
+-    <get dest="${libdir}/jstl/jars/jstl-1.1.2.jar" usetimestamp="true" ignoreerrors="true" src="http://www.ibiblio.org/maven/jstl/jars/jstl-1.1.2.jar">
++    <get dest="${libdir}/jsp-api-2.0.jar" usetimestamp="true" ignoreerrors="true" src="http://repo1.maven.org/maven/jspapi/jars/jsp-api-2.0.jar">
+     </get>
+-  </target>
+-  <target name="get-custom-dep-jstl.jar" if="jstl.jar" depends="init,setProxy,noProxy">
+-    <mkdir dir="${libdir}/jstl/jars/">
+-    </mkdir>
+-    <get dest="${libdir}/jstl/jars/jstl-1.1.2.jar" usetimestamp="true" ignoreerrors="true" src="${jstl.jar}">
++    <get dest="${libdir}/jstl-1.1.2.jar" usetimestamp="true" ignoreerrors="true" src="http://repo1.maven.org/maven/jstl/jars/jstl-1.1.2.jar">
+     </get>
+   </target>
+-  <target name="get-deps" unless="noget" depends="get-dep-joda-time.jar,get-dep-servlet-api.jar,get-dep-jsp-api.jar,get-dep-jstl.jar">
+-  </target>
+-  <target name="setProxy" if="useProxy" depends="init">
+-    <!--Proxy settings works only with a JDK 1.2 and higher.-->
+-
+-    <echo>Proxy used :</echo>
+-    <echo>Proxy host [${proxy.host}]</echo>
+-    <echo>Proxy port [${proxy.port}]</echo>
+-    <echo>Proxy user [${proxy.username}]</echo>
+-    <setproxy proxyuser="${proxy.username}" proxyport="${proxy.port}" proxypassword="${proxy.password}" proxyhost="${proxy.host}">
+-    </setproxy>
+-  </target>
+-  <target name="noProxy" unless="useProxy" depends="init">
+-    <echo>Proxy not used.</echo>
+-  </target>
+   <target name="install-maven">
+     <get dest="${user.home}/maven-install-latest.jar" usetimestamp="true" src="${repo}/maven/maven-install-latest.jar">
+     </get>
+diff --git a/JodaTimeContrib/jsptags/project.properties b/JodaTimeContrib/jsptags/project.properties
+index 1243b8a3f..afd754be0 100644
+--- a/JodaTimeContrib/jsptags/project.properties
++++ b/JodaTimeContrib/jsptags/project.properties
+@@ -6,6 +6,9 @@ maven.xdoc.legend = false;
+ maven.xdoc.theme.url = ./style/joda-theme.css
+ maven.xdoc.locale.default=en
+ 
++maven.scm.svn.tag.base=https://svn.sourceforge.net/svnroot/joda-time/tags
++maven.changelog.factory=org.apache.maven.svnlib.SvnChangeLogFactory
++
+ maven.compile.target=1.3
+ maven.compile.source=1.3
+ 
+@@ -27,3 +30,5 @@ maven.sourceforge.project.groupId=97367
+ maven.sourceforge.project.packageName=joda-time-jsptags
+ maven.sourceforge.project.sendEmailNotice=true
+ maven.sourceforge.project.submitNewsItem=false
++
++maven.repo.remote=http://repo1.maven.org/maven, http://emma.sourceforge.net/maven/ 
+diff --git a/JodaTimeContrib/jsptags/project.xml b/JodaTimeContrib/jsptags/project.xml
+index de2aa6c1e..23e9f2be6 100644
+--- a/JodaTimeContrib/jsptags/project.xml
++++ b/JodaTimeContrib/jsptags/project.xml
+@@ -4,7 +4,7 @@
+   <groupId>joda-time</groupId>
+   <artifactId>joda-time-jsptags</artifactId>
+   <name>Joda time JSP tags support</name>
+-  <currentVersion>1.1-SNAPSHOT</currentVersion>
++  <currentVersion>1.0.1</currentVersion>
+   <shortDescription>Joda-Time JSP tags support</shortDescription>
+   <description>
+     Contribution to Joda-Time that adds JSP tags support
+@@ -32,7 +32,7 @@
+       <name>Joda Interest list</name>
+       <subscribe>http://sourceforge.net/mail/?group_id=47291</subscribe>
+       <unsubscribe>http://sourceforge.net/mail/?group_id=47291</unsubscribe>
+-      <archive>http://sourceforge.net/mailarchive/forum.php?forum_id=8530</archive>
++      <archive>http://sourceforge.net/mailarchive/forum.php?forum_name=joda-interest</archive>
+     </mailingList>
+   </mailingLists>
+ 
+@@ -50,20 +50,15 @@
+   </repository>
+ 
+   <versions>
+-    <version>
+-      <id>0.8</id>
+-      <name>0.8</name>
+-      <tag>v0_8_000</tag>
+-    </version>
+-    <version>
+-      <id>0.9</id>
+-      <name>0.9</name>
+-      <tag>v0_9_000</tag>
+-    </version>
+     <version>
+       <id>1.0</id>
+       <name>1.0</name>
+-      <tag>v1_0_000</tag>
++      <tag>JSPTAGS_v1_0_0</tag>
++    </version>
++    <version>
++      <id>1.0.1</id>
++      <name>1.0.1</name>
++      <tag>JSPTAGS_v1_0_1</tag>
+     </version>
+   </versions>
+ 
+@@ -91,7 +86,7 @@
+     <dependency>
+       <groupId>joda-time</groupId>
+       <artifactId>joda-time</artifactId>
+-      <version>1.2</version>
++      <version>1.5</version>
+       <properties>
+         <comment>Compatible with v1.0 or later</comment>
+       </properties>
+@@ -124,6 +119,7 @@
+     <resources>
+       <resource>
+         <targetPath>META-INF</targetPath>
++        <directory>.</directory>
+         <includes>
+           <include>NOTICE.txt</include>
+         </includes>
+@@ -139,18 +135,18 @@
+   </build>
+ 
+   <reports>
+-     <report>maven-changelog-plugin</report>
+      <report>maven-changes-plugin</report>
+-     <report>maven-checkstyle-plugin</report>
++     <report>maven-javadoc-plugin</report>
++     <report>maven-jxr-plugin</report>
++     <report>maven-license-plugin</report>
++     <!-- report>maven-changelog-plugin</report-->
++     <!-- report>maven-checkstyle-plugin</report-->
+      <!-- <report>maven-clover-plugin</report> -->
+      <!-- <report>maven-jcoverage-plugin</report> -->
+-     <report>maven-developer-activity-plugin</report>
+-     <report>maven-file-activity-plugin</report>
+-     <report>maven-javadoc-plugin</report>
++     <!-- report>maven-developer-activity-plugin</report-->
++     <!-- report>maven-file-activity-plugin</report-->
+      <!-- <report>maven-jellydoc-plugin</report> -->
+      <!-- <report>maven-junit-report-plugin</report> -->
+-     <report>maven-jxr-plugin</report>
+-     <report>maven-license-plugin</report>
+      <!--report>maven-linkcheck-plugin</report-->
+      <!--report>maven-statcvs-plugin</report-->
+      <!--report>maven-tasklist-plugin</report-->
+diff --git a/JodaTimeContrib/jsptags/src/conf/manifest-additions.txt b/JodaTimeContrib/jsptags/src/conf/manifest-additions.txt
+index 43ee15558..ad921b9a5 100644
+--- a/JodaTimeContrib/jsptags/src/conf/manifest-additions.txt
++++ b/JodaTimeContrib/jsptags/src/conf/manifest-additions.txt
+@@ -1,2 +1,3 @@
+ Specification-Version: 1.0
++Implementation-Version: 1.0.1
+ Implementation-Vendor-Id: org.joda
+\ No newline at end of file
+diff --git a/JodaTimeContrib/jsptags/xdocs/changes.xml b/JodaTimeContrib/jsptags/xdocs/changes.xml
+index 25f237953..7c14333d2 100644
+--- a/JodaTimeContrib/jsptags/xdocs/changes.xml
++++ b/JodaTimeContrib/jsptags/xdocs/changes.xml
+@@ -8,6 +8,12 @@
+   <body>
+ 
+     <!-- types are add, fix, remove, update -->
++    <release version="1.0.1" date="2007-11-15" description="Release 1.0.1">
++      <action dev="scolebourne" type="fix">
++        Fix missing directory tag in project.xml.
++      </action>              
++    </release>
++
+     <release version="1.0" date="2006-07-01" description="First full release">
+       <action dev="scolebourne" type="add">
+         Add documentation about servlet specification needed.
+diff --git a/JodaTimeContrib/jsptags/xdocs/index.xml b/JodaTimeContrib/jsptags/xdocs/index.xml
+index 9d68b4e88..a64c8fb31 100644
+--- a/JodaTimeContrib/jsptags/xdocs/index.xml
++++ b/JodaTimeContrib/jsptags/xdocs/index.xml
+@@ -28,7 +28,7 @@ As a flavour of the tags, here's how to format a Joda-Time object in JSP:
+   &lt;% pageContext.setAttribute("now", new org.joda.time.DateTime()); %&gt;
+   <b>&lt;joda:format value="${now}" style="SM" /&gt;</b>
+ </source>
+-Version 1.0 was released on 2005-07-01 -
++Version 1.0.1 was released on 2005-11-15 -
+ <a href="http://sourceforge.net/project/showfiles.php?group_id=97367&amp;package_id=161360">Download now</a>
+ </p>
+ </section>
+@@ -50,9 +50,9 @@ Various documentation is available:
+ 
+ <section name="Releases">
+ <p>
+-<a href="http://sourceforge.net/project/showfiles.php?group_id=97367&amp;package_id=161360">Release 1.0</a>
++<a href="http://sourceforge.net/project/showfiles.php?group_id=97367&amp;package_id=161360">Release 1.0.1</a>
+ is the current latest release.
+-This release is a beta and may have bugs.
++This release is a very minor patch to 1.0, simply to fix a maven issue.
+ </p>
+ <p>
+ The dependencies are Joda-Time 1.0 or later, the Servlet 2.4 API, the JSP 2.0 API,
+@@ -68,8 +68,8 @@ The Joda-Time JSP tags library was contributed to Joda-Time by Jim Newsham.
+ It is based on the code at <a href="http://jakarta.apache.org/taglibs">Jakarta Taglibs</a>.
+ </p>
+ <p>
+-For support on bugs, using the library or to volunteer please contact the <a href="mail-lists.html">mailing list</a>
+-(or email direct to the list via <a href="mailto:joda-interest@lists.sourceforge.net">joda-interest@lists.sourceforge.net</a>).
++For support on bugs, using the library or to volunteer please contact the <a href="mail-lists.html">mailing list</a>.
++Due to spam, you must be subscribed to post to the mailing list.
+ </p>
+ </section>
+ </body>
+diff --git a/JodaTimeContrib/jsptags/xdocs/navigation.xml b/JodaTimeContrib/jsptags/xdocs/navigation.xml
+index 3b1b39c7f..484c3d65b 100644
+--- a/JodaTimeContrib/jsptags/xdocs/navigation.xml
++++ b/JodaTimeContrib/jsptags/xdocs/navigation.xml
+@@ -10,6 +10,7 @@
+       <item name="Joda-Time" href="../../index.html"/>
+       <item name="JSP tags" href="/index.html"/>
+       <item name="Hibernate" href="../hibernate/index.html"/>
++      <item name="I18N" href="../i18n/index.html"/>
+     </links>
+     <menu name="Joda Time JSP tags">
+       <item name="Overview" href="index.html"/>
+diff --git a/JodaTimeContrib/jsptags/xdocs/userguide.xml b/JodaTimeContrib/jsptags/xdocs/userguide.xml
+index 9afbbfb25..c31108206 100644
+--- a/JodaTimeContrib/jsptags/xdocs/userguide.xml
++++ b/JodaTimeContrib/jsptags/xdocs/userguide.xml
+@@ -31,7 +31,7 @@ You will need a servlet container which supports Servlet 2.4, JSP 2.0, JSTL 1.1.
+ One such container is <a href="http://tomcat.apache.org">Tomcat 5</a>.
+ </p>
+ <p>
+-The simplest setup is to copy the joda-time-1.2.jar and joda-time-jsptags-1.0.jar
++The simplest setup is to copy the joda-time-1.2.jar and joda-time-jsptags-1.0.1.jar
+ to the WEB-INF/lib directory of your web application.
+ </p>
+ <p>
+@@ -53,7 +53,7 @@ If you do not do this then EL expressions will not work as expected.
+ <section name="Format tag">
+ <p>
+ This tag formats ReadableInstant (including DateTime) and ReadablePartial
+-(including YearMonthDay and TimeOfDay) objects.
++(including LocalDateTime, LocalDate and LocalTime) objects.
+ The time zone may be specified using an attribute, an enclosing &lt;joda:dateTimeZone/&gt; tag,
+ preceding &lt;joda:timeZone/&gt; tag, or via the "org.joda.time.dateTimeZone" scoped variable.
+ </p>
+
+From d78a89d27b3b9e27dfee441712763eabd145fb49 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Fri, 16 Nov 2007 09:47:44 +0000
+Subject: [PATCH 07/12] Update to use javax.* namespace on maven for
+ dependencies
+
+git-svn-id: https://joda-time.svn.sourceforge.net/svnroot/joda-time/trunk@1293 1e1cfbb7-5c0e-0410-a2f0-f98d92ec03a1
+---
+ JodaTimeContrib/jsptags/project.xml | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/JodaTimeContrib/jsptags/project.xml b/JodaTimeContrib/jsptags/project.xml
+index 23e9f2be6..9ff6f5222 100644
+--- a/JodaTimeContrib/jsptags/project.xml
++++ b/JodaTimeContrib/jsptags/project.xml
+@@ -4,7 +4,7 @@
+   <groupId>joda-time</groupId>
+   <artifactId>joda-time-jsptags</artifactId>
+   <name>Joda time JSP tags support</name>
+-  <currentVersion>1.0.1</currentVersion>
++  <currentVersion>1.0.2</currentVersion>
+   <shortDescription>Joda-Time JSP tags support</shortDescription>
+   <description>
+     Contribution to Joda-Time that adds JSP tags support
+@@ -92,17 +92,17 @@
+       </properties>
+     </dependency>
+     <dependency>
+-      <groupId>servletapi</groupId>
++      <groupId>javax.servlet</groupId>
+       <artifactId>servlet-api</artifactId>
+       <version>2.4</version>
+     </dependency>
+     <dependency>
+-      <groupId>jspapi</groupId>
++      <groupId>javax.servlet</groupId>
+       <artifactId>jsp-api</artifactId>
+       <version>2.0</version>
+     </dependency>
+     <dependency>
+-      <groupId>jstl</groupId>
++      <groupId>javax.servlet</groupId>
+       <artifactId>jstl</artifactId>
+       <version>1.1.2</version>
+     </dependency>
+
+From 88551bde5a3e2c1df58851b3560aa30c033424a8 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Wed, 28 Nov 2007 09:17:02 +0000
+Subject: [PATCH 08/12] Support parsing all upper-case and all lower-case text
+
+git-svn-id: https://joda-time.svn.sourceforge.net/svnroot/joda-time/trunk@1294 1e1cfbb7-5c0e-0410-a2f0-f98d92ec03a1
+---
+ JodaTime/RELEASE-NOTES.txt                    |  2 ++
+ .../time/format/DateTimeFormatterBuilder.java |  6 ++++
+ .../joda/time/format/TestDateTimeFormat.java  | 28 +++++++++++++++++++
+ 3 files changed, 36 insertions(+)
+
+diff --git a/JodaTime/RELEASE-NOTES.txt b/JodaTime/RELEASE-NOTES.txt
+index b35645c54..a9ca420b1 100644
+--- a/JodaTime/RELEASE-NOTES.txt
++++ b/JodaTime/RELEASE-NOTES.txt
+@@ -42,6 +42,8 @@ Deprecations since 1.5
+ 
+ Bug fixes since 1.5
+ -------------------
++- Parsing (regression)
++  Support parsing all upper-case and all lower-case text
+ 
+ 
+ Feedback
+diff --git a/JodaTime/src/java/org/joda/time/format/DateTimeFormatterBuilder.java b/JodaTime/src/java/org/joda/time/format/DateTimeFormatterBuilder.java
+index 2ded3d653..c076e9b2e 100644
+--- a/JodaTime/src/java/org/joda/time/format/DateTimeFormatterBuilder.java
++++ b/JodaTime/src/java/org/joda/time/format/DateTimeFormatterBuilder.java
+@@ -1710,12 +1710,18 @@ public int parseInto(DateTimeParserBucket bucket, String text, int position) {
+                     for (int i = min; i <= max; i++) {
+                         property.set(i);
+                         validValues.add(property.getAsShortText(locale));
++                        validValues.add(property.getAsShortText(locale).toLowerCase(locale));
++                        validValues.add(property.getAsShortText(locale).toUpperCase(locale));
+                         validValues.add(property.getAsText(locale));
++                        validValues.add(property.getAsText(locale).toLowerCase(locale));
++                        validValues.add(property.getAsText(locale).toUpperCase(locale));
+                     }
+                     if ("en".equals(locale.getLanguage()) && iFieldType == DateTimeFieldType.era()) {
+                         // hack to support for parsing "BCE" and "CE" if the language is English
+                         validValues.add("BCE");
++                        validValues.add("bce");
+                         validValues.add("CE");
++                        validValues.add("ce");
+                         maxLength = 3;
+                     }
+                     array = new Object[] {validValues, new Integer(maxLength)};
+diff --git a/JodaTime/src/test/org/joda/time/format/TestDateTimeFormat.java b/JodaTime/src/test/org/joda/time/format/TestDateTimeFormat.java
+index b90be838a..ac541e545 100644
+--- a/JodaTime/src/test/org/joda/time/format/TestDateTimeFormat.java
++++ b/JodaTime/src/test/org/joda/time/format/TestDateTimeFormat.java
+@@ -900,6 +900,20 @@ public void testFormatParse_textMonthJanShort_UK() {
+         check(date, 2007, 1, 23);
+     }
+ 
++    public void testFormatParse_textMonthJanShortLowerCase_UK() {
++        DateTimeFormatter dateFormatter = DateTimeFormat.forPattern("dd MMM yyyy")
++            .withLocale(Locale.UK).withZone(DateTimeZone.UTC);
++        DateTime date = dateFormatter.parseDateTime("23 jan 2007");
++        check(date, 2007, 1, 23);
++    }
++
++    public void testFormatParse_textMonthJanShortUpperCase_UK() {
++        DateTimeFormatter dateFormatter = DateTimeFormat.forPattern("dd MMM yyyy")
++            .withLocale(Locale.UK).withZone(DateTimeZone.UTC);
++        DateTime date = dateFormatter.parseDateTime("23 JAN 2007");
++        check(date, 2007, 1, 23);
++    }
++
+     public void testParse_textMonthJanLong_UK() {
+         DateTimeFormatter dateFormatter = DateTimeFormat.forPattern("dd MMM yyyy")
+             .withLocale(Locale.UK).withZone(DateTimeZone.UTC);
+@@ -908,6 +922,20 @@ public void testParse_textMonthJanLong_UK() {
+         check(date, 2007, 1, 23);
+     }
+ 
++    public void testFormatParse_textMonthJanLongLowerCase_UK() {
++        DateTimeFormatter dateFormatter = DateTimeFormat.forPattern("dd MMM yyyy")
++            .withLocale(Locale.UK).withZone(DateTimeZone.UTC);
++        DateTime date = dateFormatter.parseDateTime("23 january 2007");
++        check(date, 2007, 1, 23);
++    }
++
++    public void testFormatParse_textMonthJanLongUpperCase_UK() {
++        DateTimeFormatter dateFormatter = DateTimeFormat.forPattern("dd MMM yyyy")
++            .withLocale(Locale.UK).withZone(DateTimeZone.UTC);
++        DateTime date = dateFormatter.parseDateTime("23 JANUARY 2007");
++        check(date, 2007, 1, 23);
++    }
++
+     public void testFormatParse_textMonthJanShort_France() {
+         DateTimeFormatter dateFormatter = DateTimeFormat.forPattern("dd MMM yyyy")
+             .withLocale(Locale.FRANCE).withZone(DateTimeZone.UTC);
+
+From 857aaacf649fd70f7b332a29c7a11d6a582734ec Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Wed, 28 Nov 2007 09:20:40 +0000
+Subject: [PATCH 09/12] Support parsing all upper-case and all lower-case text
+
+git-svn-id: https://joda-time.svn.sourceforge.net/svnroot/joda-time/trunk@1295 1e1cfbb7-5c0e-0410-a2f0-f98d92ec03a1
+---
+ JodaTime/RELEASE-NOTES.txt | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/JodaTime/RELEASE-NOTES.txt b/JodaTime/RELEASE-NOTES.txt
+index a9ca420b1..031cde28d 100644
+--- a/JodaTime/RELEASE-NOTES.txt
++++ b/JodaTime/RELEASE-NOTES.txt
+@@ -42,7 +42,7 @@ Deprecations since 1.5
+ 
+ Bug fixes since 1.5
+ -------------------
+-- Parsing (regression)
++- Parsing (regression) [1839440]
+   Support parsing all upper-case and all lower-case text
+ 
+ 
+
+From ecfddfa4f391a8eaf867cdddf9bcdb9e70f12c0a Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Fri, 30 Nov 2007 11:21:56 +0000
+Subject: [PATCH 10/12] Add scope provided to maven project.xml, bug 1841568
+
+git-svn-id: https://joda-time.svn.sourceforge.net/svnroot/joda-time/trunk@1296 1e1cfbb7-5c0e-0410-a2f0-f98d92ec03a1
+---
+ JodaTimeContrib/jsptags/RELEASE-NOTES.txt | 18 +++++++++++-------
+ JodaTimeContrib/jsptags/project.xml       |  3 +++
+ 2 files changed, 14 insertions(+), 7 deletions(-)
+
+diff --git a/JodaTimeContrib/jsptags/RELEASE-NOTES.txt b/JodaTimeContrib/jsptags/RELEASE-NOTES.txt
+index f93f417e0..74d14c4b1 100644
+--- a/JodaTimeContrib/jsptags/RELEASE-NOTES.txt
++++ b/JodaTimeContrib/jsptags/RELEASE-NOTES.txt
+@@ -1,17 +1,16 @@
+-Joda-Time JSP tags contributed project version 1.0.1
++Joda-Time JSP tags contributed project version 1.0.2
+ ----------------------------------------------------
+ 
+ Joda-Time is a date and time handling library that seeks to replace the JDK
+ Date and Calendar classes.
+ 
+-This is the 1.0.1 release of the JSP tag library support classes.
++This is the 1.0.2 release of the JSP tag library support classes.
+ These classes were converted from code at Jakarta Taglibs by Jim Newsham.
+ Please check the NOTICE.txt for the Apache credit.
+ 
+ 
+ About
+ -----
+-
+ The Joda Time Tag Library is a custom tag library for formatting and parsing
+ Joda dates in jsp pages.  This library works very similarly to the date-related
+ tags in the jstl fmt library, so please refer to the documentation for that
+@@ -21,29 +20,34 @@ Unlike the fmt tags which work with java.util.Date and java.util.TimeZone object
+ the Joda tags work with Joda DateTime, ReadableInstant, ReadablePartial,
+ and DateTimeZone objects.  
+ 
++
++Changes since 1.0.1
++-------------------
++Changed maven definition for servlet jars [1841568]
++
++
+ Changes since 1.0
+ -----------------
+-Fix missing directory tag in project.xml
++Fix missing directory tag in project.xml [1827409]
+ 
+ 
+ Build
+ -----
+-
+ Build-time dependencies are Joda 1.0 or later, the Servlet 2.4 API, the
+ JSP 2.0 API, and JSTL 1.1 API. A source build can be achieved from ant or maven.
+ 
++
+ Setup
+ -----
+-
+ You'll need a servlet container which supports Servlet 2.4, JSP 2.0, JSTL 1.1.
+ Copy the joda-time-1.2.jar and joda-time-tags.jar to the WEB-INF/lib directory of
+ your web application.  Declare the library as follows in your jsp pages:
+ 
+ <%@taglib prefix="joda" uri="http://www.joda.org/joda/time/tags"%>
+ 
++
+ Tags
+ ----
+-
+ FORMAT.  
+ 
+ Example: 
+diff --git a/JodaTimeContrib/jsptags/project.xml b/JodaTimeContrib/jsptags/project.xml
+index 9ff6f5222..54d2649fb 100644
+--- a/JodaTimeContrib/jsptags/project.xml
++++ b/JodaTimeContrib/jsptags/project.xml
+@@ -95,16 +95,19 @@
+       <groupId>javax.servlet</groupId>
+       <artifactId>servlet-api</artifactId>
+       <version>2.4</version>
++      <scope>provided</scope>
+     </dependency>
+     <dependency>
+       <groupId>javax.servlet</groupId>
+       <artifactId>jsp-api</artifactId>
+       <version>2.0</version>
++      <scope>provided</scope>
+     </dependency>
+     <dependency>
+       <groupId>javax.servlet</groupId>
+       <artifactId>jstl</artifactId>
+       <version>1.1.2</version>
++      <scope>provided</scope>
+     </dependency>
+   </dependencies>
+ 
+
+From e0dfeca3acec5b765dc9d139eb319fe026f8fa19 Mon Sep 17 00:00:00 2001
+From: Brian S O'Neill <bronee@gmail.com>
+Date: Tue, 4 Dec 2007 03:55:52 +0000
+Subject: [PATCH 11/12] DateTimeZone data updated to version 2007j.
+
+git-svn-id: https://joda-time.svn.sourceforge.net/svnroot/joda-time/trunk@1297 1e1cfbb7-5c0e-0410-a2f0-f98d92ec03a1
+---
+ JodaTime/RELEASE-NOTES.txt                    |  2 +-
+ .../src/java/org/joda/time/tz/src/Readme.txt  |  2 +-
+ JodaTime/src/java/org/joda/time/tz/src/asia   | 11 +++++++++-
+ .../java/org/joda/time/tz/src/northamerica    |  6 +++++-
+ .../java/org/joda/time/tz/src/southamerica    | 20 +++++++++----------
+ 5 files changed, 26 insertions(+), 15 deletions(-)
+
+diff --git a/JodaTime/RELEASE-NOTES.txt b/JodaTime/RELEASE-NOTES.txt
+index 031cde28d..e5899462d 100644
+--- a/JodaTime/RELEASE-NOTES.txt
++++ b/JodaTime/RELEASE-NOTES.txt
+@@ -31,7 +31,7 @@ Source compatible - Yes
+ Serialization compatible - Yes
+ 
+ Data compatible - Yes, except
+-  - DateTimeZone data updated to version 2007i
++  - DateTimeZone data updated to version 2007j
+ 
+ Semantic compatible - Yes
+ 
+diff --git a/JodaTime/src/java/org/joda/time/tz/src/Readme.txt b/JodaTime/src/java/org/joda/time/tz/src/Readme.txt
+index 7a481e305..6be59b7cb 100644
+--- a/JodaTime/src/java/org/joda/time/tz/src/Readme.txt
++++ b/JodaTime/src/java/org/joda/time/tz/src/Readme.txt
+@@ -1,2 +1,2 @@
+ The data files in this directory were obtained from the public tz database,
+-http://www.twinsun.com/tz/tz-link.htm, version 2007i.
++http://www.twinsun.com/tz/tz-link.htm, version 2007j.
+diff --git a/JodaTime/src/java/org/joda/time/tz/src/asia b/JodaTime/src/java/org/joda/time/tz/src/asia
+index f92ad89ae..d16c882fe 100644
+--- a/JodaTime/src/java/org/joda/time/tz/src/asia
++++ b/JodaTime/src/java/org/joda/time/tz/src/asia
+@@ -1,4 +1,4 @@
+-# @(#)asia	8.13
++# @(#)asia	8.14
+ # <pre>
+ 
+ # This data is by no means authoritative; if you think you know better,
+@@ -577,6 +577,15 @@ Zone Asia/Jayapura	9:22:48 -	LMT	1932 Nov
+ # daylight saving time ...
+ # http://uk.reuters.com/article/oilRpt/idUKBLA65048420070916
+ #
++# From Roozbeh Pournader (2007-11-05):
++# This is quoted from Official Gazette of the Islamic Republic of
++# Iran, Volume 63, Number 18242, dated Tuesday 1386/6/24
++# [2007-10-16]. I am doing the best translation I can:...
++# The official time of the country will be moved forward for one hour
++# on the 24 hours of the first day of the month of Farvardin and will
++# be changed back to its previous state on the 24 hours of the
++# thirtieth day of Shahrivar.
++#
+ # Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
+ Rule	Iran	1978	1980	-	Mar	21	0:00	1:00	D
+ Rule	Iran	1978	only	-	Oct	21	0:00	0	S
+diff --git a/JodaTime/src/java/org/joda/time/tz/src/northamerica b/JodaTime/src/java/org/joda/time/tz/src/northamerica
+index ce34d6fda..bbb8c7026 100644
+--- a/JodaTime/src/java/org/joda/time/tz/src/northamerica
++++ b/JodaTime/src/java/org/joda/time/tz/src/northamerica
+@@ -1,4 +1,4 @@
+-# @(#)northamerica	8.19
++# @(#)northamerica	8.20
+ # <pre>
+ 
+ # also includes Central America and the Caribbean
+@@ -2303,6 +2303,10 @@ Zone	America/Grenada	-4:07:00 -	LMT	1911 Jul	# St George's
+ # Zone	NAME		GMTOFF	RULES	FORMAT	[UNTIL]
+ Zone America/Guadeloupe	-4:06:08 -	LMT	1911 Jun 8	# Pointe a Pitre
+ 			-4:00	-	AST
++# St Barthelemy
++Link America/Guadeloupe	America/St_Barthelemy
++# St Martin (French part)
++Link America/Guadeloupe	America/Marigot
+ 
+ # Guatemala
+ #
+diff --git a/JodaTime/src/java/org/joda/time/tz/src/southamerica b/JodaTime/src/java/org/joda/time/tz/src/southamerica
+index 90a4aa8f8..0a96f6e07 100644
+--- a/JodaTime/src/java/org/joda/time/tz/src/southamerica
++++ b/JodaTime/src/java/org/joda/time/tz/src/southamerica
+@@ -1,4 +1,4 @@
+-# @(#)southamerica	8.12
++# @(#)southamerica	8.13
+ # <pre>
+ 
+ # This data is by no means authoritative; if you think you know better,
+@@ -1107,19 +1107,17 @@ Zone America/Montevideo	-3:44:44 -	LMT	1898 Jun 28
+ 
+ # Venezuela
+ #
+-# From Kiraz Janicke (2007-09-25), in
+-# http://www.venezuelanalysis.com/analysis/2645:
+-# The proposal ... involves turning the clock back half an hour from
+-# +4.00 Greenwich Mean Time (GMT), to +4.30GMT, the time zone
+-# Venezuela had until December 31, 1964, when the current time zone
+-# was adopted. The change was due to take place on September 17 and
+-# then on September 24, but has since been postponed until December
+-# 31, to allow for compliance with international organizations, such
+-# as the International Office of Weights and Measures.
++# From John Stainforth (2007-11-28):
++# ... the change for Venezuela originally expected for 2007-12-31 has
++# been brought forward to 2007-12-09.  The official announcement was
++# published today in the "Gaceta Oficial de la Republica Bolivariana
++# de Venezuela, numero 38.819" (official document for all laws or
++# resolution publication)
++# http://www.globovision.com/news.php?nid=72208
+ 
+ # Zone	NAME		GMTOFF	RULES	FORMAT	[UNTIL]
+ Zone	America/Caracas	-4:27:44 -	LMT	1890
+ 			-4:27:40 -	CMT	1912 Feb 12 # Caracas Mean Time?
+ 			-4:30	-	VET	1965	     # Venezuela Time
+-			-4:00	-	VET	2008
++			-4:00	-	VET	2007 Dec  9 03:00
+ 			-4:30	-	VET
+
+From c4efa9caab0c9a376a695befb1eaf896090f0fda Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Tue, 4 Dec 2007 21:02:35 +0000
+Subject: [PATCH 12/12] Pre Release 1.5.1
+
+git-svn-id: https://joda-time.svn.sourceforge.net/svnroot/joda-time/trunk@1298 1e1cfbb7-5c0e-0410-a2f0-f98d92ec03a1
+---
+ JodaTime/RELEASE-NOTES.txt      |  9 +++--
+ JodaTime/build.xml              |  2 +-
+ JodaTime/project.xml            |  2 +-
+ JodaTime/src/conf/MANIFEST.MF   |  2 +-
+ JodaTime/xdocs/index.xml        |  4 +-
+ JodaTime/xdocs/installation.xml |  5 ++-
+ JodaTime/xdocs/upgradeto151.xml | 68 +++++++++++++++++++++++++++++++++
+ 7 files changed, 81 insertions(+), 11 deletions(-)
+ create mode 100644 JodaTime/xdocs/upgradeto151.xml
+
+diff --git a/JodaTime/RELEASE-NOTES.txt b/JodaTime/RELEASE-NOTES.txt
+index e5899462d..ebffa9ccd 100644
+--- a/JodaTime/RELEASE-NOTES.txt
++++ b/JodaTime/RELEASE-NOTES.txt
+@@ -1,11 +1,12 @@
+-Joda-Time version 1.6
+----------------------
++Joda-Time version 1.5.1
++-----------------------
+ 
+ Joda-Time is a date and time handling library that seeks to replace the JDK
+ Date and Calendar classes.
+ 
+-This is the sixth full release of Joda-Time.
+-This release focuses on new features, but also include some bug fixes.
++This is a patch release for Joda-Time 1.5.
++This release contains one bug fix and a time zone update.
++We recommend all users of 1.5 upgrade to 1.5.1.
+ 
+ We recommend JDK 1.4 or later, and have performed no testing on earlier JDKs.
+ 
+diff --git a/JodaTime/build.xml b/JodaTime/build.xml
+index bb58e5685..05328d4e6 100644
+--- a/JodaTime/build.xml
++++ b/JodaTime/build.xml
+@@ -27,7 +27,7 @@
+   <property name="component.title"         value="Joda date and time"/>
+ 
+   <!-- The current version number of this component -->
+-  <property name="component.version"       value="1.6"/>
++  <property name="component.version"       value="1.5.1"/>
+   <property name="previous.version"        value="1.5"/>
+ 
+   <!-- The current version number of this component -->
+diff --git a/JodaTime/project.xml b/JodaTime/project.xml
+index 93205ec08..acc6a2be8 100644
+--- a/JodaTime/project.xml
++++ b/JodaTime/project.xml
+@@ -7,7 +7,7 @@
+   <groupId>joda-time</groupId>
+   <artifactId>joda-time</artifactId>
+   <name>Joda time</name>
+-  <currentVersion>1.6-SNAPSHOT</currentVersion>
++  <currentVersion>1.5.1</currentVersion>
+   <organization>
+     <name>Joda.org</name>
+     <url>http://www.joda.org</url>
+diff --git a/JodaTime/src/conf/MANIFEST.MF b/JodaTime/src/conf/MANIFEST.MF
+index 324714501..7299f7ad2 100644
+--- a/JodaTime/src/conf/MANIFEST.MF
++++ b/JodaTime/src/conf/MANIFEST.MF
+@@ -5,5 +5,5 @@ Specification-Vendor: Joda.org
+ Specification-Version: 1.5
+ Implementation-Vendor: Joda.org
+ Implementation-Title: org.joda.time
+-Implementation-Version: 1.5
++Implementation-Version: 1.5.1
+ Implementation-Vendor-Id: org.joda
+diff --git a/JodaTime/xdocs/index.xml b/JodaTime/xdocs/index.xml
+index 8f71c0aee..9bd0a953e 100644
+--- a/JodaTime/xdocs/index.xml
++++ b/JodaTime/xdocs/index.xml
+@@ -58,7 +58,7 @@ public boolean isJoinedInLastThreeMonths(<a href="api-release/index.html?org/jod
+   return last3Months.contains(datetimeJoined);
+ }
+ -->
+-Version 1.5 was released on 2007-10-29 -
++Version 1.5.1 was released on 2007-12-04 -
+ <a href="http://sourceforge.net/project/showfiles.php?group_id=97367&amp;package_id=104212">Download now</a>
+ </p>
+ </section>
+@@ -143,7 +143,7 @@ Various documentation is available:
+ 
+ <section name="Releases">
+ <p>
+-<a href="http://sourceforge.net/project/showfiles.php?group_id=97367&amp;package_id=104212">Release 1.5</a>
++<a href="http://sourceforge.net/project/showfiles.php?group_id=97367&amp;package_id=104212">Release 1.5.1</a>
+ is the current latest release.
+ This release is considered stable and worthy of the 1.x tag.
+ It has extensive testing suites and has been used in production.
+diff --git a/JodaTime/xdocs/installation.xml b/JodaTime/xdocs/installation.xml
+index 9ca1d8cd7..78843a167 100644
+--- a/JodaTime/xdocs/installation.xml
++++ b/JodaTime/xdocs/installation.xml
+@@ -12,16 +12,17 @@
+ <p>
+ To use Joda-Time you need to
+ <a href="http://sourceforge.net/project/showfiles.php?group_id=97367&amp;package_id=104212">download the latest version</a>.
+-The download will contain the joda-time-1.5.jar.
++The download will contain the joda-time-1.5.1.jar.
+ Once you add this to your classpath you will be able to use Joda-Time.
+ </p>
+ <p>
+-The binary download also includes joda-time-1.5-sources.jar, which is a jar file
++The binary download also includes joda-time-1.5.1-sources.jar, which is a jar file
+ of the source code suitable for linking to the jar file in IDEs such as Eclipse.
+ </p>
+ <p>
+ The release notes for upgraders can be found here:
+ <ul>
++<li><a href="upgradeto151.html">Version 1.5 to Version 1.5.1</a></li>
+ <li><a href="upgradeto150.html">Version 1.4 to Version 1.5</a></li>
+ <li><a href="upgradeto140.html">Version 1.3 to Version 1.4</a></li>
+ <li><a href="upgradeto130.html">Version 1.2 to Version 1.3</a></li>
+diff --git a/JodaTime/xdocs/upgradeto151.xml b/JodaTime/xdocs/upgradeto151.xml
+new file mode 100644
+index 000000000..40d842d04
+--- /dev/null
++++ b/JodaTime/xdocs/upgradeto151.xml
+@@ -0,0 +1,68 @@
++<?xml version="1.0" encoding="ISO-8859-1"?>
++
++<document>
++ <properties>
++  <title>Java date and time API - Upgrade from 1.5 to 1.5.1</title>
++  <author email="scolebourne.at.users.sourceforge.net">Stephen Colebourne</author>
++ </properties>
++
++<body>
++
++<section name="Upgrade">
++<p>
++These are the release notes and advice for upgrading Joda-Time from
++version 1.5 to version 1.5.1.
++<source>
++Joda-Time version 1.5.1
++-----------------------
++
++Joda-Time is a date and time handling library that seeks to replace the JDK
++Date and Calendar classes.
++
++This is a patch release for Joda-Time 1.5.
++This release contains one bug fix and a time zone update.
++We recommend all users of 1.5 upgrade to 1.5.1.
++
++We recommend JDK 1.4 or later, and have performed no testing on earlier JDKs.
++
++Joda-Time is licensed under the business-friendly Apache License Version 2.
++This is the same license as all of Apache, plus other open source projects such as Spring.
++The intent is to make the code available to the Java community with the minimum
++of restrictions. If the license causes you problems please contact the mailing list.
++
++*  Please also check out our related projects   *
++* http://joda-time.sourceforge.net/related.html *
++
++
++Enhancements since 1.5
++----------------------
++
++
++Compatibility with 1.5
++----------------------
++Binary compatible - Yes
++
++Source compatible - Yes
++
++Serialization compatible - Yes
++
++Data compatible - Yes, except
++  - DateTimeZone data updated to version 2007j
++
++Semantic compatible - Yes
++
++
++Deprecations since 1.5
++----------------------
++
++
++Bug fixes since 1.5
++-------------------
++- Parsing (regression) [1839440]
++  Support parsing all upper-case and all lower-case text
++</source>
++</p>
++</section>
++
++</body>
++</document>

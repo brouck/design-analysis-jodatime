@@ -1,0 +1,1085 @@
+From 719ee5ce890a6df4abb981591aef15519c07f6ba Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Sun, 27 Mar 2016 21:58:24 +0100
+Subject: [PATCH 1/6] Fix link to release notes
+
+---
+ src/site/markdown/index.md | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/site/markdown/index.md b/src/site/markdown/index.md
+index ba8694bb3..355eeec0d 100644
+--- a/src/site/markdown/index.md
++++ b/src/site/markdown/index.md
+@@ -129,7 +129,7 @@ Joda-Time is licenced under the business friendly <a href="license.html">Apache
+ 
+ [Release 2.9.3](download.html) is the current latest release.
+ This release is considered stable and worthy of the 2.x tag.
+-See the [upgrade notes](upgradeto290.html) for full details.
++See the [upgrade notes](installation.html) for full details.
+ 
+ Joda-Time requires Java SE 5 or later and has [no dependencies](dependencies.html).
+ There is a *compile-time* dependency on [Joda-Convert](http://www.joda.org/joda-convert/),
+
+From 527eedfaa125a3017f5230a25b6e174386ffea12 Mon Sep 17 00:00:00 2001
+From: Evgeniy Devyatykh <devyatyh@gmail.com>
+Date: Wed, 27 Apr 2016 14:53:00 +0500
+Subject: [PATCH 2/6] TimeZone Database 2016d
+
+---
+ pom.xml                                       |   2 +-
+ src/main/java/org/joda/time/tz/src/Readme.txt |   2 +-
+ src/main/java/org/joda/time/tz/src/asia       | 286 +++++++++++++-----
+ src/main/java/org/joda/time/tz/src/europe     |  98 +++---
+ .../java/org/joda/time/tz/src/northamerica    |  12 +
+ .../java/org/joda/time/tz/src/southamerica    |  18 +-
+ 6 files changed, 306 insertions(+), 112 deletions(-)
+
+diff --git a/pom.xml b/pom.xml
+index bd39c567f..ebd890c4c 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -840,6 +840,6 @@
+     <!-- Other properties -->
+     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+-    <tz.database.version>2016c</tz.database.version>
++    <tz.database.version>2016d</tz.database.version>
+   </properties>
+ </project>
+diff --git a/src/main/java/org/joda/time/tz/src/Readme.txt b/src/main/java/org/joda/time/tz/src/Readme.txt
+index 38c33af40..74a874bd4 100644
+--- a/src/main/java/org/joda/time/tz/src/Readme.txt
++++ b/src/main/java/org/joda/time/tz/src/Readme.txt
+@@ -1,2 +1,2 @@
+ The data files in this directory were obtained from the public IANA time zone database,
+-http://www.iana.org/time-zones, version 2016c.
++http://www.iana.org/time-zones, version 2016d.
+diff --git a/src/main/java/org/joda/time/tz/src/asia b/src/main/java/org/joda/time/tz/src/asia
+index c91df54a5..75d429842 100644
+--- a/src/main/java/org/joda/time/tz/src/asia
++++ b/src/main/java/org/joda/time/tz/src/asia
+@@ -79,13 +79,9 @@ Rule E-EurAsia	1979	1995	-	Sep	lastSun	 0:00	0	-
+ Rule E-EurAsia	1996	max	-	Oct	lastSun	 0:00	0	-
+ Rule RussiaAsia	1981	1984	-	Apr	1	 0:00	1:00	S
+ Rule RussiaAsia	1981	1983	-	Oct	1	 0:00	0	-
+-Rule RussiaAsia	1984	1991	-	Sep	lastSun	 2:00s	0	-
+-Rule RussiaAsia	1985	1991	-	Mar	lastSun	 2:00s	1:00	S
+-Rule RussiaAsia	1992	only	-	Mar	lastSat	23:00	1:00	S
+-Rule RussiaAsia	1992	only	-	Sep	lastSat	23:00	0	-
+-Rule RussiaAsia	1993	max	-	Mar	lastSun	 2:00s	1:00	S
+-Rule RussiaAsia	1993	1995	-	Sep	lastSun	 2:00s	0	-
+-Rule RussiaAsia	1996	max	-	Oct	lastSun	 2:00s	0	-
++Rule RussiaAsia	1984	1995	-	Sep	lastSun	 2:00s	0	-
++Rule RussiaAsia	1985	2011	-	Mar	lastSun	 2:00s	1:00	S
++Rule RussiaAsia	1996	2011	-	Oct	lastSun	 2:00s	0	-
+ 
+ # Afghanistan
+ # Zone	NAME		GMTOFF	RULES	FORMAT	[UNTIL]
+@@ -125,7 +121,7 @@ Zone	Asia/Yerevan	2:58:00 -	LMT	1924 May  2
+ 			3:00	1:00	YERST	1991 Sep 23 # independence
+ 			3:00 RussiaAsia	AM%sT	1995 Sep 24  2:00s
+ 			4:00	-	AMT	1997
+-			4:00 RussiaAsia	AM%sT	2012 Mar 25  2:00s
++			4:00 RussiaAsia	AM%sT	2012 Feb  9
+ 			4:00	-	AMT
+ 
+ # Azerbaijan
+@@ -1567,23 +1563,6 @@ Zone	Asia/Amman	2:23:44 -	LMT	1931
+ 
+ # Kazakhstan
+ 
+-# From Paul Eggert (1996-11-22):
+-# Andrew Evtichov (1996-04-13) writes that Kazakhstan
+-# stayed in sync with Moscow after 1990, and that Aqtobe (formerly Aktyubinsk)
+-# and Aqtau (formerly Shevchenko) are the largest cities in their zones.
+-# Guess that Aqtau and Aqtobe diverged in 1995, since that's the first time
+-# IATA SSIM mentions a third time zone in Kazakhstan.
+-
+-# From Paul Eggert (2006-03-22):
+-# German Iofis, ELSI, Almaty (2001-10-09) reports that Kazakhstan uses
+-# RussiaAsia rules, instead of switching at 00:00 as the IATA has it.
+-# Go with Shanks & Pottenger, who have them always using RussiaAsia rules.
+-# Also go with the following claims of Shanks & Pottenger:
+-#
+-# - Kazakhstan did not observe DST in 1991.
+-# - Qyzylorda switched from +5:00 to +6:00 on 1992-01-19 02:00.
+-# - Oral switched from +5:00 to +4:00 in spring 1989.
+-
+ # From Kazakhstan Embassy's News Bulletin No. 11
+ # <http://www.kazsociety.org.uk/news/2005/03/30.htm> (2005-03-21):
+ # The Government of Kazakhstan passed a resolution March 15 abolishing
+@@ -1600,63 +1579,232 @@ Zone	Asia/Amman	2:23:44 -	LMT	1931
+ # everything else....  I guess that would make Kazakhstan time zones
+ # de jure UTC+5 and UTC+6 respectively.
+ 
++# From Stepan Golosunov (2016-03-27) ([*] means see later comments below):
++# Review of the linked documents from http://adilet.zan.kz/
++# produced the following data for post-1991 Kazakhstan:
++#
++# 0. Act of the Cabinet of Ministers of the USSR
++# from 1991-02-04 No. 20
++# http://pravo.gov.ru/proxy/ips/?docbody=&nd=102010545
++# removed the extra hour ("decree time") on the territory of the USSR
++# starting with the last Sunday of March 1991.
++# It also allowed (but not mandated) Kazakh SSR, Kirghiz SSR, Tajik SSR,
++# Turkmen SSR and Uzbek SSR to not have "summer" time.
++#
++# The 1992-01-13 act also refers to the act of the Cabinet of Ministers
++# of the Kazakh SSR from 1991-03-20 No. 170 "About the act of the Cabinet
++# of Ministers of the USSR from 1991-02-04 No. 20" but I didn't found its
++# text.
++#
++# According to Izvestia newspaper No. 68 (23334) from 1991-03-20
++# (page 6; available at http://libinfo.org/newsr/newsr2574.djvu via
++# http://libinfo.org/index.php?id=58564) on 1991-03-31 at 2:00 during
++# transition to "summer" time:
++# Republic of Georgia, Latvian SSR, Lithuanian SSR, SSR Moldova,
++# Estonian SSR; Komi ASSR; Kaliningrad oblast; Nenets autonomous okrug
++# were to move clocks 1 hour forward.
++# Kazakh SSR (excluding Uralsk oblast); Republic of Kyrgyzstan, Tajik
++# SSR; Andijan, Jizzakh, Namangan, Sirdarya, Tashkent, Fergana oblasts
++# of the Uzbek SSR were to move clocks 1 hour backwards.
++# Other territories were to not move clocks.
++# When the "summer" time would end on 1991-09-29, clocks were to be
++# moved 1 hour backwards on the territory of the USSR excluding
++# Kazakhstan, Kirghizia, Uzbekistan, Turkmenia, Tajikistan.
++#
++# Apparently there were last minute changes. Apparently Kazakh act No. 170
++# was one of such changes.
++#
++# https://ru.wikipedia.org/wiki/Декретное время
++# claims that Sovetskaya Rossiya newspaper on 1991-03-29 published that
++# Nenets autonomous okrug, Komi and Kazakhstan (excluding Uralsk oblast)
++# were to not move clocks and Uralsk oblast was to move clocks
++# forward; on 1991-09-29 Kazakhstan was to move clocks backwards.
++# (Probably there were changes even after that publication. There is an
++# article claiming that Kaliningrad oblast decided on 1991-03-29 to not
++# move clocks.)
++#
++# This implies that on 1991-03-31 Asia/Oral remained on +04/+05 while
++# the rest of Kazakhstan switched from +06/+07 to +05/06 or from +05/06
++# to +04/+05. It's unclear how Kzyl-Orda oblast moved into the fifth
++# time belt. (By switching from +04/+05 to +05/+06 on 1991-09-29?) ...
++#
++# 1. Act of the Cabinet of Ministers of the Republic of Kazakhstan
++# from 1992-01-13 No. 28
++# http://adilet.zan.kz/rus/docs/P920000028_
++# (text includes modification from the 1996 act)
++# introduced new rules for calculation of time, mirroring Russian
++# 1992-01-08 act.  It specified that time would be calculated
++# according to time belts plus extra hour ("decree time"), moved clocks
++# on the whole territory of Kazakhstan 1 hour forward on 1992-01-19 at
++# 2:00, specified DST rules.  It acknowledged that Kazakhstan was
++# located in the fourth and the fifth time belts and specified the
++# border between them to be located east of Kustanay and Aktyubinsk
++# oblasts (notably including Turgai and Kzyl-Orda oblasts into the fifth
++# time belt).
++#
++# This means switch on 1992-01-19 at 2:00 from +04/+05 to +05/+06 for
++# Asia/Aqtau, Asia/Aqtobe, Asia/Oral, Atyrau and Kustanay oblasts; from
++# +05/+06 to +06/+07 for Asia/Almaty and Asia/Qyzylorda (and Arkalyk) [*]....
++#
++# 2. Act of the Cabinet of Ministers of the Republic of Kazakhstan
++# from 1992-03-27 No. 284
++# http://adilet.zan.kz/rus/docs/P920000284_
++# cancels extra hour ("decree time") for Uralsk and Kzyl-Orda oblasts
++# since the last Sunday of March 1992, while keeping them in the fourth
++# and the fifth time belts respectively.
++#
++# 3. Order of the Prime Minister of the Republic of Kazakhstan
++# from 1994-09-23 No. 384
++# http://adilet.zan.kz/rus/docs/R940000384_
++# cancels the extra hour ("decree time") on the territory of Mangystau
++# oblast since the last Sunday of September 1994 (saying that time on
++# the territory would correspond to the third time belt as a
++# result)....
++#
++# 4. Act of the Government of the Republic of Kazakhstan
++# from 1996-05-08 No. 575
++# http://adilet.zan.kz/rus/docs/P960000575_
++# amends the 1992-01-13 act to end summer time in October instead
++# of September, mirroring identical Russian change from 1996-04-23 act.
++#
++# 5. Act of the Government of the Republic of Kazakhstan
++# from 1999-03-26 No. 305
++# http://adilet.zan.kz/rus/docs/P990000305_
++# cancels the extra hour ("decree time") for Atyrau oblast since the
++# last Sunday of March 1999 while retaining the oblast in the fourth
++# time belt.
++#
++# This means change from +05/+06 to +04/+05.
++#
++# There is no zone for Atyrau currently (listed under Asia/Aqtau in
++# zone1970.tab).[*]
++#
++# 6. Act of the Government of the Republic of Kazakhstan
++# from 2000-11-23 No. 1749
++# http://adilet.zan.kz/rus/archive/docs/P000001749_/23.11.2000
++# replaces the previous five documents.
++#
++# The only changes I noticed are in definition of the border between the
++# fourth and the fifth time belts.  They account for changes in spelling
++# and administrative division (splitting of Turgai oblast in 1997
++# probably changed time in territories incorporated into Kostanay oblast
++# (including Arkalyk) from +06/+07 to +05/+06) and move Kyzylorda oblast
++# from being in the fifth time belt and not using decree time into the
++# fourth time belt (no change in practice).[*]
++#
++# 7. Act of the Government of the Republic of Kazakhstan
++# from 2003-12-29 No. 1342
++# http://adilet.zan.kz/rus/docs/P030001342_
++# modified the 2000-11-23 act.  No relevant changes, apparently.
++#
++# 8. Act of the Government of the Republic of Kazakhstan
++# from 2004-07-20 No. 775
++# http://adilet.zan.kz/rus/archive/docs/P040000775_/20.07.2004
++# modified the 2000-11-23 act to move Kostanay and Kyzylorda oblasts into
++# the fifth time belt and add Aktobe oblast to the list of regions not
++# using extra hour ("decree time"), leaving Kazakhstan with only 2 time
++# zones (+04/+05 and +06/+07).  The changes were to be implemented
++# during DST transitions in 2004 and 2005 but the acts got radically
++# amended before implementation happened.
++#
++# 9. Act of the Government of the Republic of Kazakhstan
++# from 2004-09-15 No. 1059
++# http://adilet.zan.kz/rus/docs/P040001059_
++# modified the 2000-11-23 act to remove exceptions from the "decree time"
++# (leaving Kazakhstan in +05/+06 and +06/+07 zones), amended the
++# 2004-07-20 act to implement changes for Atyrau, West Kazakhstan,
++# Kostanay, Kyzylorda and Mangystau oblasts by not moving clocks
++# during the 2014 transition to "winter" time.
++#
++# This means transition from +04/+05 to +05/+06 for Atyrau oblast (no
++# zone currently), Asia/Oral, Asia/Aqtau and transition from +05/+06 to
++# +06/+07 for Kostanay oblast (Kostanay and Arkalyk, no zones currently)
++# and Asia/Qyzylorda on 2004-10-31 at 3:00....[*]
++#
++# 10. Act of the Government of the Republic of Kazakhstan
++# from 2005-03-15 No. 231
++# http://adilet.zan.kz/rus/docs/P050000231_
++# removes DST provisions from the 2000-11-23 act, removes most of the
++# (already implemented) provisions from the 2004-07-20 and 2004-09-15
++# acts, comes into effect 10 days after official publication.
++# The only practical effect seems to be the abolition of the summer
++# time.
++#
++# Unamended version of the act of the Government of the Russian Federation
++# No. 23 from 1992-01-08 [See 'europe' file for details].
++# Kazakh 1992-01-13 act appears to provide the same rules and 1992-03-27
++# act was to be enacted on the last Sunday of March 1992.
++
++# From Paul Eggert (2016-04-15):
++# The tables below should reflect Stepan Golosunov's remarks above,
++# except for the items marked "[*]" which I haven't gotten to yet.
++# It looks like we will need new zones Asia/Atyrau and Asia/Qostanay
++# to handle changes from 1992 through 2004 that we did not previously
++# know about.
++
+ #
+ # Zone	NAME		GMTOFF	RULES	FORMAT	[UNTIL]
+ #
+ # Almaty (formerly Alma-Ata), representing most locations in Kazakhstan
++# This includes KZ-AKM, KZ-ALA, KZ-ALM, KZ-AST, KZ-BAY, KZ-VOS, KZ-ZHA,
++# KZ-KAR, KZ-SEV, KZ-PAV, and KZ-YUZ.
+ Zone	Asia/Almaty	5:07:48 -	LMT	1924 May  2 # or Alma-Ata
+-			5:00	-	ALMT	1930 Jun 21 # Alma-Ata Time
+-			6:00 RussiaAsia ALM%sT	1991
+-			6:00	-	ALMT	1992
+-			6:00 RussiaAsia	ALM%sT	2005 Mar 15
+-			6:00	-	ALMT
+-# Qyzylorda (aka Kyzylorda, Kizilorda, Kzyl-Orda, etc.)
++			5:00	-	+05	1930 Jun 21
++			6:00 RussiaAsia +06/+07	1991 Mar 31  2:00s
++			5:00 RussiaAsia	+05/+06	1992 Jan 19  2:00s
++			6:00 RussiaAsia	+06/+07	2004 Oct 31  2:00s
++			6:00	-	+06
++# Qyzylorda (aka Kyzylorda, Kizilorda, Kzyl-Orda, etc.) (KZ-KZY)
+ Zone	Asia/Qyzylorda	4:21:52 -	LMT	1924 May  2
+-			4:00	-	KIZT	1930 Jun 21 # Kizilorda Time
+-			5:00	-	KIZT	1981 Apr  1
+-			5:00	1:00	KIZST	1981 Oct  1
+-			6:00	-	KIZT	1982 Apr  1
+-			5:00 RussiaAsia	KIZ%sT	1991
+-			5:00	-	KIZT	1991 Dec 16 # independence
+-			5:00	-	QYZT	1992 Jan 19  2:00
+-			6:00 RussiaAsia	QYZ%sT	2005 Mar 15
+-			6:00	-	QYZT
+-# Aqtobe (aka Aktobe, formerly Aktyubinsk)
++			4:00	-	+04	1930 Jun 21
++			5:00	-	+05	1981 Apr  1
++			5:00	1:00	+06	1981 Oct  1
++			6:00	-	+06	1982 Apr  1
++			5:00 RussiaAsia	+05/+06	1991 Mar 31  2:00s
++			4:00 RussiaAsia	+04/+05	1991 Sep 29  2:00s
++			5:00 RussiaAsia	+05/+06	1992 Jan 19  2:00s
++			6:00 RussiaAsia	+06/+07	1992 Mar 29  2:00s
++			5:00 RussiaAsia	+05/+06	2004 Oct 31  2:00s
++			6:00	-	+06
++# Aqtobe (aka Aktobe, formerly Aktyubinsk) (KZ-AKT)
+ Zone	Asia/Aqtobe	3:48:40	-	LMT	1924 May  2
+-			4:00	-	AKTT	1930 Jun 21 # Aktyubinsk Time
+-			5:00	-	AKTT	1981 Apr  1
+-			5:00	1:00	AKTST	1981 Oct  1
+-			6:00	-	AKTT	1982 Apr  1
+-			5:00 RussiaAsia	AKT%sT	1991
+-			5:00	-	AKTT	1991 Dec 16 # independence
+-			5:00 RussiaAsia	AQT%sT	2005 Mar 15 # Aqtobe Time
+-			5:00	-	AQTT
+-# Mangghystau
++			4:00	-	+04	1930 Jun 21
++			5:00	-	+05	1981 Apr  1
++			5:00	1:00	+06	1981 Oct  1
++			6:00	-	+06	1982 Apr  1
++			5:00 RussiaAsia	+05/+06	1991 Mar 31  2:00s
++			4:00 RussiaAsia	+04/+05	1992 Jan 19  2:00s
++			5:00 RussiaAsia	+05/+06	2004 Oct 31  2:00s
++			5:00	-	+05
++# Qostanay (KZ-KUS)
++
++# Mangghystau (KZ-MAN)
+ # Aqtau was not founded until 1963, but it represents an inhabited region,
+ # so include time stamps before 1963.
+ Zone	Asia/Aqtau	3:21:04	-	LMT	1924 May  2
+-			4:00	-	FORT	1930 Jun 21 # Fort Shevchenko T
+-			5:00	-	FORT	1963
+-			5:00	-	SHET	1981 Oct  1 # Shevchenko Time
+-			6:00	-	SHET	1982 Apr  1
+-			5:00 RussiaAsia	SHE%sT	1991
+-			5:00	-	SHET	1991 Dec 16 # independence
+-			5:00 RussiaAsia	AQT%sT	1995 Mar lastSun  2:00 # Aqtau Time
+-			4:00 RussiaAsia	AQT%sT	2005 Mar 15
+-			5:00	-	AQTT
+-# West Kazakhstan
++			4:00	-	+04	1930 Jun 21
++			5:00	-	+05	1963
++			5:00	-	+05	1981 Oct  1
++			6:00	-	+06	1982 Apr  1
++			5:00 RussiaAsia	+05/+06	1991 Mar 31  2:00s
++			4:00 RussiaAsia	+04/+05	1992 Jan 19  2:00s
++			5:00 RussiaAsia	+05/+06	1994 Sep 25  2:00s
++			4:00 RussiaAsia	+04/+05	2004 Oct 31  2:00s
++			5:00	-	+05
++
++# West Kazakhstan (KZ-ZAP)
+ # From Paul Eggert (2016-03-18):
+ # The 1989 transition is from USSR act No. 227 (1989-03-14).
+ Zone	Asia/Oral	3:25:24	-	LMT	1924 May  2 # or Ural'sk
+-			4:00	-	URAT	1930 Jun 21 # Ural'sk time
+-			5:00	-	URAT	1981 Apr  1
+-			5:00	1:00	URAST	1981 Oct  1
+-			6:00	-	URAT	1982 Apr  1
+-			5:00 RussiaAsia	URA%sT	1989 Mar 26  2:00
+-			4:00 RussiaAsia	URA%sT	1991
+-			4:00	-	URAT	1991 Dec 16 # independence
+-			4:00 RussiaAsia	ORA%sT	2005 Mar 15 # Oral Time
+-			5:00	-	ORAT
++			4:00	-	+04	1930 Jun 21
++			5:00	-	+05	1981 Apr  1
++			5:00	1:00	+06	1981 Oct  1
++			6:00	-	+06	1982 Apr  1
++			5:00 RussiaAsia	+05/+06	1989 Mar 26  2:00s
++			4:00 RussiaAsia	+04/+05	1992 Jan 19  2:00s
++			5:00 RussiaAsia	+05/+06	1992 Mar 29  2:00s
++			4:00 RussiaAsia	+04/+05	2004 Oct 31  2:00s
++			5:00	-	+05
+ 
+ # Kyrgyzstan (Kirgizstan)
+ # Transitions through 1991 are from Shanks & Pottenger.
+diff --git a/src/main/java/org/joda/time/tz/src/europe b/src/main/java/org/joda/time/tz/src/europe
+index 456c8dc0e..86159f7e1 100644
+--- a/src/main/java/org/joda/time/tz/src/europe
++++ b/src/main/java/org/joda/time/tz/src/europe
+@@ -600,13 +600,9 @@ Rule	Russia	1981	1984	-	Apr	 1	 0:00	1:00	S
+ Rule	Russia	1981	1983	-	Oct	 1	 0:00	0	-
+ # Act No. 967 of the Council of Ministers of the USSR (1984-09-13), repeated in
+ # Act No. 227 of the Council of Ministers of the USSR (1989-03-14):
+-Rule	Russia	1984	1991	-	Sep	lastSun	 2:00s	0	-
+-Rule	Russia	1985	1991	-	Mar	lastSun	 2:00s	1:00	S
++Rule	Russia	1984	1995	-	Sep	lastSun	 2:00s	0	-
++Rule	Russia	1985	2010	-	Mar	lastSun	 2:00s	1:00	S
+ #
+-Rule	Russia	1992	only	-	Mar	lastSat	 23:00	1:00	S
+-Rule	Russia	1992	only	-	Sep	lastSat	 23:00	0	-
+-Rule	Russia	1993	2010	-	Mar	lastSun	 2:00s	1:00	S
+-Rule	Russia	1993	1995	-	Sep	lastSun	 2:00s	0	-
+ Rule	Russia	1996	2010	-	Oct	lastSun	 2:00s	0	-
+ # As described below, Russia's 2014 change affects Zone data, not Rule data.
+ 
+@@ -630,6 +626,14 @@ Rule	Russia	1996	2010	-	Oct	lastSun	 2:00s	0	-
+ # rules (Moscow time)
+ # c) Uralsk oblast: third time belt rules (Moscow+1).
+ 
++# From Stepan Golosunov (2016-03-27):
++# Unamended version of the act of the
++# Government of the Russian Federation No. 23 from 08.01.1992
++# http://pravo.gov.ru/proxy/ips/?docbody=&nd=102014034&rdk=0
++# says that every year clocks were to be moved forward on last Sunday
++# of March at 2 hours and moved backwards on last Sunday of September
++# at 3 hours.  It was amended in 1996 to replace September with October.
++
+ # From Alexander Krivenyshev (2011-06-14):
+ # According to Kremlin press service, Russian President Dmitry Medvedev
+ # signed a federal law "On calculation of time" on June 9, 2011.
+@@ -2579,16 +2583,14 @@ Zone Europe/Volgograd	 2:57:40 -	LMT	1920 Jan  3
+ # 43	RU-KIR	Kirov Oblast
+ # The 1989 transition is from USSR act No. 227 (1989-03-14).
+ #
+-# Europe/Kirov is still in draft form and for now is commented out.
+-#
+-#Zone Europe/Kirov	 3:18:48 -	LMT	1919 Jul  1  2:00
+-#			 3:00	-	+03	1930 Jun 21
+-#			 4:00	Russia	+04/+05	1989 Mar 26  2:00s
+-#			 3:00	Russia	+03/+04	1991 Mar 31  2:00s
+-#			 4:00	-	+04	1992 Mar 29  2:00s
+-#			 3:00	Russia	+03/+04	2011 Mar 27  2:00s
+-#			 4:00	-	+04	2014 Oct 26  2:00s
+-#			 3:00	-	+03
++Zone Europe/Kirov	 3:18:48 -	LMT	1919 Jul  1  2:00
++			 3:00	-	+03	1930 Jun 21
++			 4:00	Russia	+04/+05	1989 Mar 26  2:00s
++			 3:00	Russia	+03/+04	1991 Mar 31  2:00s
++			 4:00	-	+04	1992 Mar 29  2:00s
++			 3:00	Russia	+03/+04	2011 Mar 27  2:00s
++			 4:00	-	+04	2014 Oct 26  2:00s
++			 3:00	-	+03
+ 
+ # From Tim Parenti (2014-07-03), per Oscar van Vlijmen (2001-08-25):
+ # Europe/Samara covers...
+@@ -2733,9 +2735,9 @@ Zone Asia/Novosibirsk	 5:31:40 -	LMT	1919 Dec 14  6:00
+ # From Paul Eggert (2016-03-18):
+ # Asia/Tomsk covers:
+ # 70	RU-TOM	Tomsk Oblast
+-#
+-# Asia/Tomsk is still in draft form and for now is commented out.
+-# Tomsk may be changing time zones in 2016 (not decided yet).
++
++# From Stepan Golosunov (2016-03-24):
++# Byalokoz listed Tomsk at 5:39:51.
+ 
+ # From Stanislaw A. Kuzikowski (1994-06-29):
+ # Tomsk is still 4 hours ahead of Moscow.
+@@ -2750,14 +2752,34 @@ Zone Asia/Novosibirsk	 5:31:40 -	LMT	1919 Dec 14  6:00
+ # with time zones in 2011 with different numberings (there was a
+ # 2-hour gap between second and third zones in 2011-2014).
+ 
+-#Zone Asia/Tomsk	 5:39:52 -	LMT	1919 Dec 22
+-#			 6:00	-	+06	1930 Jun 21
+-#			 7:00	Russia	+07/+08	1991 Mar 31  2:00s
+-#			 6:00	Russia	+06/+07	1992 Jan 19  2:00s
+-#			 7:00	Russia	+07/+08	2002 May  1  3:00
+-#			 6:00	Russia	+06/+07	2011 Mar 27  2:00s
+-#			 7:00	-	+07	2014 Oct 26  2:00s
+-#			 6:00	-	+06
++# From Stepan Golosunov (2016-04-12):
++# http://asozd2.duma.gov.ru/main.nsf/(SpravkaNew)?OpenAgent&RN=1006865-6
++# This bill was approved in the first reading today.  It moves Tomsk oblast
++# from UTC+6 to UTC+7 and is supposed to come into effect on 2016-05-29 at
++# 2:00.  The bill needs to be approved in the second and the third readings by
++# the State Duma, approved by the Federation Council, signed by the President
++# and published to become a law.  Minor changes in the text are to be expected
++# before the second reading (references need to be updated to account for the
++# recent changes).
++#
++# Judging by the ultra-short one-day amendments period, recent similar laws,
++# the State Duma schedule and the Federation Council schedule
++# http://www.duma.gov.ru/legislative/planning/day-shedule/por_vesna_2016/
++# http://council.gov.ru/activity/meetings/schedule/63303
++# I speculate that the final text of the bill will be proposed tomorrow, the
++# bill will be approved in the second and the third readings on Friday,
++# approved by the Federation Council on 2016-04-20, signed by the President and
++# published as a law around 2016-04-26.
++
++Zone	Asia/Tomsk	 5:39:51 -	LMT	1919 Dec 22
++			 6:00	-	+06	1930 Jun 21
++			 7:00	Russia	+07/+08	1991 Mar 31  2:00s
++			 6:00	Russia	+06/+07	1992 Jan 19  2:00s
++			 7:00	Russia	+07/+08	2002 May  1  3:00
++			 6:00	Russia	+06/+07	2011 Mar 27  2:00s
++			 7:00	-	+07	2014 Oct 26  2:00s
++			 6:00	-	+06	2016 May 29  2:00s
++			 7:00	-	+07
+ 
+ 
+ # From Tim Parenti (2014-07-03):
+@@ -2990,13 +3012,13 @@ Zone Asia/Sakhalin	 9:30:48 -	LMT	1905 Aug 23
+ # until now by Asia/Magadan, will instead move to UTC+11.  These regions will
+ # need their own zone.
+ 
+-# From Alexander Krivenyshev (2016-01-03):
+-# Magadan Oblast / Magadan (draft bill date of entry 2015-12-08),
+-# UTC+10 to UTC+11
+-# From Stepan Golosunov (2016-03-17):
+-# The bill is currently proposed to be approved in both the second and
+-# the third readings on 2016-03-22. It might be in time to be approved
+-# by the Federation Council on 2016-03-23.
++# From Alexander Krivenyshev (2016-03-27):
++# ... draft bill 948300-6 to change its time zone from UTC+10 to UTC+11 ...
++# will take ... effect ... on April 24, 2016 at 2 o'clock
++#
++# From Matt Johnson (2016-04-05):
++# ... signed by the President today ...
++# http://publication.pravo.gov.ru/Document/View/0001201604050038
+ 
+ Zone Asia/Magadan	10:03:12 -	LMT	1924 May  2
+ 			10:00	-	MAGT	1930 Jun 21 # Magadan Time
+@@ -3004,12 +3026,8 @@ Zone Asia/Magadan	10:03:12 -	LMT	1924 May  2
+ 			10:00	Russia	MAG%sT	1992 Jan 19  2:00s
+ 			11:00	Russia	MAG%sT	2011 Mar 27  2:00s
+ 			12:00	-	MAGT	2014 Oct 26  2:00s
+-			10:00	-	MAGT
+-# From Paul Eggert (2016-03-18):
+-# If the bill passes as-is, replace the previous data line with:
+-#			10:00	-	MAGT	2016 Apr 24  2:00s
+-#			11:00	-	MAGT
+-# and update zone1970.tab and zone.tab to say "MSK+08" for Asia/Magadan.
++			10:00	-	MAGT	2016 Apr 24  2:00s
++			11:00	-	MAGT
+ 
+ 
+ # From Tim Parenti (2014-07-06):
+diff --git a/src/main/java/org/joda/time/tz/src/northamerica b/src/main/java/org/joda/time/tz/src/northamerica
+index 68d29bf8f..1d7395c7f 100644
+--- a/src/main/java/org/joda/time/tz/src/northamerica
++++ b/src/main/java/org/joda/time/tz/src/northamerica
+@@ -2476,6 +2476,15 @@ Zone America/Merida	-5:58:28 -	LMT	1922 Jan  1  0:01:32
+ 			-5:00	-	EST	1982 Dec  2
+ 			-6:00	Mexico	C%sT
+ # Coahuila, Nuevo León, Tamaulipas (near US border)
++# This includes the following municipalities:
++#   in Coahuila: Ocampo, Acuña, Zaragoza, Jiménez, Piedras Negras, Nava,
++#     Guerrero, Hidalgo.
++#   in Nuevo León: Anáhuac, Los Aldama.
++#   in Tamaulipas: Nuevo Laredo, Guerrero, Mier, Miguel Alemán, Camargo,
++#     Gustavo Díaz Ordaz, Reynosa, Río Bravo, Valle Hermoso, Matamoros.
++# See: Inicia mañana Horario de Verano en zona fronteriza, El Universal,
++# 2016-03-12
++# http://www.eluniversal.com.mx/articulo/estados/2016/03/12/inicia-manana-horario-de-verano-en-zona-fronteriza
+ Zone America/Matamoros	-6:40:00 -	LMT	1921 Dec 31 23:20:00
+ 			-6:00	-	CST	1988
+ 			-6:00	US	C%sT	1989
+@@ -2497,6 +2506,9 @@ Zone America/Mexico_City -6:36:36 -	LMT	1922 Jan  1  0:23:24
+ 			-6:00	-	CST	2002 Feb 20
+ 			-6:00	Mexico	C%sT
+ # Chihuahua (near US border)
++# This includes the municipalities of Janos, Ascensión, Juárez, Guadalupe,
++# Práxedis G Guerrero, Coyame del Sotol, Ojinaga, and Manuel Benavides.
++# (See the 2016-03-12 El Universal source mentioned above.)
+ Zone America/Ojinaga	-6:57:40 -	LMT	1922 Jan  1  0:02:20
+ 			-7:00	-	MST	1927 Jun 10 23:00
+ 			-6:00	-	CST	1930 Nov 15
+diff --git a/src/main/java/org/joda/time/tz/src/southamerica b/src/main/java/org/joda/time/tz/src/southamerica
+index ba9ad8176..477a6e1cd 100644
+--- a/src/main/java/org/joda/time/tz/src/southamerica
++++ b/src/main/java/org/joda/time/tz/src/southamerica
+@@ -1755,9 +1755,25 @@ Zone America/Montevideo	-3:44:44 -	LMT	1898 Jun 28
+ # resolution publication)
+ # http://www.globovision.com/news.php?nid=72208
+ 
++# From Alexander Krivenyshev (2016-04-15):
++# https://actualidad.rt.com/actualidad/204758-venezuela-modificar-huso-horario-sequia-elnino
++#
++# From Paul Eggert (2016-04-15):
++# Clocks advance 30 minutes on 2016-05-01 at 02:30. See:
++# Barboza AD. Huso horario en Venezuela volverá a 4 horas menos con
++# respecto al "Greenwich". Panorama 2016-04-15 12:20 -0430.
++# http://www.panorama.com.ve/ciudad/Huso-horario-en-Venezuela-volvera-a-4-horas-menos-con-respecto-al-Greenwich-20160415-0032.html
++#
++# "'Venezuela's new time-zone: hours without light, hours without water,
++# hours of presidential broadcasts, hours of lines," quipped comedian
++# Jean Mary Curro ...". See: Cawthorne A, Kai D. Venezuela scraps
++# half-hour time difference set by Chavez. Reuters 2016-04-15 14:50 -0400
++# http://www.reuters.com/article/us-venezuela-timezone-idUSKCN0XC2BE
++
+ # Zone	NAME		GMTOFF	RULES	FORMAT	[UNTIL]
+ Zone	America/Caracas	-4:27:44 -	LMT	1890
+ 			-4:27:40 -	CMT	1912 Feb 12 # Caracas Mean Time?
+ 			-4:30	-	VET	1965 Jan  1  0:00 # Venezuela T.
+ 			-4:00	-	VET	2007 Dec  9  3:00
+-			-4:30	-	VET
++			-4:30	-	VET	2016 May  1  2:30
++			-4:00	-	VET
+
+From bff42077d309887fb2762e6b3acb7d910d60021d Mon Sep 17 00:00:00 2001
+From: john9x <devyatyh@gmail.com>
+Date: Wed, 27 Apr 2016 16:03:17 +0500
+Subject: [PATCH 3/6] Updated RELEASE-NOTES.txt
+
+---
+ RELEASE-NOTES.txt | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/RELEASE-NOTES.txt b/RELEASE-NOTES.txt
+index 62d73ca6e..40c13e138 100644
+--- a/RELEASE-NOTES.txt
++++ b/RELEASE-NOTES.txt
+@@ -1,4 +1,4 @@
+-Joda-Time version 2.9.3
++Joda-Time version 2.9.4
+ -----------------------
+ 
+ Joda-Time is a date and time handling library that seeks to replace the JDK
+@@ -13,6 +13,10 @@ This is the same license as all of Apache, plus other open source projects such
+ **  Please also check out our related projects   **
+ ** http://www.joda.org/joda-time/related.html **
+ 
++Changes in 2.9.4
++----------------
++ - DateTimeZone data updated to version 2016d
++
+ 
+ Changes in 2.9.3
+ ----------------
+
+From 1735445fbdf8829f7ddd5985d26414d98b3c9ccd Mon Sep 17 00:00:00 2001
+From: Jason Tedor <jason@tedor.me>
+Date: Wed, 18 May 2016 17:00:34 -0400
+Subject: [PATCH 4/6] Load timezone resources in doPrivileged block
+
+Under a security manager, loading resources requries
+java.io.FilePermission. This commit modifies the loading of such
+resources so they are done in an appropriate doPrivileged block.
+---
+ .../org/joda/time/tz/ZoneInfoProvider.java    | 10 ++++++--
+ .../java/org/joda/time/TestDateTimeZone.java  | 24 +++++++++++++++++++
+ 2 files changed, 32 insertions(+), 2 deletions(-)
+
+diff --git a/src/main/java/org/joda/time/tz/ZoneInfoProvider.java b/src/main/java/org/joda/time/tz/ZoneInfoProvider.java
+index 6c0cc5e14..62214ec89 100644
+--- a/src/main/java/org/joda/time/tz/ZoneInfoProvider.java
++++ b/src/main/java/org/joda/time/tz/ZoneInfoProvider.java
+@@ -21,6 +21,8 @@
+ import java.io.IOException;
+ import java.io.InputStream;
+ import java.lang.ref.SoftReference;
++import java.security.AccessController;
++import java.security.PrivilegedAction;
+ import java.util.Collections;
+ import java.util.Map;
+ import java.util.Set;
+@@ -195,9 +197,13 @@ private InputStream openResource(String name) throws IOException {
+         if (iFileDir != null) {
+             in = new FileInputStream(new File(iFileDir, name));
+         } else {
+-            String path = iResourcePath.concat(name);
++            final String path = iResourcePath.concat(name);
+             if (iLoader != null) {
+-                in = iLoader.getResourceAsStream(path);
++                in = AccessController.doPrivileged(new PrivilegedAction<InputStream>() {
++                    public InputStream run() {
++                        return iLoader.getResourceAsStream(path);
++                    }
++                });
+             } else {
+                 in = ClassLoader.getSystemResourceAsStream(path);
+             }
+diff --git a/src/test/java/org/joda/time/TestDateTimeZone.java b/src/test/java/org/joda/time/TestDateTimeZone.java
+index 3063e69b8..f5cc7b56b 100644
+--- a/src/test/java/org/joda/time/TestDateTimeZone.java
++++ b/src/test/java/org/joda/time/TestDateTimeZone.java
+@@ -17,6 +17,7 @@
+ 
+ import java.io.ByteArrayInputStream;
+ import java.io.ByteArrayOutputStream;
++import java.io.FilePermission;
+ import java.io.ObjectInputStream;
+ import java.io.ObjectOutputStream;
+ import java.lang.reflect.Modifier;
+@@ -33,6 +34,7 @@
+ import java.util.LinkedHashMap;
+ import java.util.Locale;
+ import java.util.Map;
++import java.util.Random;
+ import java.util.Set;
+ import java.util.TimeZone;
+ 
+@@ -543,6 +545,28 @@ public void testProviderSecurity() {
+         }
+     }
+ 
++    public void testZoneInfoProviderResourceLoading() {
++        final Set<String> ids = new HashSet<String>(DateTimeZone.getAvailableIDs());
++        ids.remove(DateTimeZone.getDefault().getID());
++        final String id = ids.toArray(new String[ids.size()])[new Random().nextInt(ids.size())];
++        try {
++            Policy.setPolicy(new Policy() {
++                @Override
++                public boolean implies(ProtectionDomain domain, Permission permission) {
++                    return !(permission instanceof FilePermission) && !permission.getName().contains(id);
++                }
++            });
++            System.setSecurityManager(new SecurityManager());
++            // will throw IllegalArgumentException if the resource can
++            // not be loaded
++            final DateTimeZone zone = DateTimeZone.forID(id);
++            assertNotNull(zone);
++        } finally {
++            System.setSecurityManager(null);
++            Policy.setPolicy(ALLOW);
++        }
++    }
++
+     static class MockNullIDSProvider implements Provider {
+         public Set getAvailableIDs() {
+             return null;
+
+From 2acaddc80b7aef2d1a1538a52c32c3b472c347ae Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Sun, 22 May 2016 04:46:34 +0100
+Subject: [PATCH 5/6] Load timezone resources in doPrivileged block
+
+Fix test to compile
+Ensure system classpath also wrapped
+---
+ RELEASE-NOTES.txt                                  |  2 ++
+ pom.xml                                            |  4 ++++
+ .../java/org/joda/time/tz/ZoneInfoProvider.java    | 14 +++++++-------
+ src/test/java/org/joda/time/TestDateTimeZone.java  |  9 +++++++++
+ 4 files changed, 22 insertions(+), 7 deletions(-)
+
+diff --git a/RELEASE-NOTES.txt b/RELEASE-NOTES.txt
+index 40c13e138..414939f5f 100644
+--- a/RELEASE-NOTES.txt
++++ b/RELEASE-NOTES.txt
+@@ -17,6 +17,8 @@ Changes in 2.9.4
+ ----------------
+  - DateTimeZone data updated to version 2016d
+ 
++ - Loading time-zone provider now occurs in a priveleged block [#327, #375]
++
+ 
+ Changes in 2.9.3
+ ----------------
+diff --git a/pom.xml b/pom.xml
+index ebd890c4c..a47e3d474 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -232,6 +232,10 @@
+       <name>Grzegorz Swierczynski</name>
+       <url>https://github.com/gswierczynski</url>
+     </contributor>
++    <contributor>
++      <name>Jason Tedor</name>
++      <url>https://github.com/jasontedor</url>
++    </contributor>
+     <contributor>
+       <name>Ricardo Trindade</name>
+     </contributor>
+diff --git a/src/main/java/org/joda/time/tz/ZoneInfoProvider.java b/src/main/java/org/joda/time/tz/ZoneInfoProvider.java
+index 62214ec89..00150747a 100644
+--- a/src/main/java/org/joda/time/tz/ZoneInfoProvider.java
++++ b/src/main/java/org/joda/time/tz/ZoneInfoProvider.java
+@@ -198,15 +198,15 @@ private InputStream openResource(String name) throws IOException {
+             in = new FileInputStream(new File(iFileDir, name));
+         } else {
+             final String path = iResourcePath.concat(name);
+-            if (iLoader != null) {
+-                in = AccessController.doPrivileged(new PrivilegedAction<InputStream>() {
+-                    public InputStream run() {
++            in = AccessController.doPrivileged(new PrivilegedAction<InputStream>() {
++                public InputStream run() {
++                    if (iLoader != null) {
+                         return iLoader.getResourceAsStream(path);
++                    } else {
++                        return ClassLoader.getSystemResourceAsStream(path);
+                     }
+-                });
+-            } else {
+-                in = ClassLoader.getSystemResourceAsStream(path);
+-            }
++                }
++            });
+             if (in == null) {
+                 StringBuilder buf = new StringBuilder(40)
+                     .append("Resource not found: \"")
+diff --git a/src/test/java/org/joda/time/TestDateTimeZone.java b/src/test/java/org/joda/time/TestDateTimeZone.java
+index f5cc7b56b..140498987 100644
+--- a/src/test/java/org/joda/time/TestDateTimeZone.java
++++ b/src/test/java/org/joda/time/TestDateTimeZone.java
+@@ -551,6 +551,15 @@ public void testZoneInfoProviderResourceLoading() {
+         final String id = ids.toArray(new String[ids.size()])[new Random().nextInt(ids.size())];
+         try {
+             Policy.setPolicy(new Policy() {
++                @Override
++                public PermissionCollection getPermissions(CodeSource codesource) {
++                    Permissions p = new Permissions();
++                    p.add(new AllPermission());  // enable everything
++                    return p;
++                }
++                @Override
++                public void refresh() {
++                }
+                 @Override
+                 public boolean implies(ProtectionDomain domain, Permission permission) {
+                     return !(permission instanceof FilePermission) && !permission.getName().contains(id);
+
+From 7a1faaf78c957ca7fefb61bffd74ce355f735cb1 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Fri, 27 May 2016 10:15:52 +0100
+Subject: [PATCH 6/6] Release v2.9.4
+
+---
+ README.md                      |   8 +-
+ pom.xml                        |   2 +-
+ src/conf/MANIFEST.MF           |  18 ++---
+ src/site/markdown/index.md     |   6 +-
+ src/site/xdoc/installation.xml |   1 +
+ src/site/xdoc/upgradeto294.xml | 129 +++++++++++++++++++++++++++++++++
+ 6 files changed, 147 insertions(+), 17 deletions(-)
+ create mode 100644 src/site/xdoc/upgradeto294.xml
+
+diff --git a/README.md b/README.md
+index c5260c517..531456390 100644
+--- a/README.md
++++ b/README.md
+@@ -46,24 +46,24 @@ Various documentation is available:
+ 
+ 
+ ### Releases
+-[Release 2.9.3](http://www.joda.org/joda-time/download.html) is the current latest release.
++[Release 2.9.4](http://www.joda.org/joda-time/download.html) is the current latest release.
+ This release is considered stable and worthy of the 2.x tag.
+ It depends on JDK 1.5 or later.
+ 
+-Available in the [Maven Central repository](http://search.maven.org/#artifactdetails|joda-time|joda-time|2.9.3|jar)
++Available in the [Maven Central repository](http://search.maven.org/#artifactdetails|joda-time|joda-time|2.9.4|jar)
+ 
+ **Maven configuration:**
+ ```xml
+ <dependency>
+   <groupId>joda-time</groupId>
+   <artifactId>joda-time</artifactId>
+-  <version>2.9.3</version>
++  <version>2.9.4</version>
+ </dependency>
+ ```
+ 
+ **Gradle configuration:**
+ ```groovy
+-compile 'joda-time:joda-time:2.9.3'
++compile 'joda-time:joda-time:2.9.4'
+ ```
+ 
+ ### Related projects
+diff --git a/pom.xml b/pom.xml
+index a47e3d474..41356f303 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -9,7 +9,7 @@
+   <artifactId>joda-time</artifactId>
+   <packaging>jar</packaging>
+   <name>Joda-Time</name>
+-  <version>2.9.3</version>
++  <version>2.9.4</version>
+   <description>Date and time library to replace JDK date handling</description>
+   <url>http://www.joda.org/joda-time/</url>
+ 
+diff --git a/src/conf/MANIFEST.MF b/src/conf/MANIFEST.MF
+index 91aeb4c4e..0b0f6dad2 100644
+--- a/src/conf/MANIFEST.MF
++++ b/src/conf/MANIFEST.MF
+@@ -5,19 +5,19 @@ Specification-Vendor: Joda.org
+ Specification-Version: 2.9
+ Implementation-Vendor: Joda.org
+ Implementation-Title: org.joda.time
+-Implementation-Version: 2.9.3
++Implementation-Version: 2.9.4
+ Implementation-Vendor-Id: org.joda
+ Bundle-ManifestVersion: 2
+ Bundle-Vendor: Joda.org
+ Bundle-Name: Joda-Time
+ Bundle-SymbolicName: joda-time
+-Bundle-Version: 2.9.3
+-Export-Package: org.joda.time;version=2.9.3,
+- org.joda.time.base;version=2.9.3,
+- org.joda.time.chrono;version=2.9.3,
+- org.joda.time.convert;version=2.9.3,
+- org.joda.time.field;version=2.9.3,
+- org.joda.time.format;version=2.9.3,
+- org.joda.time.tz;version=2.9.3
++Bundle-Version: 2.9.4
++Export-Package: org.joda.time;version=2.9.4,
++ org.joda.time.base;version=2.9.4,
++ org.joda.time.chrono;version=2.9.4,
++ org.joda.time.convert;version=2.9.4,
++ org.joda.time.field;version=2.9.4,
++ org.joda.time.format;version=2.9.4,
++ org.joda.time.tz;version=2.9.4
+ Bundle-License: Apache 2.0
+ Bundle-DocURL: http://www.joda.org/joda-time/
+diff --git a/src/site/markdown/index.md b/src/site/markdown/index.md
+index 355eeec0d..287d3fd7c 100644
+--- a/src/site/markdown/index.md
++++ b/src/site/markdown/index.md
+@@ -127,7 +127,7 @@ Joda-Time is licenced under the business friendly <a href="license.html">Apache
+ 
+ ## <i></i> Releases
+ 
+-[Release 2.9.3](download.html) is the current latest release.
++[Release 2.9.4](download.html) is the current latest release.
+ This release is considered stable and worthy of the 2.x tag.
+ See the [upgrade notes](installation.html) for full details.
+ 
+@@ -135,13 +135,13 @@ Joda-Time requires Java SE 5 or later and has [no dependencies](dependencies.htm
+ There is a *compile-time* dependency on [Joda-Convert](http://www.joda.org/joda-convert/),
+ but this is not required at runtime thanks to the magic of annotations.
+ 
+-Available in [Maven Central](http://search.maven.org/#artifactdetails%7Cjoda-time%7Cjoda-time%7C2.9.3%7Cjar).
++Available in [Maven Central](http://search.maven.org/#artifactdetails%7Cjoda-time%7Cjoda-time%7C2.9.4%7Cjar).
+ 
+ ```xml
+ <dependency>
+   <groupId>joda-time</groupId>
+   <artifactId>joda-time</artifactId>
+-  <version>2.9.3</version>
++  <version>2.9.4</version>
+ </dependency>
+ ```
+ 
+diff --git a/src/site/xdoc/installation.xml b/src/site/xdoc/installation.xml
+index aa4161eda..4e6c2ae29 100644
+--- a/src/site/xdoc/installation.xml
++++ b/src/site/xdoc/installation.xml
+@@ -21,6 +21,7 @@ of the source code suitable for linking to the jar file in IDEs such as Eclipse.
+ <p>
+ The release notes for upgraders can be found here:
+ <ul>
++<li><a href="upgradeto294.html">Version 2.9.4</a></li>
+ <li><a href="upgradeto293.html">Version 2.9.3</a></li>
+ <li><a href="upgradeto292.html">Version 2.9.2</a></li>
+ <li><a href="upgradeto291.html">Version 2.9.1</a></li>
+diff --git a/src/site/xdoc/upgradeto294.xml b/src/site/xdoc/upgradeto294.xml
+new file mode 100644
+index 000000000..c61f32500
+--- /dev/null
++++ b/src/site/xdoc/upgradeto294.xml
+@@ -0,0 +1,129 @@
++<?xml version="1.0" encoding="UTF-8"?>
++
++<document>
++ <properties>
++  <title>Java date and time API - Upgrade from 2.9 to 2.9.4</title>
++  <author>Stephen Colebourne</author>
++ </properties>
++
++<body>
++
++<section name="Upgrade">
++<p>
++These are the release notes and advice for upgrading Joda-Time from version 2.8 to version 2.9.4.
++<source>
++Joda-Time version 2.9.4
++-----------------------
++
++Joda-Time is a date and time handling library that seeks to replace the JDK
++Date and Calendar classes. For Java SE 8 and later, please use java.time instead.
++
++This release contains one bug fix, a time-zone update and some minor internal changes.
++The release runs on JDK 5 or later.
++
++Joda-Time is licensed under the business-friendly Apache License Version 2.
++This is the same license as all of Apache, plus other open source projects such as Spring.
++
++**  Please also check out our related projects   **
++** http://www.joda.org/joda-time/related.html **
++
++
++Changes in 2.9.4
++----------------
++ - DateTimeZone data updated to version 2016d
++
++ - Loading time-zone provider now occurs in a priveleged block [#327, #375]
++
++
++Changes in 2.9.3
++----------------
++ - DateTimeZone data updated to version 2016c
++
++ - Make DateTimeUtils.SYSTEM_MILLIS_PROVIDER public [#357]
++
++ - Fix bug when adding months at the maximum limits of integer [#361]
++
++ - Add Turkish period translations [#364]
++
++
++Changes in 2.9.2
++----------------
++ - DateTimeZone data updated to version 2016a (version 2.9 had time-zone data 2015g)
++
++ - Fix bug in time-zone binary search [#332]
++
++ - Minor fixes to code internals [#339, #326, #344, #350, #343]
++ 
++ - Better document behaviour [#325]
++
++
++Changes in 2.9.1
++----------------
++- Fix bug introduced by Long.MIN_VALUE and Long.MAX_VALUE changes [#328]
++
++
++Enhancements in 2.9
++-------------------
++- Faster parsing of time-zone identifiers [#282]
++
++- Added Interval.parseWithOffset(String) [#299, #296]
++  Provides a way to parse the fixed offset in an interval string
++
++- Add DateTimeFormatter methods for StringBuilder [#298]
++
++- Add Russian period translations [#320]
++
++- Add Italian period translations [#312]
++
++- Add Czech period translations [#313]
++
++- Clarify that PeriodFormatterBuilder is in an invalid state once built [#309]
++
++- Allow DateTime and Interval to refer to values at Long.MIN_VALUE and Long.MAX_VALUE [#297, #190]
++  A DateTime may be created with any millisecond value, however at the very edges there may be
++  some undesirable effects, for example always using UTC instead of the time-zone
++
++- Better error message for malformed tzdb files [#319]
++
++- Better error message for interval constructor [#321]
++
++
++Compatibility between 2.8 and 2.9
++---------------------------------
++Build system - Yes
++
++Binary compatible - Yes
++
++Source compatible - Yes
++
++Serialization compatible - Yes
++
++Data compatible - Yes
++ - DateTimeZone data updated to version 2015g
++
++Semantic compatible - Yes
++
++
++Bug fixes in 2.9
++----------------
++- Fixed to handle JDK 8u60 [#288, #291]
++  Without this fix, formatting a time-zone will print "+00:00" instead of "GMT" for the GMT time-zone
++
++- Fix parsing of basic form ISO style where year has unnecessary plus sign [#86]
++  For example, +20151030 will now be correctly parsed as year 2015.
++
++- Fix overflow bug in intervals [#315]
++
++
++
++Scala
++-----
++Joda-Time uses annotations from Joda-Convert.
++In the Java programming language, this dependency is optional, however in Scala it is not.
++Scala users must manually add the Joda-Convert v1.2 dependency.
++</source>
++</p>
++</section>
++
++</body>
++</document>

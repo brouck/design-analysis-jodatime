@@ -1,0 +1,2990 @@
+From 5f98d636174cc0c6b76c9f434ee17e2b36577414 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Wed, 30 May 2018 21:52:24 +0100
+Subject: [PATCH 01/16] Fix Javadoc
+
+---
+ src/main/java/org/joda/time/DateTimeZone.java | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/main/java/org/joda/time/DateTimeZone.java b/src/main/java/org/joda/time/DateTimeZone.java
+index 78011c855..8d454b514 100644
+--- a/src/main/java/org/joda/time/DateTimeZone.java
++++ b/src/main/java/org/joda/time/DateTimeZone.java
+@@ -75,7 +75,7 @@
+  * </ul>
+  * <p>
+  * Unlike the Java TimeZone class, DateTimeZone is immutable. It also only
+- * supports long format time zone ids. Thus EST and ECT are not accepted.
++ * supports long format time zone ids. Thus PST and ECT are not accepted.
+  * However, the factory that accepts a TimeZone will attempt to convert from
+  * the old short id to a suitable long id.
+  * <p>
+
+From 7b549b1d9ad88be845e469222c57c144ae1b7da1 Mon Sep 17 00:00:00 2001
+From: Greg <gkopff@users.noreply.github.com>
+Date: Thu, 30 Aug 2018 11:43:52 +1000
+Subject: [PATCH 02/16] Add Gson Joda-Time Serialisers to related projects.
+
+---
+ src/site/markdown/related.md | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/src/site/markdown/related.md b/src/site/markdown/related.md
+index 4e2cb58c8..60f90683b 100644
+--- a/src/site/markdown/related.md
++++ b/src/site/markdown/related.md
+@@ -17,6 +17,7 @@ These projects are independent - no guarantees of quality are given!
+ * [Humanize](https://github.com/mfornos/humanize) - Human stylized text for date and time.
+ * [Joda-Time for Android](https://github.com/dlew/joda-time-android) -
+ Version for Android.
++* [Gson serialisers](https://github.com/gkopff/gson-jodatime-serialisers) - Gson converters for many Joda-Time types.
+ 
+ If your open source library provides a value added feature on top of Joda-Time,
+ then let us know! Just send a pull request to edit this page.
+
+From a0aead168930fdf739cd290e51a00ac95399af73 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Sun, 23 Sep 2018 22:02:49 +0100
+Subject: [PATCH 03/16] Fix time-zone compiler for Namibia
+
+TZDB hack failed because 1990 to 1994 was standard time in TZDB
+Hack needs to revert it to be summer time, even though not accurate
+Fixes #485
+---
+ src/changes/changes.xml                       |  6 +++++
+ .../org/joda/time/tz/ZoneInfoCompiler.java    | 23 +++++++++++++++++--
+ .../java/org/joda/time/TestDateTimeZone.java  | 19 +++++++++++++++
+ 3 files changed, 46 insertions(+), 2 deletions(-)
+
+diff --git a/src/changes/changes.xml b/src/changes/changes.xml
+index 0e086e53f..869e3f645 100644
+--- a/src/changes/changes.xml
++++ b/src/changes/changes.xml
+@@ -8,6 +8,12 @@
+   <body>
+ 
+     <!-- types are add, fix, remove, update -->
++    <release version="2.10.1" date="SNAPSHOT" description="v2.10.1">
++      <action dev="jodastephen" type="fix">
++        Fix time-zone compiler for Namibia. Oh I do love tzdb.
++        Fixes #485.
++      </action>
++    </release>
+     <release version="2.10" date="2018-05-30" description="v2.10">
+       <action dev="jodastephen" type="update">
+         DateTimeZone data updated to version 2018e.
+diff --git a/src/main/java/org/joda/time/tz/ZoneInfoCompiler.java b/src/main/java/org/joda/time/tz/ZoneInfoCompiler.java
+index 4036b55a4..f0b7afd31 100644
+--- a/src/main/java/org/joda/time/tz/ZoneInfoCompiler.java
++++ b/src/main/java/org/joda/time/tz/ZoneInfoCompiler.java
+@@ -722,6 +722,17 @@ public String toString() {
+             iLetterS = parseOptional(st.nextToken());
+         }
+ 
++        // creates a rule to go before the specified rule
++        Rule(Rule after) {
++            iName = after.iName;
++            iFromYear = 1800;
++            iToYear = after.iFromYear;
++            iType = null;
++            iDateTimeOfYear = after.iDateTimeOfYear;  // does not matter
++            iSaveMillis = 0;
++            iLetterS = after.iLetterS;
++        }
++
+         /**
+          * Adds a recurring savings rule to the builder.
+          */
+@@ -800,9 +811,10 @@ public void addRecurring(DateTimeZoneBuilder builder, int standardMillis, String
+                     negativeSave = Math.min(negativeSave, rule.iSaveMillis);
+                 }
+             }
+-            
++
+             // if negative SAVE values, then patch standard millis and name format
+             if (negativeSave < 0) {
++                System.out.println("Fixed negative save values for rule '" + iRules.get(0).iName + "'");
+                 standardMillis += negativeSave;
+                 int slashPos = nameFormat.indexOf("/");
+                 if (slashPos > 0) {
+@@ -810,7 +822,13 @@ public void addRecurring(DateTimeZoneBuilder builder, int standardMillis, String
+                 }
+             }
+             builder.setStandardOffset(standardMillis);
+-            
++
++            // add a fake rule that predates all other rules to ensure standard=summer (see Namibia)
++            if (negativeSave < 0) {
++                Rule rule = new Rule(iRules.get(0));
++                rule.addRecurring(builder, negativeSave, nameFormat);
++            }
++
+             // add each rule, passing through the negative save to alter the actual iSaveMillis value that is used
+             for (int i = 0; i < iRules.size(); i++) {
+                 Rule rule = iRules.get(i);
+@@ -892,6 +910,7 @@ private static void addToBuilder(Zone zone,
+                         builder.setFixedSavings(zone.iFormat, saveMillis);
+                     }
+                     catch (Exception e) {
++                        // Zone is using a RuleSet for this segment of the timeline
+                         RuleSet rs = ruleSets.get(zone.iRules);
+                         if (rs == null) {
+                             throw new IllegalArgumentException
+diff --git a/src/test/java/org/joda/time/TestDateTimeZone.java b/src/test/java/org/joda/time/TestDateTimeZone.java
+index 59654dcad..85ce20d8a 100644
+--- a/src/test/java/org/joda/time/TestDateTimeZone.java
++++ b/src/test/java/org/joda/time/TestDateTimeZone.java
+@@ -1097,6 +1097,25 @@ public void testDublin() {
+         assertEquals("IST", zone.getNameKey(summer.getMillis()));
+     }
+     
++    //-----------------------------------------------------------------------
++    public void testWindhoek() {
++        DateTimeZone zone = DateTimeZone.forID("Africa/Windhoek");
++        DateTime dtDec1990 = new DateTime(1990, 12, 1, 0, 0, 0, 0, zone);
++        assertEquals(3600000, zone.getStandardOffset(dtDec1990.getMillis()));
++        assertEquals(7200000, zone.getOffset(dtDec1990.getMillis()));
++        assertEquals(false, zone.isStandardOffset(dtDec1990.getMillis()));
++        
++        DateTime dtDec1994 = new DateTime(1994, 12, 1, 0, 0, 0, 0, zone);
++        assertEquals(3600000, zone.getStandardOffset(dtDec1994.getMillis()));
++        assertEquals(7200000, zone.getOffset(dtDec1994.getMillis()));
++        assertEquals(false, zone.isStandardOffset(dtDec1994.getMillis()));
++        
++        DateTime dtJun1995 = new DateTime(1995, 6, 1, 0, 0, 0, 0, zone);
++        assertEquals(3600000, zone.getStandardOffset(dtJun1995.getMillis()));
++        assertEquals(3600000, zone.getOffset(dtJun1995.getMillis()));
++        assertEquals(true, zone.isStandardOffset(dtJun1995.getMillis()));
++    }
++    
+     //-----------------------------------------------------------------------
+     public void testSerialization1() throws Exception {
+         DateTimeZone zone = DateTimeZone.forID("Europe/Paris");
+
+From 962dca1f918a2524fd8731ad083bb622cc01eeeb Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?H=C3=A9l=C3=A8ne=20Martin?= <lognaturel@gmail.com>
+Date: Wed, 26 Sep 2018 14:43:28 -0700
+Subject: [PATCH 04/16] Indicate the library is not actively developed
+
+---
+ README.md | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/README.md b/README.md
+index 196701dcd..87b003941 100644
+--- a/README.md
++++ b/README.md
+@@ -4,9 +4,11 @@ Joda-Time
+ Joda-Time provides a quality replacement for the Java date and time classes.
+ The design allows for multiple calendar systems, while still providing a simple API.
+ The 'default' calendar is the ISO8601 standard which is used by XML.
+-The Gregorian, Julian, Buddhist, Coptic, Ethiopic and Islamic systems are also included, and we welcome further additions.
++The Gregorian, Julian, Buddhist, Coptic, Ethiopic and Islamic systems are also included.
+ Supporting classes include time zone, duration, format and parsing. 
+ 
++**Joda-time is no longer in active development except to keep timezone data up to date.** From Java SE 8 onwards, users are asked to migrate to `java.time` (JSR-310) - a core part of the JDK which replaces this project. For Android users, `java.time` is [added in API 26+](https://developer.android.com/reference/java/time/package-summary). Projects needing to support lower API levels can use [the ThreeTenABP library](https://github.com/JakeWharton/ThreeTenABP).
++
+ As a flavour of Joda-Time, here's some example code:
+ 
+ ```java
+
+From b8ec80e6d33f36d03219aa1d1076fb23f3ae6b63 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Sun, 23 Sep 2018 22:50:08 +0100
+Subject: [PATCH 05/16] Use script to update website
+
+---
+ .github/website.sh | 24 ++++++++++++++++++++++++
+ .travis.yml        |  2 +-
+ 2 files changed, 25 insertions(+), 1 deletion(-)
+ create mode 100644 .github/website.sh
+
+diff --git a/.github/website.sh b/.github/website.sh
+new file mode 100644
+index 000000000..8dfce3ba1
+--- /dev/null
++++ b/.github/website.sh
+@@ -0,0 +1,24 @@
++
++echo "## setup..."
++git config --global user.name "Stephen Colebourne (CI)"
++git config --global user.email "scolebourne@joda.org"
++cd target
++
++echo "## clone..."
++git clone https://${GITHUB_TOKEN}@github.com/JodaOrg/jodaorg.github.io.git
++cd jodaorg.github.io
++git status
++
++echo "## copy..."
++rm -rf joda-time/
++cp -R ../site joda-time/
++
++echo "## update..."
++git add -A
++git status
++git commit --message "Update joda-time from Travis: Build $TRAVIS_BUILD_NUMBER"
++
++echo "## push..."
++git push origin master
++
++echo "## done"
+diff --git a/.travis.yml b/.travis.yml
+index 37b052345..06c7cd35f 100644
+--- a/.travis.yml
++++ b/.travis.yml
+@@ -16,7 +16,7 @@ install:
+ script:
+   - mvn install site -e -B
+ after_success:
+-  - if [[ $TRAVIS_TAG =~ ^v.*$ ]] && [ "$TRAVIS_PULL_REQUEST" == "false" ] && [ "$TRAVIS_JDK_VERSION" == "oraclejdk8" ]; then travis_wait 40 mvn clean install site-deploy -e -B --settings .github/maven-settings.xml; fi
++  - if [[ $TRAVIS_TAG =~ ^v.*$ ]] && [ "$TRAVIS_PULL_REQUEST" == "false" ] && [ "$TRAVIS_JDK_VERSION" == "oraclejdk8" ]; then chmod +x ./.github/website.sh; .github/website.sh; fi
+ # secure keys for GITHUB_TOKEN
+ env:
+   global:
+
+From 88389dbea942f74b2d80d66aa795b8a6ad7becd1 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Wed, 26 Sep 2018 23:11:09 +0100
+Subject: [PATCH 06/16] Update Maven skin and site plugin
+
+---
+ pom.xml                    | 79 +++++++++++---------------------------
+ src/site/markdown/index.md | 13 ++++---
+ src/site/site.xml          | 13 ++++---
+ 3 files changed, 38 insertions(+), 67 deletions(-)
+
+diff --git a/pom.xml b/pom.xml
+index e0d2d3e2a..32c2256d8 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -519,50 +519,6 @@
+           </excludes>
+         </configuration>
+       </plugin>
+-      <!-- Setup site with reflow maven skin -->
+-      <plugin>
+-        <groupId>org.apache.maven.plugins</groupId>
+-        <artifactId>maven-site-plugin</artifactId>
+-        <configuration>
+-          <skipDeploy>true</skipDeploy>
+-        </configuration>
+-        <dependencies>
+-          <dependency>
+-            <groupId>lt.velykis.maven.skins</groupId>
+-            <artifactId>reflow-velocity-tools</artifactId>
+-            <version>1.1.1</version>
+-          </dependency>
+-          <dependency>
+-            <groupId>org.apache.velocity</groupId>
+-            <artifactId>velocity</artifactId>
+-            <version>1.7</version>
+-          </dependency>
+-        </dependencies>
+-      </plugin>
+-      <!-- Setup to deploy site to GitHub, invoked with mvn site-deploy -->
+-      <plugin>
+-        <groupId>com.github.github</groupId>
+-        <artifactId>site-maven-plugin</artifactId>
+-        <version>0.12</version>
+-        <executions>
+-          <execution>
+-            <id>github-site</id>
+-            <goals>
+-              <goal>site</goal>
+-            </goals>
+-            <phase>site-deploy</phase>
+-          </execution>
+-        </executions>
+-        <configuration>
+-          <message>Create website for ${project.artifactId} v${project.version}</message>
+-          <path>${project.artifactId}</path>
+-          <merge>true</merge>
+-          <server>github</server>
+-          <repositoryOwner>JodaOrg</repositoryOwner>
+-          <repositoryName>jodaorg.github.io</repositoryName>
+-          <branch>refs/heads/master</branch>
+-        </configuration>
+-      </plugin>
+       <!-- Compatibility check -->
+       <plugin>
+         <groupId>org.codehaus.mojo</groupId>
+@@ -669,11 +625,6 @@
+           <artifactId>maven-resources-plugin</artifactId>
+           <version>${maven-resources-plugin.version}</version>
+         </plugin>
+-        <plugin>
+-          <groupId>org.apache.maven.plugins</groupId>
+-          <artifactId>maven-site-plugin</artifactId>
+-          <version>${maven-site-plugin.version}</version>
+-        </plugin>
+         <plugin>
+           <groupId>org.apache.maven.plugins</groupId>
+           <artifactId>maven-source-plugin</artifactId>
+@@ -711,6 +662,22 @@
+           <artifactId>build-helper-maven-plugin</artifactId>
+           <version>${build-helper-maven-plugin.version}</version>
+         </plugin>
++        <!-- Setup site with reflow maven skin -->
++        <plugin>
++          <groupId>org.apache.maven.plugins</groupId>
++          <artifactId>maven-site-plugin</artifactId>
++          <version>${maven-site-plugin.version}</version>
++          <configuration>
++            <skipDeploy>true</skipDeploy>
++          </configuration>
++          <dependencies>
++            <dependency>
++              <groupId>org.joda.external</groupId>
++              <artifactId>reflow-velocity-tools</artifactId>
++              <version>1.2</version>
++            </dependency>
++          </dependencies>
++        </plugin>
+         <!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
+         <plugin>
+           <groupId>org.eclipse.m2e</groupId>
+@@ -766,15 +733,16 @@
+       <plugin>
+         <groupId>org.apache.maven.plugins</groupId>
+         <artifactId>maven-project-info-reports-plugin</artifactId>
+-        <version>${maven-project-info-plugin.version}</version>
++        <version>${maven-project-info-reports-plugin.version}</version>
+         <reportSets>
+           <reportSet>
+             <reports>
++              <report>ci-management</report>
+               <report>dependencies</report>
+               <report>dependency-info</report>
+-              <report>issue-tracking</report>
+-              <report>license</report>
+-              <report>project-team</report>
++              <report>issue-management</report>
++              <report>licenses</report>
++              <report>team</report>
+               <report>scm</report>
+               <report>summary</report>
+             </reports>
+@@ -1011,12 +979,11 @@
+     <maven-jxr-plugin.version>2.5</maven-jxr-plugin.version>
+     <maven-plugin-plugin.version>3.5.1</maven-plugin-plugin.version>
+     <maven-pmd-plugin.version>3.9.0</maven-pmd-plugin.version>
+-    <maven-project-info-reports-plugin.version>2.9</maven-project-info-reports-plugin.version>
++    <maven-project-info-reports-plugin.version>3.0.0</maven-project-info-reports-plugin.version>
+     <maven-release-plugin.version>2.5.3</maven-release-plugin.version>
+     <maven-repository-plugin.version>2.4</maven-repository-plugin.version>
+     <maven-resources-plugin.version>3.0.2</maven-resources-plugin.version>
+-    <!-- v3.6 doesn't work with theme -->
+-    <maven-site-plugin.version>3.4</maven-site-plugin.version>
++    <maven-site-plugin.version>3.7.1</maven-site-plugin.version>
+     <maven-source-plugin.version>3.0.1</maven-source-plugin.version>
+     <maven-surefire-report-plugin.version>2.21.0</maven-surefire-report-plugin.version>
+     <maven-toolchains-plugin.version>1.1</maven-toolchains-plugin.version>
+diff --git a/src/site/markdown/index.md b/src/site/markdown/index.md
+index 79e5c0608..91feffd5d 100644
+--- a/src/site/markdown/index.md
++++ b/src/site/markdown/index.md
+@@ -5,7 +5,7 @@ Joda-Time provides a quality replacement for the Java date and time classes.
+ Joda-Time is the *de facto* standard date and time library for Java prior to Java SE 8.
+ Users are now asked to migrate to `java.time` (JSR-310).
+ 
+-Joda-Time is licensed under the business-friendly [Apache 2.0 licence](license.html).
++Joda-Time is licensed under the business-friendly [Apache 2.0 licence](licenses.html).
+ 
+ 
+ ## <i></i> Features
+@@ -60,17 +60,20 @@ public boolean isAfterPayDay(<a href="apidocs/org/joda/time/DateTime.html"><b>Da
+   }
+   return datetime.getDayOfMonth() > 28;
+ }
+-
++</pre>
++<pre>
+ public <a href="apidocs/org/joda/time/Days.html"><b>Days</b></a> daysToNewYear(<a href="apidocs/org/joda/time/LocalDate.html"><b>LocalDate</b></a> fromDate) {
+   <a href="apidocs/org/joda/time/LocalDate.html"><b>LocalDate</b></a> newYear = fromDate.plusYears(1).withDayOfYear(1);
+   return <a href="apidocs/org/joda/time/Days.html"><b>Days</b></a>.daysBetween(fromDate, newYear);
+ }
+-
++</pre>
++<pre>
+ public boolean isRentalOverdue(<a href="apidocs/org/joda/time/DateTime.html"><b>DateTime</b></a> datetimeRented) {
+   <a href="apidocs/org/joda/time/Period.html"><b>Period</b></a> rentalPeriod = new <a href="apidocs/org/joda/time/Period.html"><b>Period</b></a>().withDays(2).withHours(12);
+   return datetimeRented.plus(rentalPeriod).isBeforeNow();
+ }
+-
++</pre>
++<pre>
+ public String getBirthMonthText(<a href="apidocs/org/joda/time/LocalDate.html"><b>LocalDate</b></a> dateOfBirth) {
+   return dateOfBirth.monthOfYear().getAsText(Locale.ENGLISH);
+ }
+@@ -121,7 +124,7 @@ The library has been under active development since 2002.
+ It is a mature and reliable code base.
+ A number of <a href="related.html">related projects</a> are now available.
+ * <b>Open Source</b>.
+-Joda-Time is licenced under the business friendly <a href="license.html">Apache License Version 2.0</a>.
++Joda-Time is licenced under the business friendly <a href="licenses.html">Apache License Version 2.0</a>.
+ 
+ ---
+ 
+diff --git a/src/site/site.xml b/src/site/site.xml
+index 46cdd026e..ecc3717b3 100644
+--- a/src/site/site.xml
++++ b/src/site/site.xml
+@@ -5,9 +5,9 @@
+   <googleAnalyticsAccountId>UA-1425975-4</googleAnalyticsAccountId>
+ 
+   <skin>
+-    <groupId>lt.velykis.maven.skins</groupId>
++    <groupId>org.joda.external</groupId>
+     <artifactId>reflow-maven-skin</artifactId>
+-    <version>1.1.1</version>
++    <version>1.2</version>
+   </skin>
+ 
+   <custom>
+@@ -79,8 +79,9 @@
+ 
+   <body>
+     <head>
+-      <link href="http://netdna.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.css" rel="stylesheet"/>
+-      <link rel="author" href="https://plus.google.com/113137868744510231215"/>
++      <![CDATA[
++        <link href="http://netdna.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.css" rel="stylesheet"/>
++        <link rel="author" href="https://plus.google.com/113137868744510231215"/>]]>
+     </head>
+ 
+     <menu name="Documentation">
+@@ -109,7 +110,7 @@
+       </item>
+       <item name="FAQ" href="faq.html"/>
+       <item name="Javadoc" href="apidocs/index.html"/>
+-      <item name="License" href="license.html"/>
++      <item name="License" href="licenses.html"/>
+     </menu>
+ 
+     <menu name="Information">
+@@ -119,7 +120,7 @@
+       <item name="FAQ" href="faq.html"/>
+       <item name="Related projects" href="related.html"/>
+       <item name="Javadoc" href="apidocs/index.html"/>
+-      <item name="License" href="license.html"/>
++      <item name="License" href="licenses.html"/>
+       <item name="Key concepts" href="key.html"/>
+       <item name="Chronologies" href="cal.html"/>
+     </menu>
+
+From 01921361f9e3f8b3c823fafee97e246b8418502b Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Wed, 26 Sep 2018 22:48:36 +0100
+Subject: [PATCH 07/16] Update plugins
+
+---
+ pom.xml | 17 +++++++++--------
+ 1 file changed, 9 insertions(+), 8 deletions(-)
+
+diff --git a/pom.xml b/pom.xml
+index 32c2256d8..65683cbac 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -963,28 +963,29 @@
+   <!-- ==================================================================== -->
+   <properties>
+     <!-- Plugin version numbers -->
+-    <build-helper-maven-plugin.version>1.12</build-helper-maven-plugin.version>
++    <build-helper-maven-plugin.version>3.0.0</build-helper-maven-plugin.version>
+     <maven-assembly-plugin.version>3.1.0</maven-assembly-plugin.version>
+     <maven-changes-plugin.version>2.12.1</maven-changes-plugin.version>
+     <maven-checkstyle-plugin.version>2.17</maven-checkstyle-plugin.version>
+-    <maven-clean-plugin.version>3.0.0</maven-clean-plugin.version>
+-    <maven-compiler-plugin.version>3.7.0</maven-compiler-plugin.version>
++    <maven-clean-plugin.version>3.1.0</maven-clean-plugin.version>
++    <maven-compiler-plugin.version>3.8.0</maven-compiler-plugin.version>
+     <maven-deploy-plugin.version>2.8.2</maven-deploy-plugin.version>
+-    <maven-dependency-plugin.version>3.0.2</maven-dependency-plugin.version>
++    <maven-dependency-plugin.version>3.1.1</maven-dependency-plugin.version>
+     <maven-enforcer-plugin.version>3.0.0-M1</maven-enforcer-plugin.version>
+     <maven-gpg-plugin.version>1.6</maven-gpg-plugin.version>
+     <maven-install-plugin.version>2.5.2</maven-install-plugin.version>
+-    <maven-jar-plugin.version>3.0.2</maven-jar-plugin.version>
++    <maven-jar-plugin.version>3.1.0</maven-jar-plugin.version>
+     <maven-javadoc-plugin.version>3.0.0-M1</maven-javadoc-plugin.version>
+     <maven-jxr-plugin.version>2.5</maven-jxr-plugin.version>
+-    <maven-plugin-plugin.version>3.5.1</maven-plugin-plugin.version>
+-    <maven-pmd-plugin.version>3.9.0</maven-pmd-plugin.version>
++    <maven-plugin-plugin.version>3.5.2</maven-plugin-plugin.version>
++    <maven-pmd-plugin.version>3.10.0</maven-pmd-plugin.version>
+     <maven-project-info-reports-plugin.version>3.0.0</maven-project-info-reports-plugin.version>
+     <maven-release-plugin.version>2.5.3</maven-release-plugin.version>
+     <maven-repository-plugin.version>2.4</maven-repository-plugin.version>
+-    <maven-resources-plugin.version>3.0.2</maven-resources-plugin.version>
++    <maven-resources-plugin.version>3.1.0</maven-resources-plugin.version>
+     <maven-site-plugin.version>3.7.1</maven-site-plugin.version>
+     <maven-source-plugin.version>3.0.1</maven-source-plugin.version>
++    <!-- Stick with this version of surefire, see Java 5 comments above -->
+     <maven-surefire-report-plugin.version>2.21.0</maven-surefire-report-plugin.version>
+     <maven-toolchains-plugin.version>1.1</maven-toolchains-plugin.version>
+     <nexus-staging-maven-plugin.version>1.6.8</nexus-staging-maven-plugin.version>
+
+From e9b1365c47e47f502e7e95281296dc89cbe3d7ae Mon Sep 17 00:00:00 2001
+From: "Stephen Colebourne (CI)" <scolebourne@joda.org>
+Date: Fri, 28 Sep 2018 23:00:45 +0100
+Subject: [PATCH 08/16] Prepare for HTTPS
+
+---
+ .travis.yml                                     |  1 +
+ README.md                                       |  2 +-
+ pom.xml                                         |  8 ++++----
+ src/main/java/org/joda/time/DateTimeUtils.java  |  4 ++--
+ .../org/joda/time/chrono/CopticChronology.java  |  2 +-
+ .../joda/time/chrono/EthiopicChronology.java    |  2 +-
+ .../joda/time/chrono/GregorianChronology.java   |  2 +-
+ .../org/joda/time/chrono/IslamicChronology.java |  2 +-
+ .../org/joda/time/chrono/JulianChronology.java  |  2 +-
+ .../java/org/joda/time/tz/ZoneInfoCompiler.java |  2 +-
+ src/main/java/org/joda/time/tz/src/Readme.txt   |  2 +-
+ src/site/markdown/index.md                      |  6 +++---
+ src/site/markdown/related.md                    | 10 +++++-----
+ src/site/site.xml                               | 17 +++++++++--------
+ src/site/xdoc/cal_buddhist.xml                  |  4 ++--
+ src/site/xdoc/cal_coptic.xml                    |  2 +-
+ src/site/xdoc/cal_ethiopic.xml                  |  2 +-
+ src/site/xdoc/cal_gj.xml                        |  2 +-
+ src/site/xdoc/cal_gregorian.xml                 |  2 +-
+ src/site/xdoc/cal_islamic.xml                   |  4 ++--
+ src/site/xdoc/cal_iso.xml                       |  4 +---
+ src/site/xdoc/cal_julian.xml                    |  2 +-
+ src/site/xdoc/faq.xml                           |  6 +++---
+ src/site/xdoc/installation.xml                  |  2 +-
+ src/site/xdoc/timezones.xml                     |  2 +-
+ src/site/xdoc/tz_update.xml                     |  4 ++--
+ src/site/xdoc/userguide.xml                     |  2 +-
+ 27 files changed, 50 insertions(+), 50 deletions(-)
+
+diff --git a/.travis.yml b/.travis.yml
+index 06c7cd35f..b8f379048 100644
+--- a/.travis.yml
++++ b/.travis.yml
+@@ -16,6 +16,7 @@ install:
+ script:
+   - mvn install site -e -B
+ after_success:
++  - if [[ $TRAVIS_TAG =~ ^website.*$ ]] && [ "$TRAVIS_JDK_VERSION" == "oraclejdk8" ]; then chmod +x ./.github/website.sh; .github/website.sh; fi
+   - if [[ $TRAVIS_TAG =~ ^v.*$ ]] && [ "$TRAVIS_PULL_REQUEST" == "false" ] && [ "$TRAVIS_JDK_VERSION" == "oraclejdk8" ]; then chmod +x ./.github/website.sh; .github/website.sh; fi
+ # secure keys for GITHUB_TOKEN
+ env:
+diff --git a/README.md b/README.md
+index 87b003941..9b6e539e2 100644
+--- a/README.md
++++ b/README.md
+@@ -52,7 +52,7 @@ Various documentation is available:
+ This release is considered stable and worthy of the 2.x tag.
+ It depends on JDK 1.5 or later.
+ 
+-Available in the [Maven Central repository](http://search.maven.org/#artifactdetails|joda-time|joda-time|2.10|jar)
++Available in the [Maven Central repository](https://search.maven.org/search?q=g:joda-time%20AND%20a:joda-time&core=gav)
+ 
+ **Maven configuration:**
+ ```xml
+diff --git a/pom.xml b/pom.xml
+index 65683cbac..6ceeb730e 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -303,7 +303,7 @@
+   <licenses>
+     <license>
+       <name>Apache 2</name>
+-      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
++      <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+       <distribution>repo</distribution>
+     </license>
+   </licenses>
+@@ -792,17 +792,17 @@
+     <repository>
+       <id>sonatype-joda-staging</id>
+       <name>Sonatype OSS staging repository</name>
+-      <url>http://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
++      <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+       <layout>default</layout>
+     </repository>
+     <snapshotRepository>
+       <uniqueVersion>false</uniqueVersion>
+       <id>sonatype-joda-snapshot</id>
+       <name>Sonatype OSS snapshot repository</name>
+-      <url>http://oss.sonatype.org/content/repositories/joda-snapshots</url>
++      <url>https://oss.sonatype.org/content/repositories/joda-snapshots</url>
+       <layout>default</layout>
+     </snapshotRepository>
+-    <downloadUrl>http://oss.sonatype.org/content/repositories/joda-releases</downloadUrl>
++    <downloadUrl>https://oss.sonatype.org/content/repositories/joda-releases</downloadUrl>
+   </distributionManagement>
+ 
+   <!-- ==================================================================== -->
+diff --git a/src/main/java/org/joda/time/DateTimeUtils.java b/src/main/java/org/joda/time/DateTimeUtils.java
+index 446aef404..1c1b2f9f6 100644
+--- a/src/main/java/org/joda/time/DateTimeUtils.java
++++ b/src/main/java/org/joda/time/DateTimeUtils.java
+@@ -460,7 +460,7 @@ private static void put(Map<String, DateTimeZone> map, String name, String id) {
+     /**
+      * Calculates the astronomical Julian Day for an instant.
+      * <p>
+-     * The <a href="http://en.wikipedia.org/wiki/Julian_day">Julian day</a> is a well-known
++     * The <a href="https://en.wikipedia.org/wiki/Julian_day">Julian day</a> is a well-known
+      * system of time measurement for scientific use by the astronomy community.
+      * It expresses the interval of time in days and fractions of a day since
+      * January 1, 4713 BC (Julian) Greenwich noon.
+@@ -476,7 +476,7 @@ private static void put(Map<String, DateTimeZone> map, String name, String id) {
+      */
+     public static final double toJulianDay(long epochMillis) {
+         // useful links
+-        // http://en.wikipedia.org/wiki/Julian_day#cite_note-13 - Wikipedia
++        // https://en.wikipedia.org/wiki/Julian_day#cite_note-13 - Wikipedia
+         // http://aa.usno.navy.mil/data/docs/JulianDate.php" - USNO
+         // http://users.zoominternet.net/~matto/Java/Julian%20Date%20Converter.htm - Julian Date Converter by Matt Oltersdorf
+         // http://ssd.jpl.nasa.gov/tc.cgi#top - CalTech
+diff --git a/src/main/java/org/joda/time/chrono/CopticChronology.java b/src/main/java/org/joda/time/chrono/CopticChronology.java
+index c4ee6558e..1763c4cc2 100644
+--- a/src/main/java/org/joda/time/chrono/CopticChronology.java
++++ b/src/main/java/org/joda/time/chrono/CopticChronology.java
+@@ -41,7 +41,7 @@
+  * <p>
+  * CopticChronology is thread-safe and immutable.
+  *
+- * @see <a href="http://en.wikipedia.org/wiki/Coptic_calendar">Wikipedia</a>
++ * @see <a href="https://en.wikipedia.org/wiki/Coptic_calendar">Wikipedia</a>
+  * @see JulianChronology
+  *
+  * @author Brian S O'Neill
+diff --git a/src/main/java/org/joda/time/chrono/EthiopicChronology.java b/src/main/java/org/joda/time/chrono/EthiopicChronology.java
+index e4feaaa80..5089f9c7a 100644
+--- a/src/main/java/org/joda/time/chrono/EthiopicChronology.java
++++ b/src/main/java/org/joda/time/chrono/EthiopicChronology.java
+@@ -41,7 +41,7 @@
+  * <p>
+  * EthiopicChronology is thread-safe and immutable.
+  *
+- * @see <a href="http://en.wikipedia.org/wiki/Ethiopian_calendar">Wikipedia</a>
++ * @see <a href="https://en.wikipedia.org/wiki/Ethiopian_calendar">Wikipedia</a>
+  *
+  * @author Brian S O'Neill
+  * @author Stephen Colebourne
+diff --git a/src/main/java/org/joda/time/chrono/GregorianChronology.java b/src/main/java/org/joda/time/chrono/GregorianChronology.java
+index 526a71e64..66c904721 100644
+--- a/src/main/java/org/joda/time/chrono/GregorianChronology.java
++++ b/src/main/java/org/joda/time/chrono/GregorianChronology.java
+@@ -32,7 +32,7 @@
+  * <p>
+  * GregorianChronology is thread-safe and immutable.
+  *
+- * @see <a href="http://en.wikipedia.org/wiki/Gregorian_calendar">Wikipedia</a>
++ * @see <a href="https://en.wikipedia.org/wiki/Gregorian_calendar">Wikipedia</a>
+  * @see JulianChronology
+  * @see GJChronology
+  * 
+diff --git a/src/main/java/org/joda/time/chrono/IslamicChronology.java b/src/main/java/org/joda/time/chrono/IslamicChronology.java
+index ca8aaff3c..d6a2afd0e 100644
+--- a/src/main/java/org/joda/time/chrono/IslamicChronology.java
++++ b/src/main/java/org/joda/time/chrono/IslamicChronology.java
+@@ -57,7 +57,7 @@
+  * <p>
+  * IslamicChronology is thread-safe and immutable.
+  *
+- * @see <a href="http://en.wikipedia.org/wiki/Islamic_calendar">Wikipedia</a>
++ * @see <a href="https://en.wikipedia.org/wiki/Islamic_calendar">Wikipedia</a>
+  *
+  * @author Stephen Colebourne
+  * @since 1.2
+diff --git a/src/main/java/org/joda/time/chrono/JulianChronology.java b/src/main/java/org/joda/time/chrono/JulianChronology.java
+index de8fe1d17..fa261bd47 100644
+--- a/src/main/java/org/joda/time/chrono/JulianChronology.java
++++ b/src/main/java/org/joda/time/chrono/JulianChronology.java
+@@ -37,7 +37,7 @@
+  * <p>
+  * JulianChronology is thread-safe and immutable.
+  *
+- * @see <a href="http://en.wikipedia.org/wiki/Julian_calendar">Wikipedia</a>
++ * @see <a href="https://en.wikipedia.org/wiki/Julian_calendar">Wikipedia</a>
+  * @see GregorianChronology
+  * @see GJChronology
+  *
+diff --git a/src/main/java/org/joda/time/tz/ZoneInfoCompiler.java b/src/main/java/org/joda/time/tz/ZoneInfoCompiler.java
+index f0b7afd31..f258cd133 100644
+--- a/src/main/java/org/joda/time/tz/ZoneInfoCompiler.java
++++ b/src/main/java/org/joda/time/tz/ZoneInfoCompiler.java
+@@ -52,7 +52,7 @@
+  * <p>
+  * Although this tool is similar to zic, the binary formats are not
+  * compatible. The latest IANA time zone database files may be obtained
+- * <a href="http://www.iana.org/time-zones">here</a>.
++ * <a href="https://www.iana.org/time-zones">here</a>.
+  * <p>
+  * ZoneInfoCompiler is mutable and not thread-safe, although the main method
+  * may be safely invoked by multiple threads.
+diff --git a/src/main/java/org/joda/time/tz/src/Readme.txt b/src/main/java/org/joda/time/tz/src/Readme.txt
+index b3276082b..be754e15e 100644
+--- a/src/main/java/org/joda/time/tz/src/Readme.txt
++++ b/src/main/java/org/joda/time/tz/src/Readme.txt
+@@ -1,2 +1,2 @@
+ The data files in this directory were obtained from the public IANA time zone database,
+-http://www.iana.org/time-zones, version 2018e.
++https://www.iana.org/time-zones, version 2018e.
+diff --git a/src/site/markdown/index.md b/src/site/markdown/index.md
+index 91feffd5d..9f6ed85ae 100644
+--- a/src/site/markdown/index.md
++++ b/src/site/markdown/index.md
+@@ -100,7 +100,7 @@ calculations. It already provides out-of-the-box features, such as support for o
+ date formats, which are difficult to replicate with the JDK.
+ * <b>Up-to-date Time Zone calculations</b>.
+ The <a href="timezones.html">time zone implementation</a> is based on
+-the public <a href="http://www.iana.org/time-zones">tz database</a>, which is
++the public <a href="https://www.iana.org/time-zones">tz database</a>, which is
+ updated several times a year. New Joda-Time releases incorporate all changes
+ made to this database. Should the changes be needed earlier,
+ <a href="tz_update.html">manually updating the zone data</a> is easy.
+@@ -135,10 +135,10 @@ This release is considered stable and worthy of the 2.x tag.
+ See the [change notes](changes-report.html) for full details.
+ 
+ Joda-Time requires Java SE 5 or later and has [no dependencies](dependencies.html).
+-There is a *compile-time* dependency on [Joda-Convert](http://www.joda.org/joda-convert/),
++There is a *compile-time* dependency on [Joda-Convert](/joda-convert/),
+ but this is not required at runtime thanks to the magic of annotations.
+ 
+-Available in [Maven Central](http://search.maven.org/#artifactdetails%7Cjoda-time%7Cjoda-time%7C2.10%7Cjar).
++Available in [Maven Central](https://search.maven.org/search?q=g:joda-time%20AND%20a:joda-time&core=gav).
+ 
+ ```xml
+ <dependency>
+diff --git a/src/site/markdown/related.md b/src/site/markdown/related.md
+index 60f90683b..b78c2221e 100644
+--- a/src/site/markdown/related.md
++++ b/src/site/markdown/related.md
+@@ -3,13 +3,13 @@
+ Here are links to a number of projects related to **Joda-Time**.
+ These projects are independent - no guarantees of quality are given!
+ 
+-* [Extended Hibernate support](http://usertype.sourceforge.net/) - A set of classes to link Joda-Time to databases using Hibernate.
+-* [Original Hibernate support](http://www.joda.org/joda-time-hibernate/) - The original set of classes to link Joda-Time to databases using Hibernate (UserType project is newer and better maintained).
+-* [JSP tag support](http://www.joda.org/joda-time-jsptags/) - A tag library in the style of JSTL to allow Joda-Time classes to be used in JSP.
+-* [I18N support](http://www.joda.org/joda-time-i18n/) - A simple library that provides additional internationalization data for Joda-Time.
++* [Extended Hibernate support](http://jadira.sourceforge.net/usertype-userguide.html) - A set of classes to link Joda-Time to databases using Hibernate.
++* [Original Hibernate support](/joda-time-hibernate/) - The original set of classes to link Joda-Time to databases using Hibernate (UserType project is newer and better maintained).
++* [JSP tag support](/joda-time-jsptags/) - A tag library in the style of JSTL to allow Joda-Time classes to be used in JSP.
++* [I18N support](/joda-time-i18n/) - A simple library that provides additional internationalization data for Joda-Time.
+ * [ObjectLab Holiday calculation](http://objectlabkit.sourceforge.net/) - Support for working and non-working days, plus how to calculate and resolve holidays, from a finance industry perspective.
+ * [Jollyday holiday calculation](http://jollyday.sourceforge.net/) - Provides classes to handle calculation of holidays.
+-* [Recurrance (RFC 2445)](http://code.google.com/p/google-rfc-2445/) - Support for the RFC2445 recurrence specification, as found in iCal.
++* [Recurrance (RFC 2445)](https://code.google.com/archive/p/google-rfc-2445/) - Support for the RFC2445 recurrence specification, as found in iCal.
+ * [DataNucleus support](https://github.com/datanucleus/datanucleus-jodatime) - A library providing persistence via the DataNucleus platform.
+ * [JAXB](http://blog.bdoughan.com/2011/05/jaxb-and-joda-time-dates-and-times.html) - Notes on Joda-Time and JAXB.
+ * [P2 update site](https://github.com/muuki88/joda-osgi) - Eclipse P2 update site.
+diff --git a/src/site/site.xml b/src/site/site.xml
+index ecc3717b3..94876f056 100644
+--- a/src/site/site.xml
++++ b/src/site/site.xml
+@@ -34,6 +34,7 @@
+       <toc>false</toc>
+       <breadcrumbs>false</breadcrumbs>
+       <markPageHeader>false</markPageHeader>
++      <protocolRelativeURLs>true</protocolRelativeURLs>
+       <highlightJs>false</highlightJs>
+       <pages>
+         <index>
+@@ -80,7 +81,7 @@
+   <body>
+     <head>
+       <![CDATA[
+-        <link href="http://netdna.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.css" rel="stylesheet"/>
++        <link href="https://netdna.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.css" rel="stylesheet"/>
+         <link rel="author" href="https://plus.google.com/113137868744510231215"/>]]>
+     </head>
+ 
+@@ -140,16 +141,16 @@
+ 
+     <menu name="Related">
+       <item name="Related projects" href="related.html"/>
+-      <item name="JSP tags" href="http://www.joda.org/joda-time-jsptags/"/>
+-      <item name="Hibernate" href="http://www.joda.org/joda-time-hibernate/"/>
+-      <item name="I18N" href="http://www.joda.org/joda-time-i18n/"/>
++      <item name="JSP tags" href="/joda-time-jsptags/"/>
++      <item name="Hibernate" href="/joda-time-hibernate/"/>
++      <item name="I18N" href="/joda-time-i18n/"/>
+     </menu>
+ 
+     <menu name="Joda">
+-      <item name="Home" href="http://www.joda.org"/>
+-      <item name="Beans" href="http://www.joda.org/joda-beans/"/>
+-      <item name="Convert" href="http://www.joda.org/joda-convert/"/>
+-      <item name="Money" href="http://www.joda.org/joda-money/"/>
++      <item name="Home" href="/"/>
++      <item name="Beans" href="/joda-beans/"/>
++      <item name="Convert" href="/joda-convert/"/>
++      <item name="Money" href="/joda-money/"/>
+     </menu>
+ 
+     <menu name="Reports" ref="reports"/>
+diff --git a/src/site/xdoc/cal_buddhist.xml b/src/site/xdoc/cal_buddhist.xml
+index a6bec73bf..08a66ecd7 100644
+--- a/src/site/xdoc/cal_buddhist.xml
++++ b/src/site/xdoc/cal_buddhist.xml
+@@ -28,8 +28,8 @@ It is hoped that in the future an accurate Thai chronology can be developed.
+ <p>
+ References
+ <ul>
+-<li><a href="http://en.wikipedia.org/wiki/Thai_solar_calendar">Wikipedia - Thai Solar Calendar</a></li>
+-<li><a href="http://en.wikipedia.org/wiki/Thai_lunar_calendar">Wikipedia - Thai Lunar Calendar</a></li>
++<li><a href="https://en.wikipedia.org/wiki/Thai_solar_calendar">Wikipedia - Thai Solar Calendar</a></li>
++<li><a href="https://en.wikipedia.org/wiki/Thai_lunar_calendar">Wikipedia - Thai Lunar Calendar</a></li>
+ <li><a href="http://www.faqs.org/faqs/thai/culture/section-5.html">Thai Calendar FAQs</a></li>
+ </ul>
+ </p>
+diff --git a/src/site/xdoc/cal_coptic.xml b/src/site/xdoc/cal_coptic.xml
+index 42e9d2390..0624c0336 100644
+--- a/src/site/xdoc/cal_coptic.xml
++++ b/src/site/xdoc/cal_coptic.xml
+@@ -34,7 +34,7 @@ We also prevent the entry of dates before year 1.
+ References
+ <ul>
+ <li>Calendrical Calculations - Millenium Edition - ISBN 0521777526</li>
+-<li><a href="http://en.wikipedia.org/wiki/Coptic_calendar">Wikipedia - Coptic Calendar</a></li>
++<li><a href="https://en.wikipedia.org/wiki/Coptic_calendar">Wikipedia - Coptic Calendar</a></li>
+ </ul>
+ </p>
+ </section>
+diff --git a/src/site/xdoc/cal_ethiopic.xml b/src/site/xdoc/cal_ethiopic.xml
+index 985d44c40..45fd97525 100644
+--- a/src/site/xdoc/cal_ethiopic.xml
++++ b/src/site/xdoc/cal_ethiopic.xml
+@@ -33,7 +33,7 @@ We also prevent the entry of dates before year 1.
+ References
+ <ul>
+ <li>Calendrical Calculations - Millenium Edition - ISBN 0521777526</li>
+-<li><a href="http://en.wikipedia.org/wiki/Ethiopian_calendar">Wikipedia - Ethiopic Calendar</a></li>
++<li><a href="https://en.wikipedia.org/wiki/Ethiopian_calendar">Wikipedia - Ethiopic Calendar</a></li>
+ </ul>
+ </p>
+ </section>
+diff --git a/src/site/xdoc/cal_gj.xml b/src/site/xdoc/cal_gj.xml
+index aa522af45..83754a07b 100644
+--- a/src/site/xdoc/cal_gj.xml
++++ b/src/site/xdoc/cal_gj.xml
+@@ -37,7 +37,7 @@ Joda-Time default of <a href="cal_iso.html">ISO</a> chronology.
+ References
+ <ul>
+ <li>Calendrical Calculations - Millenium Edition - ISBN 0521777526</li>
+-<li><a href="http://en.wikipedia.org/wiki/Gregorian_calendar">Wikipedia - Gregorian Calendar</a></li>
++<li><a href="https://en.wikipedia.org/wiki/Gregorian_calendar">Wikipedia - Gregorian Calendar</a></li>
+ </ul>
+ </p>
+ </section>
+diff --git a/src/site/xdoc/cal_gregorian.xml b/src/site/xdoc/cal_gregorian.xml
+index fd6a48164..1cf8da1cd 100644
+--- a/src/site/xdoc/cal_gregorian.xml
++++ b/src/site/xdoc/cal_gregorian.xml
+@@ -33,7 +33,7 @@ thus 2005 has a century field of 20.
+ References
+ <ul>
+ <li>Calendrical Calculations - Millenium Edition - ISBN 0521777526</li>
+-<li><a href="http://en.wikipedia.org/wiki/Gregorian_calendar">Wikipedia - Gregorian Calendar</a></li>
++<li><a href="https://en.wikipedia.org/wiki/Gregorian_calendar">Wikipedia - Gregorian Calendar</a></li>
+ </ul>
+ </p>
+ </section>
+diff --git a/src/site/xdoc/cal_islamic.xml b/src/site/xdoc/cal_islamic.xml
+index 2473180ba..88273f2e4 100644
+--- a/src/site/xdoc/cal_islamic.xml
++++ b/src/site/xdoc/cal_islamic.xml
+@@ -76,8 +76,8 @@ ISO definitions, in other words starting at midnight.
+ References
+ <ul>
+ <li>Calendrical Calculations - Millenium Edition - ISBN 0521777526</li>
+-<li><a href="http://en.wikipedia.org/wiki/Islamic_calendar">Wikipedia - Islamic Calendar</a></li>
+-<li><a href="http://www.staff.science.uu.nl/~gent0113/islam/islam_tabcal.htm">Islamic calendar converter</a></li>
++<li><a href="https://en.wikipedia.org/wiki/Islamic_calendar">Wikipedia - Islamic Calendar</a></li>
++<li><a href="https://www.staff.science.uu.nl/~gent0113/islam/islam_tabcal.htm">Islamic calendar converter</a></li>
+ </ul>
+ </p>
+ </section>
+diff --git a/src/site/xdoc/cal_iso.xml b/src/site/xdoc/cal_iso.xml
+index a8ddec8d3..6187b7c39 100644
+--- a/src/site/xdoc/cal_iso.xml
++++ b/src/site/xdoc/cal_iso.xml
+@@ -20,7 +20,6 @@ The ISO8601 standard was created by the International Organization for Standards
+ It aims to eliminate the risk of misinterpretting dates and times when representations
+ are passed between systems and across national boundaries.
+ We are unable to provide a direct link to the standard as it is a paid-for document.
+-However some <a href="http://www.exit109.com/~ghealton/.dates.html#@Standards.ISO.8601.Commentary.Links">ISO8601 links</a> may be useful.
+ </p>
+ <p>
+ The ISO8601 standard is based on the <i>proleptic Gregorian calendar</i>.
+@@ -38,8 +37,7 @@ year month day, year dayOfYear and year week dayOfWeek.
+ References
+ <ul>
+ <li>Calendrical Calculations - Millenium Edition - ISBN 0521777526</li>
+-<li><a href="http://www.exit109.com/~ghealton/.dates.html#@Standards.ISO.8601.Commentary.Links">ISO8601 links</a></li>
+-<li><a href="http://en.wikipedia.org/wiki/ISO8601">Wikipedia - ISO Calendar</a></li>
++<li><a href="https://en.wikipedia.org/wiki/ISO8601">Wikipedia - ISO Calendar</a></li>
+ </ul>
+ </p>
+ 
+diff --git a/src/site/xdoc/cal_julian.xml b/src/site/xdoc/cal_julian.xml
+index 7ce63e459..ecfd67fdf 100644
+--- a/src/site/xdoc/cal_julian.xml
++++ b/src/site/xdoc/cal_julian.xml
+@@ -27,7 +27,7 @@ Normally, a more accurate historic calendar is found by using the
+ References
+ <ul>
+ <li>Calendrical Calculations - Millenium Edition - ISBN 0521777526</li>
+-<li><a href="http://en.wikipedia.org/wiki/Julian_calendar">Wikipedia - Julian Calendar</a></li>
++<li><a href="https://en.wikipedia.org/wiki/Julian_calendar">Wikipedia - Julian Calendar</a></li>
+ </ul>
+ </p>
+ </section>
+diff --git a/src/site/xdoc/faq.xml b/src/site/xdoc/faq.xml
+index 677b78797..e9a9d43e1 100644
+--- a/src/site/xdoc/faq.xml
++++ b/src/site/xdoc/faq.xml
+@@ -115,7 +115,7 @@ It is important to keep both up to date and in sync if you want to compare the o
+ </p>
+ <p>
+ The second reason affects date-times before the modern time-zone system was introduced.
+-The time-zone data is obtained from the <a href="http://www.iana.org/time-zones">time-zone database</a>.
++The time-zone data is obtained from the <a href="https://www.iana.org/time-zones">time-zone database</a>.
+ The database contains information on "Local Mean Time" (LMT) which is the local time that would have been
+ observed at the location following the Sun's movements.
+ </p>
+@@ -358,8 +358,8 @@ It is not an acronym.
+ <a name="pronounce" />
+ <subsection name="How do you pronounce 'joda'?">
+ <p>
+-The 'J' in 'Joda' is pronounced the same as the 'J' in <a href="http://dictionary.reference.com/browse/Java">'Java'</a>.
+-The project is not capable of wielding a <a href="http://en.wikipedia.org/wiki/Yoda">light saber</a> and is thus pronounced differently.
++The 'J' in 'Joda' is pronounced the same as the 'J' in <a href="https://www.dictionary.com/browse/java">'Java'</a>.
++The project is not capable of wielding a <a href="https://en.wikipedia.org/wiki/Yoda">light saber</a> and is thus pronounced differently.
+ </p>
+ <p>
+ <br />
+diff --git a/src/site/xdoc/installation.xml b/src/site/xdoc/installation.xml
+index ba62a5c82..e2b49d766 100644
+--- a/src/site/xdoc/installation.xml
++++ b/src/site/xdoc/installation.xml
+@@ -56,7 +56,7 @@ The <a href="changes-report.html">release notes</a> for upgraders can be found h
+ </p>
+ <p>
+ If you want to build Joda-Time from source you will need
+-<a href="http://maven.apache.org">Apache Maven</a>.
++<a href="https://maven.apache.org">Apache Maven</a>.
+ </p>
+ </section>
+ </body>
+diff --git a/src/site/xdoc/timezones.xml b/src/site/xdoc/timezones.xml
+index 90a894d46..7ea883a5f 100644
+--- a/src/site/xdoc/timezones.xml
++++ b/src/site/xdoc/timezones.xml
+@@ -11,7 +11,7 @@
+ 
+ <section name="Available Time Zones">
+ <p>
+-Time zone data is provided by the public IANA <a href="http://www.iana.org/time-zones">time zone database</a>.
++Time zone data is provided by the public IANA <a href="https://www.iana.org/time-zones">time zone database</a>.
+ The following table shows all the time zones supported by Joda-Time, using version 2013d
+ of the database.
+ It is also possible to update to a <a href="tz_update.html">later version of the database</a>.
+diff --git a/src/site/xdoc/tz_update.xml b/src/site/xdoc/tz_update.xml
+index c28d3b144..2cb785968 100644
+--- a/src/site/xdoc/tz_update.xml
++++ b/src/site/xdoc/tz_update.xml
+@@ -14,7 +14,7 @@
+ Time zones are a concept driven by the political situation in each country around the world.
+ As such, they change frequently, and often at short notice.
+ In order to manage this, Joda-Time uses the internationally recognised
+-<a href="http://www.iana.org/time-zones">tz database</a>, which is also used
++<a href="https://www.iana.org/time-zones">tz database</a>, which is also used
+ in most operating systems and the JDK itself.
+ </p>
+ <p>
+@@ -30,7 +30,7 @@ that you can update the raw data and recompile the jar at any time.
+ <section name="Updating the time zone data">
+ <p>
+ Firstly, download the latest version of the data files from
+-<a href="http://www.iana.org/time-zones">tz database</a>.
++<a href="https://www.iana.org/time-zones">tz database</a>.
+ Ensure you select the "Data" download which comes as a tar.gz.
+ </p>
+ <p>
+diff --git a/src/site/xdoc/userguide.xml b/src/site/xdoc/userguide.xml
+index 7aca6cd9f..a7b2bfbcf 100644
+--- a/src/site/xdoc/userguide.xml
++++ b/src/site/xdoc/userguide.xml
+@@ -334,7 +334,7 @@ DateTimeZone zoneUTC = DateTimeZone.forOffsetHours(hours);
+ </p>
+ <p>
+ The time zone implementation is based on data provided by the public
+-IANA <a href="http://www.iana.org/time-zones">time zone database</a>.
++IANA <a href="https://www.iana.org/time-zones">time zone database</a>.
+ A full list of time zone ids can be found <a href="timezones.html">here</a>
+ </p>
+ <p>
+
+From bc5d87cd66d71a3d7f01fa1b3b0d38197940bc39 Mon Sep 17 00:00:00 2001
+From: "Stephen Colebourne (CI)" <scolebourne@joda.org>
+Date: Fri, 28 Sep 2018 23:08:46 +0100
+Subject: [PATCH 09/16] Format readme
+
+---
+ README.md | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/README.md b/README.md
+index 9b6e539e2..390723dfc 100644
+--- a/README.md
++++ b/README.md
+@@ -7,7 +7,10 @@ The 'default' calendar is the ISO8601 standard which is used by XML.
+ The Gregorian, Julian, Buddhist, Coptic, Ethiopic and Islamic systems are also included.
+ Supporting classes include time zone, duration, format and parsing. 
+ 
+-**Joda-time is no longer in active development except to keep timezone data up to date.** From Java SE 8 onwards, users are asked to migrate to `java.time` (JSR-310) - a core part of the JDK which replaces this project. For Android users, `java.time` is [added in API 26+](https://developer.android.com/reference/java/time/package-summary). Projects needing to support lower API levels can use [the ThreeTenABP library](https://github.com/JakeWharton/ThreeTenABP).
++**Joda-time is no longer in active development except to keep timezone data up to date.**
++From Java SE 8 onwards, users are asked to migrate to `java.time` (JSR-310) - a core part of the JDK which replaces this project.
++For Android users, `java.time` is [added in API 26+](https://developer.android.com/reference/java/time/package-summary).
++Projects needing to support lower API levels can use [the ThreeTenABP library](https://github.com/JakeWharton/ThreeTenABP).
+ 
+ As a flavour of Joda-Time, here's some example code:
+ 
+
+From 861823fda47c294eefee1a3130b15d4add4b70e8 Mon Sep 17 00:00:00 2001
+From: "Stephen Colebourne (CI)" <scolebourne@joda.org>
+Date: Fri, 28 Sep 2018 23:22:14 +0100
+Subject: [PATCH 10/16] Fix website
+
+---
+ src/site/site.xml | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
+
+diff --git a/src/site/site.xml b/src/site/site.xml
+index 94876f056..45f1fb98b 100644
+--- a/src/site/site.xml
++++ b/src/site/site.xml
+@@ -81,7 +81,7 @@
+   <body>
+     <head>
+       <![CDATA[
+-        <link href="https://netdna.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.css" rel="stylesheet"/>
++        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet"/>
+         <link rel="author" href="https://plus.google.com/113137868744510231215"/>]]>
+     </head>
+ 
+@@ -141,16 +141,16 @@
+ 
+     <menu name="Related">
+       <item name="Related projects" href="related.html"/>
+-      <item name="JSP tags" href="/joda-time-jsptags/"/>
+-      <item name="Hibernate" href="/joda-time-hibernate/"/>
+-      <item name="I18N" href="/joda-time-i18n/"/>
++      <item name="JSP tags" href="http://www.joda.org/joda-time-jsptags/"/>
++      <item name="Hibernate" href="http://www.joda.org/joda-time-hibernate/"/>
++      <item name="I18N" href="http://www.joda.org/joda-time-i18n/"/>
+     </menu>
+ 
+     <menu name="Joda">
+-      <item name="Home" href="/"/>
+-      <item name="Beans" href="/joda-beans/"/>
+-      <item name="Convert" href="/joda-convert/"/>
+-      <item name="Money" href="/joda-money/"/>
++      <item name="Home" href="http://www.joda.org/"/>
++      <item name="Beans" href="http://www.joda.org/joda-beans/"/>
++      <item name="Convert" href="http://www.joda.org/joda-convert/"/>
++      <item name="Money" href="http://www.joda.org/joda-money/"/>
+     </menu>
+ 
+     <menu name="Reports" ref="reports"/>
+
+From d1ea2a53929d7d56d4f4560852e5586517a0dd47 Mon Sep 17 00:00:00 2001
+From: "Stephen Colebourne (CI)" <scolebourne@joda.org>
+Date: Sat, 29 Sep 2018 00:47:44 +0100
+Subject: [PATCH 11/16] Switch to HTTPS
+
+---
+ NOTICE.txt                     |  2 +-
+ README.md                      | 16 ++++++++--------
+ RELEASE-NOTES.txt              |  6 +++---
+ pom.xml                        |  6 +++---
+ src/site/site.xml              | 14 +++++++-------
+ src/site/xdoc/upgradeto100.xml |  8 ++++----
+ src/site/xdoc/upgradeto140.xml |  2 +-
+ src/site/xdoc/upgradeto150.xml |  2 +-
+ src/site/xdoc/upgradeto151.xml |  2 +-
+ src/site/xdoc/upgradeto152.xml |  2 +-
+ src/site/xdoc/upgradeto160.xml |  2 +-
+ src/site/xdoc/upgradeto161.xml |  2 +-
+ src/site/xdoc/upgradeto162.xml |  2 +-
+ src/site/xdoc/upgradeto200.xml |  2 +-
+ src/site/xdoc/upgradeto210.xml |  2 +-
+ src/site/xdoc/upgradeto220.xml |  2 +-
+ src/site/xdoc/upgradeto230.xml |  4 ++--
+ src/site/xdoc/upgradeto240.xml |  2 +-
+ src/site/xdoc/upgradeto250.xml |  2 +-
+ src/site/xdoc/upgradeto260.xml |  2 +-
+ src/site/xdoc/upgradeto270.xml |  2 +-
+ src/site/xdoc/upgradeto280.xml |  2 +-
+ src/site/xdoc/upgradeto281.xml |  4 ++--
+ src/site/xdoc/upgradeto282.xml |  6 +++---
+ src/site/xdoc/upgradeto290.xml |  2 +-
+ src/site/xdoc/upgradeto291.xml |  2 +-
+ src/site/xdoc/upgradeto292.xml |  2 +-
+ src/site/xdoc/upgradeto293.xml |  2 +-
+ src/site/xdoc/upgradeto294.xml |  2 +-
+ src/site/xdoc/upgradeto295.xml |  2 +-
+ src/site/xdoc/upgradeto296.xml |  2 +-
+ 31 files changed, 55 insertions(+), 55 deletions(-)
+
+diff --git a/NOTICE.txt b/NOTICE.txt
+index dffbcf31c..6e6ab3b3d 100644
+--- a/NOTICE.txt
++++ b/NOTICE.txt
+@@ -2,4 +2,4 @@
+ = NOTICE file corresponding to section 4d of the Apache License Version 2.0 =
+ =============================================================================
+ This product includes software developed by
+-Joda.org (http://www.joda.org/).
++Joda.org (https://www.joda.org/).
+diff --git a/README.md b/README.md
+index 390723dfc..7a879f799 100644
+--- a/README.md
++++ b/README.md
+@@ -37,21 +37,21 @@ public String getBirthMonthText(LocalDate dateOfBirth) {
+ }
+ ```
+ 
+-Joda-Time is licensed under the business-friendly [Apache 2.0 licence](http://www.joda.org/joda-time/license.html).
++Joda-Time is licensed under the business-friendly [Apache 2.0 licence](https://www.joda.org/joda-time/licenses.html).
+ 
+ 
+ ### Documentation
+ Various documentation is available:
+ 
+-* The [home page](http://www.joda.org/joda-time/)
+-* Two user guides - [quick](http://www.joda.org/joda-time/quickstart.html) and [full](http://www.joda.org/joda-time/userguide.html)
+-* The [Javadoc](http://www.joda.org/joda-time/apidocs/index.html)
+-* The [FAQ](http://www.joda.org/joda-time/faq.html) list
+-* Information on [downloading and installing](http://www.joda.org/joda-time/installation.html) Joda-Time including release notes
++* The [home page](https://www.joda.org/joda-time/)
++* Two user guides - [quick](https://www.joda.org/joda-time/quickstart.html) and [full](https://www.joda.org/joda-time/userguide.html)
++* The [Javadoc](https://www.joda.org/joda-time/apidocs/index.html)
++* The [FAQ](https://www.joda.org/joda-time/faq.html) list
++* Information on [downloading and installing](https://www.joda.org/joda-time/installation.html) Joda-Time including release notes
+ 
+ 
+ ### Releases
+-[Release 2.10](http://www.joda.org/joda-time/download.html) is the current latest release.
++[Release 2.10](https://www.joda.org/joda-time/download.html) is the current latest release.
+ This release is considered stable and worthy of the 2.x tag.
+ It depends on JDK 1.5 or later.
+ 
+@@ -78,7 +78,7 @@ Related projects at GitHub:
+ - https://github.com/JodaOrg/joda-time-i18n
+ 
+ Other related projects:
+-- http://www.joda.org/joda-time/related.html
++- https://www.joda.org/joda-time/related.html
+ 
+ 
+ ### Support
+diff --git a/RELEASE-NOTES.txt b/RELEASE-NOTES.txt
+index 99e0bc2fa..1869a3df9 100644
+--- a/RELEASE-NOTES.txt
++++ b/RELEASE-NOTES.txt
+@@ -10,13 +10,13 @@ Joda-Time is licensed under the business-friendly Apache License Version 2.
+ This is the same license as all of Apache, plus other open source projects such as Spring.
+ 
+ **  Please also check out our related projects   **
+-** http://www.joda.org/joda-time/related.html **
++** https://www.joda.org/joda-time/related.html **
+ 
+ 
+ Release notes
+ -------------
+ From v2.9.7, Joda-Time release notes are found here:
+-http://www.joda.org/joda-time/changes-report.html
++https://www.joda.org/joda-time/changes-report.html
+ 
+ 
+ Scala
+@@ -32,4 +32,4 @@ Feedback is best received using GitHub issues and Pull Requests.
+ https://github.com/JodaOrg/joda-time/
+ 
+ The Joda team
+-http://www.joda.org/joda-time/
++https://www.joda.org/joda-time/
+diff --git a/pom.xml b/pom.xml
+index 6ceeb730e..0ecc39f26 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -10,7 +10,7 @@
+   <name>Joda-Time</name>
+   <version>2.10</version>
+   <description>Date and time library to replace JDK date handling</description>
+-  <url>http://www.joda.org/joda-time/</url>
++  <url>https://www.joda.org/joda-time/</url>
+ 
+   <!-- ==================================================================== -->
+   <issueManagement>
+@@ -315,7 +315,7 @@
+   </scm>
+   <organization>
+     <name>Joda.org</name>
+-    <url>http://www.joda.org</url>
++    <url>https://www.joda.org</url>
+   </organization>
+ 
+   <!-- ==================================================================== -->
+@@ -881,7 +881,7 @@
+             <version>1.1.1</version>
+             <configuration>
+               <releaseName>Release v${project.version}</releaseName>
+-              <description>See the [change notes](http://www.joda.org/joda-time/changes-report.html) for more information.</description>
++              <description>See the [change notes](https://www.joda.org/joda-time/changes-report.html) for more information.</description>
+               <tag>v${project.version}</tag>
+               <overwriteArtifact>true</overwriteArtifact>
+               <fileSets>
+diff --git a/src/site/site.xml b/src/site/site.xml
+index 45f1fb98b..2f8377317 100644
+--- a/src/site/site.xml
++++ b/src/site/site.xml
+@@ -141,16 +141,16 @@
+ 
+     <menu name="Related">
+       <item name="Related projects" href="related.html"/>
+-      <item name="JSP tags" href="http://www.joda.org/joda-time-jsptags/"/>
+-      <item name="Hibernate" href="http://www.joda.org/joda-time-hibernate/"/>
+-      <item name="I18N" href="http://www.joda.org/joda-time-i18n/"/>
++      <item name="JSP tags" href="https://www.joda.org/joda-time-jsptags/"/>
++      <item name="Hibernate" href="https://www.joda.org/joda-time-hibernate/"/>
++      <item name="I18N" href="https://www.joda.org/joda-time-i18n/"/>
+     </menu>
+ 
+     <menu name="Joda">
+-      <item name="Home" href="http://www.joda.org/"/>
+-      <item name="Beans" href="http://www.joda.org/joda-beans/"/>
+-      <item name="Convert" href="http://www.joda.org/joda-convert/"/>
+-      <item name="Money" href="http://www.joda.org/joda-money/"/>
++      <item name="Home" href="https://www.joda.org/"/>
++      <item name="Beans" href="https://www.joda.org/joda-beans/"/>
++      <item name="Convert" href="https://www.joda.org/joda-convert/"/>
++      <item name="Money" href="https://www.joda.org/joda-money/"/>
+     </menu>
+ 
+     <menu name="Reports" ref="reports"/>
+diff --git a/src/site/xdoc/upgradeto100.xml b/src/site/xdoc/upgradeto100.xml
+index b0443ef5c..ea135bcb8 100644
+--- a/src/site/xdoc/upgradeto100.xml
++++ b/src/site/xdoc/upgradeto100.xml
+@@ -33,25 +33,25 @@ of restrictions. If the license cause you problems please contact the mailing li
+ Incompatible changes since 0.99
+ -------------------------------
+ Deprecated methods removed.
+-See http://www.joda.org/joda-time/upgradeto099.html for 0.98 to 0.99 changes
++See https://www.joda.org/joda-time/upgradeto099.html for 0.98 to 0.99 changes
+ 
+ 
+ Deprecations since 0.99
+ -----------------------
+ None
+-See http://www.joda.org/joda-time/upgradeto099.html for 0.98 to 0.99 changes
++See https://www.joda.org/joda-time/upgradeto099.html for 0.98 to 0.99 changes
+ 
+ 
+ Bug fixes since 0.99
+ --------------------
+ None
+-See http://www.joda.org/joda-time/upgradeto099.html for 0.98 to 0.99 changes
++See https://www.joda.org/joda-time/upgradeto099.html for 0.98 to 0.99 changes
+ 
+ 
+ Enhancements since 0.99
+ -----------------------
+ None
+-See http://www.joda.org/joda-time/upgradeto099.html for 0.98 to 0.99 changes
++See https://www.joda.org/joda-time/upgradeto099.html for 0.98 to 0.99 changes
+ 
+ </source>
+ </p>
+diff --git a/src/site/xdoc/upgradeto140.xml b/src/site/xdoc/upgradeto140.xml
+index fa5db0756..79f1d07f0 100644
+--- a/src/site/xdoc/upgradeto140.xml
++++ b/src/site/xdoc/upgradeto140.xml
+@@ -30,7 +30,7 @@ The intent is to make the code available to the Java community with the minimum
+ of restrictions. If the license causes you problems please contact the mailing list.
+ 
+ *  Please also check out our related projects   *
+-* http://www.joda.org/joda-time/related.html *
++* https://www.joda.org/joda-time/related.html *
+ 
+ 
+ Enhancements since 1.3
+diff --git a/src/site/xdoc/upgradeto150.xml b/src/site/xdoc/upgradeto150.xml
+index 7caefa0af..2b2263dc3 100644
+--- a/src/site/xdoc/upgradeto150.xml
++++ b/src/site/xdoc/upgradeto150.xml
+@@ -30,7 +30,7 @@ The intent is to make the code available to the Java community with the minimum
+ of restrictions. If the license causes you problems please contact the mailing list.
+ 
+ *  Please also check out our related projects   *
+-* http://www.joda.org/joda-time/related.html *
++* https://www.joda.org/joda-time/related.html *
+ 
+ 
+ Enhancements since 1.4
+diff --git a/src/site/xdoc/upgradeto151.xml b/src/site/xdoc/upgradeto151.xml
+index 38b965077..67f75f270 100644
+--- a/src/site/xdoc/upgradeto151.xml
++++ b/src/site/xdoc/upgradeto151.xml
+@@ -31,7 +31,7 @@ The intent is to make the code available to the Java community with the minimum
+ of restrictions. If the license causes you problems please contact the mailing list.
+ 
+ *  Please also check out our related projects   *
+-* http://www.joda.org/joda-time/related.html *
++* https://www.joda.org/joda-time/related.html *
+ 
+ 
+ Enhancements since 1.5
+diff --git a/src/site/xdoc/upgradeto152.xml b/src/site/xdoc/upgradeto152.xml
+index a8583c60a..958da9d7c 100644
+--- a/src/site/xdoc/upgradeto152.xml
++++ b/src/site/xdoc/upgradeto152.xml
+@@ -31,7 +31,7 @@ The intent is to make the code available to the Java community with the minimum
+ of restrictions. If the license causes you problems please contact the mailing list.
+ 
+ *  Please also check out our related projects   *
+-* http://www.joda.org/joda-time/related.html *
++* https://www.joda.org/joda-time/related.html *
+ 
+ 
+ Enhancements since 1.5
+diff --git a/src/site/xdoc/upgradeto160.xml b/src/site/xdoc/upgradeto160.xml
+index 1f3b4da4e..99d6215df 100644
+--- a/src/site/xdoc/upgradeto160.xml
++++ b/src/site/xdoc/upgradeto160.xml
+@@ -30,7 +30,7 @@ The intent is to make the code available to the Java community with the minimum
+ of restrictions. If the license causes you problems please contact the mailing list.
+ 
+ **  Please also check out our related projects   **
+-** http://www.joda.org/joda-time/related.html **
++** https://www.joda.org/joda-time/related.html **
+ 
+ ********************************************************************
+  The next release will probably be v2.0
+diff --git a/src/site/xdoc/upgradeto161.xml b/src/site/xdoc/upgradeto161.xml
+index 653d5d2d3..18891ee2e 100644
+--- a/src/site/xdoc/upgradeto161.xml
++++ b/src/site/xdoc/upgradeto161.xml
+@@ -31,7 +31,7 @@ The intent is to make the code available to the Java community with the minimum
+ of restrictions. If the license causes you problems please contact the mailing list.
+ 
+ **  Please also check out our related projects   **
+-** http://www.joda.org/joda-time/related.html **
++** https://www.joda.org/joda-time/related.html **
+ 
+ 
+ Compatibility with 1.6
+diff --git a/src/site/xdoc/upgradeto162.xml b/src/site/xdoc/upgradeto162.xml
+index 1160dcd0f..69d1a133f 100644
+--- a/src/site/xdoc/upgradeto162.xml
++++ b/src/site/xdoc/upgradeto162.xml
+@@ -31,7 +31,7 @@ The intent is to make the code available to the Java community with the minimum
+ of restrictions. If the license causes you problems please contact the mailing list.
+ 
+ ** Please also check out our related projects **
+-** http://www.joda.org/joda-time/related.html **
++** https://www.joda.org/joda-time/related.html **
+ 
+ 
+ Compatibility with 1.6.1
+diff --git a/src/site/xdoc/upgradeto200.xml b/src/site/xdoc/upgradeto200.xml
+index e5549b1e6..cebf2b151 100644
+--- a/src/site/xdoc/upgradeto200.xml
++++ b/src/site/xdoc/upgradeto200.xml
+@@ -39,7 +39,7 @@ The intent is to make the code available to the Java community with the minimum
+ of restrictions. If the license causes you problems please contact the mailing list.
+ 
+ **  Please also check out our related projects   **
+-** http://www.joda.org/joda-time/related.html **
++** https://www.joda.org/joda-time/related.html **
+ 
+ 
+ Enhancements since 1.6
+diff --git a/src/site/xdoc/upgradeto210.xml b/src/site/xdoc/upgradeto210.xml
+index 7ee52edbf..f0f2826c8 100644
+--- a/src/site/xdoc/upgradeto210.xml
++++ b/src/site/xdoc/upgradeto210.xml
+@@ -30,7 +30,7 @@ The intent is to make the code available to the Java community with the minimum
+ of restrictions. If the license causes you problems please contact the mailing list.
+ 
+ **  Please also check out our related projects   **
+-** http://www.joda.org/joda-time/related.html **
++** https://www.joda.org/joda-time/related.html **
+ 
+ 
+ Enhancements since 2.0
+diff --git a/src/site/xdoc/upgradeto220.xml b/src/site/xdoc/upgradeto220.xml
+index 786a9702b..3048d3127 100644
+--- a/src/site/xdoc/upgradeto220.xml
++++ b/src/site/xdoc/upgradeto220.xml
+@@ -28,7 +28,7 @@ The intent is to make the code available to the Java community with the minimum
+ of restrictions. If the license causes you problems please contact the mailing list.
+ 
+ **  Please also check out our related projects   **
+-** http://www.joda.org/joda-time/related.html **
++** https://www.joda.org/joda-time/related.html **
+ 
+ 
+ Enhancements since 2.1
+diff --git a/src/site/xdoc/upgradeto230.xml b/src/site/xdoc/upgradeto230.xml
+index dd3973922..8520555b8 100644
+--- a/src/site/xdoc/upgradeto230.xml
++++ b/src/site/xdoc/upgradeto230.xml
+@@ -27,7 +27,7 @@ The intent is to make the code available to the Java community with the minimum
+ of restrictions. If the license causes you problems please contact the mailing list.
+ 
+ **  Please also check out our related projects   **
+-** http://www.joda.org/joda-time/related.html **
++** https://www.joda.org/joda-time/related.html **
+ 
+ 
+ Enhancements since 2.2
+@@ -50,7 +50,7 @@ Enhancements since 2.2
+   Provides an alternate way to create a java.util.Date that avoids some synchronization
+ 
+ - Home page moved
+-  http://www.joda.org/joda-time
++  https://www.joda.org/joda-time
+ 
+ 
+ Compatibility with 2.2
+diff --git a/src/site/xdoc/upgradeto240.xml b/src/site/xdoc/upgradeto240.xml
+index c26b31ec4..d21791313 100644
+--- a/src/site/xdoc/upgradeto240.xml
++++ b/src/site/xdoc/upgradeto240.xml
+@@ -27,7 +27,7 @@ The intent is to make the code available to the Java community with the minimum
+ of restrictions. If the license causes you problems please contact the mailing list.
+ 
+ **  Please also check out our related projects   **
+-** http://www.joda.org/joda-time/related.html **
++** https://www.joda.org/joda-time/related.html **
+ 
+ 
+ Enhancements since 2.3
+diff --git a/src/site/xdoc/upgradeto250.xml b/src/site/xdoc/upgradeto250.xml
+index f67b639af..a1b165014 100644
+--- a/src/site/xdoc/upgradeto250.xml
++++ b/src/site/xdoc/upgradeto250.xml
+@@ -27,7 +27,7 @@ The intent is to make the code available to the Java community with the minimum
+ of restrictions. If the license causes you problems please contact the mailing list.
+ 
+ **  Please also check out our related projects   **
+-** http://www.joda.org/joda-time/related.html **
++** https://www.joda.org/joda-time/related.html **
+ 
+ 
+ Enhancements since 2.4
+diff --git a/src/site/xdoc/upgradeto260.xml b/src/site/xdoc/upgradeto260.xml
+index 796370e5d..681b4be4b 100644
+--- a/src/site/xdoc/upgradeto260.xml
++++ b/src/site/xdoc/upgradeto260.xml
+@@ -27,7 +27,7 @@ The intent is to make the code available to the Java community with the minimum
+ of restrictions. If the license causes you problems please contact the mailing list.
+ 
+ **  Please also check out our related projects   **
+-** http://www.joda.org/joda-time/related.html **
++** https://www.joda.org/joda-time/related.html **
+ 
+ 
+ Enhancements since 2.5
+diff --git a/src/site/xdoc/upgradeto270.xml b/src/site/xdoc/upgradeto270.xml
+index 45bfd0324..a72b99dd7 100644
+--- a/src/site/xdoc/upgradeto270.xml
++++ b/src/site/xdoc/upgradeto270.xml
+@@ -27,7 +27,7 @@ The intent is to make the code available to the Java community with the minimum
+ of restrictions. If the license causes you problems please contact the mailing list.
+ 
+ **  Please also check out our related projects   **
+-** http://www.joda.org/joda-time/related.html **
++** https://www.joda.org/joda-time/related.html **
+ 
+ 
+ Enhancements since 2.6
+diff --git a/src/site/xdoc/upgradeto280.xml b/src/site/xdoc/upgradeto280.xml
+index 7f75fdc9b..c87313428 100644
+--- a/src/site/xdoc/upgradeto280.xml
++++ b/src/site/xdoc/upgradeto280.xml
+@@ -27,7 +27,7 @@ The intent is to make the code available to the Java community with the minimum
+ of restrictions. If the license causes you problems please contact the mailing list.
+ 
+ **  Please also check out our related projects   **
+-** http://www.joda.org/joda-time/related.html **
++** https://www.joda.org/joda-time/related.html **
+ 
+ 
+ Enhancements since 2.7
+diff --git a/src/site/xdoc/upgradeto281.xml b/src/site/xdoc/upgradeto281.xml
+index 7ad3894b7..bb8b4f102 100644
+--- a/src/site/xdoc/upgradeto281.xml
++++ b/src/site/xdoc/upgradeto281.xml
+@@ -27,7 +27,7 @@ The intent is to make the code available to the Java community with the minimum
+ of restrictions. If the license causes you problems please contact the mailing list.
+ 
+ **  Please also check out our related projects   **
+-** http://www.joda.org/joda-time/related.html **
++** https://www.joda.org/joda-time/related.html **
+ 
+ 
+ Changes in 2.8.1
+@@ -41,7 +41,7 @@ Changes in 2.8.1
+ Changes in 2.8.0
+ ================
+ 
+-See http://www.joda.org/joda-time/upgradeto280.html
++See https://www.joda.org/joda-time/upgradeto280.html
+ 
+ </source>
+ </p>
+diff --git a/src/site/xdoc/upgradeto282.xml b/src/site/xdoc/upgradeto282.xml
+index e7a3c1a8e..ff78837ae 100644
+--- a/src/site/xdoc/upgradeto282.xml
++++ b/src/site/xdoc/upgradeto282.xml
+@@ -25,7 +25,7 @@ Joda-Time is licensed under the business-friendly Apache License Version 2.
+ This is the same license as all of Apache, plus other open source projects such as Spring.
+ 
+ **  Please also check out our related projects   **
+-** http://www.joda.org/joda-time/related.html **
++** https://www.joda.org/joda-time/related.html **
+ 
+ 
+ Changes in 2.8.2
+@@ -36,13 +36,13 @@ Changes in 2.8.2
+ 
+ Changes in 2.8.1
+ ================
+-See http://www.joda.org/joda-time/upgradeto281.html
++See https://www.joda.org/joda-time/upgradeto281.html
+ 
+ 
+ Changes in 2.8.0
+ ================
+ 
+-See http://www.joda.org/joda-time/upgradeto280.html
++See https://www.joda.org/joda-time/upgradeto280.html
+ 
+ </source>
+ </p>
+diff --git a/src/site/xdoc/upgradeto290.xml b/src/site/xdoc/upgradeto290.xml
+index b3ad20e74..0f0b5b2ea 100644
+--- a/src/site/xdoc/upgradeto290.xml
++++ b/src/site/xdoc/upgradeto290.xml
+@@ -25,7 +25,7 @@ Joda-Time is licensed under the business-friendly Apache License Version 2.
+ This is the same license as all of Apache, plus other open source projects such as Spring.
+ 
+ **  Please also check out our related projects   **
+-** http://www.joda.org/joda-time/related.html **
++** https://www.joda.org/joda-time/related.html **
+ 
+ 
+ Enhancements since 2.8
+diff --git a/src/site/xdoc/upgradeto291.xml b/src/site/xdoc/upgradeto291.xml
+index c56e7e416..054cac0aa 100644
+--- a/src/site/xdoc/upgradeto291.xml
++++ b/src/site/xdoc/upgradeto291.xml
+@@ -25,7 +25,7 @@ Joda-Time is licensed under the business-friendly Apache License Version 2.
+ This is the same license as all of Apache, plus other open source projects such as Spring.
+ 
+ **  Please also check out our related projects   **
+-** http://www.joda.org/joda-time/related.html **
++** https://www.joda.org/joda-time/related.html **
+ 
+ 
+ Bug fixes in 2.9.1
+diff --git a/src/site/xdoc/upgradeto292.xml b/src/site/xdoc/upgradeto292.xml
+index 979d98cf5..50ddb194b 100644
+--- a/src/site/xdoc/upgradeto292.xml
++++ b/src/site/xdoc/upgradeto292.xml
+@@ -25,7 +25,7 @@ Joda-Time is licensed under the business-friendly Apache License Version 2.
+ This is the same license as all of Apache, plus other open source projects such as Spring.
+ 
+ **  Please also check out our related projects   **
+-** http://www.joda.org/joda-time/related.html **
++** https://www.joda.org/joda-time/related.html **
+ 
+ 
+ Bug fixes in 2.9.2
+diff --git a/src/site/xdoc/upgradeto293.xml b/src/site/xdoc/upgradeto293.xml
+index b6d4dc526..2c9fef48c 100644
+--- a/src/site/xdoc/upgradeto293.xml
++++ b/src/site/xdoc/upgradeto293.xml
+@@ -25,7 +25,7 @@ Joda-Time is licensed under the business-friendly Apache License Version 2.
+ This is the same license as all of Apache, plus other open source projects such as Spring.
+ 
+ **  Please also check out our related projects   **
+-** http://www.joda.org/joda-time/related.html **
++** https://www.joda.org/joda-time/related.html **
+ 
+ 
+ Changes in 2.9.3
+diff --git a/src/site/xdoc/upgradeto294.xml b/src/site/xdoc/upgradeto294.xml
+index c61f32500..029d895c2 100644
+--- a/src/site/xdoc/upgradeto294.xml
++++ b/src/site/xdoc/upgradeto294.xml
+@@ -25,7 +25,7 @@ Joda-Time is licensed under the business-friendly Apache License Version 2.
+ This is the same license as all of Apache, plus other open source projects such as Spring.
+ 
+ **  Please also check out our related projects   **
+-** http://www.joda.org/joda-time/related.html **
++** https://www.joda.org/joda-time/related.html **
+ 
+ 
+ Changes in 2.9.4
+diff --git a/src/site/xdoc/upgradeto295.xml b/src/site/xdoc/upgradeto295.xml
+index f8f481709..e1c6319d0 100644
+--- a/src/site/xdoc/upgradeto295.xml
++++ b/src/site/xdoc/upgradeto295.xml
+@@ -25,7 +25,7 @@ Joda-Time is licensed under the business-friendly Apache License Version 2.
+ This is the same license as all of Apache, plus other open source projects such as Spring.
+ 
+ **  Please also check out our related projects   **
+-** http://www.joda.org/joda-time/related.html **
++** https://www.joda.org/joda-time/related.html **
+ 
+ Changes in 2.9.5
+ ----------------
+diff --git a/src/site/xdoc/upgradeto296.xml b/src/site/xdoc/upgradeto296.xml
+index d3452e156..a2f82334c 100644
+--- a/src/site/xdoc/upgradeto296.xml
++++ b/src/site/xdoc/upgradeto296.xml
+@@ -25,7 +25,7 @@ Joda-Time is licensed under the business-friendly Apache License Version 2.
+ This is the same license as all of Apache, plus other open source projects such as Spring.
+ 
+ **  Please also check out our related projects   **
+-** http://www.joda.org/joda-time/related.html **
++** https://www.joda.org/joda-time/related.html **
+ 
+ Changes in 2.9.6
+ ----------------
+
+From 768f169fad093cd80552bb6bccc0f9f3caaec898 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Fri, 26 Oct 2018 21:49:56 +0100
+Subject: [PATCH 12/16] Update tzdb to v2018f
+
+---
+ pom.xml                                       |   2 +-
+ src/main/java/org/joda/time/tz/src/Readme.txt |   2 +-
+ src/main/java/org/joda/time/tz/src/africa     |  25 +-
+ src/main/java/org/joda/time/tz/src/antarctica |   2 +
+ src/main/java/org/joda/time/tz/src/asia       | 314 +++++++++++++++---
+ .../java/org/joda/time/tz/src/australasia     |  13 +-
+ src/main/java/org/joda/time/tz/src/backward   |   4 +-
+ src/main/java/org/joda/time/tz/src/etcetera   |   4 +-
+ src/main/java/org/joda/time/tz/src/europe     |  74 ++++-
+ .../java/org/joda/time/tz/src/northamerica    |   4 +-
+ src/main/java/org/joda/time/tz/src/pacificnew |   2 +
+ .../java/org/joda/time/tz/src/southamerica    |  36 +-
+ src/main/java/org/joda/time/tz/src/systemv    |   2 +
+ 13 files changed, 411 insertions(+), 73 deletions(-)
+
+diff --git a/pom.xml b/pom.xml
+index 0ecc39f26..82d2b414c 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -1007,6 +1007,6 @@
+     <!-- Other properties -->
+     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+-    <tz.database.version>2018e</tz.database.version>
++    <tz.database.version>2018f</tz.database.version>
+   </properties>
+ </project>
+diff --git a/src/main/java/org/joda/time/tz/src/Readme.txt b/src/main/java/org/joda/time/tz/src/Readme.txt
+index be754e15e..c2f0651fe 100644
+--- a/src/main/java/org/joda/time/tz/src/Readme.txt
++++ b/src/main/java/org/joda/time/tz/src/Readme.txt
+@@ -1,2 +1,2 @@
+ The data files in this directory were obtained from the public IANA time zone database,
+-https://www.iana.org/time-zones, version 2018e.
++https://www.iana.org/time-zones, version 2018f.
+diff --git a/src/main/java/org/joda/time/tz/src/africa b/src/main/java/org/joda/time/tz/src/africa
+index 84e1ce2d5..555052bed 100644
+--- a/src/main/java/org/joda/time/tz/src/africa
++++ b/src/main/java/org/joda/time/tz/src/africa
+@@ -1,3 +1,5 @@
++# tzdb data for Africa and environs
++
+ # This file is in the public domain, so clarified as of
+ # 2009-05-17 by Arthur David Olson.
+ 
+@@ -6,7 +8,7 @@
+ # tz@iana.org for general use in the future).  For more, please see
+ # the file CONTRIBUTING in the tz distribution.
+ 
+-# From Paul Eggert (2017-04-09):
++# From Paul Eggert (2018-05-27):
+ #
+ # Unless otherwise specified, the source for data through 1990 is:
+ # Thomas G. Shanks and Rique Pottenger, The International Atlas (6th edition),
+@@ -51,13 +53,15 @@
+ # I vaguely recall 'WAT' also being used for -01 in the past but
+ # cannot now come up with solid citations.
+ #
+-# I invented the following abbreviations; corrections are welcome!
+-#	 +02	WAST	West Africa Summer Time (no longer used)
+-#	 +03	CAST	Central Africa Summer Time (no longer used)
+-#	 +03	SAST	South Africa Summer Time (no longer used)
++# I invented the following abbreviations in the 1990s:
++#	 +02	WAST	West Africa Summer Time
++#	 +03	CAST	Central Africa Summer Time
++#	 +03	SAST	South Africa Summer Time
+ #	 +03	EAT	East Africa Time
+-# 'EAT' also seems to have caught on; the others are rare but are paired
+-# with better-attested non-DST abbreviations.
++# 'EAT' seems to have caught on and is in current timestamps, and though
++# the other abbreviations are rarer and are only in past timestamps,
++# they are paired with better-attested non-DST abbreviations.
++# Corrections are welcome.
+ 
+ # Algeria
+ # Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
+@@ -362,6 +366,13 @@ Zone	Africa/Cairo	2:05:09 -	LMT	1900 Oct
+ # Eritrea
+ # Ethiopia
+ # See Africa/Nairobi.
++#
++# Unfortunately tzdb records only Western clock time in use in Ethiopia,
++# as the tzdb format is not up to properly recording a common Ethiopian
++# timekeeping practice that is based on solar time.  See:
++# Mortada D. If you have a meeting in Ethiopia, you'd better double
++# check the time. PRI's The World. 2015-01-30 15:15 -05.
++# https://www.pri.org/stories/2015-01-30/if-you-have-meeting-ethiopia-you-better-double-check-time
+ 
+ # Gabon
+ # See Africa/Lagos.
+diff --git a/src/main/java/org/joda/time/tz/src/antarctica b/src/main/java/org/joda/time/tz/src/antarctica
+index 866cf4fc2..1dd9b004f 100644
+--- a/src/main/java/org/joda/time/tz/src/antarctica
++++ b/src/main/java/org/joda/time/tz/src/antarctica
+@@ -1,3 +1,5 @@
++# tzdb data for Antarctica and environs
++
+ # This file is in the public domain, so clarified as of
+ # 2009-05-17 by Arthur David Olson.
+ 
+diff --git a/src/main/java/org/joda/time/tz/src/asia b/src/main/java/org/joda/time/tz/src/asia
+index 3d3086477..48b4c6529 100644
+--- a/src/main/java/org/joda/time/tz/src/asia
++++ b/src/main/java/org/joda/time/tz/src/asia
+@@ -1,3 +1,5 @@
++# tzdb data for Asia and environs
++
+ # This file is in the public domain, so clarified as of
+ # 2009-05-17 by Arthur David Olson.
+ 
+@@ -6,7 +8,7 @@
+ # tz@iana.org for general use in the future).  For more, please see
+ # the file CONTRIBUTING in the tz distribution.
+ 
+-# From Paul Eggert (2017-01-13):
++# From Paul Eggert (2018-06-19):
+ #
+ # Unless otherwise specified, the source for data through 1990 is:
+ # Thomas G. Shanks and Rique Pottenger, The International Atlas (6th edition),
+@@ -35,7 +37,8 @@
+ # A reliable and entertaining source about time zones is
+ # Derek Howse, Greenwich time and longitude, Philip Wilson Publishers (1997).
+ #
+-# The following alphabetic abbreviations appear in these tables:
++# The following alphabetic abbreviations appear in these tables
++# (corrections are welcome):
+ #	     std  dst
+ #	     LMT	Local Mean Time
+ #	2:00 EET  EEST	Eastern European Time
+@@ -44,11 +47,13 @@
+ #	7:00 WIB	west Indonesia (Waktu Indonesia Barat)
+ #	8:00 WITA	central Indonesia (Waktu Indonesia Tengah)
+ #	8:00 CST	China
++#	8:00 PST  PDT*	Philippine Standard Time
+ #	8:30 KST  KDT	Korea when at +0830
+ #	9:00 WIT	east Indonesia (Waktu Indonesia Timur)
+ #	9:00 JST  JDT	Japan
+ #	9:00 KST  KDT	Korea when at +09
+ #	9:30 ACST	Australian Central Standard Time
++# *I invented the abbreviation PDT; see "Philippines" below.
+ # Otherwise, these tables typically use numeric abbreviations like +03
+ # and +0330 for integer hour and minute UT offsets.  Although earlier
+ # editions invented alphabetic time zone abbreviations for every
+@@ -281,6 +286,29 @@ Zone	Asia/Yangon	6:24:47 -	LMT	1880        # or Rangoon
+ 
+ # China
+ 
++# From Paul Eggert (2018-10-02):
++# The following comes from Table 1 of:
++# Li Yu. Research on the daylight saving movement in 1940s Shanghai.
++# Nanjing Journal of Social Sciences. 2014;(2):144-50.
++# http://oversea.cnki.net/kns55/detail.aspx?dbname=CJFD2014&filename=NJSH201402020
++# The table lists dates only; I am guessing 00:00 and 24:00 transition times.
++# Also, the table lists the planned end of DST in 1949, but the corresponding
++# zone line cuts this off on May 28, when the Communists took power.
++#
++# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
++Rule	Shang	1940	only	-	Jun	 1	 0:00	1:00	D
++Rule	Shang	1940	only	-	Oct	12	24:00	0	S
++Rule	Shang	1941	only	-	Mar	15	 0:00	1:00	D
++Rule	Shang	1941	only	-	Nov	 1	24:00	0	S
++Rule	Shang	1942	only	-	Jan	31	 0:00	1:00	D
++Rule	Shang	1945	only	-	Sep	 1	24:00	0	S
++Rule	Shang	1946	only	-	May	15	 0:00	1:00	D
++Rule	Shang	1946	only	-	Sep	30	24:00	0	S
++Rule	Shang	1947	only	-	Apr	15	 0:00	1:00	D
++Rule	Shang	1947	only	-	Oct	31	24:00	0	S
++Rule	Shang	1948	1949	-	May	 1	 0:00	1:00	D
++Rule	Shang	1948	1949	-	Sep	30	24:00	0	S #plan
++
+ # From Guy Harris:
+ # People's Republic of China.  Yes, they really have only one time zone.
+ 
+@@ -307,18 +335,33 @@ Zone	Asia/Yangon	6:24:47 -	LMT	1880        # or Rangoon
+ # time - sort of", Los Angeles Times, 1986-05-05 ... [says] that China began
+ # observing daylight saving time in 1986.
+ 
+-# From Paul Eggert (2014-06-30):
+-# Shanks & Pottenger have China switching to a single time zone in 1980, but
+-# this doesn't seem to be correct.  They also write that China observed summer
+-# DST from 1986 through 1991, which seems to match the above commentary, so
+-# go with them for DST rules as follows:
++# From P Chan (2018-05-07):
++# The start and end time of DST in China [from 1986 on] should be 2:00
++# (i.e. 2:00 to 3:00 at the start and 2:00 to 1:00 at the end)....
++# Government notices about summer time:
++#
++# 1986-04-12 http://www.zj.gov.cn/attach/zfgb/198608.pdf p.21-22
++# (To establish summer time from 1986. On 4 May, set the clocks ahead one hour
++# at 2 am. On 14 September, set the clocks backward one hour at 2 am.)
++#
++# 1987-02-15 http://www.gov.cn/gongbao/shuju/1987/gwyb198703.pdf p.114
++# (Summer time in 1987 to start from 12 April until 13 September)
++#
++# 1987-09-09 http://www.gov.cn/gongbao/shuju/1987/gwyb198721.pdf p.709
++# (From 1988, summer time to start from 2 am of the first Sunday of mid-April
++# until 2 am of the first Sunday of mid-September)
++#
++# 1992-03-03 http://www.gov.cn/gongbao/shuju/1992/gwyb199205.pdf p.152
++# (To suspend summer time from 1992)
++#
++# The first page of People's Daily on 12 April 1988 stating that summer time
++# to begin on 17 April.
++# http://data.people.com.cn/pic/101p/1988/04/1988041201.jpg
++
+ # Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
+-Rule	Shang	1940	only	-	Jun	 3	0:00	1:00	D
+-Rule	Shang	1940	1941	-	Oct	 1	0:00	0	S
+-Rule	Shang	1941	only	-	Mar	16	0:00	1:00	D
+-Rule	PRC	1986	only	-	May	 4	0:00	1:00	D
+-Rule	PRC	1986	1991	-	Sep	Sun>=11	0:00	0	S
+-Rule	PRC	1987	1991	-	Apr	Sun>=10	0:00	1:00	D
++Rule	PRC	1986	only	-	May	 4	 2:00	1:00	D
++Rule	PRC	1986	1991	-	Sep	Sun>=11	 2:00	0	S
++Rule	PRC	1987	1991	-	Apr	Sun>=11	 2:00	1:00	D
+ 
+ # From Anthony Fok (2001-12-20):
+ # BTW, I did some research on-line and found some info regarding these five
+@@ -340,10 +383,11 @@ Rule	PRC	1987	1991	-	Apr	Sun>=10	0:00	1:00	D
+ # Alois Treindl kindly sent me translations of the following two sources:
+ #
+ # (1)
+-# Guo Qingsheng (National Time-Service Center, CAS, Xi'an 710600, China)
++# Guo Qing-sheng (National Time-Service Center, CAS, Xi'an 710600, China)
+ # Beijing Time at the Beginning of the PRC
+ # China Historical Materials of Science and Technology
+-# (Zhongguo ke ji shi liao, 中国科技史料), Vol. 24, No. 1 (2003)
++# (Zhongguo ke ji shi liao, 中国科技史料). 2003;24(1):5-9.
++# http://oversea.cnki.net/kcms/detail/detail.aspx?filename=ZGKS200301000&dbname=CJFD2003
+ # It gives evidence that at the beginning of the PRC, Beijing time was
+ # officially apparent solar time!  However, Guo also says that the
+ # evidence is dubious, as the relevant institute of astronomy had not
+@@ -520,7 +564,7 @@ Rule	PRC	1987	1991	-	Apr	Sun>=10	0:00	1:00	D
+ # Zone	NAME		GMTOFF	RULES	FORMAT	[UNTIL]
+ # Beijing time, used throughout China; represented by Shanghai.
+ Zone	Asia/Shanghai	8:05:43	-	LMT	1901
+-			8:00	Shang	C%sT	1949
++			8:00	Shang	C%sT	1949 May 28
+ 			8:00	PRC	C%sT
+ # Xinjiang time, used by many in western China; represented by Ürümqi / Ürümchi
+ # / Wulumuqi.  (Please use Asia/Shanghai if you prefer Beijing time.)
+@@ -749,24 +793,140 @@ Zone	Asia/Taipei	8:06:00 -	LMT	1896 Jan  1
+ 			8:00	Taiwan	C%sT
+ 
+ # Macau (Macao, Aomen)
++#
++# From P Chan (2018-05-10):
++# * LegisMac
++#   http://legismac.safp.gov.mo/legismac/descqry/Descqry.jsf?lang=pt
++#   A database for searching titles of legal documents of Macau in
++#   Chinese and Portuguese.  The term "HORÁRIO DE VERÃO" can be used for
++#   searching decrees about summer time.
++# * Archives of Macao
++#   http://www.archives.gov.mo/en/bo/
++#   It contains images of old official gazettes.
++# * The Macao Meteorological and Geophysical Bureau have a page listing the
++#   summer time history.  But it is not complete and has some mistakes.
++#   http://www.smg.gov.mo/smg/geophysics/e_t_Summer%20Time.htm
++# Macau adopted GMT+8 on 30 Oct 1904 to follow Hong Kong.  Clocks were
++# advanced by 25 minutes and 50 seconds.  Which means the LMT used was
++# +7:34:10.  As stated in the "Portaria No. 204" dated 21 October 1904
++# and published in the Official Gazette on 29 October 1904.
++# http://igallery.icm.gov.mo/Images/Archives/BO/MO_AH_PUB_BO_1904_10/MO_AH_PUB_BO_1904_10_00025_Grey.JPG
++#
++# Therefore the 1911 decree of Portugal did not change time in Macau.
++#
++# From LegisMac, here is a list of decrees that changed the time ...
++# [Decree Gazette-no. date; titles omitted in this quotation]
++#	DIL 732 BOCM 51 1941.12.20
++#	DIL 764 BOCM 9S 1942.04.30
++#	DIL 781 BOCM 21 1942.10.10
++#	PT 3434 BOCM 8S 1943.04.17
++#	PT 3504 BOCM 20 1943.09.25
++#	PT 3843 BOCM 39 1945.09.29
++#	PT 3961 BOCM 17 1946.04.27
++#	PT 4026 BOCM 39 1946.09.28
++#	PT 4153 BOCM 16 1947.04.10
++#	PT 4271 BOCM 48 1947.11.29
++#	PT 4374 BOCM 18 1948.05.01
++#	PT 4465 BOCM 44 1948.10.30
++#	PT 4590 BOCM 14 1949.04.02
++#	PT 4666 BOCM 44 1949.10.29
++#	PT 4771 BOCM 12 1950.03.25
++#	PT 4838 BOCM 43 1950.10.28
++#	PT 4946 BOCM 12 1951.03.24
++#	PT 5025 BO 43 1951.10.27
++#	PT 5149 BO 14 1952.04.05
++#	PT 5251 BO 43 1952.10.25
++#	PT 5366 BO 13 1953.03.28
++#	PT 5444 BO 44 1953.10.31
++#	PT 5540 BO 12 1954.03.20
++#	PT 5589 BO 44 1954.10.30
++#	PT 5676 BO 12 1955.03.19
++#	PT 5739 BO 45 1955.11.05
++#	PT 5823 BO 11 1956.03.17
++#	PT 5891 BO 44 1956.11.03
++#	PT 5981 BO 12 1957.03.23
++#	PT 6064 BO 43 1957.10.26
++#	PT 6172 BO 12 1958.03.22
++#	PT 6243 BO 43 1958.10.25
++#	PT 6341 BO 12 1959.03.21
++#	PT 6411 BO 43 1959.10.24
++#	PT 6514 BO 11 1960.03.12
++#	PT 6584 BO 44 1960.10.29
++#	PT 6721 BO 10 1961.03.11
++#	PT 6815 BO 43 1961.10.28
++#	PT 6947 BO 10 1962.03.10
++#	PT 7080 BO 43 1962.10.27
++#	PT 7218 BO 12 1963.03.23
++#	PT 7340 BO 43 1963.10.26
++#	PT 7491 BO 11 1964.03.14
++#	PT 7664 BO 43 1964.10.24
++#	PT 7846 BO 15 1965.04.10
++#	PT 7979 BO 42 1965.10.16
++#	PT 8146 BO 15 1966.04.09
++#	PT 8252 BO 41 1966.10.08
++#	PT 8429 BO 15 1967.04.15
++#	PT 8540 BO 41 1967.10.14
++#	PT 8735 BO 15 1968.04.13
++#	PT 8860 BO 41 1968.10.12
++#	PT 9035 BO 16 1969.04.19
++#	PT 9156 BO 42 1969.10.18
++#	PT 9328 BO 15 1970.04.11
++#	PT 9418 BO 41 1970.10.10
++#	PT 9587 BO 14 1971.04.03
++#	PT 9702 BO 41 1971.10.09
++#	PT 38-A/72 BO 14 1972.04.01
++#	PT 126-A/72 BO 41 1972.10.07
++#	PT 61/73 BO 14 1973.04.07
++#	PT 182/73 BO 40 1973.10.06
++#	PT 282/73 BO 51 1973.12.22
++#	PT 177/74 BO 41 1974.10.12
++#	PT 51/75 BO 15 1975.04.12
++#	PT 173/75 BO 41 1975.10.11
++#	PT 67/76/M BO 14 1976.04.03
++#	PT 169/76/M BO 41 1976.10.09
++#	PT 78/79/M BO 19 1979.05.12
++#	PT 166/79/M BO 42 1979.10.20
++# Note that DIL 732 does not belong to "HORÁRIO DE VERÃO" according to
++# LegisMac.... Note that between 1942 and 1945, the time switched
++# between GMT+9 and GMT+10.  Also in 1965 and 1965 the DST ended at 2:30am.
++
++# From Paul Eggert (2018-05-10):
++# The 1904 decree says that Macau changed from the meridian of
++# Fortaleza do Monte, presumably the basis for the 7:34:10 for LMT.
++
+ # Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
+-Rule	Macau	1961	1962	-	Mar	Sun>=16	3:30	1:00	D
+-Rule	Macau	1961	1964	-	Nov	Sun>=1	3:30	0	S
+-Rule	Macau	1963	only	-	Mar	Sun>=16	0:00	1:00	D
+-Rule	Macau	1964	only	-	Mar	Sun>=16	3:30	1:00	D
+-Rule	Macau	1965	only	-	Mar	Sun>=16	0:00	1:00	D
+-Rule	Macau	1965	only	-	Oct	31	0:00	0	S
+-Rule	Macau	1966	1971	-	Apr	Sun>=16	3:30	1:00	D
+-Rule	Macau	1966	1971	-	Oct	Sun>=16	3:30	0	S
+-Rule	Macau	1972	1974	-	Apr	Sun>=15	0:00	1:00	D
+-Rule	Macau	1972	1973	-	Oct	Sun>=15	0:00	0	S
+-Rule	Macau	1974	1977	-	Oct	Sun>=15	3:30	0	S
+-Rule	Macau	1975	1977	-	Apr	Sun>=15	3:30	1:00	D
+-Rule	Macau	1978	1980	-	Apr	Sun>=15	0:00	1:00	D
+-Rule	Macau	1978	1980	-	Oct	Sun>=15	0:00	0	S
+-# See Europe/Lisbon for info about the 1912 transition.
++Rule	Macau	1942	1943	-	Apr	30	23:00	1:00	-
++Rule	Macau	1942	only	-	Nov	17	23:00	0	-
++Rule	Macau	1943	only	-	Sep	30	23:00	0	S
++Rule	Macau	1946	only	-	Apr	30	23:00s	1:00	D
++Rule	Macau	1946	only	-	Sep	30	23:00s	0	S
++Rule	Macau	1947	only	-	Apr	19	23:00s	1:00	D
++Rule	Macau	1947	only	-	Nov	30	23:00s	0	S
++Rule	Macau	1948	only	-	May	 2	23:00s	1:00	D
++Rule	Macau	1948	only	-	Oct	31	23:00s	0	S
++Rule	Macau	1949	1950	-	Apr	Sat>=1	23:00s	1:00	D
++Rule	Macau	1949	1950	-	Oct	lastSat	23:00s	0	S
++Rule	Macau	1951	only	-	Mar	31	23:00s	1:00	D
++Rule	Macau	1951	only	-	Oct	28	23:00s	0	S
++Rule	Macau	1952	1953	-	Apr	Sat>=1	23:00s	1:00	D
++Rule	Macau	1952	only	-	Nov	 1	23:00s	0	S
++Rule	Macau	1953	1954	-	Oct	lastSat	23:00s	0	S
++Rule	Macau	1954	1956	-	Mar	Sat>=17	23:00s	1:00	D
++Rule	Macau	1955	only	-	Nov	 5	23:00s	0	S
++Rule	Macau	1956	1964	-	Nov	Sun>=1	03:30	0	S
++Rule	Macau	1957	1964	-	Mar	Sun>=18	03:30	1:00	D
++Rule	Macau	1965	1973	-	Apr	Sun>=16	03:30	1:00	D
++Rule	Macau	1965	1966	-	Oct	Sun>=16	02:30	0	S
++Rule	Macau	1967	1976	-	Oct	Sun>=16	03:30	0	S
++Rule	Macau	1973	only	-	Dec	30	03:30	1:00	D
++Rule	Macau	1975	1976	-	Apr	Sun>=16	03:30	1:00	D
++Rule	Macau	1979	only	-	May	13	03:30	1:00	D
++Rule	Macau	1979	only	-	Oct	Sun>=16	03:30	0	S
++
+ # Zone	NAME		GMTOFF	RULES	FORMAT	[UNTIL]
+-Zone	Asia/Macau	7:34:20 -	LMT	1911 Dec 31 16:00u
++Zone	Asia/Macau	7:34:10 -	LMT	1904 Oct 30
++			8:00	-	CST	1941 Dec 21 23:00
++			9:00	Macau	+09/+10	1945 Sep 30 24:00
+ 			8:00	Macau	C%sT
+ 
+ 
+@@ -1471,9 +1631,29 @@ Zone	Asia/Jerusalem	2:20:54 -	LMT	1880
+ # http://www.shugiin.go.jp/internet/itdb_housei.nsf/html/houritsu/00719500331039.htm
+ # ... In summary, it is written as follows.  From 24:00 on the first Saturday
+ # in May, until 0:00 on the day after the second Saturday in September.
++
++# From Phake Nick (2018-09-27):
++# [T]he webpage authored by National Astronomical Observatory of Japan
++# https://eco.mtk.nao.ac.jp/koyomi/wiki/BBFEB9EF2FB2C6BBFEB9EF.html
++# ... mentioned that using Showa 23 (year 1948) as example, 13pm of September
++# 11 in summer time will equal to 0am of September 12 in standard time.
++# It cited a document issued by the Liaison Office which briefly existed
++# during the postwar period of Japan, where the detail on implementation
++# of the summer time is described in the document.
++# https://eco.mtk.nao.ac.jp/koyomi/wiki/BBFEB9EF2FB2C6BBFEB9EFB2C6BBFEB9EFA4CEBCC2BBDCA4CBA4C4A4A4A4C6.pdf
++# The text in the document do instruct a fall back to occur at
++# September 11, 13pm in summer time, while ordinary citizens can
++# change the clock before they sleep.
++#
++# From Paul Eggert (2018-09-27):
++# This instruction is equivalent to "Sat>=8 25:00", so use that.  zic treats
++# it like "Sun>=9 01:00", which is not quite the same but is the best we can
++# do in any POSIX or C platform.  The "25:00" assumes zic from 2007 or later,
++# which should be safe now.
++
+ # Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
+ Rule	Japan	1948	only	-	May	Sat>=1	24:00	1:00	D
+-Rule	Japan	1948	1951	-	Sep	Sun>=9	 0:00	0	S
++Rule	Japan	1948	1951	-	Sep	Sat>=8	25:00	0	S
+ Rule	Japan	1949	only	-	Apr	Sat>=1	24:00	1:00	D
+ Rule	Japan	1950	1951	-	May	Sat>=1	24:00	1:00	D
+ 
+@@ -1855,7 +2035,7 @@ Zone	Asia/Aqtobe	3:48:40	-	LMT	1924 May  2
+ 			5:00	-	+05
+ # Mangghystaū (KZ-MAN)
+ # Aqtau was not founded until 1963, but it represents an inhabited region,
+-# so include time stamps before 1963.
++# so include timestamps before 1963.
+ Zone	Asia/Aqtau	3:21:04	-	LMT	1924 May  2
+ 			4:00	-	+04	1930 Jun 21
+ 			5:00	-	+05	1981 Oct  1
+@@ -1995,6 +2175,10 @@ Rule	ROK	1987	1988	-	Oct	Sun>=8	3:00	0	S
+ # Assembly, as published in Rodong Sinmun.
+ # From Tim Parenti (2018-04-29):
+ # It appears to be the front page story at the top in the right-most column.
++#
++# From Paul Eggert (2018-05-04):
++# The BBC reported that the transition was from 23:30 to 24:00 today.
++# https://www.bbc.com/news/world-asia-44010705
+ 
+ # Zone	NAME		GMTOFF	RULES	FORMAT	[UNTIL]
+ Zone	Asia/Seoul	8:27:52	-	LMT	1908 Apr  1
+@@ -2007,7 +2191,7 @@ Zone	Asia/Pyongyang	8:23:00 -	LMT	1908 Apr  1
+ 			8:30	-	KST	1912 Jan  1
+ 			9:00	-	JST	1945 Aug 24
+ 			9:00	-	KST	2015 Aug 15 00:00
+-			8:30	-	KST	2018 May  5
++			8:30	-	KST	2018 May  4 23:30
+ 			9:00	-	KST
+ 
+ ###############################################################################
+@@ -2757,19 +2941,35 @@ Zone	Asia/Hebron	2:20:23	-	LMT	1900 Oct
+ # Philippine Star 2014-08-05
+ # http://www.philstar.com/headlines/2014/08/05/1354152/pnoy-urged-declare-use-daylight-saving-time
+ 
++# From Paul Goyette (2018-06-15):
++# In the Philippines, there is a national law, Republic Act No. 10535
++# which declares the official time here as "Philippine Standard Time".
++# The act [1] even specifies use of PST as the abbreviation, although
++# the FAQ provided by PAGASA [2] uses the "acronym PhST to distinguish
++# it from the Pacific Standard Time (PST)."
++# [1] http://www.officialgazette.gov.ph/2013/05/15/republic-act-no-10535/
++# [2] https://www1.pagasa.dost.gov.ph/index.php/astronomy/philippine-standard-time#republic-act-10535
++#
++# From Paul Eggert (2018-06-19):
++# I surveyed recent news reports, and my impression is that "PST" is
++# more popular among reliable English-language news sources.  This is
++# not just a measure of Google hit counts: it's also the sizes and
++# influence of the sources.  There is no current abbreviation for DST,
++# so use "PDT", the usual American style.
++
+ # Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
+-Rule	Phil	1936	only	-	Nov	1	0:00	1:00	-
+-Rule	Phil	1937	only	-	Feb	1	0:00	0	-
+-Rule	Phil	1954	only	-	Apr	12	0:00	1:00	-
+-Rule	Phil	1954	only	-	Jul	1	0:00	0	-
+-Rule	Phil	1978	only	-	Mar	22	0:00	1:00	-
+-Rule	Phil	1978	only	-	Sep	21	0:00	0	-
++Rule	Phil	1936	only	-	Nov	1	0:00	1:00	D
++Rule	Phil	1937	only	-	Feb	1	0:00	0	S
++Rule	Phil	1954	only	-	Apr	12	0:00	1:00	D
++Rule	Phil	1954	only	-	Jul	1	0:00	0	S
++Rule	Phil	1978	only	-	Mar	22	0:00	1:00	D
++Rule	Phil	1978	only	-	Sep	21	0:00	0	S
+ # Zone	NAME		GMTOFF	RULES	FORMAT	[UNTIL]
+ Zone	Asia/Manila	-15:56:00 -	LMT	1844 Dec 31
+ 			8:04:00 -	LMT	1899 May 11
+-			8:00	Phil	+08/+09	1942 May
+-			9:00	-	+09	1944 Nov
+-			8:00	Phil	+08/+09
++			8:00	Phil	P%sT	1942 May
++			9:00	-	JST	1944 Nov
++			8:00	Phil	P%sT
+ 
+ # Qatar
+ # Zone	NAME		GMTOFF	RULES	FORMAT	[UNTIL]
+@@ -2780,15 +2980,34 @@ Link Asia/Qatar Asia/Bahrain
+ 
+ # Saudi Arabia
+ #
+-# From Paul Eggert (2014-07-15):
++# From Paul Eggert (2018-08-29):
+ # Time in Saudi Arabia and other countries in the Arabian peninsula was not
+-# standardized until relatively recently; we don't know when, and possibly it
++# standardized until 1968 or so; we don't know exactly when, and possibly it
+ # has never been made official.  Richard P Hunt, in "Islam city yielding to
+ # modern times", New York Times (1961-04-09), p 20, wrote that only airlines
+ # observed standard time, and that people in Jeddah mostly observed quasi-solar
+ # time, doing so by setting their watches at sunrise to 6 o'clock (or to 12
+ # o'clock for "Arab" time).
+ #
++# Timekeeping differed depending on who you were and which part of Saudi
++# Arabia you were in.  In 1969, Elias Antar wrote that although a common
++# practice had been to set one's watch to 12:00 (i.e., midnight) at sunset -
++# which meant that the time on one side of a mountain could differ greatly from
++# the time on the other side - many foreigners set their watches to 6pm
++# instead, while airlines instead used UTC +03 (except in Dhahran, where they
++# used UTC +04), Aramco used UTC +03 with DST, and the Trans-Arabian Pipe Line
++# Company used Aramco time in eastern Saudi Arabia and airline time in western.
++# (The American Military Aid Advisory Group used plain UTC.)  Antar writes,
++# "A man named Higgins, so the story goes, used to run a local power
++# station. One day, the whole thing became too much for Higgins and he
++# assembled his staff and laid down the law. 'I've had enough of this,' he
++# shrieked. 'It is now 12 o'clock Higgins Time, and from now on this station is
++# going to run on Higgins Time.' And so, until last year, it did."  See:
++# Antar E. Dinner at When? Saudi Aramco World, 1969 March/April. 2-3.
++# http://archive.aramcoworld.com/issue/196902/dinner.at.when.htm
++# newspapers.com says a similar story about Higgins was published in the Port
++# Angeles (WA) Evening News, 1965-03-10, page 5, but I lack access to the text.
++#
+ # The TZ database cannot represent quasi-solar time; airline time is the best
+ # we can do.  The 1946 foreign air news digest of the U.S. Civil Aeronautics
+ # Board (OCLC 42299995) reported that the "... Arabian Government, inaugurated
+@@ -2798,7 +3017,8 @@ Link Asia/Qatar Asia/Bahrain
+ #
+ # Shanks & Pottenger also state that until 1968-05-01 Saudi Arabia had two
+ # time zones; the other zone, at UT +04, was in the far eastern part of
+-# the country.  Ignore this, as it's before our 1970 cutoff.
++# the country.  Presumably this is documenting airline time.  Ignore this,
++# as it's before our 1970 cutoff.
+ #
+ # Zone	NAME		GMTOFF	RULES	FORMAT	[UNTIL]
+ Zone	Asia/Riyadh	3:06:52 -	LMT	1947 Mar 14
+diff --git a/src/main/java/org/joda/time/tz/src/australasia b/src/main/java/org/joda/time/tz/src/australasia
+index e3e79f19b..87ba620d9 100644
+--- a/src/main/java/org/joda/time/tz/src/australasia
++++ b/src/main/java/org/joda/time/tz/src/australasia
+@@ -1,3 +1,5 @@
++# tzdb data for Australasia and environs, and for much of the Pacific
++
+ # This file is in the public domain, so clarified as of
+ # 2009-05-17 by Arthur David Olson.
+ 
+@@ -361,8 +363,15 @@ Zone	Indian/Cocos	6:27:40	-	LMT	1900
+ # Dominic Fok writes (2017-08-20) that DST ends 2018-01-14, citing
+ # Extraordinary Government of Fiji Gazette Supplement No. 21 (2017-08-27),
+ # [Legal Notice No. 41] of an order of the previous day by J Usamate.
++
++# From Raymond Kumar (2018-07-13):
++# http://www.fijitimes.com/government-approves-2018-daylight-saving/
++# ... The daylight saving period will end at 3am on Sunday January 13, 2019.
++#
++# From Paul Eggert (2018-07-15):
+ # For now, guess DST from 02:00 the first Sunday in November to 03:00
+-# the first Sunday on or after January 14.  Although ad hoc, it matches
++# the first Sunday on or after January 13.  January transitions reportedly
++# depend on when school terms start.  Although the guess is ad hoc, it matches
+ # transitions since late 2014 and seems more likely to match future
+ # practice than guessing no DST.
+ 
+@@ -376,7 +385,7 @@ Rule	Fiji	2011	only	-	Mar	Sun>=1	3:00	0	-
+ Rule	Fiji	2012	2013	-	Jan	Sun>=18	3:00	0	-
+ Rule	Fiji	2014	only	-	Jan	Sun>=18	2:00	0	-
+ Rule	Fiji	2014	max	-	Nov	Sun>=1	2:00	1:00	-
+-Rule	Fiji	2015	max	-	Jan	Sun>=14	3:00	0	-
++Rule	Fiji	2015	max	-	Jan	Sun>=13	3:00	0	-
+ # Zone	NAME		GMTOFF	RULES	FORMAT	[UNTIL]
+ Zone	Pacific/Fiji	11:55:44 -	LMT	1915 Oct 26 # Suva
+ 			12:00	Fiji	+12/+13
+diff --git a/src/main/java/org/joda/time/tz/src/backward b/src/main/java/org/joda/time/tz/src/backward
+index 2141f0d57..51e10f4ce 100644
+--- a/src/main/java/org/joda/time/tz/src/backward
++++ b/src/main/java/org/joda/time/tz/src/backward
+@@ -1,7 +1,9 @@
++# tzdb links for backward compatibility
++
+ # This file is in the public domain, so clarified as of
+ # 2009-05-17 by Arthur David Olson.
+ 
+-# This file provides links between current names for time zones
++# This file provides links between current names for timezones
+ # and their old names.  Many names changed in late 1993.
+ 
+ # Link	TARGET			LINK-NAME
+diff --git a/src/main/java/org/joda/time/tz/src/etcetera b/src/main/java/org/joda/time/tz/src/etcetera
+index f5fa4c94b..91ded935c 100644
+--- a/src/main/java/org/joda/time/tz/src/etcetera
++++ b/src/main/java/org/joda/time/tz/src/etcetera
+@@ -1,9 +1,11 @@
++# tzdb data for ships at sea and other miscellany
++
+ # This file is in the public domain, so clarified as of
+ # 2009-05-17 by Arthur David Olson.
+ 
+ # These entries are mostly present for historical reasons, so that
+ # people in areas not otherwise covered by the tz files could "zic -l"
+-# to a time zone that was right for their area.  These days, the
++# to a timezone that was right for their area.  These days, the
+ # tz files cover almost all the inhabited world, and the only practical
+ # need now for the entries that are not on UTC are for ships at sea
+ # that cannot use POSIX TZ settings.
+diff --git a/src/main/java/org/joda/time/tz/src/europe b/src/main/java/org/joda/time/tz/src/europe
+index 6994ed807..5b0a82969 100644
+--- a/src/main/java/org/joda/time/tz/src/europe
++++ b/src/main/java/org/joda/time/tz/src/europe
+@@ -1,3 +1,5 @@
++# tzdb data for Europe and environs
++
+ # This file is in the public domain, so clarified as of
+ # 2009-05-17 by Arthur David Olson.
+ 
+@@ -517,7 +519,7 @@ Link	Europe/London	Europe/Isle_of_Man
+ #
+ # To work around this problem, the build procedure can translate the
+ # following data into two forms, one with negative SAVE values and the
+-# other form with a traditional approximation for Irish time stamps
++# other form with a traditional approximation for Irish timestamps
+ # after 1971-10-31 02:00 UTC; although this approximation has tm_isdst
+ # flags that are reversed, its UTC offsets are correct and this often
+ # suffices.  This source file currently uses only nonnegative SAVE
+@@ -2427,6 +2429,33 @@ Zone Europe/Bucharest	1:44:24 -	LMT	1891 Oct
+ # administratively part of Sakhalin oblast', they appear to have
+ # remained on UTC+11 along with Magadan.
+ 
++# From Marat Nigametzianov (2018-07-16):
++# this is link to order from 1956 about timezone in USSR
++# http://astro.uni-altai.ru/~orion/blog/2011/11/novyie-granitsyi-chasovyih-poyasov-v-sssr/
++#
++# From Paul Eggert (2018-07-16):
++# Perhaps someone could translate the above-mentioned link and use it
++# to correct our data for the ex-Soviet Union.  It cites the following:
++# «Поясное время и новые границы часовых поясов» / сост. П.Н. Долгов,
++# отв. ред. Г.Д. Бурдун - М: Комитет стандартов, мер и измерительных
++# приборов при Совете Министров СССР, Междуведомственная комиссия
++# единой службы времени, 1956 г.
++# This book looks like it would be a helpful resource for the Soviet
++# Union through 1956.  Although a copy was in the Scientific Library
++# of Tomsk State University, I have not been able to track down a copy nearby.
++#
++# From Stepan Golosunov (2018-07-21):
++# http://astro.uni-altai.ru/~orion/blog/2015/05/center-reforma-ischisleniya-vremeni-br-na-territorii-sssr-v-1957-godu-center/
++# says that the 1956 decision to change time belts' borders was not
++# implemented as planned in 1956 and the change happened in 1957.
++# There is also the problem that actual time zones were different from
++# the official time belts (and from many time belts' maps) as there were
++# numerous exceptions to application of time belt rules.  For example,
++# https://ru.wikipedia.org/wiki/Московское_время#Перемещение_границы_применения_московского_времени_на_восток
++# says that by 1962 there were many regions in the 3rd time belt that
++# were on Moscow time, referring to a 1962 map.  By 1989 number of such
++# exceptions grew considerably.
++
+ # From Tim Parenti (2014-07-06):
+ # The comments detailing the coverage of each Russian zone are meant to assist
+ # with maintenance only and represent our best guesses as to which regions
+@@ -2437,9 +2466,6 @@ Zone Europe/Bucharest	1:44:24 -	LMT	1891 Oct
+ # future stability.  ISO 3166-2:RU codes are also listed for first-level
+ # divisions where available.
+ 
+-# Zone	NAME		GMTOFF	RULES	FORMAT	[UNTIL]
+-
+-
+ # From Tim Parenti (2014-07-03):
+ # Europe/Kaliningrad covers...
+ # 39	RU-KGD	Kaliningrad Oblast
+@@ -2707,6 +2733,15 @@ Zone Europe/Astrakhan	 3:12:12 -	LMT	1924 May
+ # 34	RU-VGG	Volgograd Oblast
+ # The 1988 transition is from USSR act No. 5 (1988-01-04).
+ 
++# From Alexander Fetisov (2018-09-20):
++# Volgograd region in southern Russia (Europe/Volgograd) change
++# timezone from UTC+3 to UTC+4 from 28oct2018.
++# http://sozd.parliament.gov.ru/bill/452878-7
++#
++# From Stepan Golosunov (2018-10-11):
++# The law has been published today on
++# http://publication.pravo.gov.ru/Document/View/0001201810110037
++
+ Zone Europe/Volgograd	 2:57:40 -	LMT	1920 Jan  3
+ 			 3:00	-	+03	1930 Jun 21
+ 			 4:00	-	+04	1961 Nov 11
+@@ -2715,7 +2750,8 @@ Zone Europe/Volgograd	 2:57:40 -	LMT	1920 Jan  3
+ 			 4:00	-	+04	1992 Mar 29  2:00s
+ 			 3:00	Russia	+03/+04	2011 Mar 27  2:00s
+ 			 4:00	-	+04	2014 Oct 26  2:00s
+-			 3:00	-	+03
++			 3:00	-	+03	2018 Oct 28  2:00s
++			 4:00	-	+04
+ 
+ # From Paul Eggert (2016-11-11):
+ # Europe/Saratov covers:
+@@ -3424,6 +3460,7 @@ Zone	Africa/Ceuta	-0:21:16 -	LMT	1900 Dec 31 23:38:44
+ 			 0:00	1:00	WEST	1918 Oct  7 23:00
+ 			 0:00	-	WET	1924
+ 			 0:00	Spain	WE%sT	1929
++			 0:00	-	WET	1967 # Help zishrink.awk.
+ 			 0:00 SpainAfrica WE%sT	1984 Mar 16
+ 			 1:00	-	CET	1986
+ 			 1:00	EU	CE%sT
+@@ -3609,7 +3646,7 @@ Zone	Europe/Zurich	0:34:08 -	LMT	1853 Jul 16 # See above comment.
+ # http://www.resmigazete.gov.tr/eskiler/2001/03/20010324.htm#2  - for 2001
+ # http://www.resmigazete.gov.tr/eskiler/2002/03/20020316.htm#2  - for 2002-2006
+ # From Paul Eggert (2016-09-25):
+-# Prefer the above sources to Shanks & Pottenger for time stamps after 1985.
++# Prefer the above sources to Shanks & Pottenger for timestamps after 1985.
+ 
+ # From Steffen Thorsen (2007-03-09):
+ # Starting 2007 though, it seems that they are adopting EU's 1:00 UTC
+@@ -3819,10 +3856,29 @@ Link	Europe/Istanbul	Asia/Istanbul	# Istanbul is in both continents.
+ # * Ukrainian Government's Resolution of 20.03.1992, No. 139.
+ # http://www.uazakon.com/documents/date_8u/pg_grcasa.htm
+ 
++# From Paul Eggert (2018-10-03):
++# As is usual in tzdb, Ukrainian zones use the most common English spellings.
++# For example, tzdb uses Europe/Kiev, as "Kiev" is the most common spelling in
++# English for Ukraine's capital, even though it is certainly wrong as a
++# transliteration of the Ukrainian "Київ".  This is similar to tzdb's use of
++# Europe/Prague, which is certainly wrong as a transliteration of the Czech
++# "Praha".  ("Kiev" came from old Slavic via Russian to English, and "Prague"
++# came from old Slavic via French to English, so the two cases have something
++# in common.)  Admittedly English-language spelling of Ukrainian names is
++# controversial, and some day "Kyiv" may become substantially more popular in
++# English; in the meantime, stick with the traditional English "Kiev" as that
++# means less disruption for our users.
++#
++# Anyway, none of the common English-language spellings (Kiev, Kyiv, Kieff,
++# Kijeff, Kijev, Kiyef, Kiyeff) do justice to the common pronunciation in
++# Ukrainian, namely [ˈkɪjiu̯] (IPA).  This pronunciation has nothing like an
++# English "v" or "f", and instead trails off with what an English-speaker
++# would call a demure "oo" sound, and it would would be better anglicized as
++# "Kuiyu".  Here's a sound file, if you would like to do as the Kuiyuvians do:
++# https://commons.wikimedia.org/wiki/File:Uk-Київ.ogg
++
+ # Zone	NAME		GMTOFF	RULES	FORMAT	[UNTIL]
+-# Most of Ukraine since 1970 has been like Kiev.
+-# "Kyiv" is the transliteration of the Ukrainian name, but
+-# "Kiev" is more common in English.
++# This represents most of Ukraine.  See above for the spelling of "Kiev".
+ Zone Europe/Kiev	2:02:04 -	LMT	1880
+ 			2:02:04	-	KMT	1924 May  2 # Kiev Mean Time
+ 			2:00	-	EET	1930 Jun 21
+diff --git a/src/main/java/org/joda/time/tz/src/northamerica b/src/main/java/org/joda/time/tz/src/northamerica
+index 06db1a805..88c0f6f22 100644
+--- a/src/main/java/org/joda/time/tz/src/northamerica
++++ b/src/main/java/org/joda/time/tz/src/northamerica
+@@ -1,3 +1,5 @@
++# tzdb data for North and Central America and environs
++
+ # This file is in the public domain, so clarified as of
+ # 2009-05-17 by Arthur David Olson.
+ 
+@@ -48,7 +50,7 @@
+ #
+ # Most of the US soon followed suit.  See:
+ # Bartky IR. The adoption of standard time. Technol Cult 1989 Jan;30(1):25-56.
+-# http://dx.doi.org/10.2307/3105430
++# https://dx.doi.org/10.2307/3105430
+ 
+ # From Paul Eggert (2005-04-16):
+ # That 1883 transition occurred at 12:00 new time, not at 12:00 old time.
+diff --git a/src/main/java/org/joda/time/tz/src/pacificnew b/src/main/java/org/joda/time/tz/src/pacificnew
+index 734943486..0e6cf0792 100644
+--- a/src/main/java/org/joda/time/tz/src/pacificnew
++++ b/src/main/java/org/joda/time/tz/src/pacificnew
+@@ -1,3 +1,5 @@
++# tzdb data for proposed US election time (this file is obsolete)
++
+ # This file is in the public domain, so clarified as of
+ # 2009-05-17 by Arthur David Olson.
+ 
+diff --git a/src/main/java/org/joda/time/tz/src/southamerica b/src/main/java/org/joda/time/tz/src/southamerica
+index 9784044ec..b66cb88b1 100644
+--- a/src/main/java/org/joda/time/tz/src/southamerica
++++ b/src/main/java/org/joda/time/tz/src/southamerica
+@@ -1,3 +1,5 @@
++# tzdb data for South America and environs
++
+ # This file is in the public domain, so clarified as of
+ # 2009-05-17 by Arthur David Olson.
+ 
+@@ -392,7 +394,7 @@ Rule	Arg	2008	only	-	Oct	Sun>=15	0:00	1:00	-
+ # standard time, so let's do that here too.  This does not change UTC
+ # offsets, only tm_isdst and the time zone abbreviations.  One minor
+ # plus is that this silences a zic complaint that there's no POSIX TZ
+-# setting for time stamps past 2038.
++# setting for timestamps past 2038.
+ 
+ # Zone	NAME		GMTOFF	RULES	FORMAT	[UNTIL]
+ #
+@@ -925,6 +927,14 @@ Rule	Brazil	2016	2022	-	Feb	Sun>=15	0:00	0	-
+ # ... https://www.timeanddate.com/news/time/brazil-delays-dst-2018.html
+ # From Steffen Thorsen (2017-12-20):
+ # http://www.planalto.gov.br/ccivil_03/_ato2015-2018/2017/decreto/D9242.htm
++#
++# From Fábio Gomes (2018-10-04):
++# The Brazilian president just announced a new change on this year DST.
++# It was scheduled to start on November 4th and it was changed to November 18th.
++# From Rodrigo Brüning Wessler (2018-10-15):
++# The Brazilian government just announced that the change in DST was
++# canceled....  Maybe the president Michel Temer also woke up one hour
++# earlier today. :)
+ Rule	Brazil	2018	max	-	Nov	Sun>=1	0:00	1:00	-
+ Rule	Brazil	2023	only	-	Feb	Sun>=22	0:00	0	-
+ Rule	Brazil	2024	2025	-	Feb	Sun>=15	0:00	0	-
+@@ -1231,6 +1241,24 @@ Zone America/Rio_Branco	-4:31:12 -	LMT	1914
+ # they will switch from -03 to -04 one hour after Santiago does that day.
+ # For now, assume that they will not revert.
+ 
++# From Juan Correa (2018-08-13):
++# As of moments ago, the Ministry of Energy in Chile has announced the new
++# schema for DST. ...  Announcement in video (in Spanish):
++# https://twitter.com/MinEnergia/status/1029000399129374720
++# From Yonathan Dossow (2018-08-13):
++# The video says "first Saturday of September", we all know it means Sunday at
++# midnight.
++# From Tim Parenti (2018-08-13):
++# Translating the captions on the video at 0:44-0:55, "We want to announce as
++# Government that from 2019, Winter Time will be increased to 5 months, between
++# the first Saturday of April and the first Saturday of September."
++# At 2:08-2:20, "The Magallanes region will maintain its current time, as
++# decided by the citizens during 2017, but our Government will promote a
++# regional dialogue table to gather their opinion on this matter."
++# https://twitter.com/MinEnergia/status/1029009354001973248
++# "We will keep the new time policy unchanged for at least the next 4 years."
++# So we extend the new rules on Saturdays at 24:00 mainland time indefinitely.
++
+ # Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
+ Rule	Chile	1927	1931	-	Sep	 1	0:00	1:00	-
+ Rule	Chile	1928	1932	-	Apr	 1	0:00	0	-
+@@ -1264,8 +1292,10 @@ Rule	Chile	2011	only	-	May	Sun>=2	3:00u	0	-
+ Rule	Chile	2011	only	-	Aug	Sun>=16	4:00u	1:00	-
+ Rule	Chile	2012	2014	-	Apr	Sun>=23	3:00u	0	-
+ Rule	Chile	2012	2014	-	Sep	Sun>=2	4:00u	1:00	-
+-Rule	Chile	2016	max	-	May	Sun>=9	3:00u	0	-
+-Rule	Chile	2016	max	-	Aug	Sun>=9	4:00u	1:00	-
++Rule	Chile	2016	2018	-	May	Sun>=9	3:00u	0	-
++Rule	Chile	2016	2018	-	Aug	Sun>=9	4:00u	1:00	-
++Rule	Chile	2019	max	-	Apr	Sun>=2	3:00u	0	-
++Rule	Chile	2019	max	-	Sep	Sun>=2	4:00u	1:00	-
+ # IATA SSIM anomalies: (1992-02) says 1992-03-14;
+ # (1996-09) says 1998-03-08.  Ignore these.
+ # Zone	NAME		GMTOFF	RULES	FORMAT	[UNTIL]
+diff --git a/src/main/java/org/joda/time/tz/src/systemv b/src/main/java/org/joda/time/tz/src/systemv
+index d9e299575..24c8f6419 100644
+--- a/src/main/java/org/joda/time/tz/src/systemv
++++ b/src/main/java/org/joda/time/tz/src/systemv
+@@ -1,3 +1,5 @@
++# tzdb data for System V rules (this file is obsolete)
++
+ # This file is in the public domain, so clarified as of
+ # 2009-05-17 by Arthur David Olson.
+ 
+
+From b72a1f99d135a4f7aa0e5acc7343c33d7d1b3d45 Mon Sep 17 00:00:00 2001
+From: "Stephen Colebourne (CI)" <scolebourne@joda.org>
+Date: Sat, 27 Oct 2018 19:20:35 +0100
+Subject: [PATCH 13/16] Handle extended data in TZDB
+
+TZDB now returns a time-of-day of 25:00
+---
+ .../java/org/joda/time/tz/DateTimeZoneBuilder.java     |  5 +++++
+ src/test/java/org/joda/time/tz/TestCompiler.java       | 10 ++++++++++
+ 2 files changed, 15 insertions(+)
+
+diff --git a/src/main/java/org/joda/time/tz/DateTimeZoneBuilder.java b/src/main/java/org/joda/time/tz/DateTimeZoneBuilder.java
+index 0578dacfb..c759eeacd 100644
+--- a/src/main/java/org/joda/time/tz/DateTimeZoneBuilder.java
++++ b/src/main/java/org/joda/time/tz/DateTimeZoneBuilder.java
+@@ -32,6 +32,7 @@
+ 
+ import org.joda.time.Chronology;
+ import org.joda.time.DateTime;
++import org.joda.time.DateTimeConstants;
+ import org.joda.time.DateTimeUtils;
+ import org.joda.time.DateTimeZone;
+ import org.joda.time.Period;
+@@ -584,6 +585,8 @@ public long next(long instant, int standardOffset, int saveMillis) {
+                     next = setDayOfWeek(chrono, next);
+                 }
+             }
++            next = chrono.millisOfDay().set(next, 0);
++            next = chrono.millisOfDay().add(next, iMillisOfDay);
+ 
+             // Convert from local time to UTC.
+             return next - offset;
+@@ -626,6 +629,8 @@ public long previous(long instant, int standardOffset, int saveMillis) {
+                     prev = setDayOfWeek(chrono, prev);
+                 }
+             }
++            prev = chrono.millisOfDay().set(prev, 0);
++            prev = chrono.millisOfDay().add(prev, iMillisOfDay);
+ 
+             // Convert from local time to UTC.
+             return prev - offset;
+diff --git a/src/test/java/org/joda/time/tz/TestCompiler.java b/src/test/java/org/joda/time/tz/TestCompiler.java
+index 7cf6b9949..51ee2b9c3 100644
+--- a/src/test/java/org/joda/time/tz/TestCompiler.java
++++ b/src/test/java/org/joda/time/tz/TestCompiler.java
+@@ -27,6 +27,7 @@
+ import junit.framework.TestSuite;
+ 
+ import org.joda.time.DateTime;
++import org.joda.time.DateTimeConstants;
+ import org.joda.time.DateTimeZone;
+ import org.joda.time.tz.ZoneInfoCompiler.DateTimeOfYear;
+ 
+@@ -270,4 +271,13 @@ public void test_Amman_2006() {
+         assertEquals(next, new DateTime(2006, 3, 31, 0, 0, DateTimeZone.forOffsetHours(2)).getMillis());
+     }
+ 
++    public void test_Tokyo_1949() {
++        DateTimeZone zone = DateTimeZone.forID("Asia/Tokyo");
++        DateTime dt = new DateTime(1949, 9, 7, 0, 0, zone);
++        long next = zone.nextTransition(dt.getMillis());
++        DateTime expected = new DateTime(1949, 9, 11, 0, 0, DateTimeZone.forOffsetHours(9));
++        assertEquals(DateTimeConstants.SUNDAY, expected.getDayOfWeek());
++        assertEquals(expected.getMillis(), next);
++    }
++
+ }
+
+From 2f168eb3a389465a5ff47a0d00e53e4a0f4ba851 Mon Sep 17 00:00:00 2001
+From: "Stephen Colebourne (CI)" <scolebourne@joda.org>
+Date: Sat, 27 Oct 2018 19:26:13 +0100
+Subject: [PATCH 14/16] Update tzdb to v2018g
+
+---
+ pom.xml                                       |  2 +-
+ src/main/java/org/joda/time/tz/src/Readme.txt |  2 +-
+ src/main/java/org/joda/time/tz/src/africa     | 96 +++++++------------
+ src/main/java/org/joda/time/tz/src/europe     |  3 +-
+ .../java/org/joda/time/tz/src/northamerica    | 17 +++-
+ 5 files changed, 50 insertions(+), 70 deletions(-)
+
+diff --git a/pom.xml b/pom.xml
+index 82d2b414c..0a0a55053 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -1007,6 +1007,6 @@
+     <!-- Other properties -->
+     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+-    <tz.database.version>2018f</tz.database.version>
++    <tz.database.version>2018g</tz.database.version>
+   </properties>
+ </project>
+diff --git a/src/main/java/org/joda/time/tz/src/Readme.txt b/src/main/java/org/joda/time/tz/src/Readme.txt
+index c2f0651fe..768bf8159 100644
+--- a/src/main/java/org/joda/time/tz/src/Readme.txt
++++ b/src/main/java/org/joda/time/tz/src/Readme.txt
+@@ -1,2 +1,2 @@
+ The data files in this directory were obtained from the public IANA time zone database,
+-https://www.iana.org/time-zones, version 2018f.
++https://www.iana.org/time-zones, version 2018g.
+diff --git a/src/main/java/org/joda/time/tz/src/africa b/src/main/java/org/joda/time/tz/src/africa
+index 555052bed..a26b91bc1 100644
+--- a/src/main/java/org/joda/time/tz/src/africa
++++ b/src/main/java/org/joda/time/tz/src/africa
+@@ -844,94 +844,61 @@ Zone Indian/Mauritius	3:50:00 -	LMT	1907 # Port Louis
+ # <https://lnt.ma/le-maroc-reculera-dune-heure-le-dimanche-14-juin/> agrees
+ # with the patch.
+ 
+-# From Paul Eggert (2015-06-08):
+-# For now, guess that later spring and fall transitions will use 2015's rules,
+-# and guess that Morocco will switch to standard time at 03:00 the last
+-# Sunday before Ramadan, and back to DST at 02:00 the first Sunday after
+-# Ramadan.  To implement this, transition dates for 2016 through 2037 were
+-# determined by running the following program under GNU Emacs 24.3, with the
+-# results integrated by hand into the table below.
+-# (let ((islamic-year 1437))
+-#   (require 'cal-islam)
+-#   (while (< islamic-year 1460)
+-#     (let ((a (calendar-islamic-to-absolute (list 9 1 islamic-year)))
+-#           (b (calendar-islamic-to-absolute (list 10 1 islamic-year)))
+-#           (sunday 0))
+-#       (while (/= sunday (mod (setq a (1- a)) 7)))
+-#       (while (/= sunday (mod b 7))
+-#         (setq b (1+ b)))
+-#       (setq a (calendar-gregorian-from-absolute a))
+-#       (setq b (calendar-gregorian-from-absolute b))
+-#       (insert
+-#        (format
+-#         (concat "Rule\tMorocco\t%d\tonly\t-\t%s\t%2d\t 3:00\t0\t-\n"
+-#                 "Rule\tMorocco\t%d\tonly\t-\t%s\t%2d\t 2:00\t1:00\tS\n")
+-#         (car (cdr (cdr a))) (calendar-month-name (car a) t) (car (cdr a))
+-#         (car (cdr (cdr b))) (calendar-month-name (car b) t) (car (cdr b)))))
+-#     (setq islamic-year (+ 1 islamic-year))))
++# From Mohamed Essedik Najd (2018-10-26):
++# Today, a Moroccan government council approved the perpetual addition
++# of 60 minutes to the regular Moroccan timezone.
++# From Brian Inglis (2018-10-26):
++# http://www.maroc.ma/fr/actualites/le-conseil-de-gouvernement-adopte-un-projet-de-decret-relatif-lheure-legale-stipulant-le
+ 
+ # RULE	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
+-
+-Rule	Morocco	1939	only	-	Sep	12	 0:00	1:00	S
++Rule	Morocco	1939	only	-	Sep	12	 0:00	1:00	-
+ Rule	Morocco	1939	only	-	Nov	19	 0:00	0	-
+-Rule	Morocco	1940	only	-	Feb	25	 0:00	1:00	S
++Rule	Morocco	1940	only	-	Feb	25	 0:00	1:00	-
+ Rule	Morocco	1945	only	-	Nov	18	 0:00	0	-
+-Rule	Morocco	1950	only	-	Jun	11	 0:00	1:00	S
++Rule	Morocco	1950	only	-	Jun	11	 0:00	1:00	-
+ Rule	Morocco	1950	only	-	Oct	29	 0:00	0	-
+-Rule	Morocco	1967	only	-	Jun	 3	12:00	1:00	S
++Rule	Morocco	1967	only	-	Jun	 3	12:00	1:00	-
+ Rule	Morocco	1967	only	-	Oct	 1	 0:00	0	-
+-Rule	Morocco	1974	only	-	Jun	24	 0:00	1:00	S
++Rule	Morocco	1974	only	-	Jun	24	 0:00	1:00	-
+ Rule	Morocco	1974	only	-	Sep	 1	 0:00	0	-
+-Rule	Morocco	1976	1977	-	May	 1	 0:00	1:00	S
++Rule	Morocco	1976	1977	-	May	 1	 0:00	1:00	-
+ Rule	Morocco	1976	only	-	Aug	 1	 0:00	0	-
+ Rule	Morocco	1977	only	-	Sep	28	 0:00	0	-
+-Rule	Morocco	1978	only	-	Jun	 1	 0:00	1:00	S
++Rule	Morocco	1978	only	-	Jun	 1	 0:00	1:00	-
+ Rule	Morocco	1978	only	-	Aug	 4	 0:00	0	-
+-Rule	Morocco	2008	only	-	Jun	 1	 0:00	1:00	S
++Rule	Morocco	2008	only	-	Jun	 1	 0:00	1:00	-
+ Rule	Morocco	2008	only	-	Sep	 1	 0:00	0	-
+-Rule	Morocco	2009	only	-	Jun	 1	 0:00	1:00	S
++Rule	Morocco	2009	only	-	Jun	 1	 0:00	1:00	-
+ Rule	Morocco	2009	only	-	Aug	21	 0:00	0	-
+-Rule	Morocco	2010	only	-	May	 2	 0:00	1:00	S
++Rule	Morocco	2010	only	-	May	 2	 0:00	1:00	-
+ Rule	Morocco	2010	only	-	Aug	 8	 0:00	0	-
+-Rule	Morocco	2011	only	-	Apr	 3	 0:00	1:00	S
++Rule	Morocco	2011	only	-	Apr	 3	 0:00	1:00	-
+ Rule	Morocco	2011	only	-	Jul	31	 0:00	0	-
+-Rule	Morocco	2012	2013	-	Apr	lastSun	 2:00	1:00	S
++Rule	Morocco	2012	2013	-	Apr	lastSun	 2:00	1:00	-
+ Rule	Morocco	2012	only	-	Jul	20	 3:00	0	-
+-Rule	Morocco	2012	only	-	Aug	20	 2:00	1:00	S
++Rule	Morocco	2012	only	-	Aug	20	 2:00	1:00	-
+ Rule	Morocco	2012	only	-	Sep	30	 3:00	0	-
+ Rule	Morocco	2013	only	-	Jul	 7	 3:00	0	-
+-Rule	Morocco	2013	only	-	Aug	10	 2:00	1:00	S
+-Rule	Morocco	2013	max	-	Oct	lastSun	 3:00	0	-
+-Rule	Morocco	2014	2021	-	Mar	lastSun	 2:00	1:00	S
++Rule	Morocco	2013	only	-	Aug	10	 2:00	1:00	-
++Rule	Morocco	2013	2018	-	Oct	lastSun	 3:00	0	-
++Rule	Morocco	2014	2018	-	Mar	lastSun	 2:00	1:00	-
+ Rule	Morocco	2014	only	-	Jun	28	 3:00	0	-
+-Rule	Morocco	2014	only	-	Aug	 2	 2:00	1:00	S
++Rule	Morocco	2014	only	-	Aug	 2	 2:00	1:00	-
+ Rule	Morocco	2015	only	-	Jun	14	 3:00	0	-
+-Rule	Morocco	2015	only	-	Jul	19	 2:00	1:00	S
++Rule	Morocco	2015	only	-	Jul	19	 2:00	1:00	-
+ Rule	Morocco	2016	only	-	Jun	 5	 3:00	0	-
+-Rule	Morocco	2016	only	-	Jul	10	 2:00	1:00	S
++Rule	Morocco	2016	only	-	Jul	10	 2:00	1:00	-
+ Rule	Morocco	2017	only	-	May	21	 3:00	0	-
+-Rule	Morocco	2017	only	-	Jul	 2	 2:00	1:00	S
++Rule	Morocco	2017	only	-	Jul	 2	 2:00	1:00	-
+ Rule	Morocco	2018	only	-	May	13	 3:00	0	-
+-Rule	Morocco	2018	only	-	Jun	17	 2:00	1:00	S
+-Rule	Morocco	2019	only	-	May	 5	 3:00	0	-
+-Rule	Morocco	2019	only	-	Jun	 9	 2:00	1:00	S
+-Rule	Morocco	2020	only	-	Apr	19	 3:00	0	-
+-Rule	Morocco	2020	only	-	May	24	 2:00	1:00	S
+-Rule	Morocco	2021	only	-	Apr	11	 3:00	0	-
+-Rule	Morocco	2021	only	-	May	16	 2:00	1:00	S
+-Rule	Morocco	2022	only	-	May	 8	 2:00	1:00	S
+-Rule	Morocco	2023	only	-	Apr	23	 2:00	1:00	S
+-Rule	Morocco	2024	only	-	Apr	14	 2:00	1:00	S
+-Rule	Morocco	2025	only	-	Apr	 6	 2:00	1:00	S
+-Rule	Morocco	2026	max	-	Mar	lastSun	 2:00	1:00	S
+-Rule	Morocco	2036	only	-	Oct	19	 3:00	0	-
+-Rule	Morocco	2037	only	-	Oct	 4	 3:00	0	-
++Rule	Morocco	2018	only	-	Jun	17	 2:00	1:00	-
+ 
+ # Zone	NAME		GMTOFF	RULES	FORMAT	[UNTIL]
+ Zone Africa/Casablanca	-0:30:20 -	LMT	1913 Oct 26
+-			 0:00	Morocco	WE%sT	1984 Mar 16
+-			 1:00	-	CET	1986
+-			 0:00	Morocco	WE%sT
++			 0:00	Morocco	+00/+01	1984 Mar 16
++			 1:00	-	+01	1986
++			 0:00	Morocco	+00/+01	2018 Oct 27
++			 1:00	-	+01
+ 
+ # Western Sahara
+ #
+@@ -946,7 +913,8 @@ Zone Africa/Casablanca	-0:30:20 -	LMT	1913 Oct 26
+ 
+ Zone Africa/El_Aaiun	-0:52:48 -	LMT	1934 Jan # El Aaiún
+ 			-1:00	-	-01	1976 Apr 14
+-			 0:00	Morocco	WE%sT
++			 0:00	Morocco	+00/+01	2018 Oct 27
++			 1:00	-	+01
+ 
+ # Mozambique
+ #
+diff --git a/src/main/java/org/joda/time/tz/src/europe b/src/main/java/org/joda/time/tz/src/europe
+index 5b0a82969..587f7b03c 100644
+--- a/src/main/java/org/joda/time/tz/src/europe
++++ b/src/main/java/org/joda/time/tz/src/europe
+@@ -3440,7 +3440,8 @@ Rule	Spain	1978	only	-	Oct	 1	 2:00s	0	-
+ #Rule NatSpain	1937	only	-	May	22	23:00	1:00	S
+ #Rule NatSpain	1937	1938	-	Oct	Sat>=1	24:00s	0	-
+ #Rule NatSpain	1938	only	-	Mar	26	23:00	1:00	S
+-# The following rules are copied from Morocco from 1967 through 1978.
++# The following rules are copied from Morocco from 1967 through 1978,
++# except with "S" letters.
+ Rule SpainAfrica 1967	only	-	Jun	 3	12:00	1:00	S
+ Rule SpainAfrica 1967	only	-	Oct	 1	 0:00	0	-
+ Rule SpainAfrica 1974	only	-	Jun	24	 0:00	1:00	S
+diff --git a/src/main/java/org/joda/time/tz/src/northamerica b/src/main/java/org/joda/time/tz/src/northamerica
+index 88c0f6f22..9d5bad2f7 100644
+--- a/src/main/java/org/joda/time/tz/src/northamerica
++++ b/src/main/java/org/joda/time/tz/src/northamerica
+@@ -439,6 +439,19 @@ Zone America/North_Dakota/Beulah -6:47:07 - LMT	1883 Nov 18 12:12:53
+ # western South Dakota, far western Texas (El Paso County, Hudspeth County,
+ # and Pine Springs and Nickel Creek in Culberson County), Utah, Wyoming
+ #
++# From Paul Eggert (2018-10-25):
++# On 1921-03-04 federal law placed all of Texas into the central time zone.
++# However, El Paso ignored the law for decades and continued to observe
++# mountain time, on the grounds that that's what they had always done
++# and they weren't about to let the federal government tell them what to do.
++# Eventually the federal government gave in and changed the law on
++# 1970-04-10 to match what El Paso was actually doing.  Although
++# that's slightly after our 1970 cutoff, there is no need to create a
++# separate zone for El Paso since they were ignoring the law anyway.  See:
++# Long T. El Pasoans were time rebels, fought to stay in Mountain zone.
++# El Paso Times. 2018-10-24 06:40 -06.
++# https://www.elpasotimes.com/story/news/local/el-paso/2018/10/24/el-pasoans-were-time-rebels-fought-stay-mountain-zone/1744509002/
++#
+ # Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER
+ Rule	Denver	1920	1921	-	Mar	lastSun	2:00	1:00	D
+ Rule	Denver	1920	only	-	Oct	lastSun	2:00	0	S
+@@ -708,9 +721,7 @@ Zone America/Adak	 12:13:22 -	LMT	1867 Oct 19 12:44:35
+ Zone Pacific/Honolulu	-10:31:26 -	LMT	1896 Jan 13 12:00
+ 			-10:30	-	HST	1933 Apr 30  2:00
+ 			-10:30	1:00	HDT	1933 May 21 12:00
+-			-10:30	-	HST	1942 Feb  9  2:00
+-			-10:30	1:00	HDT	1945 Sep 30  2:00
+-			-10:30	-	HST	1947 Jun  8  2:00
++			-10:30	US	H%sT	1947 Jun  8  2:00
+ 			-10:00	-	HST
+ 
+ # Now we turn to US areas that have diverged from the consensus since 1970.
+
+From 89944f313686fcb8ae95878c2a9ef52dc943b11b Mon Sep 17 00:00:00 2001
+From: "Stephen Colebourne (CI)" <scolebourne@joda.org>
+Date: Sat, 27 Oct 2018 19:41:35 +0100
+Subject: [PATCH 15/16] Update release notes
+
+---
+ src/changes/changes.xml | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/src/changes/changes.xml b/src/changes/changes.xml
+index 869e3f645..c61fcc0f8 100644
+--- a/src/changes/changes.xml
++++ b/src/changes/changes.xml
+@@ -9,10 +9,16 @@
+ 
+     <!-- types are add, fix, remove, update -->
+     <release version="2.10.1" date="SNAPSHOT" description="v2.10.1">
++      <action dev="jodastephen" type="update">
++        DateTimeZone data updated to version 2018g.
++      </action>
+       <action dev="jodastephen" type="fix">
+         Fix time-zone compiler for Namibia. Oh I do love tzdb.
+         Fixes #485.
+       </action>
++      <action dev="jodastephen" type="fix">
++        Fix time-zone compiler for Tokyo. Oh I do love tzdb.
++      </action>
+     </release>
+     <release version="2.10" date="2018-05-30" description="v2.10">
+       <action dev="jodastephen" type="update">
+
+From 6a1fa20ca409f6e74fe1b46898671730db7a6e0f Mon Sep 17 00:00:00 2001
+From: "Stephen Colebourne (CI)" <scolebourne@joda.org>
+Date: Sat, 27 Oct 2018 19:45:42 +0100
+Subject: [PATCH 16/16] Release v2.10.1
+
+---
+ README.md                  |  6 +++---
+ pom.xml                    |  2 +-
+ src/changes/changes.xml    |  2 +-
+ src/conf/MANIFEST.MF       | 20 ++++++++++----------
+ src/site/markdown/index.md |  4 ++--
+ 5 files changed, 17 insertions(+), 17 deletions(-)
+
+diff --git a/README.md b/README.md
+index 7a879f799..8f81f509c 100644
+--- a/README.md
++++ b/README.md
+@@ -51,7 +51,7 @@ Various documentation is available:
+ 
+ 
+ ### Releases
+-[Release 2.10](https://www.joda.org/joda-time/download.html) is the current latest release.
++[Release 2.10.1](https://www.joda.org/joda-time/download.html) is the current latest release.
+ This release is considered stable and worthy of the 2.x tag.
+ It depends on JDK 1.5 or later.
+ 
+@@ -62,13 +62,13 @@ Available in the [Maven Central repository](https://search.maven.org/search?q=g:
+ <dependency>
+   <groupId>joda-time</groupId>
+   <artifactId>joda-time</artifactId>
+-  <version>2.10</version>
++  <version>2.10.1</version>
+ </dependency>
+ ```
+ 
+ **Gradle configuration:**
+ ```groovy
+-compile 'joda-time:joda-time:2.10'
++compile 'joda-time:joda-time:2.10.1'
+ ```
+ 
+ ### Related projects
+diff --git a/pom.xml b/pom.xml
+index 0a0a55053..bc366c913 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -8,7 +8,7 @@
+   <artifactId>joda-time</artifactId>
+   <packaging>jar</packaging>
+   <name>Joda-Time</name>
+-  <version>2.10</version>
++  <version>2.10.1</version>
+   <description>Date and time library to replace JDK date handling</description>
+   <url>https://www.joda.org/joda-time/</url>
+ 
+diff --git a/src/changes/changes.xml b/src/changes/changes.xml
+index c61fcc0f8..e7daaac80 100644
+--- a/src/changes/changes.xml
++++ b/src/changes/changes.xml
+@@ -8,7 +8,7 @@
+   <body>
+ 
+     <!-- types are add, fix, remove, update -->
+-    <release version="2.10.1" date="SNAPSHOT" description="v2.10.1">
++    <release version="2.10.1" date="2018-10-27" description="v2.10.1">
+       <action dev="jodastephen" type="update">
+         DateTimeZone data updated to version 2018g.
+       </action>
+diff --git a/src/conf/MANIFEST.MF b/src/conf/MANIFEST.MF
+index fa2c4ebf3..1f121a5f9 100644
+--- a/src/conf/MANIFEST.MF
++++ b/src/conf/MANIFEST.MF
+@@ -5,19 +5,19 @@ Specification-Vendor: Joda.org
+ Specification-Version: 2.10
+ Implementation-Vendor: Joda.org
+ Implementation-Title: org.joda.time
+-Implementation-Version: 2.10
++Implementation-Version: 2.10.1
+ Implementation-Vendor-Id: org.joda
+ Bundle-ManifestVersion: 2
+ Bundle-Vendor: Joda.org
+ Bundle-Name: Joda-Time
+ Bundle-SymbolicName: joda-time
+-Bundle-Version: 2.10
+-Export-Package: org.joda.time;version=2.10,
+- org.joda.time.base;version=2.10,
+- org.joda.time.chrono;version=2.10,
+- org.joda.time.convert;version=2.10,
+- org.joda.time.field;version=2.10,
+- org.joda.time.format;version=2.10,
+- org.joda.time.tz;version=2.10
++Bundle-Version: 2.10.1
++Export-Package: org.joda.time;version=2.10.1,
++ org.joda.time.base;version=2.10.1,
++ org.joda.time.chrono;version=2.10.1,
++ org.joda.time.convert;version=2.10.1,
++ org.joda.time.field;version=2.10.1,
++ org.joda.time.format;version=2.10.1,
++ org.joda.time.tz;version=2.10.1
+ Bundle-License: Apache 2.0
+-Bundle-DocURL: http://www.joda.org/joda-time/
++Bundle-DocURL: https://www.joda.org/joda-time/
+diff --git a/src/site/markdown/index.md b/src/site/markdown/index.md
+index 9f6ed85ae..d56ecd311 100644
+--- a/src/site/markdown/index.md
++++ b/src/site/markdown/index.md
+@@ -130,7 +130,7 @@ Joda-Time is licenced under the business friendly <a href="licenses.html">Apache
+ 
+ ## <i></i> Releases
+ 
+-[Release 2.10](download.html) is the current latest release.
++[Release 2.10.1](download.html) is the current latest release.
+ This release is considered stable and worthy of the 2.x tag.
+ See the [change notes](changes-report.html) for full details.
+ 
+@@ -144,7 +144,7 @@ Available in [Maven Central](https://search.maven.org/search?q=g:joda-time%20AND
+ <dependency>
+   <groupId>joda-time</groupId>
+   <artifactId>joda-time</artifactId>
+-  <version>2.10</version>
++  <version>2.10.1</version>
+ </dependency>
+ ```
+ 

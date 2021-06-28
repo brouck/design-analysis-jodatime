@@ -1,0 +1,1057 @@
+From bde9df403a0377a0fad5c3a7e9954aaa6657b379 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Thu, 4 Jul 2019 15:17:14 +0100
+Subject: [PATCH 1/7] Bump version
+
+---
+ pom.xml | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/pom.xml b/pom.xml
+index 4b80c7fe9..32e02935a 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -8,7 +8,7 @@
+   <artifactId>joda-time</artifactId>
+   <packaging>jar</packaging>
+   <name>Joda-Time</name>
+-  <version>2.10.3</version>
++  <version>2.10.4-SNAPSHOT</version>
+   <description>Date and time library to replace JDK date handling</description>
+   <url>https://www.joda.org/joda-time/</url>
+ 
+
+From 406eb494fca22c0750321247687cabbf685c3a3b Mon Sep 17 00:00:00 2001
+From: Brenna Heaps <brenna.heaps@gmail.com>
+Date: Tue, 17 Sep 2019 13:32:12 -0400
+Subject: [PATCH 2/7] Adding for enterprise section
+
+@jodastephen this PR adds the following copy to the README between "related projects" and "support"
+
+For enterprise
+Available as part of the Tidelift Subscription.
+Joda and the maintainers of thousands of other packages are working with Tidelift to deliver one enterprise subscription that covers all of the open source you use.
+If you want the flexibility of open source and the confidence of commercial-grade software, this is for you.
+Learn more
+---
+ README.md | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/README.md b/README.md
+index 419c94d72..a51cf12fa 100644
+--- a/README.md
++++ b/README.md
+@@ -83,6 +83,14 @@ Related projects at GitHub:
+ Other related projects:
+ - https://www.joda.org/joda-time/related.html
+ 
++### For enterprise
++Available as part of the Tidelift Subscription.
++
++Joda and the maintainers of thousands of other packages are working with Tidelift to deliver one enterprise subscription that covers all of the open source you use.
++
++If you want the flexibility of open source and the confidence of commercial-grade software, this is for you.
++
++[Learn more](https://tidelift.com/subscription/pkg/maven-joda-time-joda-time?utm_source=maven-joda-time-joda-time&utm_medium=github)
+ 
+ ### Support
+ Please use [Stack Overflow](https://stackoverflow.com/questions/tagged/jodatime) for general usage questions.
+
+From b47331a68a5c3ddae0bee9c981a0355219e1091b Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Fri, 20 Sep 2019 09:59:34 +0100
+Subject: [PATCH 3/7] Update tzdb to v2019c
+
+---
+ pom.xml                                       |   2 +-
+ src/changes/changes.xml                       |   5 +
+ src/main/java/org/joda/time/tz/src/Readme.txt |   2 +-
+ src/main/java/org/joda/time/tz/src/asia       |  23 ++-
+ .../java/org/joda/time/tz/src/australasia     |  42 ++--
+ src/main/java/org/joda/time/tz/src/europe     | 186 +++++++++++++-----
+ .../java/org/joda/time/tz/src/northamerica    | 132 +++++++++----
+ .../java/org/joda/time/tz/src/southamerica    |  11 +-
+ 8 files changed, 286 insertions(+), 117 deletions(-)
+
+diff --git a/pom.xml b/pom.xml
+index 32e02935a..45d7e8f1f 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -1023,6 +1023,6 @@
+     <!-- Other properties -->
+     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+-    <tz.database.version>2019b</tz.database.version>
++    <tz.database.version>2019c</tz.database.version>
+   </properties>
+ </project>
+diff --git a/src/changes/changes.xml b/src/changes/changes.xml
+index e1dffa489..62deea5cd 100644
+--- a/src/changes/changes.xml
++++ b/src/changes/changes.xml
+@@ -8,6 +8,11 @@
+   <body>
+ 
+     <!-- types are add, fix, remove, update -->
++    <release version="2.10.4" date="SNAPSHOT" description="v2.10.4">
++      <action dev="bradarndt" type="update">
++        DateTimeZone data updated to version 2019c.
++      </action>
++    </release>
+     <release version="2.10.3" date="2019-07-04" description="v2.10.3">
+       <action dev="bradarndt" type="update">
+         DateTimeZone data updated to version 2019b.
+diff --git a/src/main/java/org/joda/time/tz/src/Readme.txt b/src/main/java/org/joda/time/tz/src/Readme.txt
+index 189197489..4d9788ac1 100644
+--- a/src/main/java/org/joda/time/tz/src/Readme.txt
++++ b/src/main/java/org/joda/time/tz/src/Readme.txt
+@@ -1,2 +1,2 @@
+ The data files in this directory were obtained from the public IANA time zone database,
+-https://www.iana.org/time-zones, version 2019b.
++https://www.iana.org/time-zones, version 2019c.
+diff --git a/src/main/java/org/joda/time/tz/src/asia b/src/main/java/org/joda/time/tz/src/asia
+index 348e2b5df..b29c896e5 100644
+--- a/src/main/java/org/joda/time/tz/src/asia
++++ b/src/main/java/org/joda/time/tz/src/asia
+@@ -8,7 +8,7 @@
+ # tz@iana.org for general use in the future).  For more, please see
+ # the file CONTRIBUTING in the tz distribution.
+ 
+-# From Paul Eggert (2018-06-19):
++# From Paul Eggert (2019-07-11):
+ #
+ # Unless otherwise specified, the source for data through 1990 is:
+ # Thomas G. Shanks and Rique Pottenger, The International Atlas (6th edition),
+@@ -47,13 +47,13 @@
+ #	7:00 WIB	west Indonesia (Waktu Indonesia Barat)
+ #	8:00 WITA	central Indonesia (Waktu Indonesia Tengah)
+ #	8:00 CST	China
+-#	8:00 PST  PDT*	Philippine Standard Time
++#	8:00 HKT  HKST	Hong Kong (HKWT* for Winter Time in late 1941)
++#	8:00 PST  PDT*	Philippines
+ #	8:30 KST  KDT	Korea when at +0830
+ #	9:00 WIT	east Indonesia (Waktu Indonesia Timur)
+ #	9:00 JST  JDT	Japan
+ #	9:00 KST  KDT	Korea when at +09
+-#	9:30 ACST	Australian Central Standard Time
+-# *I invented the abbreviation PDT; see "Philippines" below.
++# *I invented the abbreviations HKWT and PDT; see below.
+ # Otherwise, these tables typically use numeric abbreviations like +03
+ # and +0330 for integer hour and minute UT offsets.  Although earlier
+ # editions invented alphabetic time zone abbreviations for every
+@@ -653,6 +653,15 @@ Zone	Asia/Urumqi	5:50:20	-	LMT	1928
+ # * 1941-09-30, Hong Kong Daily Press, Winter Time Warning.
+ #   https://i.imgur.com/dge4kFJ.png
+ 
++# From Paul Eggert (2019-07-11):
++# "Hong Kong winter time" is considered to be daylight saving.
++# "Hong Kong had adopted daylight saving on June 15 as a wartime measure,
++# clocks moving forward one hour until October 1, when they would be put back
++# by just half an hour for 'Hong Kong Winter time', so that daylight saving
++# operated year round." -- Low Z. The longest day: when wartime Hong Kong
++# introduced daylight saving. South China Morning Post. 2019-06-28.
++# https://www.scmp.com/magazines/post-magazine/short-reads/article/3016281/longest-day-when-wartime-hong-kong-introduced
++
+ # From P Chan (2018-12-31):
+ # * According to the Hong Kong Daylight-Saving Regulations, 1941, the
+ #   1941 spring-forward transition was at 03:00.
+@@ -754,7 +763,7 @@ Rule	HK	1979	only	-	Oct	21	3:30	0	-
+ Zone	Asia/Hong_Kong	7:36:42 -	LMT	1904 Oct 30  0:36:42
+ 			8:00	-	HKT	1941 Jun 15  3:00
+ 			8:00	1:00	HKST	1941 Oct  1  4:00
+-			8:30	-	HKT	1941 Dec 25
++			8:00	0:30	HKWT	1941 Dec 25
+ 			9:00	-	JST	1945 Nov 18  2:00
+ 			8:00	HK	HK%sT
+ 
+@@ -2419,7 +2428,7 @@ Rule	ROK	1987	1988	-	Oct	Sun>=8	 3:00	0	S
+ Zone	Asia/Seoul	8:27:52	-	LMT	1908 Apr  1
+ 			8:30	-	KST	1912 Jan  1
+ 			9:00	-	JST	1945 Sep  8
+-			9:00	-	KST	1954 Mar 21
++			9:00	ROK	K%sT	1954 Mar 21
+ 			8:30	ROK	K%sT	1961 Aug 10
+ 			9:00	ROK	K%sT
+ Zone	Asia/Pyongyang	8:23:00 -	LMT	1908 Apr  1
+@@ -3604,7 +3613,7 @@ Zone	Asia/Tashkent	4:37:11 -	LMT	1924 May  2
+ # and in South Vietnam in particular (after 1954):
+ # To 07:00 on 1911-05-01.
+ # To 08:00 on 1942-12-31 at 23:00.
+-# To 09:00 in 1945-03-14 at 23:00.
++# To 09:00 on 1945-03-14 at 23:00.
+ # To 07:00 on 1945-09-02 in Vietnam.
+ # To 08:00 on 1947-04-01 in French-controlled Indochina.
+ # To 07:00 on 1955-07-01 in South Vietnam.
+diff --git a/src/main/java/org/joda/time/tz/src/australasia b/src/main/java/org/joda/time/tz/src/australasia
+index 0544e5875..ac44c0482 100644
+--- a/src/main/java/org/joda/time/tz/src/australasia
++++ b/src/main/java/org/joda/time/tz/src/australasia
+@@ -367,13 +367,18 @@ Zone	Indian/Cocos	6:27:40	-	LMT	1900
+ # From Raymond Kumar (2018-07-13):
+ # http://www.fijitimes.com/government-approves-2018-daylight-saving/
+ # ... The daylight saving period will end at 3am on Sunday January 13, 2019.
+-#
+-# From Paul Eggert (2018-07-15):
+-# For now, guess DST from 02:00 the first Sunday in November to 03:00
+-# the first Sunday on or after January 13.  January transitions reportedly
++
++# From Paul Eggert (2019-08-06):
++# Today Raymond Kumar reported the Government of Fiji Gazette Supplement No. 27
++# (2019-08-02) said that Fiji observes DST "commencing at 2.00 am on
++# Sunday, 10 November 2019 and ending at 3.00 am on Sunday, 12 January 2020."
++# For now, guess DST from 02:00 the second Sunday in November to 03:00
++# the first Sunday on or after January 12.  January transitions reportedly
+ # depend on when school terms start.  Although the guess is ad hoc, it matches
+-# transitions since late 2014 and seems more likely to match future
+-# practice than guessing no DST.
++# transitions planned this year and seems more likely to match future practice
++# than guessing no DST.
++# From Michael Deckers (2019-08-06):
++# https://www.laws.gov.fj/LawsAsMade/downloadfile/848
+ 
+ # Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
+ Rule	Fiji	1998	1999	-	Nov	Sun>=1	2:00	1:00	-
+@@ -384,8 +389,9 @@ Rule	Fiji	2010	2013	-	Oct	Sun>=21	2:00	1:00	-
+ Rule	Fiji	2011	only	-	Mar	Sun>=1	3:00	0	-
+ Rule	Fiji	2012	2013	-	Jan	Sun>=18	3:00	0	-
+ Rule	Fiji	2014	only	-	Jan	Sun>=18	2:00	0	-
+-Rule	Fiji	2014	max	-	Nov	Sun>=1	2:00	1:00	-
+-Rule	Fiji	2015	max	-	Jan	Sun>=13	3:00	0	-
++Rule	Fiji	2014	2018	-	Nov	Sun>=1	2:00	1:00	-
++Rule	Fiji	2015	max	-	Jan	Sun>=12	3:00	0	-
++Rule	Fiji	2019	max	-	Nov	Sun>=8	2:00	1:00	-
+ # Zone	NAME		STDOFF	RULES	FORMAT	[UNTIL]
+ Zone	Pacific/Fiji	11:55:44 -	LMT	1915 Oct 26 # Suva
+ 			12:00	Fiji	+12/+13
+@@ -604,10 +610,11 @@ Zone	Pacific/Niue	-11:19:40 -	LMT	1901        # Alofi
+ # Zone	NAME		STDOFF	RULES	FORMAT	[UNTIL]
+ Zone	Pacific/Norfolk	11:11:52 -	LMT	1901 # Kingston
+ 			11:12	-	+1112	1951
+-			11:30	-	+1130	1974 Oct 27 02:00
+-			11:30	1:00	+1230	1975 Mar  2 02:00
+-			11:30	-	+1130	2015 Oct  4 02:00
+-			11:00	-	+11
++			11:30	-	+1130	1974 Oct 27 02:00s
++			11:30	1:00	+1230	1975 Mar  2 02:00s
++			11:30	-	+1130	2015 Oct  4 02:00s
++			11:00	-	+11	2019 Jul
++			11:00	AN	+11/+12
+ 
+ # Palau (Belau)
+ # Zone	NAME		STDOFF	RULES	FORMAT	[UNTIL]
+@@ -1875,12 +1882,21 @@ Zone	Pacific/Wallis	12:15:20 -	LMT	1901
+ # ... at 12.30 am (by legal time in New South Wales) on 4 October 2015.
+ # http://www.norfolkisland.gov.nf/nia/MediaRelease/Media%20Release%20Norfolk%20Island%20Standard%20Time%20Change.pdf
+ 
+-# From Paul Eggert (2015-09-23):
++# From Paul Eggert (2019-08-28):
+ # Transitions before 2015 are from timeanddate.com, which consulted
+ # the Norfolk Island Museum and the Australian Bureau of Meteorology's
+ # Norfolk Island station, and found no record of Norfolk observing DST
+ # other than in 1974/5.  See:
+ # https://www.timeanddate.com/time/australia/norfolk-island.html
++# However, disagree with timeanddate about the 1975-03-02 transition;
++# timeanddate has 02:00 but 02:00s corresponds to what the NSW law said
++# (thanks to Michael Deckers).
++
++# Norfolk started observing Australian DST in spring 2019.
++# From Kyle Czech (2019-08-13):
++# https://www.legislation.gov.au/Details/F2018L01702
++# From Michael Deckers (2019-08-14):
++# https://www.legislation.gov.au/Details/F2019C00010
+ 
+ # Palau
+ # See commentary for Micronesia.
+diff --git a/src/main/java/org/joda/time/tz/src/europe b/src/main/java/org/joda/time/tz/src/europe
+index 5dc03976d..361b396c0 100644
+--- a/src/main/java/org/joda/time/tz/src/europe
++++ b/src/main/java/org/joda/time/tz/src/europe
+@@ -821,11 +821,16 @@ Zone	Europe/Andorra	0:06:04 -	LMT	1901
+ # Shanks & Pottenger give 02:00, the BEV 00:00.  Go with the BEV,
+ # and guess 02:00 for 1945-04-12.
+ 
++# From Alois Triendl (2019-07-22):
++# In 1946 the end of DST was on Monday, 7 October 1946, at 3:00 am.
++# Shanks had this right.  Source: Die Weltpresse, 5. Oktober 1946, page 5.
++
+ # Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
+ Rule	Austria	1920	only	-	Apr	 5	2:00s	1:00	S
+ Rule	Austria	1920	only	-	Sep	13	2:00s	0	-
+ Rule	Austria	1946	only	-	Apr	14	2:00s	1:00	S
+-Rule	Austria	1946	1948	-	Oct	Sun>=1	2:00s	0	-
++Rule	Austria	1946	only	-	Oct	 7	2:00s	0	-
++Rule	Austria	1947	1948	-	Oct	Sun>=1	2:00s	0	-
+ Rule	Austria	1947	only	-	Apr	 6	2:00s	1:00	S
+ Rule	Austria	1948	only	-	Apr	18	2:00s	1:00	S
+ Rule	Austria	1980	only	-	Apr	 6	0:00	1:00	S
+@@ -875,15 +880,35 @@ Zone	Europe/Minsk	1:50:16 -	LMT	1880
+ 
+ # Belgium
+ #
+-# From Paul Eggert (1997-07-02):
++# From Michael Deckers (2019-08-25):
++# The exposition in the web page
++# https://www.bestor.be/wiki/index.php/Voyager_dans_le_temps._L%E2%80%99introduction_de_la_norme_de_Greenwich_en_Belgique
++# gives several contemporary sources from which one can conclude that
++# the switch in Europe/Brussels on 1892-05-01 was from 00:17:30 to 00:00:00.
++#
++# From Paul Eggert (2019-08-28):
++# This quote helps explain the late-1914 situation:
++#   In early November 1914, the Germans imposed the time zone used in central
++#   Europe and forced the inhabitants to set their watches and public clocks
++#   sixty minutes ahead.  Many were reluctant to accept "German time" and
++#   continued to use "Belgian time" among themselves.  Reflecting the spirit of
++#   resistance that arose in the population, a song made fun of this change....
++# The song ended:
++#   Putting your clock forward
++#   Will but hasten the happy hour
++#   When we kick out the Boches!
++# See: Pluvinage G. Brussels on German time. Cahiers Bruxellois -
++# Brusselse Cahiers. 2014;XLVI(1E):15-38.
++# https://www.cairn.info/revue-cahiers-bruxellois-2014-1E-page-15.htm
++#
++# Entries from 1914 through 1917 are taken from "De tijd in België"
++# <https://www.astro.oma.be/GENERAL/INFO/nli001a.html>.
+ # Entries from 1918 through 1991 are taken from:
+ #	Annuaire de L'Observatoire Royal de Belgique,
+ #	Avenue Circulaire, 3, B-1180 BRUXELLES, CLVIIe année, 1991
+ #	(Imprimerie HAYEZ, s.p.r.l., Rue Fin, 4, 1080 BRUXELLES, MCMXC),
+ #	pp 8-9.
+-# LMT before 1892 was 0:17:30, according to the official journal of Belgium:
+-#	Moniteur Belge, Samedi 30 Avril 1892, N.121.
+-# Thanks to Pascal Delmoitie for these references.
++# Thanks to Pascal Delmoitie for the 1918/1991 references.
+ # The 1918 rules are listed for completeness; they apply to unoccupied Belgium.
+ # Assume Brussels switched to WET in 1918 when the armistice took effect.
+ #
+@@ -928,7 +953,7 @@ Rule	Belgium	1946	only	-	May	19	 2:00s	1:00	S
+ Rule	Belgium	1946	only	-	Oct	 7	 2:00s	0	-
+ # Zone	NAME		STDOFF	RULES	FORMAT	[UNTIL]
+ Zone	Europe/Brussels	0:17:30 -	LMT	1880
+-			0:17:30	-	BMT	1892 May  1 12:00  # Brussels MT
++			0:17:30	-	BMT	1892 May  1 00:17:30
+ 			0:00	-	WET	1914 Nov  8
+ 			1:00	-	CET	1916 May  1  0:00
+ 			1:00	C-Eur	CE%sT	1918 Nov 11 11:00u
+@@ -1627,6 +1652,13 @@ Zone Atlantic/Reykjavik	-1:28	-	LMT	1908
+ # advanced to sixty minutes later starting at hour two on 1944-04-02; ...
+ # Starting at hour three on the date 1944-09-17 standard time will be resumed.
+ #
++# From Alois Triendl (2019-07-02):
++# I spent 6 Euros to buy two archive copies of Il Messaggero, a Roman paper,
++# for 1 and 2 April 1944.  The edition of 2 April has this note: "Tonight at 2
++# am, put forward the clock by one hour.  Remember that in the night between
++# today and Monday the 'ora legale' will come in force again."  That makes it
++# clear that in Rome the change was on Monday, 3 April 1944 at 2 am.
++#
+ # From Paul Eggert (2016-10-27):
+ # Go with INRiM for DST rules, except as corrected by Inglis for 1944
+ # for the Kingdom of Italy.  This is consistent with Renzo Baldini.
+@@ -1774,15 +1806,10 @@ Zone	Europe/Riga	1:36:34	-	LMT	1880
+ # From Paul Eggert (2013-09-09):
+ # Shanks & Pottenger say Vaduz is like Zurich.
+ 
+-# From Alois Treindl (2013-09-18):
+-# http://www.eliechtensteinensia.li/LIJ/1978/1938-1978/1941.pdf
+-# ... confirms on p. 6 that Liechtenstein followed Switzerland in 1941 and 1942.
+-# I ... translate only the last two paragraphs:
+-#    ... during second world war, in the years 1941 and 1942, Liechtenstein
+-#    introduced daylight saving time, adapting to Switzerland.  From 1943 on
+-#    central European time was in force throughout the year.
+-#    From a report of the duke's government to the high council,
+-#    regarding the introduction of a time law, of 31 May 1977.
++# From Alois Treindl (2019-07-04):
++# I was able to access the online archive of the Vaduz paper Vaterland ...
++# I could confirm from the paper that Liechtenstein did in fact follow
++# the same DST in 1941 and 1942 as Switzerland did.
+ 
+ Link Europe/Zurich Europe/Vaduz
+ 
+@@ -2490,6 +2517,12 @@ Zone Europe/Bucharest	1:44:24 -	LMT	1891 Oct
+ # Europe/Kaliningrad covers...
+ # 39	RU-KGD	Kaliningrad Oblast
+ 
++# From Paul Eggert (2019-07-25):
++# Although Shanks lists 1945-01-01 as the date for transition from
++# +01/+02 to +02/+03, more likely this is a placeholder.  Guess that
++# the transition occurred at 1945-04-10 00:00, which is about when
++# Königsberg surrendered to Soviet troops.  (Thanks to Alois Triendl.)
++
+ # From Paul Eggert (2016-03-18):
+ # The 1989 transition is from USSR act No. 227 (1989-03-14).
+ 
+@@ -2506,8 +2539,8 @@ Zone Europe/Bucharest	1:44:24 -	LMT	1891 Oct
+ # Moscow on 1991-11-03, switched to Moscow-1 on 1992-01-19.
+ 
+ Zone Europe/Kaliningrad	 1:22:00 -	LMT	1893 Apr
+-			 1:00	C-Eur	CE%sT	1945
+-			 2:00	Poland	CE%sT	1946
++			 1:00	C-Eur	CE%sT	1945 Apr 10
++			 2:00	Poland	EE%sT	1946 Apr  7
+ 			 3:00	Russia	MSK/MSD	1989 Mar 26  2:00s
+ 			 2:00	Russia	EE%sT	2011 Mar 27  2:00s
+ 			 3:00	-	+03	2014 Oct 26  2:00s
+@@ -3650,20 +3683,75 @@ Zone	Europe/Zurich	0:34:08 -	LMT	1853 Jul 16 # See above comment.
+ 
+ # Turkey
+ 
++# From Alois Treindl (2019-08-12):
++# http://www.astrolojidergisi.com/yazsaati.htm has researched the time zone
++# history of Turkey, based on newspaper archives and official documents.
++# From Paul Eggert (2019-08-28):
++# That source (Oya Vulaş, "Türkiye'de Yaz Saati Uygulamaları")
++# is used for 1940/1972, where it seems more reliable than our other
++# sources.
++
++# From Kıvanç Yazan (2019-08-12):
++# http://www.resmigazete.gov.tr/arsiv/14539.pdf#page=24
++# 1973-06-03 01:00 -> 02:00, 1973-11-04 02:00 -> 01:00
++#
++# http://www.resmigazete.gov.tr/arsiv/14829.pdf#page=1
++# 1974-03-31 02:00 -> 03:00, 1974-11-03 02:00 -> 01:00
++#
++# http://www.resmigazete.gov.tr/arsiv/15161.pdf#page=1
++# 1975-03-22 02:00 -> 03:00, 1975-11-02 02:00 -> 01:00
++#
++# http://www.resmigazete.gov.tr/arsiv/15535_1.pdf#page=1
++# 1976-03-21 02:00 -> 03:00, 1976-10-31 02:00 -> 01:00
++#
++# http://www.resmigazete.gov.tr/arsiv/15778.pdf#page=5
++# 1977-04-03 02:00 -> 03:00, 1977-10-16 02:00 -> 01:00,
++# 1978-04-02 02:00 -> 03:00 (not applied, see below)
++# 1978-10-15 02:00 -> 01:00 (not applied, see below)
++# 1979-04-01 02:00 -> 03:00 (not applied, see below)
++# 1979-10-14 02:00 -> 01:00 (not applied, see below)
++#
++# http://www.resmigazete.gov.tr/arsiv/16245.pdf#page=17
++# This cancels the previous decision, and repeats it only for 1978.
++# 1978-04-02 02:00 -> 03:00, 1978-10-15 02:00 -> 01:00
++# (not applied due to standard TZ change below)
++#
++# http://www.resmigazete.gov.tr/arsiv/16331.pdf#page=3
++# This decision changes the default longitude for Turkish time zone from 30
++# degrees East to 45 degrees East.  This means a standard TZ change, from +2
++# to +3.  This is published & applied on 1978-06-29.  At that time, Turkey was
++# already on summer time (already on 45E).  Hence, this new law just meant an
++# "continuous summer time".  Note that this was reversed in a few years.
++#
++# http://www.resmigazete.gov.tr/arsiv/18119_1.pdf#page=1
++# 1983-07-31 02:00 -> 03:00 (note that this jumps TZ to +4)
++# 1983-10-02 02:00 -> 01:00 (back to +3)
++#
++# http://www.resmigazete.gov.tr/arsiv/18561.pdf (page 1 and 34)
++# At this time, Turkey is still on +3 with no spring-forward on early
++# 1984.  This decision is published on 10/31/1984.  Page 1 declares
++# the decision of reverting the "default longitude change".  So the
++# standard time should go back to +3 (30E).  And page 34 explains when
++# that will happen: 1984-11-01 02:00 -> 01:00.  You can think of this
++# as "end of continuous summer time, change of standard time zone".
++#
++# http://www.resmigazete.gov.tr/arsiv/18713.pdf#page=1
++# 1985-04-20 01:00 -> 02:00, 1985-09-28 02:00 -> 01:00
++
+ # From Kıvanç Yazan (2016-09-25):
+ # 1) For 1986-2006, DST started at 01:00 local and ended at 02:00 local, with
+ #    no exceptions.
+ # 2) 1994's lastSun was overridden with Mar 20 ...
+ # Here are official papers:
+-# http://www.resmigazete.gov.tr/arsiv/19032.pdf  - page 2 for 1986
+-# http://www.resmigazete.gov.tr/arsiv/19400.pdf  - page 4 for 1987
+-# http://www.resmigazete.gov.tr/arsiv/19752.pdf  - page 15 for 1988
+-# http://www.resmigazete.gov.tr/arsiv/20102.pdf  - page 6 for 1989
+-# http://www.resmigazete.gov.tr/arsiv/20464.pdf  - page 1 for 1990 - 1992
+-# http://www.resmigazete.gov.tr/arsiv/21531.pdf  - page 15 for 1993 - 1995
+-# http://www.resmigazete.gov.tr/arsiv/21879.pdf  - page 1 for overriding 1994
+-# http://www.resmigazete.gov.tr/arsiv/22588.pdf  - page 1 for 1996, 1997
+-# http://www.resmigazete.gov.tr/arsiv/23286.pdf  - page 10 for 1998 - 2000
++# http://www.resmigazete.gov.tr/arsiv/19032.pdf#page=2 for 1986
++# http://www.resmigazete.gov.tr/arsiv/19400.pdf#page=4 for 1987
++# http://www.resmigazete.gov.tr/arsiv/19752.pdf#page=15 for 1988
++# http://www.resmigazete.gov.tr/arsiv/20102.pdf#page=6 for 1989
++# http://www.resmigazete.gov.tr/arsiv/20464.pdf#page=1 for 1990 - 1992
++# http://www.resmigazete.gov.tr/arsiv/21531.pdf#page=15 for 1993 - 1995
++# http://www.resmigazete.gov.tr/arsiv/21879.pdf#page=1 for overriding 1994
++# http://www.resmigazete.gov.tr/arsiv/22588.pdf#page=1 for 1996, 1997
++# http://www.resmigazete.gov.tr/arsiv/23286.pdf#page=10 for 1998 - 2000
+ # http://www.resmigazete.gov.tr/eskiler/2001/03/20010324.htm#2  - for 2001
+ # http://www.resmigazete.gov.tr/eskiler/2002/03/20020316.htm#2  - for 2002-2006
+ # From Paul Eggert (2016-09-25):
+@@ -3747,46 +3835,36 @@ Rule	Turkey	1922	only	-	Oct	 8	0:00	0	-
+ Rule	Turkey	1924	only	-	May	13	0:00	1:00	S
+ Rule	Turkey	1924	1925	-	Oct	 1	0:00	0	-
+ Rule	Turkey	1925	only	-	May	 1	0:00	1:00	S
+-Rule	Turkey	1940	only	-	Jun	30	0:00	1:00	S
+-Rule	Turkey	1940	only	-	Oct	 5	0:00	0	-
++Rule	Turkey	1940	only	-	Jul	 1	0:00	1:00	S
++Rule	Turkey	1940	only	-	Oct	 6	0:00	0	-
+ Rule	Turkey	1940	only	-	Dec	 1	0:00	1:00	S
+ Rule	Turkey	1941	only	-	Sep	21	0:00	0	-
+ Rule	Turkey	1942	only	-	Apr	 1	0:00	1:00	S
+-# Whitman omits the next two transition and gives 1945 Oct 1;
+-# go with Shanks & Pottenger.
+-Rule	Turkey	1942	only	-	Nov	 1	0:00	0	-
+-Rule	Turkey	1945	only	-	Apr	 2	0:00	1:00	S
+ Rule	Turkey	1945	only	-	Oct	 8	0:00	0	-
+ Rule	Turkey	1946	only	-	Jun	 1	0:00	1:00	S
+ Rule	Turkey	1946	only	-	Oct	 1	0:00	0	-
+ Rule	Turkey	1947	1948	-	Apr	Sun>=16	0:00	1:00	S
+-Rule	Turkey	1947	1950	-	Oct	Sun>=2	0:00	0	-
++Rule	Turkey	1947	1951	-	Oct	Sun>=2	0:00	0	-
+ Rule	Turkey	1949	only	-	Apr	10	0:00	1:00	S
+-Rule	Turkey	1950	only	-	Apr	19	0:00	1:00	S
++Rule	Turkey	1950	only	-	Apr	16	0:00	1:00	S
+ Rule	Turkey	1951	only	-	Apr	22	0:00	1:00	S
+-Rule	Turkey	1951	only	-	Oct	 8	0:00	0	-
++# DST for 15 months; unusual but we'll let it pass.
+ Rule	Turkey	1962	only	-	Jul	15	0:00	1:00	S
+-Rule	Turkey	1962	only	-	Oct	 8	0:00	0	-
++Rule	Turkey	1963	only	-	Oct	30	0:00	0	-
+ Rule	Turkey	1964	only	-	May	15	0:00	1:00	S
+ Rule	Turkey	1964	only	-	Oct	 1	0:00	0	-
+-Rule	Turkey	1970	1972	-	May	Sun>=2	0:00	1:00	S
+-Rule	Turkey	1970	1972	-	Oct	Sun>=2	0:00	0	-
+ Rule	Turkey	1973	only	-	Jun	 3	1:00	1:00	S
+-Rule	Turkey	1973	only	-	Nov	 4	3:00	0	-
++Rule	Turkey	1973	1976	-	Oct	Sun>=31	2:00	0	-
+ Rule	Turkey	1974	only	-	Mar	31	2:00	1:00	S
+-Rule	Turkey	1974	only	-	Nov	 3	5:00	0	-
+-Rule	Turkey	1975	only	-	Mar	30	0:00	1:00	S
+-Rule	Turkey	1975	1976	-	Oct	lastSun	0:00	0	-
+-Rule	Turkey	1976	only	-	Jun	 1	0:00	1:00	S
+-Rule	Turkey	1977	1978	-	Apr	Sun>=1	0:00	1:00	S
+-Rule	Turkey	1977	only	-	Oct	16	0:00	0	-
+-Rule	Turkey	1979	1980	-	Apr	Sun>=1	3:00	1:00	S
+-Rule	Turkey	1979	1982	-	Oct	Mon>=11	0:00	0	-
+-Rule	Turkey	1981	1982	-	Mar	lastSun	3:00	1:00	S
+-Rule	Turkey	1983	only	-	Jul	31	0:00	1:00	S
+-Rule	Turkey	1983	only	-	Oct	 2	0:00	0	-
+-Rule	Turkey	1985	only	-	Apr	20	0:00	1:00	S
+-Rule	Turkey	1985	only	-	Sep	28	0:00	0	-
++Rule	Turkey	1975	only	-	Mar	22	2:00	1:00	S
++Rule	Turkey	1976	only	-	Mar	21	2:00	1:00	S
++Rule	Turkey	1977	1978	-	Apr	Sun>=1	2:00	1:00	S
++Rule	Turkey	1977	1978	-	Oct	Sun>=15	2:00	0	-
++Rule	Turkey	1978	only	-	Jun	29	0:00	0	-
++Rule	Turkey	1983	only	-	Jul	31	2:00	1:00	S
++Rule	Turkey	1983	only	-	Oct	 2	2:00	0	-
++Rule	Turkey	1985	only	-	Apr	20	1:00s	1:00	S
++Rule	Turkey	1985	only	-	Sep	28	1:00s	0	-
+ Rule	Turkey	1986	1993	-	Mar	lastSun	1:00s	1:00	S
+ Rule	Turkey	1986	1995	-	Sep	lastSun	1:00s	0	-
+ Rule	Turkey	1994	only	-	Mar	20	1:00s	1:00	S
+@@ -3795,8 +3873,8 @@ Rule	Turkey	1996	2006	-	Oct	lastSun	1:00s	0	-
+ # Zone	NAME		STDOFF	RULES	FORMAT	[UNTIL]
+ Zone	Europe/Istanbul	1:55:52 -	LMT	1880
+ 			1:56:56	-	IMT	1910 Oct # Istanbul Mean Time?
+-			2:00	Turkey	EE%sT	1978 Oct 15
+-			3:00	Turkey	+03/+04	1985 Apr 20
++			2:00	Turkey	EE%sT	1978 Jun 29
++			3:00	Turkey	+03/+04	1984 Nov  1  2:00
+ 			2:00	Turkey	EE%sT	2007
+ 			2:00	EU	EE%sT	2011 Mar 27  1:00u
+ 			2:00	-	EET	2011 Mar 28  1:00u
+diff --git a/src/main/java/org/joda/time/tz/src/northamerica b/src/main/java/org/joda/time/tz/src/northamerica
+index 9e3577bca..8771d96e6 100644
+--- a/src/main/java/org/joda/time/tz/src/northamerica
++++ b/src/main/java/org/joda/time/tz/src/northamerica
+@@ -406,6 +406,31 @@ Zone America/New_York	-4:56:02 -	LMT	1883 Nov 18 12:03:58
+ # From Paul Eggert (2015-12-25):
+ # Assume this practice predates 1970, so Fort Pierre can use America/Chicago.
+ 
++# From Paul Eggert (2015-04-06):
++# In 1950s Nashville a public clock had dueling faces, one for conservatives
++# and the other for liberals; the two sides didn't agree about the time of day.
++# I haven't found a photo of this clock, nor have I tracked down the TIME
++# magazine report cited below, but here's the story as told by the late
++# American journalist John Seigenthaler, who was there:
++#
++# "The two [newspaper] owners held strongly contrasting political and
++# ideological views.  Evans was a New South liberal, Stahlman an Old South
++# conservative, and their two papers frequently clashed editorially, often on
++# the same day....  In the 1950s as the state legislature was grappling with
++# the question of whether to approve daylight saving time for the entire state,
++# TIME magazine reported:
++#
++# "'The Nashville Banner and The Nashville Tennessean rarely agree on anything
++# but the time of day - and last week they couldn't agree on that.'
++#
++# "It was all too true. The clock on the front of the building had two faces -
++# The Tennessean side of the building facing west, the other, east.  When it
++# was high noon Banner time, it was 11 a.m. Tennessean time."
++#
++# Seigenthaler J. For 100 years, Tennessean had it covered.
++# The Tennessean 2007-05-11, republished 2015-04-06.
++# https://www.tennessean.com/story/insider/extras/2015/04/06/archives-seigenthaler-for-100-years-the-tennessean-had-it-covered/25348545/
++
+ # Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER
+ Rule	Chicago	1920	only	-	Jun	13	2:00	1:00	D
+ Rule	Chicago	1920	1921	-	Oct	lastSun	2:00	0	S
+@@ -945,21 +970,21 @@ Zone America/Indiana/Vincennes -5:50:07 - LMT	1883 Nov 18 12:09:53
+ 			-5:00	US	E%sT
+ #
+ # Perry County, Indiana, switched from eastern to central time in April 2006.
++# From Alois Triendl (2019-07-09):
++# The Indianapolis News, Friday 27 October 1967 states that Perry County
++# returned to CST.  It went again to EST on 27 April 1969, as documented by the
++# Indianapolis star of Saturday 26 April.
+ # Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER
+-Rule Perry	1946	only	-	Apr	lastSun	2:00	1:00	D
+-Rule Perry	1946	only	-	Sep	lastSun	2:00	0	S
+-Rule Perry	1953	1954	-	Apr	lastSun	2:00	1:00	D
+-Rule Perry	1953	1959	-	Sep	lastSun	2:00	0	S
+ Rule Perry	1955	only	-	May	 1	0:00	1:00	D
++Rule Perry	1955	1960	-	Sep	lastSun	2:00	0	S
+ Rule Perry	1956	1963	-	Apr	lastSun	2:00	1:00	D
+-Rule Perry	1960	only	-	Oct	lastSun	2:00	0	S
+-Rule Perry	1961	only	-	Sep	lastSun	2:00	0	S
+-Rule Perry	1962	1963	-	Oct	lastSun	2:00	0	S
++Rule Perry	1961	1963	-	Oct	lastSun	2:00	0	S
+ # Zone	NAME		STDOFF	RULES	FORMAT	[UNTIL]
+ Zone America/Indiana/Tell_City -5:47:03 - LMT	1883 Nov 18 12:12:57
+ 			-6:00	US	C%sT	1946
+ 			-6:00 Perry	C%sT	1964 Apr 26  2:00
+-			-5:00	-	EST	1969
++			-5:00	-	EST	1967 Oct 29  2:00
++			-6:00	US	C%sT	1969 Apr 27  2:00
+ 			-5:00	US	E%sT	1971
+ 			-5:00	-	EST	2006 Apr  2  2:00
+ 			-6:00	US	C%sT
+@@ -1035,16 +1060,27 @@ Zone America/Indiana/Vevay -5:40:16 -	LMT	1883 Nov 18 12:19:44
+ # clear how this matched civil time in Louisville, so for now continue
+ # to assume Louisville switched at noon new local time, like New York.
+ #
++# From Michael Deckers (2019-08-06):
++# From the contemporary source given by Alois Treindl,
++# the switch in Louisville on 1946-04-28 was on 00:01
++# From Paul Eggert (2019-08-26):
++# That source was the Louisville Courier-Journal, 1946-04-27, p 4.
++# Shanks gives 02:00 for all 20th-century transition times in Louisville.
++# Evidently this is wrong for spring 1946.  Although also likely wrong
++# for other dates, we have no data.
++#
+ # Part of Kentucky left its clocks alone in 1974.
+ # This also includes Clark, Floyd, and Harrison counties in Indiana.
+ # Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER
+ Rule Louisville	1921	only	-	May	1	2:00	1:00	D
+ Rule Louisville	1921	only	-	Sep	1	2:00	0	S
+-Rule Louisville	1941	1961	-	Apr	lastSun	2:00	1:00	D
++Rule Louisville	1941	only	-	Apr	lastSun	2:00	1:00	D
+ Rule Louisville	1941	only	-	Sep	lastSun	2:00	0	S
++Rule Louisville	1946	only	-	Apr	lastSun	0:01	1:00	D
+ Rule Louisville	1946	only	-	Jun	2	2:00	0	S
++Rule Louisville	1950	1961	-	Apr	lastSun	2:00	1:00	D
+ Rule Louisville	1950	1955	-	Sep	lastSun	2:00	0	S
+-Rule Louisville	1956	1960	-	Oct	lastSun	2:00	0	S
++Rule Louisville	1956	1961	-	Oct	lastSun	2:00	0	S
+ # Zone	NAME		STDOFF	RULES	FORMAT	[UNTIL]
+ Zone America/Kentucky/Louisville -5:43:02 -	LMT	1883 Nov 18 12:16:58
+ 			-6:00	US	C%sT	1921
+@@ -1134,18 +1170,19 @@ Zone America/Kentucky/Monticello -5:39:24 - LMT	1883 Nov 18 12:20:36
+ # one hour in 1914."  This change is not in Shanks.  We have no more
+ # info, so omit this for now.
+ #
+-# From Paul Eggert (2017-07-26):
+-# Although Shanks says Detroit observed DST in 1967 from 06-14 00:01
+-# until 10-29 00:01, I now see multiple reports that this is incorrect.
+-# For example, according to a 50-year anniversary report about the 1967
+-# Detroit riots and a major-league doubleheader on 1967-07-23, "By the time
+-# the last fly ball of the doubleheader settled into the glove of leftfielder
+-# Lenny Green, it was after 7 p.m.  Detroit did not observe daylight saving
+-# time, so light was already starting to fail.  Twilight was made even deeper
+-# by billowing columns of smoke that ascended in an unbroken wall north of the
+-# ballpark."  See: Dow B. Detroit '67: As violence unfolded, Tigers played two
+-# at home vs. Yankees. Detroit Free Press 2017-07-23.
+-# https://www.freep.com/story/sports/mlb/tigers/2017/07/23/detroit-tigers-1967-riot-new-york-yankees/499951001/
++# From Paul Eggert (2019-07-06):
++# Due to a complicated set of legal maneuvers, in 1967 Michigan did
++# not start daylight saving time when the rest of the US did.
++# Instead, it began DST on Jun 14 at 00:01.  This was big news:
++# the Detroit Free Press reported it at the top of Page 1 on
++# 1967-06-14, in an article "State Adjusting to Switch to Fast Time"
++# by Gary Blonston, above an article about Thurgood Marshall's
++# confirmation to the US Supreme Court.  Although Shanks says Detroit
++# observed DST until 1967-10-29 00:01, that time of day seems to be
++# incorrect, as the Free Press later said DST ended in Michigan at the
++# same time as the rest of the US.  Also, although Shanks reports no DST in
++# Detroit in 1968, it did observe DST that year; in the November 1968
++# election Michigan voters narrowly repealed DST, effective 1969.
+ #
+ # Most of Michigan observed DST from 1973 on, but was a bit late in 1975.
+ # Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER
+@@ -1156,7 +1193,9 @@ Zone America/Detroit	-5:32:11 -	LMT	1905
+ 			-6:00	-	CST	1915 May 15  2:00
+ 			-5:00	-	EST	1942
+ 			-5:00	US	E%sT	1946
+-			-5:00	Detroit	E%sT	1973
++			-5:00	Detroit	E%sT	1967 Jun 14  0:01
++			-5:00	US	E%sT	1969
++			-5:00	-	EST	1973
+ 			-5:00	US	E%sT	1975
+ 			-5:00	-	EST	1975 Apr 27  2:00
+ 			-5:00	US	E%sT
+@@ -1205,6 +1244,12 @@ Zone America/Menominee	-5:50:27 -	LMT	1885 Sep 18 12:00
+ #
+ # Other sources occasionally used include:
+ #
++#	Milne J. Civil time. Geogr J. 1899 Feb;13(2):173-94
++#	<https://www.jstor.org/stable/1774359>.
++#
++#	Pearce C. The Great Daylight Saving Time Controversy.
++#	Australian Ebook Publisher. 2017. ISBN 978-1-925516-96-8.
++#
+ #	Edward W. Whitman, World Time Differences,
+ #	Whitman Publishing Co, 2 Niagara Av, Ealing, London (undated),
+ #	which I found in the UCLA library.
+@@ -1213,9 +1258,6 @@ Zone America/Menominee	-5:50:27 -	LMT	1885 Sep 18 12:00
+ #	<http://cs.ucla.edu/~eggert/The-Waste-of-Daylight-19th.pdf>
+ #	[PDF] (1914-03)
+ #
+-#	Milne J. Civil time. Geogr J. 1899 Feb;13(2):173-94
+-#	<https://www.jstor.org/stable/1774359>.
+-#
+ # See the 'europe' file for Greenland.
+ 
+ # Canada
+@@ -1857,9 +1899,8 @@ Zone America/Winnipeg	-6:28:36 -	LMT	1887 Jul 16
+ # Willett (1914-03) notes that DST "has been in operation ... in the
+ # City of Moose Jaw, Saskatchewan, for one year."
+ 
+-# From Paul Eggert (2019-04-26):
+-# Chris Pearce's book "The Great Daylight Saving Time Controversy" (2017)
+-# says that Regina observed DST in 1914-1917.  No dates and times,
++# From Paul Eggert (2019-07-25):
++# Pearce's book says Regina observed DST in 1914-1917.  No dates and times,
+ # unfortunately.  It also says that in 1914 Saskatoon observed DST
+ # from 1 June to 6 July, and that DST was also tried out in Davidson,
+ # Melfort, and Prince Albert.
+@@ -1939,6 +1980,19 @@ Zone America/Swift_Current -7:11:20 -	LMT	1905 Sep
+ 
+ # Alberta
+ 
++# From Alois Triendl (2019-07-19):
++# There was no DST in Alberta in 1967... Calgary Herald, 29 April 1967.
++# 1969, no DST, from Edmonton Journal 18 April 1969
++#
++# From Paul Eggert (2019-07-25):
++# Pearce's book says that Alberta's 1948 Daylight Saving Act required
++# Mountain Standard Time without DST, and that "anyone who broke that law
++# could be fined up to $25 and costs".  There seems to be no record of
++# anybody paying the fine.  The law was not changed until an August 1971
++# plebiscite reinstituted DST in 1972.  This story is also mentioned in:
++# Boyer JP. Forcing Choice: The Risky Reward of Referendums. Dundum. 2017.
++# ISBN 978-1459739123.
++
+ # Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
+ Rule	Edm	1918	1919	-	Apr	Sun>=8	2:00	1:00	D
+ Rule	Edm	1918	only	-	Oct	27	2:00	0	S
+@@ -1951,10 +2005,6 @@ Rule	Edm	1945	only	-	Aug	14	23:00u	1:00	P # Peace
+ Rule	Edm	1945	only	-	Sep	lastSun	2:00	0	S
+ Rule	Edm	1947	only	-	Apr	lastSun	2:00	1:00	D
+ Rule	Edm	1947	only	-	Sep	lastSun	2:00	0	S
+-Rule	Edm	1967	only	-	Apr	lastSun	2:00	1:00	D
+-Rule	Edm	1967	only	-	Oct	lastSun	2:00	0	S
+-Rule	Edm	1969	only	-	Apr	lastSun	2:00	1:00	D
+-Rule	Edm	1969	only	-	Oct	lastSun	2:00	0	S
+ Rule	Edm	1972	1986	-	Apr	lastSun	2:00	1:00	D
+ Rule	Edm	1972	2006	-	Oct	lastSun	2:00	0	S
+ # Zone	NAME		STDOFF	RULES	FORMAT	[UNTIL]
+@@ -2037,8 +2087,20 @@ Zone America/Edmonton	-7:33:52 -	LMT	1906 Sep
+ # been on MST (-0700) like Dawson Creek since it advanced its clocks on
+ # 2015-03-08.
+ #
+-# From Paul Eggert (2015-09-23):
++# From Paul Eggert (2019-07-25):
+ # Shanks says Fort Nelson did not observe DST in 1946, unlike Vancouver.
++# Alois Triendl confirmed this on 07-22, citing the 1946-04-27 Vancouver Daily
++# Province.  He also cited the 1946-09-28 Victoria Daily Times, which said
++# that Vancouver, Victoria, etc. "change at midnight Saturday"; for now,
++# guess they meant 02:00 Sunday since 02:00 was common practice in Vancouver.
++#
++# Early Vancouver, Volume Four, by Major J.S. Matthews, V.D., 2011 edition
++# says that a 1922 plebiscite adopted DST, but a 1923 plebiscite rejected it.
++# http://former.vancouver.ca/ctyclerk/archives/digitized/EarlyVan/SearchEarlyVan/Vol4pdf/MatthewsEarlyVancouverVol4_DaylightSavings.pdf
++# A catalog entry for a newspaper clipping seems to indicate that Vancouver
++# observed DST in 1941 from 07-07 through 09-27; see
++# https://searcharchives.vancouver.ca/daylight-saving-1918-starts-again-july-7-1941-start-d-s-sept-27-end-of-d-s-1941
++# We have no further details, so omit them for now.
+ 
+ # Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
+ Rule	Vanc	1918	only	-	Apr	14	2:00	1:00	D
+@@ -2047,7 +2109,7 @@ Rule	Vanc	1942	only	-	Feb	 9	2:00	1:00	W # War
+ Rule	Vanc	1945	only	-	Aug	14	23:00u	1:00	P # Peace
+ Rule	Vanc	1945	only	-	Sep	30	2:00	0	S
+ Rule	Vanc	1946	1986	-	Apr	lastSun	2:00	1:00	D
+-Rule	Vanc	1946	only	-	Oct	13	2:00	0	S
++Rule	Vanc	1946	only	-	Sep	29	2:00	0	S
+ Rule	Vanc	1947	1961	-	Sep	lastSun	2:00	0	S
+ Rule	Vanc	1962	2006	-	Oct	lastSun	2:00	0	S
+ # Zone	NAME		STDOFF	RULES	FORMAT	[UNTIL]
+diff --git a/src/main/java/org/joda/time/tz/src/southamerica b/src/main/java/org/joda/time/tz/src/southamerica
+index 397a2cc3a..9b679c614 100644
+--- a/src/main/java/org/joda/time/tz/src/southamerica
++++ b/src/main/java/org/joda/time/tz/src/southamerica
+@@ -1230,14 +1230,8 @@ Zone America/Rio_Branco	-4:31:12 -	LMT	1914
+ # From Juan Correa (2016-12-04):
+ # Magallanes region ... will keep DST (UTC -3) all year round....
+ # http://www.soychile.cl/Santiago/Sociedad/2016/12/04/433428/Bachelet-firmo-el-decreto-para-establecer-un-horario-unico-para-la-Region-de-Magallanes.aspx
+-#
+ # From Deborah Goldsmith (2017-01-19):
+ # http://www.diariooficial.interior.gob.cl/publicaciones/2017/01/17/41660/01/1169626.pdf
+-# From Paul Eggert (2017-01-19):
+-# The above says the Magallanes change expires 2019-05-11 at 24:00,
+-# so in theory, they will revert to -04/-03 after that, which means
+-# they will switch from -03 to -04 one hour after Santiago does that day.
+-# For now, assume that they will not revert.
+ 
+ # From Juan Correa (2018-08-13):
+ # As of moments ago, the Ministry of Energy in Chile has announced the new
+@@ -1258,6 +1252,11 @@ Zone America/Rio_Branco	-4:31:12 -	LMT	1914
+ # So we extend the new rules on Saturdays at 24:00 mainland time indefinitely.
+ # From Juan Correa (2019-02-04):
+ # http://www.diariooficial.interior.gob.cl/publicaciones/2018/11/23/42212/01/1498738.pdf
++# From Paul Eggert (2019-09-01):
++# The above says the Magallanes exception expires 2022-04-02 at 24:00,
++# so in theory, they will revert to -04/-03 after that.
++# For now, assume that they will not revert,
++# since they have extended the expiration date once already.
+ 
+ # Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
+ Rule	Chile	1927	1931	-	Sep	 1	0:00	1:00	-
+
+From beb82a9f6cfc9fe6dc359d6c5ba2e6263c2c4083 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Fri, 20 Sep 2019 09:59:34 +0100
+Subject: [PATCH 4/7] Fix Travis build
+
+---
+ .travis.yml | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
+
+diff --git a/.travis.yml b/.travis.yml
+index b8f379048..a1af7f519 100644
+--- a/.travis.yml
++++ b/.travis.yml
+@@ -1,10 +1,8 @@
+ # build does not work on Java 9 or later as Java 5 is not a valid target
+ 
+-sudo: false
+ language: java
+ jdk:
+-  - oraclejdk8
+-  - openjdk7
++  - openjdk8
+ cache:
+   directories:
+     - "$HOME/.m2/repository"
+
+From 644f4b97d154ea04071ebc6fb1e68dcba51fa69c Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Fri, 20 Sep 2019 10:45:14 +0100
+Subject: [PATCH 5/7] Add Tidelift Enterprise sections
+
+---
+ src/site/markdown/index.md | 13 +++++++++++--
+ src/site/site.xml          |  6 +++++-
+ 2 files changed, 16 insertions(+), 3 deletions(-)
+
+diff --git a/src/site/markdown/index.md b/src/site/markdown/index.md
+index c97c27ff9..22ca13b33 100644
+--- a/src/site/markdown/index.md
++++ b/src/site/markdown/index.md
+@@ -163,13 +163,22 @@ the last release to support Java SE 4 and the last v1.x release.
+ 
+ ---
+ 
++### For Enterprise
++
++[Available as part of the Tidelift Subscription](https://tidelift.com/subscription/pkg/maven-joda-time-joda-time?utm_source=maven-joda-time-joda-time&utm_medium=referral&utm_campaign=enterprise).
++
++Joda and the maintainers of thousands of other packages are working with Tidelift to deliver one
++enterprise subscription that covers all of the open source you use.
++
++If you want the flexibility of open source and the confidence of commercial-grade software, this is for you.
++[Learn more](https://tidelift.com/subscription/pkg/maven-joda-time-joda-time?utm_source=maven-joda-time-joda-time&utm_medium=referral&utm_campaign=enterprise).
++
++
+ ### Support
+ 
+ Please use [Stack Overflow](https://stackoverflow.com/questions/tagged/jodatime) for general usage questions.
+ GitHub [issues](https://github.com/JodaOrg/joda-time/issues) and [pull requests](https://github.com/JodaOrg/joda-time/pulls)
+ should be used when you want to help advance the project.
+-Commercial support is available via the
+-[Tidelift subscription](https://tidelift.com/subscription/pkg/maven-joda-time-joda-time?utm_source=maven-joda-time-joda-time&utm_medium=referral&utm_campaign=website).
+ 
+ Note that Joda-Time is considered to be a largely "finished" project.
+ No major enhancements are planned.
+diff --git a/src/site/site.xml b/src/site/site.xml
+index 2f8377317..c946cf166 100644
+--- a/src/site/site.xml
++++ b/src/site/site.xml
+@@ -21,7 +21,7 @@
+         <name>Joda-Time</name>
+         <href>index.html</href>
+       </brand>
+-      <topNav>Documentation|Releases|Development|Related|Joda</topNav>
++      <topNav>Documentation|Releases|Development|Related|Joda|For Enterprise</topNav>
+       <bottomNav>
+         <column>Information</column>
+         <column>Releases|Related</column>
+@@ -153,6 +153,10 @@
+       <item name="Money" href="https://www.joda.org/joda-money/"/>
+     </menu>
+ 
++    <menu name="For Enterprise">
++      <item name="Tidelift" href="https://tidelift.com/subscription/pkg/maven-joda-time-joda-time?utm_source=maven-joda-time-joda-time&amp;utm_medium=referral&amp;utm_campaign=nav"/>
++    </menu>
++
+     <menu name="Reports" ref="reports"/>
+   </body>
+ </project>
+
+From 5dbc0a87a0fc2ee52f9b0b81145c8ff4b7ec6830 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Fri, 20 Sep 2019 11:56:28 +0100
+Subject: [PATCH 6/7] Auto release on Nexus
+
+---
+ pom.xml | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/pom.xml b/pom.xml
+index 45d7e8f1f..bcdec6f36 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -930,7 +930,8 @@
+               <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+               <serverId>sonatype-joda-staging</serverId>
+               <description>Releasing ${project.groupId}:${project.artifactId}:${project.version}</description>
+-              <autoReleaseAfterClose>false</autoReleaseAfterClose>
++              <keepStagingRepositoryOnCloseRuleFailure>true</keepStagingRepositoryOnCloseRuleFailure>
++              <autoReleaseAfterClose>true</autoReleaseAfterClose>
+             </configuration>
+           </plugin>
+         </plugins>
+
+From 30deaffa45e10ff12ca92e10aa4b1f2321c3e890 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Fri, 20 Sep 2019 11:53:07 +0100
+Subject: [PATCH 7/7] Release v2.10.4
+
+---
+ README.md                  |  6 +++---
+ pom.xml                    |  2 +-
+ src/changes/changes.xml    |  2 +-
+ src/conf/MANIFEST.MF       | 18 +++++++++---------
+ src/site/markdown/index.md |  4 ++--
+ 5 files changed, 16 insertions(+), 16 deletions(-)
+
+diff --git a/README.md b/README.md
+index a51cf12fa..b8c34bc8b 100644
+--- a/README.md
++++ b/README.md
+@@ -51,7 +51,7 @@ Various documentation is available:
+ 
+ 
+ ### Releases
+-[Release 2.10.3](https://www.joda.org/joda-time/download.html) is the current latest release.
++[Release 2.10.4](https://www.joda.org/joda-time/download.html) is the current latest release.
+ This release is considered stable and worthy of the 2.x tag.
+ It depends on JDK 1.5 or later.
+ 
+@@ -62,13 +62,13 @@ Available in the [Maven Central repository](https://search.maven.org/search?q=g:
+ <dependency>
+   <groupId>joda-time</groupId>
+   <artifactId>joda-time</artifactId>
+-  <version>2.10.3</version>
++  <version>2.10.4</version>
+ </dependency>
+ ```
+ 
+ **Gradle configuration:**
+ ```groovy
+-compile 'joda-time:joda-time:2.10.3'
++compile 'joda-time:joda-time:2.10.4'
+ ```
+ 
+ ![Tidelift dependency check](https://tidelift.com/badges/github/JodaOrg/joda-time)
+diff --git a/pom.xml b/pom.xml
+index bcdec6f36..33c3bdaff 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -8,7 +8,7 @@
+   <artifactId>joda-time</artifactId>
+   <packaging>jar</packaging>
+   <name>Joda-Time</name>
+-  <version>2.10.4-SNAPSHOT</version>
++  <version>2.10.4</version>
+   <description>Date and time library to replace JDK date handling</description>
+   <url>https://www.joda.org/joda-time/</url>
+ 
+diff --git a/src/changes/changes.xml b/src/changes/changes.xml
+index 62deea5cd..d183061d6 100644
+--- a/src/changes/changes.xml
++++ b/src/changes/changes.xml
+@@ -8,7 +8,7 @@
+   <body>
+ 
+     <!-- types are add, fix, remove, update -->
+-    <release version="2.10.4" date="SNAPSHOT" description="v2.10.4">
++    <release version="2.10.4" date="2019-09-20" description="v2.10.4">
+       <action dev="bradarndt" type="update">
+         DateTimeZone data updated to version 2019c.
+       </action>
+diff --git a/src/conf/MANIFEST.MF b/src/conf/MANIFEST.MF
+index fc75bb30a..717ecc63d 100644
+--- a/src/conf/MANIFEST.MF
++++ b/src/conf/MANIFEST.MF
+@@ -5,19 +5,19 @@ Specification-Vendor: Joda.org
+ Specification-Version: 2.10
+ Implementation-Vendor: Joda.org
+ Implementation-Title: org.joda.time
+-Implementation-Version: 2.10.3
++Implementation-Version: 2.10.4
+ Implementation-Vendor-Id: org.joda
+ Bundle-ManifestVersion: 2
+ Bundle-Vendor: Joda.org
+ Bundle-Name: Joda-Time
+ Bundle-SymbolicName: joda-time
+-Bundle-Version: 2.10.3
+-Export-Package: org.joda.time;version=2.10.3,
+- org.joda.time.base;version=2.10.3,
+- org.joda.time.chrono;version=2.10.3,
+- org.joda.time.convert;version=2.10.3,
+- org.joda.time.field;version=2.10.3,
+- org.joda.time.format;version=2.10.3,
+- org.joda.time.tz;version=2.10.3
++Bundle-Version: 2.10.4
++Export-Package: org.joda.time;version=2.10.4,
++ org.joda.time.base;version=2.10.4,
++ org.joda.time.chrono;version=2.10.4,
++ org.joda.time.convert;version=2.10.4,
++ org.joda.time.field;version=2.10.4,
++ org.joda.time.format;version=2.10.4,
++ org.joda.time.tz;version=2.10.4
+ Bundle-License: Apache 2.0
+ Bundle-DocURL: https://www.joda.org/joda-time/
+diff --git a/src/site/markdown/index.md b/src/site/markdown/index.md
+index 22ca13b33..d6e171e15 100644
+--- a/src/site/markdown/index.md
++++ b/src/site/markdown/index.md
+@@ -130,7 +130,7 @@ Joda-Time is licenced under the business friendly <a href="licenses.html">Apache
+ 
+ ## <i></i> Releases
+ 
+-[Release 2.10.3](download.html) is the current latest release.
++[Release 2.10.4](download.html) is the current latest release.
+ This release is considered stable and worthy of the 2.x tag.
+ See the [change notes](changes-report.html) for full details.
+ 
+@@ -144,7 +144,7 @@ Available in [Maven Central](https://search.maven.org/search?q=g:joda-time%20AND
+ <dependency>
+   <groupId>joda-time</groupId>
+   <artifactId>joda-time</artifactId>
+-  <version>2.10.3</version>
++  <version>2.10.4</version>
+ </dependency>
+ ```
+ 

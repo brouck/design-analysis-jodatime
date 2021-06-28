@@ -1,0 +1,561 @@
+From 4ea9d99247ef1db680d2a749a06cd64960dc8f88 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Mon, 13 Sep 2010 22:44:39 +0000
+Subject: [PATCH 1/6] DateTimeZone.getDefault [3048468,3056104] Handle missing
+ user.timezone system property on Android that resulted in stack overflow
+
+git-svn-id: https://joda-time.svn.sourceforge.net/svnroot/joda-time/branches/v1_6_000_BRANCH@1570 1e1cfbb7-5c0e-0410-a2f0-f98d92ec03a1
+---
+ .../main/java/org/joda/time/DateTimeZone.java    | 16 +++++++++++-----
+ 1 file changed, 11 insertions(+), 5 deletions(-)
+
+diff --git a/JodaTime/src/main/java/org/joda/time/DateTimeZone.java b/JodaTime/src/main/java/org/joda/time/DateTimeZone.java
+index a84e9d56e..fc44d8112 100644
+--- a/JodaTime/src/main/java/org/joda/time/DateTimeZone.java
++++ b/JodaTime/src/main/java/org/joda/time/DateTimeZone.java
+@@ -117,6 +117,10 @@
+     //-----------------------------------------------------------------------
+     /**
+      * Gets the default time zone.
++     * <p>
++     * The default time zone is derived from the system property {@code user.timezone}.
++     * If that is {@code null} or is not a valid identifier, then the value of the
++     * JDK {@code TimeZone} default is converted. If that fails, {@code UTC} is used.
+      * 
+      * @return the default datetime zone object
+      */
+@@ -129,7 +133,10 @@ public static DateTimeZone getDefault() {
+                     DateTimeZone temp = null;
+                     try {
+                         try {
+-                            temp = forID(System.getProperty("user.timezone"));
++                            String id = System.getProperty("user.timezone");
++                            if (id != null) {  // null check avoids stack overflow
++                                temp = forID(id);
++                            }
+                         } catch (RuntimeException ex) {
+                             // ignored
+                         }
+@@ -205,7 +212,7 @@ public static DateTimeZone forID(String id) {
+                 return fixedOffsetZone(id, offset);
+             }
+         }
+-        throw new IllegalArgumentException("The datetime zone id is not recognised: " + id);
++        throw new IllegalArgumentException("The datetime zone id '" + id + "' is not recognised");
+     }
+ 
+     /**
+@@ -228,7 +235,7 @@ public static DateTimeZone forOffsetHours(int hoursOffset) throws IllegalArgumen
+      * <p>
+      * This factory is a convenient way of constructing zones with a fixed offset.
+      * The minutes value is always positive and in the range 0 to 59.
+-     * If constructed with the values (-2, 30), the resultiong zone is '-02:30'.
++     * If constructed with the values (-2, 30), the resulting zone is '-02:30'.
+      * 
+      * @param hoursOffset  the offset in hours from UTC
+      * @param minutesOffset  the offset in minutes from UTC, must be between 0 and 59 inclusive
+@@ -319,8 +326,7 @@ public static DateTimeZone forTimeZone(TimeZone zone) {
+                 }
+             }
+         }
+-
+-        throw new IllegalArgumentException("The datetime zone id is not recognised: " + id);
++        throw new IllegalArgumentException("The datetime zone id '" + id + "' is not recognised");
+     }
+ 
+     //-----------------------------------------------------------------------
+
+From 98f1f3263a4a8dda1189753c7b2f5d3a01616cf8 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Mon, 13 Sep 2010 22:46:23 +0000
+Subject: [PATCH 2/6] Prepare for v1.6.2
+
+git-svn-id: https://joda-time.svn.sourceforge.net/svnroot/joda-time/branches/v1_6_000_BRANCH@1571 1e1cfbb7-5c0e-0410-a2f0-f98d92ec03a1
+---
+ JodaTime/RELEASE-NOTES.txt              |  19 +++--
+ JodaTime/pom.xml                        |   2 +-
+ JodaTime/src/conf/MANIFEST.MF           |  18 ++---
+ JodaTime/src/site/xdoc/index.xml        |   4 +-
+ JodaTime/src/site/xdoc/installation.xml |   1 +
+ JodaTime/src/site/xdoc/upgradeto162.xml | 100 ++++++++++++++++++++++++
+ 6 files changed, 127 insertions(+), 17 deletions(-)
+ create mode 100644 JodaTime/src/site/xdoc/upgradeto162.xml
+
+diff --git a/JodaTime/RELEASE-NOTES.txt b/JodaTime/RELEASE-NOTES.txt
+index 7c7f94c4a..135ad7df4 100644
+--- a/JodaTime/RELEASE-NOTES.txt
++++ b/JodaTime/RELEASE-NOTES.txt
+@@ -1,12 +1,12 @@
+-Joda-Time version 1.6.1
++Joda-Time version 1.6.2
+ -----------------------
+ 
+ Joda-Time is a date and time handling library that seeks to replace the JDK
+ Date and Calendar classes.
+ 
+-This is a patch release for Joda-Time 1.6.
++This is a patch release for Joda-Time 1.6 and 1.6.1.
+ This release only contains bug fixes.
+-We recommend all users of 1.6 upgrade to 1.6.1.
++We recommend all users of 1.6 upgrade to 1.6.2.
+ 
+ We recommend JDK 1.4 or later, and have performed no testing on earlier JDKs.
+ 
+@@ -19,8 +19,8 @@ of restrictions. If the license causes you problems please contact the mailing l
+ ** http://joda-time.sourceforge.net/related.html **
+ 
+ 
+-Compatibility with 1.6
+-----------------------
++Compatibility with 1.6 and 1.6.1
++--------------------------------
+ Binary compatible - Yes
+ 
+ Source compatible - Yes
+@@ -33,6 +33,15 @@ Data compatible - Yes, except
+ Semantic compatible - Yes
+ 
+ 
++Bug fixes since 1.6.1
++---------------------
++- DateTimeZone.getDefault [3048468,3056104]
++  Handle missing user.timezone system property on Android that resulted in stack overflow
++
++
++RELEASE NOTES for v1.6 to v1.6.1
++================================
++
+ Deprecations since 1.6
+ ----------------------
+ - DateTimeFormatter.getChronolgy() [2783325]
+diff --git a/JodaTime/pom.xml b/JodaTime/pom.xml
+index b00936f08..d8c24fd98 100644
+--- a/JodaTime/pom.xml
++++ b/JodaTime/pom.xml
+@@ -8,7 +8,7 @@
+   <artifactId>joda-time</artifactId>
+   <packaging>jar</packaging>
+   <name>Joda time</name>
+-  <version>1.6.1</version>
++  <version>1.6.2</version>
+   <description>Date and time library to replace JDK date handling</description>
+   <url>http://joda-time.sourceforge.net</url>
+   <issueManagement>
+diff --git a/JodaTime/src/conf/MANIFEST.MF b/JodaTime/src/conf/MANIFEST.MF
+index 951e805e0..770fc034e 100644
+--- a/JodaTime/src/conf/MANIFEST.MF
++++ b/JodaTime/src/conf/MANIFEST.MF
+@@ -6,20 +6,20 @@ Specification-Vendor: Joda.org
+ Specification-Version: 1.6
+ Implementation-Vendor: Joda.org
+ Implementation-Title: org.joda.time
+-Implementation-Version: 1.6.1
++Implementation-Version: 1.6.2
+ Implementation-Vendor-Id: org.joda
+ Bundle-ManifestVersion: 2
+ Bundle-Vendor: Joda.org
+ Bundle-Name: Joda-Time
+ Bundle-SymbolicName: joda-time
+-Bundle-Version: 1.6.1
+-Export-Package: org.joda.time;version=1.6.1,
+- org.joda.time.base;version=1.6.1,
+- org.joda.time.chrono;version=1.6.1,
+- org.joda.time.convert;version=1.6.1,
+- org.joda.time.field;version=1.6.1,
+- org.joda.time.format;version=1.6.1,
+- org.joda.time.tz;version=1.6.1
++Bundle-Version: 1.6.2
++Export-Package: org.joda.time;version=1.6.2,
++ org.joda.time.base;version=1.6.2,
++ org.joda.time.chrono;version=1.6.2,
++ org.joda.time.convert;version=1.6.2,
++ org.joda.time.field;version=1.6.2,
++ org.joda.time.format;version=1.6.2,
++ org.joda.time.tz;version=1.6.2
+ Bundle-License: Apache 2.0
+ Bundle-RequiredExecutionEnvironment: J2SE-1.3
+ Bundle-DocURL: http://joda-time.sourceforge.net/
+diff --git a/JodaTime/src/site/xdoc/index.xml b/JodaTime/src/site/xdoc/index.xml
+index ab740bc37..4c7e714d8 100644
+--- a/JodaTime/src/site/xdoc/index.xml
++++ b/JodaTime/src/site/xdoc/index.xml
+@@ -58,7 +58,7 @@ public boolean isJoinedInLastThreeMonths(<a href="api-release/org/joda/time/Date
+   return last3Months.contains(datetimeJoined);
+ }
+ -->
+-Version 1.6.1 was released on 2010-08-08 -
++Version 1.6.2 was released on 2010-09-14 -
+ <a href="http://sourceforge.net/projects/joda-time/files/joda-time/">Download now</a>
+ </p>
+ </section>
+@@ -143,7 +143,7 @@ Various documentation is available:
+ 
+ <section name="Releases">
+ <p>
+-<a href="http://sourceforge.net/projects/joda-time/files/joda-time/">Release 1.6.1</a>
++<a href="http://sourceforge.net/projects/joda-time/files/joda-time/">Release 1.6.2</a>
+ is the current latest release.
+ This release is considered stable and worthy of the 1.x tag.
+ It has extensive testing suites and has been used in production.
+diff --git a/JodaTime/src/site/xdoc/installation.xml b/JodaTime/src/site/xdoc/installation.xml
+index 47d61de9f..4a044eb61 100644
+--- a/JodaTime/src/site/xdoc/installation.xml
++++ b/JodaTime/src/site/xdoc/installation.xml
+@@ -22,6 +22,7 @@ of the source code suitable for linking to the jar file in IDEs such as Eclipse.
+ <p>
+ The release notes for upgraders can be found here:
+ <ul>
++<li><a href="upgradeto162.html">Version 1.6.1 to Version 1.6.2</a></li>
+ <li><a href="upgradeto161.html">Version 1.6 to Version 1.6.1</a></li>
+ <li><a href="upgradeto160.html">Version 1.5 to Version 1.6</a></li>
+ <li><a href="upgradeto152.html">Version 1.5.1 to Version 1.5.2</a></li>
+diff --git a/JodaTime/src/site/xdoc/upgradeto162.xml b/JodaTime/src/site/xdoc/upgradeto162.xml
+new file mode 100644
+index 000000000..53e98e5c9
+--- /dev/null
++++ b/JodaTime/src/site/xdoc/upgradeto162.xml
+@@ -0,0 +1,100 @@
++<?xml version="1.0" encoding="ISO-8859-1"?>
++
++<document>
++ <properties>
++  <title>Java date and time API - Upgrade from 1.6.1 to 1.6.2</title>
++  <author>Stephen Colebourne</author>
++ </properties>
++
++<body>
++
++<section name="Upgrade">
++<p>
++These are the release notes and advice for upgrading Joda-Time from
++version 1.6 to version 1.6.1.
++<source>
++Joda-Time version 1.6.2
++-----------------------
++
++Joda-Time is a date and time handling library that seeks to replace the JDK
++Date and Calendar classes.
++
++This is a patch release for Joda-Time 1.6 and 1.6.1.
++This release only contains bug fixes.
++We recommend all users of 1.6 upgrade to 1.6.2.
++
++We recommend JDK 1.4 or later, and have performed no testing on earlier JDKs.
++
++Joda-Time is licensed under the business-friendly Apache License Version 2.
++This is the same license as all of Apache, plus other open source projects such as Spring.
++The intent is to make the code available to the Java community with the minimum
++of restrictions. If the license causes you problems please contact the mailing list.
++
++**  Please also check out our related projects   **
++** http://joda-time.sourceforge.net/related.html **
++
++
++Compatibility with 1.6 and 1.6.1
++--------------------------------
++Binary compatible - Yes
++
++Source compatible - Yes
++
++Serialization compatible - Yes
++
++Data compatible - Yes, except
++  - DateTimeZone data updated to version 2010k
++
++Semantic compatible - Yes
++
++
++Bug fixes since 1.6.1
++---------------------
++- DateTimeZone.getDefault [3048468,3056104]
++  Handle missing user.timezone system property on Android that resulted in stack overflow
++
++
++RELEASE NOTES for v1.6 to v1.6.1
++================================
++
++Deprecations since 1.6
++----------------------
++- DateTimeFormatter.getChronolgy() [2783325]
++  Incorrect spelling - new method DateTimeFormatter.getChronology()
++
++
++Bug fixes since 1.6
++-------------------
++- LocalTime.fromDateFields()
++  Now handles times based on java.util.Date before 1970
++
++- LocalDate.toInterval() [2487417]
++  Now handles time zones which have no midnight at DST cutover
++
++- DateTimeZone.convertLocalToUTC [2903029]
++  Now handles date after last ever DST change
++
++- Period formatting concurrency [2820871]
++  Fix possible concurrency hole in PeriodFormatBuilder.Separator
++
++- Classloading CachedDateTimeZone could invalidate state [2935625]
++  Default time zone now lazily loaded
++
++- DateTimeUtils shared static variable now volatile [2986043]
++
++- Time zone compiler now handles 24:00 [2804258]
++
++- Time zone compiler now handles non-UTC better
++
++- Assorted Javadoc clarifications, including [2721880]
++
++
++Enhancements since 1.6
++----------------------
++- None
++</source>
++</p>
++</section>
++
++</body>
++</document>
+
+From ccbee74ab666f8aea9ee5531a60683bc1c43e8f1 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Mon, 13 Sep 2010 22:59:38 +0000
+Subject: [PATCH 3/6] Update time-zone data to 2010l
+
+git-svn-id: https://joda-time.svn.sourceforge.net/svnroot/joda-time/branches/v1_6_000_BRANCH@1572 1e1cfbb7-5c0e-0410-a2f0-f98d92ec03a1
+---
+ JodaTime/RELEASE-NOTES.txt                        |  2 +-
+ .../src/main/java/org/joda/time/tz/src/Readme.txt |  2 +-
+ .../src/main/java/org/joda/time/tz/src/africa     |  6 +++---
+ JodaTime/src/main/java/org/joda/time/tz/src/asia  | 15 ++++++++++++++-
+ JodaTime/src/site/xdoc/upgradeto162.xml           |  2 +-
+ 5 files changed, 20 insertions(+), 7 deletions(-)
+
+diff --git a/JodaTime/RELEASE-NOTES.txt b/JodaTime/RELEASE-NOTES.txt
+index 135ad7df4..b6332fd7c 100644
+--- a/JodaTime/RELEASE-NOTES.txt
++++ b/JodaTime/RELEASE-NOTES.txt
+@@ -28,7 +28,7 @@ Source compatible - Yes
+ Serialization compatible - Yes
+ 
+ Data compatible - Yes, except
+-  - DateTimeZone data updated to version 2010k
++  - DateTimeZone data updated to version 2010l
+ 
+ Semantic compatible - Yes
+ 
+diff --git a/JodaTime/src/main/java/org/joda/time/tz/src/Readme.txt b/JodaTime/src/main/java/org/joda/time/tz/src/Readme.txt
+index ba9f69112..80535b3ab 100644
+--- a/JodaTime/src/main/java/org/joda/time/tz/src/Readme.txt
++++ b/JodaTime/src/main/java/org/joda/time/tz/src/Readme.txt
+@@ -1,2 +1,2 @@
+ The data files in this directory were obtained from the public tz database,
+-http://www.twinsun.com/tz/tz-link.htm, version 2010k.
++http://www.twinsun.com/tz/tz-link.htm, version 2010l.
+diff --git a/JodaTime/src/main/java/org/joda/time/tz/src/africa b/JodaTime/src/main/java/org/joda/time/tz/src/africa
+index 0c37506a2..481bc264b 100644
+--- a/JodaTime/src/main/java/org/joda/time/tz/src/africa
++++ b/JodaTime/src/main/java/org/joda/time/tz/src/africa
+@@ -1,5 +1,5 @@
+ # <pre>
+-# @(#)africa	8.27
++# @(#)africa	8.28
+ # This file is in the public domain, so clarified as of
+ # 2009-05-17 by Arthur David Olson.
+ 
+@@ -311,8 +311,8 @@ Rule	Egypt	2007	only	-	Sep	Thu>=1	23:00s	0	-
+ 
+ Rule	Egypt	2008	only	-	Aug	lastThu	23:00s	0	-
+ Rule	Egypt	2009	only	-	Aug	20	23:00s	0	-
+-Rule	Egypt	2010	only	-	Aug	10	23:00s	0	-
+-Rule	Egypt	2010	only	-	Sep	9	0:00s	1:00	S
++Rule	Egypt	2010	only	-	Aug	11	0:00	0	-
++Rule	Egypt	2010	only	-	Sep	10	0:00	1:00	S
+ Rule	Egypt	2010	max	-	Sep	lastThu	23:00s	0	-
+ 
+ # Zone	NAME		GMTOFF	RULES	FORMAT	[UNTIL]
+diff --git a/JodaTime/src/main/java/org/joda/time/tz/src/asia b/JodaTime/src/main/java/org/joda/time/tz/src/asia
+index 78ff2ffed..09158b669 100644
+--- a/JodaTime/src/main/java/org/joda/time/tz/src/asia
++++ b/JodaTime/src/main/java/org/joda/time/tz/src/asia
+@@ -1,4 +1,4 @@
+-# @(#)asia	8.60
++# @(#)asia	8.61
+ # This file is in the public domain, so clarified as of
+ # 2009-05-17 by Arthur David Olson.
+ 
+@@ -2178,6 +2178,18 @@ Zone	Asia/Karachi	4:28:12 -	LMT	1907
+ # "At 12:01am Friday, clocks in Israel and the West Bank will change to
+ # 1:01am, while Gaza clocks will change at 12:01am Saturday morning."
+ 
++# From Steffen Thorsen (2010-08-11):
++# According to several sources, including
++# <a href="http://www.maannews.net/eng/ViewDetails.aspx?ID=306795">
++# http://www.maannews.net/eng/ViewDetails.aspx?ID=306795
++# </a>
++# the clocks were set back one hour at 2010-08-11 00:00:00 local time in 
++# Gaza and the West Bank.
++# Some more background info:
++# <a href="http://www.timeanddate.com/news/time/westbank-gaza-end-dst-2010.html">
++# http://www.timeanddate.com/news/time/westbank-gaza-end-dst-2010.html
++# </a>
++
+ # The rules for Egypt are stolen from the `africa' file.
+ # Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
+ Rule EgyptAsia	1957	only	-	May	10	0:00	1:00	S
+@@ -2198,6 +2210,7 @@ Rule Palestine	2008	only	-	Aug	lastFri	2:00	0	-
+ Rule Palestine	2009	only	-	Mar	lastFri	0:00	1:00	S
+ Rule Palestine	2010	max	-	Mar	lastSat	0:01	1:00	S
+ Rule Palestine	2009	max	-	Sep	Fri>=1	2:00	0	-
++Rule Palestine	2010	only	-	Aug	11	0:00	0	-
+ 
+ # Zone	NAME		GMTOFF	RULES	FORMAT	[UNTIL]
+ Zone	Asia/Gaza	2:17:52	-	LMT	1900 Oct
+diff --git a/JodaTime/src/site/xdoc/upgradeto162.xml b/JodaTime/src/site/xdoc/upgradeto162.xml
+index 53e98e5c9..1da207916 100644
+--- a/JodaTime/src/site/xdoc/upgradeto162.xml
++++ b/JodaTime/src/site/xdoc/upgradeto162.xml
+@@ -43,7 +43,7 @@ Source compatible - Yes
+ Serialization compatible - Yes
+ 
+ Data compatible - Yes, except
+-  - DateTimeZone data updated to version 2010k
++  - DateTimeZone data updated to version 2010l
+ 
+ Semantic compatible - Yes
+ 
+
+From d19952e39a0a77447a6080acc7f82a0a53eb92fe Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Mon, 13 Sep 2010 23:03:49 +0000
+Subject: [PATCH 4/6] Clearer release notes
+
+git-svn-id: https://joda-time.svn.sourceforge.net/svnroot/joda-time/branches/v1_6_000_BRANCH@1573 1e1cfbb7-5c0e-0410-a2f0-f98d92ec03a1
+---
+ JodaTime/RELEASE-NOTES.txt              | 18 ++++++++++++++++--
+ JodaTime/src/site/xdoc/upgradeto162.xml | 18 ++++++++++++++++--
+ 2 files changed, 32 insertions(+), 4 deletions(-)
+
+diff --git a/JodaTime/RELEASE-NOTES.txt b/JodaTime/RELEASE-NOTES.txt
+index b6332fd7c..aedbe9990 100644
+--- a/JodaTime/RELEASE-NOTES.txt
++++ b/JodaTime/RELEASE-NOTES.txt
+@@ -19,8 +19,8 @@ of restrictions. If the license causes you problems please contact the mailing l
+ ** http://joda-time.sourceforge.net/related.html **
+ 
+ 
+-Compatibility with 1.6 and 1.6.1
+---------------------------------
++Compatibility with 1.6.1
++------------------------
+ Binary compatible - Yes
+ 
+ Source compatible - Yes
+@@ -42,6 +42,20 @@ Bug fixes since 1.6.1
+ RELEASE NOTES for v1.6 to v1.6.1
+ ================================
+ 
++Compatibility with 1.6
++----------------------
++Binary compatible - Yes
++
++Source compatible - Yes
++
++Serialization compatible - Yes
++
++Data compatible - Yes, except
++  - DateTimeZone data updated to version 2010k (2010l in v1.6.2)
++
++Semantic compatible - Yes
++
++
+ Deprecations since 1.6
+ ----------------------
+ - DateTimeFormatter.getChronolgy() [2783325]
+diff --git a/JodaTime/src/site/xdoc/upgradeto162.xml b/JodaTime/src/site/xdoc/upgradeto162.xml
+index 1da207916..824e14973 100644
+--- a/JodaTime/src/site/xdoc/upgradeto162.xml
++++ b/JodaTime/src/site/xdoc/upgradeto162.xml
+@@ -34,8 +34,8 @@ of restrictions. If the license causes you problems please contact the mailing l
+ ** http://joda-time.sourceforge.net/related.html **
+ 
+ 
+-Compatibility with 1.6 and 1.6.1
+---------------------------------
++Compatibility with 1.6.1
++------------------------
+ Binary compatible - Yes
+ 
+ Source compatible - Yes
+@@ -57,6 +57,20 @@ Bug fixes since 1.6.1
+ RELEASE NOTES for v1.6 to v1.6.1
+ ================================
+ 
++Compatibility with 1.6
++----------------------
++Binary compatible - Yes
++
++Source compatible - Yes
++
++Serialization compatible - Yes
++
++Data compatible - Yes, except
++  - DateTimeZone data updated to version 2010k (2010l in v1.6.2)
++
++Semantic compatible - Yes
++
++
+ Deprecations since 1.6
+ ----------------------
+ - DateTimeFormatter.getChronolgy() [2783325]
+
+From 5841d038ae8b33b63c3cd1c0bd378721a61f4d46 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Mon, 13 Sep 2010 23:19:58 +0000
+Subject: [PATCH 5/6] Prepare for v1.6.2
+
+git-svn-id: https://joda-time.svn.sourceforge.net/svnroot/joda-time/branches/v1_6_000_BRANCH@1574 1e1cfbb7-5c0e-0410-a2f0-f98d92ec03a1
+---
+ JodaTime/src/site/xdoc/installation.xml | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/JodaTime/src/site/xdoc/installation.xml b/JodaTime/src/site/xdoc/installation.xml
+index 4a044eb61..22c57cb7b 100644
+--- a/JodaTime/src/site/xdoc/installation.xml
++++ b/JodaTime/src/site/xdoc/installation.xml
+@@ -12,11 +12,11 @@
+ <p>
+ To use Joda-Time you need to
+ <a href="http://sourceforge.net/projects/joda-time/files/joda-time/">download the latest version</a>.
+-The download will contain the joda-time-1.6.1.jar.
++The download will contain the joda-time-1.6.2.jar.
+ Once you add this to your classpath you will be able to use Joda-Time.
+ </p>
+ <p>
+-The binary download also includes joda-time-1.6.1-sources.jar, which is a jar file
++The binary download also includes joda-time-1.6.2-sources.jar, which is a jar file
+ of the source code suitable for linking to the jar file in IDEs such as Eclipse.
+ </p>
+ <p>
+
+From 845f00cb9660bdbd0041357389a55c03f50e261b Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Mon, 13 Sep 2010 23:27:34 +0000
+Subject: [PATCH 6/6] Prepare for v1.6.2
+
+git-svn-id: https://joda-time.svn.sourceforge.net/svnroot/joda-time/branches/v1_6_000_BRANCH@1575 1e1cfbb7-5c0e-0410-a2f0-f98d92ec03a1
+---
+ JodaTime/src/site/site.xml | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/JodaTime/src/site/site.xml b/JodaTime/src/site/site.xml
+index 886cd165b..ca10ef26f 100644
+--- a/JodaTime/src/site/site.xml
++++ b/JodaTime/src/site/site.xml
+@@ -64,6 +64,7 @@
+     <menu name="Joda">
+       <item name="Joda home" href="http://joda.sourceforge.net"/>
+       <item name="Beans" href="http://joda-beans.sourceforge.net/index.html"/>
++      <item name="Convert" href="http://joda-convert.sourceforge.net/index.html"/>
+       <item name="Money" href="http://joda-money.sourceforge.net/index.html"/>
+       <item name="Primitives" href="http://joda-primitives.sourceforge.net/index.html"/>
+     </menu>

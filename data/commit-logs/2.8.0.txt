@@ -1,0 +1,3181 @@
+From c10fb6d3a411a38921faa7b364a8023cf524586a Mon Sep 17 00:00:00 2001
+From: Dan Cavallaro <dtc008@bucknell.edu>
+Date: Wed, 21 Jan 2015 07:07:37 -0800
+Subject: [PATCH 01/23] Update MonthDay.plusDays docs
+
+Updated MonthDay.plusDays Javadoc comment to mention that February is
+assumed to have 29 days for calculations that require wrapping past the
+end of February. Note that the Javadoc for MonthDay in the new Java 8
+date API calls out this limitation as well, and explicitly chose not to
+support arithmetic on MonthDays for this reason:
+http://docs.oracle.com/javase/8/docs/api/java/time/MonthDay.html
+---
+ src/main/java/org/joda/time/MonthDay.java | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/src/main/java/org/joda/time/MonthDay.java b/src/main/java/org/joda/time/MonthDay.java
+index c7dd59b69..bc9b6977f 100644
+--- a/src/main/java/org/joda/time/MonthDay.java
++++ b/src/main/java/org/joda/time/MonthDay.java
+@@ -598,6 +598,9 @@ public MonthDay plusMonths(int months) {
+      * This month-day instance is immutable and unaffected by this method call.
+      * The month will wrap at the end of the year from December to January.
+      * <p>
++     * If the number of days added requires wrapping past the end of February,
++     * the wrapping will be calculated assuming February has 29 days. 
++     * <p>
+      * The following three lines are identical in effect:
+      * <pre>
+      * MonthDay added = md.plusDays(6);
+
+From 1f0ca1e4aa7a1669a50ca69cd977707b5ebb6287 Mon Sep 17 00:00:00 2001
+From: Dan Cavallaro <dancaval@amazon.com>
+Date: Thu, 22 Jan 2015 08:24:54 -0800
+Subject: [PATCH 02/23] Tiny copy-paste typo fix
+
+---
+ .travis.yml | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/.travis.yml b/.travis.yml
+index 55d71cb97..06fcd3bef 100644
+--- a/.travis.yml
++++ b/.travis.yml
+@@ -1,5 +1,5 @@
+ # This file enables the Travis continuous integration system, which
+-# automatically builds and tests joda-money for each GitHub commit or 
++# automatically builds and tests joda-time for each GitHub commit or 
+ # pull request on three separate JDKs.
+ #
+ # For more information, see https://travis-ci.org
+
+From b7074b2a18894774f7d2f9ad1c3d714f5d762e92 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Fri, 23 Jan 2015 12:16:13 +0000
+Subject: [PATCH 03/23] Bump version
+
+Update pom.xml to latest versions
+Add contributor
+---
+ pom.xml | 56 ++++++++++++++++++++++++++++++--------------------------
+ 1 file changed, 30 insertions(+), 26 deletions(-)
+
+diff --git a/pom.xml b/pom.xml
+index c411a2856..b82704eae 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -9,7 +9,7 @@
+   <artifactId>joda-time</artifactId>
+   <packaging>jar</packaging>
+   <name>Joda-Time</name>
+-  <version>2.7</version>
++  <version>2.8-SNAPSHOT</version>
+   <description>Date and time library to replace JDK date handling</description>
+   <url>http://www.joda.org/joda-time/</url>
+ 
+@@ -64,6 +64,10 @@
+       <name>Dave Brosius</name>
+       <url>https://github.com/mebigfatguy</url>
+     </contributor>
++    <contributor>
++      <name>Dan Cavallaro</name>
++      <url>https://github.com/dancavallaro</url>
++    </contributor>
+     <contributor>
+       <name>Luc Claes</name>
+       <url>https://github.com/lucclaes</url>
+@@ -253,7 +257,7 @@
+       <plugin>
+         <groupId>org.codehaus.mojo</groupId>      
+         <artifactId>exec-maven-plugin</artifactId>
+-        <version>1.2.1</version>
++        <version>1.3.2</version>
+         <executions>
+           <execution>
+             <id>compile-tzdb</id>
+@@ -432,7 +436,7 @@
+       <plugin><!-- invoke with mvn site-deploy -->
+         <groupId>com.github.github</groupId>
+         <artifactId>site-maven-plugin</artifactId>
+-        <version>0.10</version>
++        <version>0.11</version>
+         <executions>
+           <execution>
+             <id>github-site</id>
+@@ -455,9 +459,9 @@
+       <plugin>
+         <groupId>org.codehaus.mojo</groupId>
+         <artifactId>clirr-maven-plugin</artifactId>
+-        <version>2.3</version>
++        <version>2.6.1</version>
+         <configuration>
+-          <comparisonVersion>2.3</comparisonVersion>
++          <comparisonVersion>2.7</comparisonVersion>
+           <minSeverity>info</minSeverity>
+           <logResults>true</logResults>
+         </configuration>
+@@ -756,28 +760,28 @@
+   <!-- ==================================================================== -->
+   <properties>
+     <!-- Plugin version numbers -->
+-    <maven-assembly-plugin.version>2.4</maven-assembly-plugin.version>
+-    <maven-changes-plugin.version>2.9</maven-changes-plugin.version>
+-    <maven-checkstyle-plugin.version>2.11</maven-checkstyle-plugin.version>
+-    <maven-clean-plugin.version>2.5</maven-clean-plugin.version>
+-    <maven-compiler-plugin.version>3.1</maven-compiler-plugin.version>
+-    <maven-deploy-plugin.version>2.8.1</maven-deploy-plugin.version>
+-    <maven-dependency-plugin.version>2.8</maven-dependency-plugin.version>
+-    <maven-gpg-plugin.version>1.4</maven-gpg-plugin.version>
+-    <maven-install-plugin.version>2.5.1</maven-install-plugin.version>
+-    <maven-jar-plugin.version>2.4</maven-jar-plugin.version>
+-    <maven-javadoc-plugin.version>2.9.1</maven-javadoc-plugin.version>
+-    <maven-jxr-plugin.version>2.3</maven-jxr-plugin.version>
+-    <maven-plugin-plugin.version>3.2</maven-plugin-plugin.version>
+-    <maven-pmd-plugin.version>3.0.1</maven-pmd-plugin.version>
+-    <maven-project-info-reports-plugin.version>2.7</maven-project-info-reports-plugin.version>
++    <maven-assembly-plugin.version>2.5.3</maven-assembly-plugin.version>
++    <maven-changes-plugin.version>2.11</maven-changes-plugin.version>
++    <maven-checkstyle-plugin.version>2.13</maven-checkstyle-plugin.version>
++    <maven-clean-plugin.version>2.6.1</maven-clean-plugin.version>
++    <maven-compiler-plugin.version>3.2</maven-compiler-plugin.version>
++    <maven-deploy-plugin.version>2.8.2</maven-deploy-plugin.version>
++    <maven-dependency-plugin.version>2.9</maven-dependency-plugin.version>
++    <maven-gpg-plugin.version>1.6</maven-gpg-plugin.version>
++    <maven-install-plugin.version>2.5.2</maven-install-plugin.version>
++    <maven-jar-plugin.version>2.5</maven-jar-plugin.version>
++    <maven-javadoc-plugin.version>2.10.1</maven-javadoc-plugin.version>
++    <maven-jxr-plugin.version>2.5</maven-jxr-plugin.version>
++    <maven-plugin-plugin.version>3.4</maven-plugin-plugin.version>
++    <maven-pmd-plugin.version>3.3</maven-pmd-plugin.version>
++    <maven-project-info-reports-plugin.version>2.8</maven-project-info-reports-plugin.version>
+     <maven-repository-plugin.version>2.3.1</maven-repository-plugin.version>
+-    <maven-resources-plugin.version>2.6</maven-resources-plugin.version>
+-    <maven-site-plugin.version>3.3</maven-site-plugin.version>
+-    <maven-source-plugin.version>2.2.1</maven-source-plugin.version>
+-    <maven-surefire-plugin.version>2.16</maven-surefire-plugin.version>
+-    <maven-surefire-report-plugin.version>2.16</maven-surefire-report-plugin.version>
+-    <maven-toolchains-plugin.version>1.0</maven-toolchains-plugin.version>
++    <maven-resources-plugin.version>2.7</maven-resources-plugin.version>
++    <maven-site-plugin.version>3.4</maven-site-plugin.version>
++    <maven-source-plugin.version>2.4</maven-source-plugin.version>
++    <maven-surefire-plugin.version>2.18.1</maven-surefire-plugin.version>
++    <maven-surefire-report-plugin.version>2.18.1</maven-surefire-report-plugin.version>
++    <maven-toolchains-plugin.version>1.1</maven-toolchains-plugin.version>
+     <!-- Properties for maven-compiler-plugin -->
+     <maven.compiler.compilerVersion>1.5</maven.compiler.compilerVersion>
+     <maven.compiler.source>1.5</maven.compiler.source>
+
+From 29956ccdc75365646441de647e85fe6589081b16 Mon Sep 17 00:00:00 2001
+From: Dan Cavallaro <dancaval@amazon.com>
+Date: Thu, 22 Jan 2015 09:04:09 -0800
+Subject: [PATCH 04/23] Adding test cases for MonthDays plus/minusDays wrapping
+ behavior
+
+---
+ .../org/joda/time/TestMonthDay_Basics.java    | 56 +++++++++++++++++++
+ 1 file changed, 56 insertions(+)
+
+diff --git a/src/test/java/org/joda/time/TestMonthDay_Basics.java b/src/test/java/org/joda/time/TestMonthDay_Basics.java
+index 38f97a7f4..6b0953653 100644
+--- a/src/test/java/org/joda/time/TestMonthDay_Basics.java
++++ b/src/test/java/org/joda/time/TestMonthDay_Basics.java
+@@ -503,6 +503,34 @@ public void testPlusDays_int() {
+         MonthDay expected = new MonthDay(5, 11, BuddhistChronology.getInstance());
+         assertEquals(expected, result);
+     }
++    
++    public void testPlusDays_int_wrapMonth() {
++        MonthDay test = new MonthDay(11, 1, ISOChronology.getInstanceUTC());
++        MonthDay result = test.plusDays(30);
++        MonthDay expected = new MonthDay(12, 1, ISOChronology.getInstanceUTC());
++        assertEquals(expected, result);
++    }
++    
++    public void testPlusDays_int_wrapMonthTwice() {
++        MonthDay test = new MonthDay(10, 31, ISOChronology.getInstanceUTC());
++        MonthDay result = test.plusDays(31);
++        MonthDay expected = new MonthDay(12, 1, ISOChronology.getInstanceUTC());
++        assertEquals(expected, result);
++    }
++    
++    public void testPlusDays_int_wrapMonthIntoNextYear() {
++        MonthDay test = new MonthDay(12, 1, ISOChronology.getInstanceUTC());
++        MonthDay result = test.plusDays(31);
++        MonthDay expected = new MonthDay(1, 1, ISOChronology.getInstanceUTC());
++        assertEquals(expected, result);
++    }
++    
++    public void testPlusDays_int_wrapMonthTwiceIntoNextYear() {
++        MonthDay test = new MonthDay(11, 30, ISOChronology.getInstanceUTC());
++        MonthDay result = test.plusDays(32);
++        MonthDay expected = new MonthDay(1, 1, ISOChronology.getInstanceUTC());
++        assertEquals(expected, result);
++    }
+ 
+     public void testPlusDays_int_fromLeap() {
+         MonthDay test = new MonthDay(2, 29, ISOChronology.getInstanceUTC());
+@@ -597,6 +625,34 @@ public void testMinusDays_int() {
+         MonthDay expected = new MonthDay(5, 10, BuddhistChronology.getInstance());
+         assertEquals(expected, result);
+     }
++    
++    public void testMinusDays_int_wrapMonth() {
++        MonthDay test = new MonthDay(12, 1, ISOChronology.getInstanceUTC());
++        MonthDay result = test.minusDays(30);
++        MonthDay expected = new MonthDay(11, 1, ISOChronology.getInstanceUTC());
++        assertEquals(expected, result);
++    }
++    
++    public void testMinusDays_int_wrapMonthTwice() {
++        MonthDay test = new MonthDay(12, 1, ISOChronology.getInstanceUTC());
++        MonthDay result = test.minusDays(31);
++        MonthDay expected = new MonthDay(10, 31, ISOChronology.getInstanceUTC());
++        assertEquals(expected, result);
++    }
++    
++    public void testMinusDays_int_wrapMonthIntoLastYear() {
++        MonthDay test = new MonthDay(1, 1, ISOChronology.getInstanceUTC());
++        MonthDay result = test.minusDays(31);
++        MonthDay expected = new MonthDay(12, 1, ISOChronology.getInstanceUTC());
++        assertEquals(expected, result);
++    }
++    
++    public void testMinusDays_int_wrapMonthTwiceIntoLastYear() {
++        MonthDay test = new MonthDay(1, 1, ISOChronology.getInstanceUTC());
++        MonthDay result = test.minusDays(32);
++        MonthDay expected = new MonthDay(11, 30, ISOChronology.getInstanceUTC());
++        assertEquals(expected, result);
++    }
+ 
+     public void testMinusDays_int_fromLeap() {
+         MonthDay test = new MonthDay(2, 29, ISOChronology.getInstanceUTC());
+
+From bef3d7c9871fd85373e8753dffb5132d8458d373 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Mon, 26 Jan 2015 20:27:04 +0000
+Subject: [PATCH 05/23] Adding test case for MonthDay.plus/minusDays February
+ behavior
+
+Since MonthDay.plus/minusDays is documented to assume February has 29
+days, these test cases verifies that.
+---
+ .../java/org/joda/time/TestMonthDay_Basics.java    | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
+
+diff --git a/src/test/java/org/joda/time/TestMonthDay_Basics.java b/src/test/java/org/joda/time/TestMonthDay_Basics.java
+index 6b0953653..58183d9d8 100644
+--- a/src/test/java/org/joda/time/TestMonthDay_Basics.java
++++ b/src/test/java/org/joda/time/TestMonthDay_Basics.java
+@@ -532,6 +532,13 @@ public void testPlusDays_int_wrapMonthTwiceIntoNextYear() {
+         assertEquals(expected, result);
+     }
+ 
++    public void testPlusDays_int_toLeap() {
++        MonthDay test = new MonthDay(2, 28, ISOChronology.getInstanceUTC());
++        MonthDay result = test.plusDays(1);
++        MonthDay expected = new MonthDay(2, 29, ISOChronology.getInstance());
++        assertEquals(expected, result);
++    }
++
+     public void testPlusDays_int_fromLeap() {
+         MonthDay test = new MonthDay(2, 29, ISOChronology.getInstanceUTC());
+         MonthDay result = test.plusDays(1);
+@@ -654,6 +661,13 @@ public void testMinusDays_int_wrapMonthTwiceIntoLastYear() {
+         assertEquals(expected, result);
+     }
+ 
++    public void testMinusDays_int_toLeap() {
++        MonthDay test = new MonthDay(3, 1, ISOChronology.getInstanceUTC());
++        MonthDay result = test.minusDays(1);
++        MonthDay expected = new MonthDay(2, 29, ISOChronology.getInstance());
++        assertEquals(expected, result);
++    }
++
+     public void testMinusDays_int_fromLeap() {
+         MonthDay test = new MonthDay(2, 29, ISOChronology.getInstanceUTC());
+         MonthDay result = test.minusDays(1);
+
+From b95ebe240aa65d2d28deb84b76d8a7edacf922f8 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Mon, 26 Jan 2015 20:50:05 +0000
+Subject: [PATCH 06/23] Fix MonthDay.plusDays()
+
+Algorithm incorrect when adding caused month to change twice
+Used incorrect way of getting current value of partial
+Fixes #227
+---
+ RELEASE-NOTES.txt                             | 37 ++++---------------
+ .../chrono/BasicMonthOfYearDateTimeField.java |  2 +-
+ .../org/joda/time/TestMonthDay_Basics.java    | 31 ++++++++++------
+ 3 files changed, 27 insertions(+), 43 deletions(-)
+
+diff --git a/RELEASE-NOTES.txt b/RELEASE-NOTES.txt
+index e3ad6faa2..20ba60813 100644
+--- a/RELEASE-NOTES.txt
++++ b/RELEASE-NOTES.txt
+@@ -1,4 +1,4 @@
+-Joda-Time version 2.7
++Joda-Time version 2.8
+ ---------------------
+ 
+ Joda-Time is a date and time handling library that seeks to replace the JDK
+@@ -16,27 +16,11 @@ of restrictions. If the license causes you problems please contact the mailing l
+ ** http://www.joda.org/joda-time/related.html **
+ 
+ 
+-Enhancements since 2.6
++Enhancements since 2.7
+ ----------------------
+-- Add DateTime.withDate(LocalDate) and DateTime.withTime(LocalTime) [#213]
+-  This was possible using DateTime.withFields(ReadablePartial) but the new methods are clearer
+ 
+-- Added new system property for time-zone loading [#37]
+-  Added system property "org.joda.time.DateTimeZone.Folder".
+-  If set, then it is treated as a file system folder to load time-zone data from.
+-  The folder is loaded using ZoneInfoProvider and must be the unzipped output of ZoneInfoCompiler.
+-  The default behaviour is unchanged, with default time-zone data included in the jar file.
+ 
+-- Produce jar file without time-zone data [#220]
+-  A second jar file is now located in Maven Central with the classifier "no-tzdb".
+-  This is the same as the main joda-time jar file, except that the tzdb data and ZoneInfoCompiler are omitted.
+-  This is intended for use by Android, but could be used in other environments.
+-  If using this alternative jar, a time-zone system property must be set, either
+-  "org.joda.time.DateTimeZone.Provider" or "org.joda.time.DateTimeZone.Folder".
+-  The default behaviour in the standard jar file is unchanged, with time-zone data included in the jar file.
+-
+-
+-Compatibility with 2.6
++Compatibility with 2.7
+ ----------------------
+ Build system - Yes
+ 
+@@ -52,21 +36,14 @@ Data compatible - Yes
+ Semantic compatible - Yes
+ 
+ 
+-Deprecations since 2.6
++Deprecations since 2.7
+ ----------------------
+ 
+ 
+-Bug fixes since 2.6
++Bug fixes since 2.7
+ -------------------
+-- Fix Asia/Dhaka time-zone [#208]
+-  Problem caused by time-zone ending at 24:00 on December 31st
+-  Model change as being as 23:59:59.999
+-
+-- Fix PeriodFormatter.withLocale to operate on word-based formatting [#187, #191]
+-  Previously, PeriodFormatter.withLocale() had no effect on word-based formatting
+-  Now, the locale used when calling PeriodFormat.wordBased(locale) is passed to the PeriodFormatter.
+-  In addition, if PeriodFormatter.withLocale(locale) is called, then the word-based pattern will
+-  change to a pattern appropriate for that locale.
++- Fix MonthDay.plusDays() [#227]
++  The algorithm was incorrect when adding enough days to cause the month to change twice.
+ 
+ 
+ Scala
+diff --git a/src/main/java/org/joda/time/chrono/BasicMonthOfYearDateTimeField.java b/src/main/java/org/joda/time/chrono/BasicMonthOfYearDateTimeField.java
+index 051caeddf..6ac87c207 100644
+--- a/src/main/java/org/joda/time/chrono/BasicMonthOfYearDateTimeField.java
++++ b/src/main/java/org/joda/time/chrono/BasicMonthOfYearDateTimeField.java
+@@ -209,7 +209,7 @@ public long add(long instant, long months) {
+         }
+         if (partial.size() > 0 && partial.getFieldType(0).equals(DateTimeFieldType.monthOfYear()) && fieldIndex == 0) {
+             // month is largest field and being added to, such as month-day
+-            int curMonth0 = partial.getValue(0) - 1;
++            int curMonth0 = values[0] - 1;
+             int newMonth = ((curMonth0 + (valueToAdd % 12) + 12) % 12) + 1;
+             return set(partial, 0, values, newMonth);
+         }
+diff --git a/src/test/java/org/joda/time/TestMonthDay_Basics.java b/src/test/java/org/joda/time/TestMonthDay_Basics.java
+index 58183d9d8..e8a8cede7 100644
+--- a/src/test/java/org/joda/time/TestMonthDay_Basics.java
++++ b/src/test/java/org/joda/time/TestMonthDay_Basics.java
+@@ -503,28 +503,28 @@ public void testPlusDays_int() {
+         MonthDay expected = new MonthDay(5, 11, BuddhistChronology.getInstance());
+         assertEquals(expected, result);
+     }
+-    
++
+     public void testPlusDays_int_wrapMonth() {
+         MonthDay test = new MonthDay(11, 1, ISOChronology.getInstanceUTC());
+-        MonthDay result = test.plusDays(30);
+-        MonthDay expected = new MonthDay(12, 1, ISOChronology.getInstanceUTC());
++        MonthDay result = test.plusDays(31);
++        MonthDay expected = new MonthDay(12, 2, ISOChronology.getInstanceUTC());
+         assertEquals(expected, result);
+     }
+-    
++
+     public void testPlusDays_int_wrapMonthTwice() {
+         MonthDay test = new MonthDay(10, 31, ISOChronology.getInstanceUTC());
+-        MonthDay result = test.plusDays(31);
+-        MonthDay expected = new MonthDay(12, 1, ISOChronology.getInstanceUTC());
++        MonthDay result = test.plusDays(32);
++        MonthDay expected = new MonthDay(12, 2, ISOChronology.getInstanceUTC());
+         assertEquals(expected, result);
+     }
+-    
++
+     public void testPlusDays_int_wrapMonthIntoNextYear() {
+         MonthDay test = new MonthDay(12, 1, ISOChronology.getInstanceUTC());
+         MonthDay result = test.plusDays(31);
+         MonthDay expected = new MonthDay(1, 1, ISOChronology.getInstanceUTC());
+         assertEquals(expected, result);
+     }
+-    
++
+     public void testPlusDays_int_wrapMonthTwiceIntoNextYear() {
+         MonthDay test = new MonthDay(11, 30, ISOChronology.getInstanceUTC());
+         MonthDay result = test.plusDays(32);
+@@ -532,6 +532,13 @@ public void testPlusDays_int_wrapMonthTwiceIntoNextYear() {
+         assertEquals(expected, result);
+     }
+ 
++    public void testPlusDays_int_wrap50() {
++        MonthDay test = new MonthDay(5, 15, ISOChronology.getInstanceUTC());
++        MonthDay result = test.plusDays(50);
++        MonthDay expected = new MonthDay(7, 4, ISOChronology.getInstanceUTC());
++        assertEquals(expected, result);
++    }
++
+     public void testPlusDays_int_toLeap() {
+         MonthDay test = new MonthDay(2, 28, ISOChronology.getInstanceUTC());
+         MonthDay result = test.plusDays(1);
+@@ -632,28 +639,28 @@ public void testMinusDays_int() {
+         MonthDay expected = new MonthDay(5, 10, BuddhistChronology.getInstance());
+         assertEquals(expected, result);
+     }
+-    
++
+     public void testMinusDays_int_wrapMonth() {
+         MonthDay test = new MonthDay(12, 1, ISOChronology.getInstanceUTC());
+         MonthDay result = test.minusDays(30);
+         MonthDay expected = new MonthDay(11, 1, ISOChronology.getInstanceUTC());
+         assertEquals(expected, result);
+     }
+-    
++
+     public void testMinusDays_int_wrapMonthTwice() {
+         MonthDay test = new MonthDay(12, 1, ISOChronology.getInstanceUTC());
+         MonthDay result = test.minusDays(31);
+         MonthDay expected = new MonthDay(10, 31, ISOChronology.getInstanceUTC());
+         assertEquals(expected, result);
+     }
+-    
++
+     public void testMinusDays_int_wrapMonthIntoLastYear() {
+         MonthDay test = new MonthDay(1, 1, ISOChronology.getInstanceUTC());
+         MonthDay result = test.minusDays(31);
+         MonthDay expected = new MonthDay(12, 1, ISOChronology.getInstanceUTC());
+         assertEquals(expected, result);
+     }
+-    
++
+     public void testMinusDays_int_wrapMonthTwiceIntoLastYear() {
+         MonthDay test = new MonthDay(1, 1, ISOChronology.getInstanceUTC());
+         MonthDay result = test.minusDays(32);
+
+From 0daee1292837cfea36dd452259d086f3e39cec3f Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Mon, 26 Jan 2015 21:05:25 +0000
+Subject: [PATCH 07/23] Encode properties files using unicode escapes
+
+Re-encode files using unicode escapes to avoid encoding issues
+Fixes #228
+---
+ RELEASE-NOTES.txt                                         | 3 +++
+ src/main/java/org/joda/time/format/messages_da.properties | 8 ++++----
+ src/main/java/org/joda/time/format/messages_es.properties | 8 ++++----
+ src/main/java/org/joda/time/format/messages_fr.properties | 4 ++--
+ src/main/java/org/joda/time/format/messages_pt.properties | 2 +-
+ 5 files changed, 14 insertions(+), 11 deletions(-)
+
+diff --git a/RELEASE-NOTES.txt b/RELEASE-NOTES.txt
+index 20ba60813..cb5c4b771 100644
+--- a/RELEASE-NOTES.txt
++++ b/RELEASE-NOTES.txt
+@@ -18,6 +18,9 @@ of restrictions. If the license causes you problems please contact the mailing l
+ 
+ Enhancements since 2.7
+ ----------------------
++- Encode properties files using unicode escapes [#228]
++  The properties files are supposed to be loaded using ISO 8859-1 but Android seems to have issues with that.
++  Re-encode the files using unicode escapes to sidestep the issue.
+ 
+ 
+ Compatibility with 2.7
+diff --git a/src/main/java/org/joda/time/format/messages_da.properties b/src/main/java/org/joda/time/format/messages_da.properties
+index 733d8f125..837cae45f 100644
+--- a/src/main/java/org/joda/time/format/messages_da.properties
++++ b/src/main/java/org/joda/time/format/messages_da.properties
+@@ -4,10 +4,10 @@ PeriodFormat.commandand=,og
+ PeriodFormat.commaspaceand=, og
+ PeriodFormat.commaspace=,\ 
+ PeriodFormat.spaceandspace=\ og\ 
+-PeriodFormat.year=\ �r
+-PeriodFormat.years=\ �r
+-PeriodFormat.month=\ m�ned
+-PeriodFormat.months=\ m�neder
++PeriodFormat.year=\ \u00e5r
++PeriodFormat.years=\ \u00e5r
++PeriodFormat.month=\ m\u00e5ned
++PeriodFormat.months=\ m\u00e5neder
+ PeriodFormat.week=\ uge
+ PeriodFormat.weeks=\ uger
+ PeriodFormat.day=\ dag
+diff --git a/src/main/java/org/joda/time/format/messages_es.properties b/src/main/java/org/joda/time/format/messages_es.properties
+index 986175175..2b601cffb 100644
+--- a/src/main/java/org/joda/time/format/messages_es.properties
++++ b/src/main/java/org/joda/time/format/messages_es.properties
+@@ -4,14 +4,14 @@ PeriodFormat.commandand=,y
+ PeriodFormat.commaspaceand=, y 
+ PeriodFormat.commaspace=, 
+ PeriodFormat.spaceandspace=\ y 
+-PeriodFormat.year=\ a�o
+-PeriodFormat.years=\ a�os
++PeriodFormat.year=\ a\u00f1o
++PeriodFormat.years=\ a\u00f1os
+ PeriodFormat.month=\ mes
+ PeriodFormat.months=\ meses
+ PeriodFormat.week=\ semana
+ PeriodFormat.weeks=\ semanas
+-PeriodFormat.day=\ d�a
+-PeriodFormat.days=\ d�as
++PeriodFormat.day=\ d\u00eda
++PeriodFormat.days=\ d\u00edas
+ PeriodFormat.hour=\ hora
+ PeriodFormat.hours=\ horas
+ PeriodFormat.minute=\ minuto
+diff --git a/src/main/java/org/joda/time/format/messages_fr.properties b/src/main/java/org/joda/time/format/messages_fr.properties
+index b804092e9..7275856d4 100644
+--- a/src/main/java/org/joda/time/format/messages_fr.properties
++++ b/src/main/java/org/joda/time/format/messages_fr.properties
+@@ -4,8 +4,8 @@ PeriodFormat.commandand=,et
+ PeriodFormat.commaspaceand=, et 
+ PeriodFormat.commaspace=, 
+ PeriodFormat.spaceandspace=\ et 
+-PeriodFormat.year=\ ann�e
+-PeriodFormat.years=\ ann�es
++PeriodFormat.year=\ ann\u00e9e
++PeriodFormat.years=\ ann\u00e9es
+ PeriodFormat.month=\ mois
+ PeriodFormat.months=\ mois
+ PeriodFormat.week=\ semaine
+diff --git a/src/main/java/org/joda/time/format/messages_pt.properties b/src/main/java/org/joda/time/format/messages_pt.properties
+index c714ad4ae..e45b73595 100644
+--- a/src/main/java/org/joda/time/format/messages_pt.properties
++++ b/src/main/java/org/joda/time/format/messages_pt.properties
+@@ -6,7 +6,7 @@ PeriodFormat.commaspace=,
+ PeriodFormat.spaceandspace=\ e 
+ PeriodFormat.year=\ ano
+ PeriodFormat.years=\ anos
+-PeriodFormat.month=\ m�s
++PeriodFormat.month=\ m\u00eas
+ PeriodFormat.months=\ meses
+ PeriodFormat.week=\ semana
+ PeriodFormat.weeks=\ semanas
+
+From 470a545bb065df2467b4f2e7dc5bda853e580708 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Sun, 1 Feb 2015 10:08:46 +0000
+Subject: [PATCH 08/23] Clarify definition of ISO chronology
+
+Fixes #231
+---
+ src/main/java/org/joda/time/Chronology.java | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/main/java/org/joda/time/Chronology.java b/src/main/java/org/joda/time/Chronology.java
+index de752fa51..ea583a7a5 100644
+--- a/src/main/java/org/joda/time/Chronology.java
++++ b/src/main/java/org/joda/time/Chronology.java
+@@ -31,7 +31,7 @@
+  * <p>
+  * The provided chronology implementations are:
+  * <ul>
+- * <li>ISO - Based on the ISO8601 standard and suitable for use after about 1600
++ * <li>ISO - The <i>de facto<i> world calendar system, based on the ISO-8601 standard
+  * <li>GJ - Historically accurate calendar with Julian followed by Gregorian
+  * <li>Gregorian - The Gregorian calendar system used for all time (proleptic)
+  * <li>Julian - The Julian calendar system used for all time (proleptic)
+
+From 48b6ae85b02f41bec0fac7110ee47239c53eee9d Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Sun, 1 Feb 2015 10:55:35 +0000
+Subject: [PATCH 09/23] Fix DateTime.withDate() DateTime.withTime()
+
+Algorithm incorrectly changed hour of day
+Happened mid-change when DST dates were hit
+New algorithm avoids an IllegalInstantException when moving to DST gap
+Fixes #233
+---
+ RELEASE-NOTES.txt                             |  4 +++
+ src/main/java/org/joda/time/DateTime.java     | 24 +++++++-------
+ .../org/joda/time/TestDateTime_Basics.java    | 33 +++++++++++++++++++
+ 3 files changed, 50 insertions(+), 11 deletions(-)
+
+diff --git a/RELEASE-NOTES.txt b/RELEASE-NOTES.txt
+index cb5c4b771..509dcb17c 100644
+--- a/RELEASE-NOTES.txt
++++ b/RELEASE-NOTES.txt
+@@ -48,6 +48,10 @@ Bug fixes since 2.7
+ - Fix MonthDay.plusDays() [#227]
+   The algorithm was incorrect when adding enough days to cause the month to change twice.
+ 
++- Fix DateTime.withDate() DateTime.withTime() [#233]
++  The algorithm incorrectly changed the hour of day when certain DST dates were hit.
++  The new algorithm avoids an IllegalInstantException when moving to a DST gap.
++
+ 
+ Scala
+ --------
+diff --git a/src/main/java/org/joda/time/DateTime.java b/src/main/java/org/joda/time/DateTime.java
+index c595c0e7c..73a33b005 100644
+--- a/src/main/java/org/joda/time/DateTime.java
++++ b/src/main/java/org/joda/time/DateTime.java
+@@ -713,6 +713,8 @@ public DateTime withLaterOffsetAtOverlap() {
+      * DateTime set = monthOfYear().setCopy(6);
+      * </pre>
+      * <p>
++     * If the time is invalid on the new date due to the time-zone, the time will be adjusted.
++     * <p>
+      * This instance is immutable and unaffected by this method call.
+      *
+      * @param year  the new year value
+@@ -723,16 +725,15 @@ public DateTime withLaterOffsetAtOverlap() {
+      */
+     public DateTime withDate(int year, int monthOfYear, int dayOfMonth) {
+         Chronology chrono = getChronology();
+-        long instant = getMillis();
+-        instant = chrono.year().set(instant, year);
+-        instant = chrono.monthOfYear().set(instant, monthOfYear);
+-        instant = chrono.dayOfMonth().set(instant, dayOfMonth);
+-        return withMillis(instant);
++        long localInstant = chrono.withUTC().getDateTimeMillis(year, monthOfYear, dayOfMonth, getMillisOfDay());
++        return withMillis(chrono.getZone().convertLocalToUTC(localInstant, false, getMillis()));
+     }
+ 
+     /**
+      * Returns a copy of this datetime with the specified date, retaining the time fields.
+      * <p>
++     * If the time is invalid on the new date due to the time-zone, the time will be adjusted.
++     * <p>
+      * This instance is immutable and unaffected by this method call.
+      *
+      * @param date  the local date
+@@ -755,6 +756,8 @@ public DateTime withDate(LocalDate date) {
+      * DateTime set = dt.hourOfDay().setCopy(6);
+      * </pre>
+      * <p>
++     * If the new time is invalid due to the time-zone, the time will be adjusted.
++     * <p>
+      * This instance is immutable and unaffected by this method call.
+      *
+      * @param hourOfDay  the hour of the day
+@@ -766,17 +769,16 @@ public DateTime withDate(LocalDate date) {
+      */
+     public DateTime withTime(int hourOfDay, int minuteOfHour, int secondOfMinute, int millisOfSecond) {
+         Chronology chrono = getChronology();
+-        long instant = getMillis();
+-        instant = chrono.hourOfDay().set(instant, hourOfDay);
+-        instant = chrono.minuteOfHour().set(instant, minuteOfHour);
+-        instant = chrono.secondOfMinute().set(instant, secondOfMinute);
+-        instant = chrono.millisOfSecond().set(instant, millisOfSecond);
+-        return withMillis(instant);
++        long localInstant = chrono.withUTC().getDateTimeMillis(
++            getYear(), getMonthOfYear(), getDayOfMonth(), hourOfDay, minuteOfHour, secondOfMinute, millisOfSecond);
++        return withMillis(chrono.getZone().convertLocalToUTC(localInstant, false, getMillis()));
+     }
+ 
+     /**
+      * Returns a copy of this datetime with the specified time, retaining the date fields.
+      * <p>
++     * If the new time is invalid due to the time-zone, the time will be adjusted.
++     * <p>
+      * This instance is immutable and unaffected by this method call.
+      *
+      * @param time  the local time
+diff --git a/src/test/java/org/joda/time/TestDateTime_Basics.java b/src/test/java/org/joda/time/TestDateTime_Basics.java
+index 12649fa60..b49e2bce4 100644
+--- a/src/test/java/org/joda/time/TestDateTime_Basics.java
++++ b/src/test/java/org/joda/time/TestDateTime_Basics.java
+@@ -839,6 +839,30 @@ public void testWithDate_int_int_int() {
+         } catch (IllegalArgumentException ex) {}
+     }
+     
++    public void testWithDate_int_int_int_toDST1() {
++        // 2010-03-28T02:55 is DST time, need to change to 03:55
++        DateTime test = new DateTime(2015, 1, 10, 2, 55, 0, 0, ISO_PARIS);
++        DateTime result = test.withDate(2010, 3, 28);
++        DateTime expected = new DateTime(2010, 3, 28, 3, 55, 0, 0, ISO_PARIS);
++        assertEquals(expected, result);
++    }
++    
++    public void testWithDate_int_int_int_toDST2() {
++        // 2010-03-28T02:55 is DST time, need to change to 03:55
++        DateTime test = new DateTime(2015, 1, 28, 2, 55, 0, 0, ISO_PARIS);
++        DateTime result = test.withDate(2010, 3, 28);
++        DateTime expected = new DateTime(2010, 3, 28, 3, 55, 0, 0, ISO_PARIS);
++        assertEquals(expected, result);
++    }
++    
++    public void testWithDate_int_int_int_affectedByDST() {
++        // 2010-03-28T02:55 is DST time, need to avoid time being changed to 03:55
++        DateTime test = new DateTime(2015, 1, 28, 2, 55, 0, 0, ISO_PARIS);
++        DateTime result = test.withDate(2010, 3, 10);
++        DateTime expected = new DateTime(2010, 3, 10, 2, 55, 0, 0, ISO_PARIS);
++        assertEquals(expected, result);
++    }
++    
+     public void testWithDate_LocalDate() {
+         DateTime test = new DateTime(2002, 4, 5, 1, 2, 3, 4, ISO_UTC);
+         DateTime result = test.withDate(new LocalDate(2003, 5, 6));
+@@ -852,6 +876,7 @@ public void testWithDate_LocalDate() {
+         } catch (IllegalArgumentException ex) {}
+     }
+     
++    //-----------------------------------------------------------------------
+     public void testWithTime_int_int_int_int() {
+         DateTime test = new DateTime(TEST_TIME1 - 12345L, BUDDHIST_UTC);
+         DateTime result = test.withTime(12, 24, 0, 0);
+@@ -865,6 +890,14 @@ public void testWithTime_int_int_int_int() {
+         } catch (IllegalArgumentException ex) {}
+     }
+     
++    public void testWithTime_int_int_int_int_toDST() {
++        // 2010-03-28T02:55 is DST time, need to change to 03:55
++        DateTime test = new DateTime(2010, 3, 28, 0, 0, 0, 0, ISO_PARIS);
++        DateTime result = test.withTime(2, 55, 0, 0);
++        DateTime expected = new DateTime(2010, 3, 28, 3, 55, 0, 0, ISO_PARIS);
++        assertEquals(expected, result);
++    }
++    
+     public void testWithTime_LocalTime() {
+         DateTime test = new DateTime(TEST_TIME1 - 12345L, BUDDHIST_UTC);
+         DateTime result = test.withTime(new LocalTime(12, 24, 0, 0));
+
+From fd323b4a8fa05348c67bdace8dde380ffa7b7435 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Tue, 10 Feb 2015 15:12:48 +0000
+Subject: [PATCH 10/23] Fix Javadoc
+
+Fixes #241
+---
+ src/main/java/org/joda/time/base/AbstractInstant.java | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/main/java/org/joda/time/base/AbstractInstant.java b/src/main/java/org/joda/time/base/AbstractInstant.java
+index e78154253..2df2d58e9 100644
+--- a/src/main/java/org/joda/time/base/AbstractInstant.java
++++ b/src/main/java/org/joda/time/base/AbstractInstant.java
+@@ -385,7 +385,7 @@ public boolean isBefore(ReadableInstant instant) {
+      * comparing solely by millisecond.
+      *
+      * @param instant  a millisecond instant to check against
+-     * @return true if this instant is before the instant passed in
++     * @return true if this instant is equal to the instant passed in
+      */
+     public boolean isEqual(long instant) {
+         return (getMillis() == instant);
+@@ -395,7 +395,7 @@ public boolean isEqual(long instant) {
+      * Is this instant equal to the current instant
+      * comparing solely by millisecond.
+      * 
+-     * @return true if this instant is before the current instant
++     * @return true if this instant is equal to the current instant
+      */
+     public boolean isEqualNow() {
+         return isEqual(DateTimeUtils.currentTimeMillis());
+
+From 558c9282cedc6b0d8a4dcbb7e7157077872b1cda Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Tue, 10 Feb 2015 15:27:36 +0000
+Subject: [PATCH 11/23] Fix Parsing of negative periods less than a second
+
+Fixes #238
+---
+ RELEASE-NOTES.txt                                |  3 +++
+ .../joda/time/format/PeriodFormatterBuilder.java |  5 +++--
+ .../time/format/TestPeriodFormatParsing.java     | 16 ++++++++++++++++
+ 3 files changed, 22 insertions(+), 2 deletions(-)
+
+diff --git a/RELEASE-NOTES.txt b/RELEASE-NOTES.txt
+index 509dcb17c..d63e98036 100644
+--- a/RELEASE-NOTES.txt
++++ b/RELEASE-NOTES.txt
+@@ -52,6 +52,9 @@ Bug fixes since 2.7
+   The algorithm incorrectly changed the hour of day when certain DST dates were hit.
+   The new algorithm avoids an IllegalInstantException when moving to a DST gap.
+ 
++- Fix Period.parse() [#238]
++  Negative periods of a fraction of a second were not parsed correctly.
++
+ 
+ Scala
+ --------
+diff --git a/src/main/java/org/joda/time/format/PeriodFormatterBuilder.java b/src/main/java/org/joda/time/format/PeriodFormatterBuilder.java
+index 6b81cf8b0..7d8e71156 100644
+--- a/src/main/java/org/joda/time/format/PeriodFormatterBuilder.java
++++ b/src/main/java/org/joda/time/format/PeriodFormatterBuilder.java
+@@ -1573,11 +1573,12 @@ public int parseInto(
+             int length = 0;
+             int fractPos = -1;
+             boolean hasDigits = false;
++            boolean negative = false;
+             while (length < limit) {
+                 char c = text.charAt(position + length);
+                 // leading sign
+                 if (length == 0 && (c == '-' || c == '+') && !iRejectSignedValues) {
+-                    boolean negative = c == '-';
++                    negative = c == '-';
+ 
+                     // Next character must be a digit.
+                     if (length + 1 >= limit || 
+@@ -1653,7 +1654,7 @@ public int parseInto(
+                             fractValue *= 10;
+                         }
+                     }
+-                    if (wholeValue < 0) {
++                    if (negative || wholeValue < 0) {
+                         fractValue = -fractValue;
+                     }
+                 }
+diff --git a/src/test/java/org/joda/time/format/TestPeriodFormatParsing.java b/src/test/java/org/joda/time/format/TestPeriodFormatParsing.java
+index 1ef2e18f7..38c02239d 100644
+--- a/src/test/java/org/joda/time/format/TestPeriodFormatParsing.java
++++ b/src/test/java/org/joda/time/format/TestPeriodFormatParsing.java
+@@ -95,6 +95,22 @@ public void testParseStandard1() {
+         assertEquals(new Period(6, 3, 0, 2, 0, 0, 0, 0), p);
+     }
+ 
++    public void testParseNegativeMillis1() {
++        Period period = new Period(0, 0, 0, -1);
++        String formatted = period.toString();
++        assertEquals("PT-0.001S", formatted);
++        Period parsed = Period.parse(formatted);
++        assertEquals(period, parsed);
++    }
++
++    public void testParseNegativeMillis2() {
++        Period period = new Period(0, 0, 0, -999);
++        String formatted = period.toString();
++        assertEquals("PT-0.999S", formatted);
++        Period parsed = Period.parse(formatted);
++        assertEquals(period, parsed);
++    }
++
+     public void testParseCustom1() {
+         PeriodFormatter formatter = new PeriodFormatterBuilder()
+             .printZeroAlways()
+
+From eb1b99814287682e3f185a3b2ef7e2c858e2728a Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Thu, 12 Feb 2015 13:11:04 +0000
+Subject: [PATCH 12/23] Update to time-zone data 2015a
+
+Fixes #243
+---
+ RELEASE-NOTES.txt                             |  2 +-
+ pom.xml                                       |  2 +-
+ src/main/java/org/joda/time/tz/src/Readme.txt |  2 +-
+ src/main/java/org/joda/time/tz/src/antarctica |  9 +++---
+ src/main/java/org/joda/time/tz/src/asia       | 28 +++++-------------
+ src/main/java/org/joda/time/tz/src/backward   |  2 +-
+ src/main/java/org/joda/time/tz/src/europe     | 29 +++++++++----------
+ .../java/org/joda/time/tz/src/northamerica    | 27 ++++++++++++++---
+ .../java/org/joda/time/tz/src/southamerica    | 17 +++++++----
+ 9 files changed, 65 insertions(+), 53 deletions(-)
+
+diff --git a/RELEASE-NOTES.txt b/RELEASE-NOTES.txt
+index d63e98036..dddf2d11a 100644
+--- a/RELEASE-NOTES.txt
++++ b/RELEASE-NOTES.txt
+@@ -34,7 +34,7 @@ Source compatible - Yes
+ Serialization compatible - Yes
+ 
+ Data compatible - Yes
+- - DateTimeZone data still at version 2014j
++ - DateTimeZone data updated to version 2015a
+ 
+ Semantic compatible - Yes
+ 
+diff --git a/pom.xml b/pom.xml
+index b82704eae..a3ba7d0f3 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -799,6 +799,6 @@
+     <!-- Other properties -->
+     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+-    <tz.database.version>2014j</tz.database.version>
++    <tz.database.version>2015a</tz.database.version>
+   </properties>
+ </project>
+diff --git a/src/main/java/org/joda/time/tz/src/Readme.txt b/src/main/java/org/joda/time/tz/src/Readme.txt
+index 11f8cc830..bbdd388be 100644
+--- a/src/main/java/org/joda/time/tz/src/Readme.txt
++++ b/src/main/java/org/joda/time/tz/src/Readme.txt
+@@ -1,2 +1,2 @@
+ The data files in this directory were obtained from the public IANA time zone database,
+-http://www.iana.org/time-zones, version 2014j.
++http://www.iana.org/time-zones, version 2015a.
+diff --git a/src/main/java/org/joda/time/tz/src/antarctica b/src/main/java/org/joda/time/tz/src/antarctica
+index 1deff8e4e..ebae99407 100644
+--- a/src/main/java/org/joda/time/tz/src/antarctica
++++ b/src/main/java/org/joda/time/tz/src/antarctica
+@@ -47,8 +47,8 @@ Rule	ChileAQ	2009	only	-	Mar	Sun>=9	3:00u	0	-
+ Rule	ChileAQ	2010	only	-	Apr	Sun>=1	3:00u	0	-
+ Rule	ChileAQ	2011	only	-	May	Sun>=2	3:00u	0	-
+ Rule	ChileAQ	2011	only	-	Aug	Sun>=16	4:00u	1:00	S
+-Rule	ChileAQ	2012	max	-	Apr	Sun>=23	3:00u	0	-
+-Rule	ChileAQ	2012	max	-	Sep	Sun>=2	4:00u	1:00	S
++Rule	ChileAQ	2012	2015	-	Apr	Sun>=23	3:00u	0	-
++Rule	ChileAQ	2012	2014	-	Sep	Sun>=2	4:00u	1:00	S
+ 
+ # Argentina - year-round bases
+ # Belgrano II, Confin Coast, -770227-0343737, since 1972-02-05
+@@ -354,9 +354,10 @@ Zone Antarctica/Rothera	0	-	zzz	1976 Dec  1
+ #
+ # Zone	NAME		GMTOFF	RULES	FORMAT	[UNTIL]
+ Zone Antarctica/Palmer	0	-	zzz	1965
+-			-4:00	ArgAQ	AR%sT	1969 Oct 5
++			-4:00	ArgAQ	AR%sT	1969 Oct  5
+ 			-3:00	ArgAQ	AR%sT	1982 May
+-			-4:00	ChileAQ	CL%sT
++			-4:00	ChileAQ	CL%sT	2015 Apr 26 3:00u
++			-3:00	-	CLT
+ #
+ #
+ # McMurdo Station, Ross Island, since 1955-12
+diff --git a/src/main/java/org/joda/time/tz/src/asia b/src/main/java/org/joda/time/tz/src/asia
+index 1a2bd12ad..8f33b1620 100644
+--- a/src/main/java/org/joda/time/tz/src/asia
++++ b/src/main/java/org/joda/time/tz/src/asia
+@@ -145,10 +145,7 @@ Zone	Asia/Baku	3:19:24 -	LMT	1924 May  2
+ 			4:00	Azer	AZ%sT
+ 
+ # Bahrain
+-# Zone	NAME		GMTOFF	RULES	FORMAT	[UNTIL]
+-Zone	Asia/Bahrain	3:22:20 -	LMT	1920     # Manamah
+-			4:00	-	GST	1972 Jun
+-			3:00	-	AST
++# See Asia/Qatar.
+ 
+ # Bangladesh
+ # From Alexander Krivenyshev (2009-05-13):
+@@ -1731,9 +1728,7 @@ Zone	Asia/Pyongyang	8:23:00 -	LMT	1908 Apr  1
+ ###############################################################################
+ 
+ # Kuwait
+-# Zone	NAME		GMTOFF	RULES	FORMAT	[UNTIL]
+-Zone	Asia/Kuwait	3:11:56 -	LMT	1950
+-			3:00	-	AST
++# See Asia/Riyadh.
+ 
+ # Laos
+ # See Asia/Bangkok.
+@@ -1954,12 +1949,7 @@ Zone	Asia/Kathmandu	5:41:16 -	LMT	1920
+ 			5:45	-	NPT	# Nepal Time
+ 
+ # Oman
+-
+-# Milne says 3:54:24 was the meridian of the Muscat Tidal Observatory.
+-
+-# Zone	NAME		GMTOFF	RULES	FORMAT	[UNTIL]
+-Zone	Asia/Muscat	3:54:24 -	LMT	1920
+-			4:00	-	GST
++# See Asia/Dubai.
+ 
+ # Pakistan
+ 
+@@ -2453,6 +2443,7 @@ Zone	Asia/Manila	-15:56:00 -	LMT	1844 Dec 31
+ Zone	Asia/Qatar	3:26:08 -	LMT	1920     # Al Dawhah / Doha
+ 			4:00	-	GST	1972 Jun
+ 			3:00	-	AST
++Link Asia/Qatar Asia/Bahrain
+ 
+ # Saudi Arabia
+ #
+@@ -2479,6 +2470,8 @@ Zone	Asia/Qatar	3:26:08 -	LMT	1920     # Al Dawhah / Doha
+ # Zone	NAME		GMTOFF	RULES	FORMAT	[UNTIL]
+ Zone	Asia/Riyadh	3:06:52 -	LMT	1947 Mar 14
+ 			3:00	-	AST
++Link Asia/Riyadh Asia/Aden	# Yemen
++Link Asia/Riyadh Asia/Kuwait
+ 
+ # Singapore
+ # taken from Mok Ly Yng (2003-10-30)
+@@ -2767,6 +2760,7 @@ Zone	Asia/Ashgabat	3:53:32 -	LMT	1924 May  2 # or Ashkhabad
+ # Zone	NAME		GMTOFF	RULES	FORMAT	[UNTIL]
+ Zone	Asia/Dubai	3:41:12 -	LMT	1920
+ 			4:00	-	GST
++Link Asia/Dubai Asia/Muscat	# Oman
+ 
+ # Uzbekistan
+ # Byalokoz 1919 says Uzbekistan was 4:27:53.
+@@ -2851,10 +2845,4 @@ Zone Asia/Ho_Chi_Minh	7:06:40 -	LMT	1906 Jul  1
+ 			7:00	-	ICT
+ 
+ # Yemen
+-
+-# Milne says 2:59:54 was the meridian of the saluting battery at Aden,
+-# and that Yemen was at 1:55:56, the meridian of the Hagia Sophia.
+-
+-# Zone	NAME		GMTOFF	RULES	FORMAT	[UNTIL]
+-Zone	Asia/Aden	2:59:54	-	LMT	1950
+-			3:00	-	AST
++# See Asia/Riyadh.
+diff --git a/src/main/java/org/joda/time/tz/src/backward b/src/main/java/org/joda/time/tz/src/backward
+index 00cbfc416..3ceda884b 100644
+--- a/src/main/java/org/joda/time/tz/src/backward
++++ b/src/main/java/org/joda/time/tz/src/backward
+@@ -5,7 +5,7 @@
+ # and their old names.  Many names changed in late 1993.
+ 
+ # Link	TARGET			LINK-NAME
+-Link	Africa/Asmara		Africa/Asmera
++Link	Africa/Nairobi		Africa/Asmera
+ Link	Africa/Abidjan		Africa/Timbuktu
+ Link	America/Argentina/Catamarca	America/Argentina/ComodRivadavia
+ Link	America/Adak		America/Atka
+diff --git a/src/main/java/org/joda/time/tz/src/europe b/src/main/java/org/joda/time/tz/src/europe
+index 5e78c5499..60dfc1dce 100644
+--- a/src/main/java/org/joda/time/tz/src/europe
++++ b/src/main/java/org/joda/time/tz/src/europe
+@@ -1407,35 +1407,32 @@ Zone	Europe/Budapest	1:16:20 -	LMT	1890 Oct
+ # might be a reference to the Julian calendar as opposed to Gregorian, or it
+ # might mean something else (???).
+ #
+-# From Paul Eggert (2006-03-22):
+-# The Iceland Almanak, Shanks & Pottenger, and Whitman disagree on many points.
+-# We go with the Almanak, except for one claim from Shanks & Pottenger, namely
+-# that Reykavik was 21W57 from 1837 to 1908, local mean time before that.
++# From Paul Eggert (2014-11-22):
++# The information below is taken from the 1988 Almanak; see
++# http://www.almanak.hi.is/klukkan.html
+ #
+ # Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
+-Rule	Iceland	1917	1918	-	Feb	19	23:00	1:00	S
++Rule	Iceland	1917	1919	-	Feb	19	23:00	1:00	S
+ Rule	Iceland	1917	only	-	Oct	21	 1:00	0	-
+-Rule	Iceland	1918	only	-	Nov	16	 1:00	0	-
++Rule	Iceland	1918	1919	-	Nov	16	 1:00	0	-
++Rule	Iceland	1921	only	-	Mar	19	23:00	1:00	S
++Rule	Iceland	1921	only	-	Jun	23	 1:00	0	-
+ Rule	Iceland	1939	only	-	Apr	29	23:00	1:00	S
+-Rule	Iceland	1939	only	-	Nov	29	 2:00	0	-
++Rule	Iceland	1939	only	-	Oct	29	 2:00	0	-
+ Rule	Iceland	1940	only	-	Feb	25	 2:00	1:00	S
+-Rule	Iceland	1940	only	-	Nov	 3	 2:00	0	-
+-Rule	Iceland	1941	only	-	Mar	 2	 1:00s	1:00	S
+-Rule	Iceland	1941	only	-	Nov	 2	 1:00s	0	-
+-Rule	Iceland	1942	only	-	Mar	 8	 1:00s	1:00	S
+-Rule	Iceland	1942	only	-	Oct	25	 1:00s	0	-
++Rule	Iceland	1940	1941	-	Nov	Sun>=2	 1:00s	0	-
++Rule	Iceland	1941	1942	-	Mar	Sun>=2	 1:00s	1:00	S
+ # 1943-1946 - first Sunday in March until first Sunday in winter
+ Rule	Iceland	1943	1946	-	Mar	Sun>=1	 1:00s	1:00	S
+-Rule	Iceland	1943	1948	-	Oct	Sun>=22	 1:00s	0	-
++Rule	Iceland	1942	1948	-	Oct	Sun>=22	 1:00s	0	-
+ # 1947-1967 - first Sunday in April until first Sunday in winter
+ Rule	Iceland	1947	1967	-	Apr	Sun>=1	 1:00s	1:00	S
+-# 1949 Oct transition delayed by 1 week
++# 1949 and 1967 Oct transitions delayed by 1 week
+ Rule	Iceland	1949	only	-	Oct	30	 1:00s	0	-
+ Rule	Iceland	1950	1966	-	Oct	Sun>=22	 1:00s	0	-
+ Rule	Iceland	1967	only	-	Oct	29	 1:00s	0	-
+ # Zone	NAME		GMTOFF	RULES	FORMAT	[UNTIL]
+-Zone Atlantic/Reykjavik	-1:27:24 -	LMT	1837
+-			-1:27:48 -	RMT	1908 # Reykjavik Mean Time?
++Zone Atlantic/Reykjavik	-1:28	-	LMT	1908
+ 			-1:00	Iceland	IS%sT	1968 Apr  7  1:00s
+ 			 0:00	-	GMT
+ 
+diff --git a/src/main/java/org/joda/time/tz/src/northamerica b/src/main/java/org/joda/time/tz/src/northamerica
+index c91430c03..cb94c5e50 100644
+--- a/src/main/java/org/joda/time/tz/src/northamerica
++++ b/src/main/java/org/joda/time/tz/src/northamerica
+@@ -124,7 +124,7 @@ Rule	US	1918	1919	-	Mar	lastSun	2:00	1:00	D
+ Rule	US	1918	1919	-	Oct	lastSun	2:00	0	S
+ Rule	US	1942	only	-	Feb	9	2:00	1:00	W # War
+ Rule	US	1945	only	-	Aug	14	23:00u	1:00	P # Peace
+-Rule	US	1945	only	-	Sep	30	2:00	0	S
++Rule	US	1945	only	-	Sep	lastSun	2:00	0	S
+ Rule	US	1967	2006	-	Oct	lastSun	2:00	0	S
+ Rule	US	1967	1973	-	Apr	lastSun	2:00	1:00	D
+ Rule	US	1974	only	-	Jan	6	2:00	1:00	D
+@@ -2124,11 +2124,11 @@ Zone America/Dawson	-9:17:40 -	LMT	1900 Aug 20
+ 
+ # Mexico
+ 
+-# From Paul Eggert (2001-03-05):
++# From Paul Eggert (2014-12-07):
+ # The Investigation and Analysis Service of the
+ # Mexican Library of Congress (MLoC) has published a
+ # history of Mexican local time (in Spanish)
+-# http://www.cddhcu.gob.mx/bibliot/publica/inveyana/polisoc/horver/
++# http://www.diputados.gob.mx/bibliot/publica/inveyana/polisoc/horver/index.htm
+ #
+ # Here are the discrepancies between Shanks & Pottenger (S&P) and the MLoC.
+ # (In all cases we go with the MLoC.)
+@@ -2297,6 +2297,24 @@ Zone America/Dawson	-9:17:40 -	LMT	1900 Aug 20
+ # efecto desde las dos horas del segundo domingo de marzo y concluirá a
+ # las dos horas del primer domingo de noviembre.
+ 
++# From Steffen Thorsen (2014-12-08), translated by Gwillim Law:
++# The Mexican state of Quintana Roo will likely change to EST in 2015.
++#
++# http://www.unioncancun.mx/articulo/2014/12/04/medio-ambiente/congreso-aprueba-una-hora-mas-de-sol-en-qroo
++# "With this change, the time conflict that has existed between the municipios
++# of Quintana Roo and the municipio of Felipe Carrillo Puerto may come to an
++# end. The latter declared itself in rebellion 15 years ago when a time change
++# was initiated in Mexico, and since then it has refused to change its time
++# zone along with the rest of the country."
++#
++# From Steffen Thorsen (2015-01-14), translated by Gwillim Law:
++# http://sipse.com/novedades/confirman-aplicacion-de-nueva-zona-horaria-para-quintana-roo-132331.html
++# "...the new time zone will come into effect at two o'clock on the first Sunday
++# of February, when we will have to advance the clock one hour from its current
++# time..."
++#
++# Also, the new zone will not use DST.
++
+ # Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
+ Rule	Mexico	1939	only	-	Feb	5	0:00	1:00	D
+ Rule	Mexico	1939	only	-	Jun	25	0:00	0	S
+@@ -2317,7 +2335,8 @@ Rule	Mexico	2002	max	-	Oct	lastSun	2:00	0	S
+ Zone America/Cancun	-5:47:04 -	LMT	1922 Jan  1  0:12:56
+ 			-6:00	-	CST	1981 Dec 23
+ 			-5:00	Mexico	E%sT	1998 Aug  2  2:00
+-			-6:00	Mexico	C%sT
++			-6:00	Mexico	C%sT	2015 Feb  1  2:00
++			-5:00	-	EST
+ # Campeche, Yucatán; represented by Mérida
+ Zone America/Merida	-5:58:28 -	LMT	1922 Jan  1  0:01:32
+ 			-6:00	-	CST	1981 Dec 23
+diff --git a/src/main/java/org/joda/time/tz/src/southamerica b/src/main/java/org/joda/time/tz/src/southamerica
+index bdc29c214..3ab353e32 100644
+--- a/src/main/java/org/joda/time/tz/src/southamerica
++++ b/src/main/java/org/joda/time/tz/src/southamerica
+@@ -1206,6 +1206,11 @@ Zone America/Rio_Branco	-4:31:12 -	LMT	1914
+ # DST Start: first Saturday of September 2014 (Sun 07 Sep 2014 04:00 UTC)
+ # http://www.diariooficial.interior.gob.cl//media/2014/02/19/do-20140219.pdf
+ 
++# From Juan Correa (2015-01-28):
++# ... today the Ministry of Energy announced that Chile will drop DST, will keep
++# "summer time" (UTC -3 / UTC -5) all year round....
++# http://www.minenergia.cl/ministerio/noticias/generales/ministerio-de-energia-anuncia.html
++
+ # NOTE: ChileAQ rules for Antarctic bases are stored separately in the
+ # 'antarctica' file.
+ 
+@@ -1247,8 +1252,8 @@ Rule	Chile	2009	only	-	Mar	Sun>=9	3:00u	0	-
+ Rule	Chile	2010	only	-	Apr	Sun>=1	3:00u	0	-
+ Rule	Chile	2011	only	-	May	Sun>=2	3:00u	0	-
+ Rule	Chile	2011	only	-	Aug	Sun>=16	4:00u	1:00	S
+-Rule	Chile	2012	max	-	Apr	Sun>=23	3:00u	0	-
+-Rule	Chile	2012	max	-	Sep	Sun>=2	4:00u	1:00	S
++Rule	Chile	2012	2015	-	Apr	Sun>=23	3:00u	0	-
++Rule	Chile	2012	2014	-	Sep	Sun>=2	4:00u	1:00	S
+ # IATA SSIM anomalies: (1992-02) says 1992-03-14;
+ # (1996-09) says 1998-03-08.  Ignore these.
+ # Zone	NAME		GMTOFF	RULES	FORMAT	[UNTIL]
+@@ -1259,11 +1264,13 @@ Zone America/Santiago	-4:42:46 -	LMT	1890
+ 			-4:00	-	CLT	1919 Jul  1 # Chile Time
+ 			-4:42:46 -	SMT	1927 Sep  1 # Santiago Mean Time
+ 			-5:00	Chile	CL%sT	1947 May 22 # Chile Time
+-			-4:00	Chile	CL%sT
++			-4:00	Chile	CL%sT	2015 Apr 26  3:00u
++			-3:00	-	CLT
+ Zone Pacific/Easter	-7:17:44 -	LMT	1890
+ 			-7:17:28 -	EMT	1932 Sep    # Easter Mean Time
+-			-7:00	Chile	EAS%sT	1982 Mar 13 21:00 # Easter Time
+-			-6:00	Chile	EAS%sT
++			-7:00	Chile	EAS%sT	1982 Mar 13 3:00u # Easter Time
++			-6:00	Chile	EAS%sT	2015 Apr 26 3:00u
++			-5:00	-	EAST
+ #
+ # Salas y Gómez Island is uninhabited.
+ # Other Chilean locations, including Juan Fernández Is, Desventuradas Is,
+
+From 4222b61dcefc4e621f6d016e0928da0280663f87 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Thu, 12 Feb 2015 15:09:10 +0000
+Subject: [PATCH 13/23] Revive zones destroyed by the IANA tzdb maintainer
+
+Links in the main tzdb data files are now treated as zones
+with the exception of a few special cases
+Links in the 'backward' file are still treated as aliases
+---
+ RELEASE-NOTES.txt                             |  91 +++++++++++++
+ .../org/joda/time/tz/ZoneInfoCompiler.java    | 122 ++++++++++++------
+ 2 files changed, 176 insertions(+), 37 deletions(-)
+
+diff --git a/RELEASE-NOTES.txt b/RELEASE-NOTES.txt
+index dddf2d11a..3b258f774 100644
+--- a/RELEASE-NOTES.txt
++++ b/RELEASE-NOTES.txt
+@@ -35,6 +35,97 @@ Serialization compatible - Yes
+ 
+ Data compatible - Yes
+  - DateTimeZone data updated to version 2015a
++ - In the past year, the IANA time-zone database maintainer has changed unique time-zone data for many parts
++   of the world into shared "links". For example, in IANA 'Asia/Kuwait' now links to 'Asia/Riyadh'.
++   (I personally disagree with the IANA time-zone database maintainer's actions but my objections were ignored).
++   This was a problem for Joda-Time as we interpreted the concept of links (many years ago) as only being used
++   for backwards compatibility. Links are exposed in Joda-Time, because if you request a time-zone for a linked
++   identifier you get the target of the link back. As such, in recent versions of Joda-Time, it was not possible
++   to obtain a DateTimeZone with an appropriate identifier for many parts of the world, such as 'Asia/Kuwait'.
++   With this release, most links in the main IANA files are now restored to be real zones.
++   As a side effect of this, some identifiers that used to act as links are now real zones.
++   In summary, in the last Joda-Time release, requesting 'Asia/Kuwait' would have given back 'Asia/Riyadh',
++   but it now returns 'Asia/Kuwait' (where 'Asia/Kuwait' and 'Asia/Riyadh' have the same time-zone rules).
++   In most cases, this won't have any impact on your application.
++ Zones affected (now real zones rather than incorrect links):
++ * Africa/Bamako
++ * Africa/Banjul
++ * Africa/Conakry
++ * Africa/Dakar
++ * Africa/Freetown
++ * Africa/Lome
++ * Africa/Nouakchott
++ * Africa/Ouagadougou
++ * Africa/Sao_Tome
++ * Atlantic/St_Helena
++ * Africa/Addis_Ababa
++ * Africa/Asmara
++ * Africa/Dar_es_Salaam
++ * Africa/Djibouti
++ * Africa/Kampala
++ * Africa/Mogadishu
++ * Indian/Antananarivo
++ * Indian/Comoro
++ * Indian/Mayotte
++ * Africa/Blantyre
++ * Africa/Bujumbura
++ * Africa/Gaborone
++ * Africa/Harare
++ * Africa/Kigali
++ * Africa/Lubumbashi
++ * Africa/Lusaka
++ * Africa/Bangui
++ * Africa/Brazzaville
++ * Africa/Douala
++ * Africa/Kinshasa
++ * Africa/Libreville
++ * Africa/Luanda
++ * Africa/Malabo
++ * Africa/Niamey
++ * Africa/Porto-Novo
++ * Africa/Maseru
++ * Africa/Mbabane
++ * Africa/Juba
++ * Europe/Nicosia
++ * Asia/Bahrain
++ * Asia/Aden
++ * Asia/Kuwait
++ * Asia/Phnom_Penh
++ * Asia/Vientiane
++ * Asia/Muscat
++ * Antarctica/McMurdo
++ * Europe/Jersey
++ * Europe/Guernsey
++ * Europe/Isle_of_Man
++ * Europe/Mariehamn
++ * Europe/Busingen
++ * Europe/Vatican
++ * Europe/San_Marino
++ * Europe/Vaduz
++ * Arctic/Longyearbyen
++ * Europe/Ljubljana
++ * Europe/Podgorica
++ * Europe/Sarajevo
++ * Europe/Skopje
++ * Europe/Zagreb
++ * Europe/Bratislava
++ * Asia/Istanbul
++ * Pacific/Johnston
++ * America/Aruba
++ * America/Lower_Princes
++ * America/Kralendijk
++ * America/Anguilla
++ * America/Dominica
++ * America/Grenada
++ * America/Guadeloupe
++ * America/Marigot
++ * America/Montserrat
++ * America/St_Barthelemy
++ * America/St_Kitts
++ * America/St_Lucia
++ * America/St_Thomas
++ * America/St_Vincent
++ * America/Tortola
+ 
+ Semantic compatible - Yes
+ 
+diff --git a/src/main/java/org/joda/time/tz/ZoneInfoCompiler.java b/src/main/java/org/joda/time/tz/ZoneInfoCompiler.java
+index b03549fd5..1bc122849 100644
+--- a/src/main/java/org/joda/time/tz/ZoneInfoCompiler.java
++++ b/src/main/java/org/joda/time/tz/ZoneInfoCompiler.java
+@@ -29,9 +29,9 @@
+ import java.util.List;
+ import java.util.Locale;
+ import java.util.Map;
++import java.util.Map.Entry;
+ import java.util.StringTokenizer;
+ import java.util.TreeMap;
+-import java.util.Map.Entry;
+ 
+ import org.joda.time.Chronology;
+ import org.joda.time.DateTime;
+@@ -350,12 +350,16 @@ static boolean test(String id, DateTimeZone tz) {
+     private List<Zone> iZones;
+ 
+     // List String pairs to link.
+-    private List<String> iLinks;
++    private List<String> iGoodLinks;
++
++    // List String pairs to link.
++    private List<String> iBackLinks;
+ 
+     public ZoneInfoCompiler() {
+         iRuleSets = new HashMap<String, RuleSet>();
+         iZones = new ArrayList<Zone>();
+-        iLinks = new ArrayList<String>();
++        iGoodLinks = new ArrayList<String>();
++        iBackLinks = new ArrayList<String>();
+     }
+ 
+     /**
+@@ -368,7 +372,7 @@ public ZoneInfoCompiler() {
+         if (sources != null) {
+             for (int i=0; i<sources.length; i++) {
+                 BufferedReader in = new BufferedReader(new FileReader(sources[i]));
+-                parseDataFile(in);
++                parseDataFile(in, "backward".equals(sources[i].getName()));
+                 in.close();
+             }
+         }
+@@ -385,60 +389,68 @@ public ZoneInfoCompiler() {
+         }
+ 
+         Map<String, DateTimeZone> map = new TreeMap<String, DateTimeZone>();
++        Map<String, Zone> sourceMap = new TreeMap<String, Zone>();
+ 
+         System.out.println("Writing zoneinfo files");
+-        for (int i=0; i<iZones.size(); i++) {
++        // write out the standard entries
++        for (int i = 0; i < iZones.size(); i++) {
+             Zone zone = iZones.get(i);
+             DateTimeZoneBuilder builder = new DateTimeZoneBuilder();
+             zone.addToBuilder(builder, iRuleSets);
+-            final DateTimeZone original = builder.toDateTimeZone(zone.iName, true);
+-            DateTimeZone tz = original;
++            DateTimeZone tz = builder.toDateTimeZone(zone.iName, true);
+             if (test(tz.getID(), tz)) {
+                 map.put(tz.getID(), tz);
++                sourceMap.put(tz.getID(), zone);
+                 if (outputDir != null) {
+-                    if (ZoneInfoCompiler.verbose()) {
+-                        System.out.println("Writing " + tz.getID());
+-                    }
+-                    File file = new File(outputDir, tz.getID());
+-                    if (!file.getParentFile().exists()) {
+-                        file.getParentFile().mkdirs();
+-                    }
+-                    OutputStream out = new FileOutputStream(file);
+-                    try {
+-                        builder.writeTo(zone.iName, out);
+-                    } finally {
+-                        out.close();
+-                    }
+-
+-                    // Test if it can be read back.
+-                    InputStream in = new FileInputStream(file);
+-                    DateTimeZone tz2 = DateTimeZoneBuilder.readFrom(in, tz.getID());
+-                    in.close();
++                    writeZone(outputDir, builder, tz);
++                }
++            }
++        }
+ 
+-                    if (!original.equals(tz2)) {
+-                        System.out.println("*e* Error in " + tz.getID() +
+-                                           ": Didn't read properly from file");
++        // revive zones from "good" links
++        for (int i = 0; i < iGoodLinks.size(); i += 2) {
++            String baseId = iGoodLinks.get(i);
++            String alias = iGoodLinks.get(i + 1);
++            Zone sourceZone = sourceMap.get(baseId);
++            if (sourceZone == null) {
++                System.out.println("Cannot find source zone '" + baseId + "' to link alias '" + alias + "' to");
++            } else {
++                DateTimeZoneBuilder builder = new DateTimeZoneBuilder();
++                sourceZone.addToBuilder(builder, iRuleSets);
++                DateTimeZone revived = builder.toDateTimeZone(alias, true);
++                if (test(revived.getID(), revived)) {
++                    map.put(revived.getID(), revived);
++                    if (outputDir != null) {
++                        writeZone(outputDir, builder, revived);
+                     }
+                 }
++                map.put(revived.getID(), revived);
++                if (ZoneInfoCompiler.verbose()) {
++                    System.out.println("Good link: " + alias + " -> " + baseId + " revived");
++                }
+             }
+         }
+ 
+-        for (int pass=0; pass<2; pass++) {
+-            for (int i=0; i<iLinks.size(); i += 2) {
+-                String id = iLinks.get(i);
+-                String alias = iLinks.get(i + 1);
++        // store "back" links as aliases (where name is permanently mapped
++        for (int pass = 0; pass < 2; pass++) {
++            for (int i = 0; i < iBackLinks.size(); i += 2) {
++                String id = iBackLinks.get(i);
++                String alias = iBackLinks.get(i + 1);
+                 DateTimeZone tz = map.get(id);
+                 if (tz == null) {
+                     if (pass > 0) {
+-                        System.out.println("Cannot find time zone '" + id +
+-                                           "' to link alias '" + alias + "' to");
++                        System.out.println("Cannot find time zone '" + id + "' to link alias '" + alias + "' to");
+                     }
+                 } else {
+                     map.put(alias, tz);
++                    if (ZoneInfoCompiler.verbose()) {
++                        System.out.println("Back link: " + alias + " -> " + tz.getID());
++                    }
+                 }
+             }
+         }
+ 
++        // write map that unites the time-zone data, pointing aliases and real zones at files
+         if (outputDir != null) {
+             System.out.println("Writing ZoneInfoMap");
+             File file = new File(outputDir, "ZoneInfoMap");
+@@ -461,7 +473,33 @@ public ZoneInfoCompiler() {
+         return map;
+     }
+ 
+-    public void parseDataFile(BufferedReader in) throws IOException {
++    private void writeZone(File outputDir, DateTimeZoneBuilder builder, DateTimeZone tz) throws IOException {
++        if (ZoneInfoCompiler.verbose()) {
++            System.out.println("Writing " + tz.getID());
++        }
++        File file = new File(outputDir, tz.getID());
++        if (!file.getParentFile().exists()) {
++            file.getParentFile().mkdirs();
++        }
++        OutputStream out = new FileOutputStream(file);
++        try {
++            builder.writeTo(tz.getID(), out);
++        } finally {
++            out.close();
++        }
++
++        // Test if it can be read back.
++        InputStream in = new FileInputStream(file);
++        DateTimeZone tz2 = DateTimeZoneBuilder.readFrom(in, tz.getID());
++        in.close();
++
++        if (!tz.equals(tz2)) {
++            System.out.println("*e* Error in " + tz.getID() +
++                               ": Didn't read properly from file");
++        }
++    }
++
++    public void parseDataFile(BufferedReader in, boolean backward) throws IOException {
+         Zone zone = null;
+         String line;
+         while ((line = in.readLine()) != null) {
+@@ -506,8 +544,18 @@ public void parseDataFile(BufferedReader in) throws IOException {
+                 } else if (token.equalsIgnoreCase("Zone")) {
+                     zone = new Zone(st);
+                 } else if (token.equalsIgnoreCase("Link")) {
+-                    iLinks.add(st.nextToken());
+-                    iLinks.add(st.nextToken());
++                    String real = st.nextToken();
++                    String alias = st.nextToken();
++                    // links in "backward" are deprecated names
++                    // links in other files should be kept
++                    // special case a few to try to repair terrible damage to tzdb
++                    if (backward || alias.equals("US/Pacific-New") || alias.startsWith("Etc/") || alias.equals("GMT")) {
++                        iBackLinks.add(real);
++                        iBackLinks.add(alias);
++                    } else {
++                        iGoodLinks.add(real);
++                        iGoodLinks.add(alias);
++                    }
+                 } else {
+                     System.out.println("Unknown line: " + line);
+                 }
+
+From 02922734c59f07b8ccc8e531bd231464dcc3b43c Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Mon, 2 Mar 2015 19:41:17 +0000
+Subject: [PATCH 14/23] Separate logging from time-zone compilation
+
+Fixes #246
+---
+ RELEASE-NOTES.txt                             |  3 ++
+ .../org/joda/time/tz/DateTimeZoneBuilder.java |  4 +-
+ .../org/joda/time/tz/ZoneInfoCompiler.java    | 22 ++--------
+ .../java/org/joda/time/tz/ZoneInfoLogger.java | 41 +++++++++++++++++++
+ 4 files changed, 50 insertions(+), 20 deletions(-)
+ create mode 100644 src/main/java/org/joda/time/tz/ZoneInfoLogger.java
+
+diff --git a/RELEASE-NOTES.txt b/RELEASE-NOTES.txt
+index 3b258f774..b64e55b3f 100644
+--- a/RELEASE-NOTES.txt
++++ b/RELEASE-NOTES.txt
+@@ -22,6 +22,9 @@ Enhancements since 2.7
+   The properties files are supposed to be loaded using ISO 8859-1 but Android seems to have issues with that.
+   Re-encode the files using unicode escapes to sidestep the issue.
+ 
++- Avoid ProGuard errors in Android jar [#246]
++  Separate logging from time-zone compilation
++
+ 
+ Compatibility with 2.7
+ ----------------------
+diff --git a/src/main/java/org/joda/time/tz/DateTimeZoneBuilder.java b/src/main/java/org/joda/time/tz/DateTimeZoneBuilder.java
+index fa5c16443..c95f9008a 100644
+--- a/src/main/java/org/joda/time/tz/DateTimeZoneBuilder.java
++++ b/src/main/java/org/joda/time/tz/DateTimeZoneBuilder.java
+@@ -1443,7 +1443,7 @@ static PrecalculatedZone create(String id, boolean outputID, ArrayList<Transitio
+                         curNameKey.equals(zoneNameData[2]) &&
+                         curNameKey.equals(zoneNameData[4])) {
+                     
+-                    if (ZoneInfoCompiler.verbose()) {
++                    if (ZoneInfoLogger.verbose()) {
+                         System.out.println("Fixing duplicate name key - " + nextNameKey);
+                         System.out.println("     - " + new DateTime(trans[i], chrono) +
+                                            " - " + new DateTime(trans[i + 1], chrono));
+@@ -1460,7 +1460,7 @@ static PrecalculatedZone create(String id, boolean outputID, ArrayList<Transitio
+             if (tailZone != null) {
+                 if (tailZone.iStartRecurrence.getNameKey()
+                     .equals(tailZone.iEndRecurrence.getNameKey())) {
+-                    if (ZoneInfoCompiler.verbose()) {
++                    if (ZoneInfoLogger.verbose()) {
+                         System.out.println("Fixing duplicate recurrent name key - " +
+                                            tailZone.iStartRecurrence.getNameKey());
+                     }
+diff --git a/src/main/java/org/joda/time/tz/ZoneInfoCompiler.java b/src/main/java/org/joda/time/tz/ZoneInfoCompiler.java
+index 1bc122849..feb721556 100644
+--- a/src/main/java/org/joda/time/tz/ZoneInfoCompiler.java
++++ b/src/main/java/org/joda/time/tz/ZoneInfoCompiler.java
+@@ -65,20 +65,6 @@
+ 
+     static Chronology cLenientISO;
+ 
+-    static ThreadLocal<Boolean> cVerbose = new ThreadLocal<Boolean>() {
+-        protected Boolean initialValue() {
+-            return Boolean.FALSE;
+-        }
+-    };
+-
+-    /**
+-     * Gets a flag indicating that verbose logging is required.
+-     * @return true to log verbosely
+-     */
+-    public static boolean verbose() {
+-        return cVerbose.get();
+-    }
+-
+     //-----------------------------------------------------------------------
+     /**
+      * Launches the ZoneInfoCompiler tool.
+@@ -132,7 +118,7 @@ public static void main(String[] args) throws Exception {
+             sources[j] = inputDir == null ? new File(args[i]) : new File(inputDir, args[i]);
+         }
+ 
+-        cVerbose.set(verbose);
++        ZoneInfoLogger.set(verbose);
+         ZoneInfoCompiler zic = new ZoneInfoCompiler();
+         zic.compile(outputDir, sources);
+     }
+@@ -425,7 +411,7 @@ public ZoneInfoCompiler() {
+                     }
+                 }
+                 map.put(revived.getID(), revived);
+-                if (ZoneInfoCompiler.verbose()) {
++                if (ZoneInfoLogger.verbose()) {
+                     System.out.println("Good link: " + alias + " -> " + baseId + " revived");
+                 }
+             }
+@@ -443,7 +429,7 @@ public ZoneInfoCompiler() {
+                     }
+                 } else {
+                     map.put(alias, tz);
+-                    if (ZoneInfoCompiler.verbose()) {
++                    if (ZoneInfoLogger.verbose()) {
+                         System.out.println("Back link: " + alias + " -> " + tz.getID());
+                     }
+                 }
+@@ -474,7 +460,7 @@ public ZoneInfoCompiler() {
+     }
+ 
+     private void writeZone(File outputDir, DateTimeZoneBuilder builder, DateTimeZone tz) throws IOException {
+-        if (ZoneInfoCompiler.verbose()) {
++        if (ZoneInfoLogger.verbose()) {
+             System.out.println("Writing " + tz.getID());
+         }
+         File file = new File(outputDir, tz.getID());
+diff --git a/src/main/java/org/joda/time/tz/ZoneInfoLogger.java b/src/main/java/org/joda/time/tz/ZoneInfoLogger.java
+new file mode 100644
+index 000000000..1e9c46fe6
+--- /dev/null
++++ b/src/main/java/org/joda/time/tz/ZoneInfoLogger.java
+@@ -0,0 +1,41 @@
++/*
++ *  Copyright 2001-2015 Stephen Colebourne
++ *
++ *  Licensed under the Apache License, Version 2.0 (the "License");
++ *  you may not use this file except in compliance with the License.
++ *  You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ *  Unless required by applicable law or agreed to in writing, software
++ *  distributed under the License is distributed on an "AS IS" BASIS,
++ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ *  See the License for the specific language governing permissions and
++ *  limitations under the License.
++ */
++package org.joda.time.tz;
++
++/**
++ * Logger for the compiler.
++ */
++public class ZoneInfoLogger {
++
++    static ThreadLocal<Boolean> cVerbose = new ThreadLocal<Boolean>() {
++        protected Boolean initialValue() {
++            return Boolean.FALSE;
++        }
++    };
++
++    /**
++     * Gets a flag indicating that verbose logging is required.
++     * @return true to log verbosely
++     */
++    public static boolean verbose() {
++        return cVerbose.get();
++    }
++
++    public static void set(boolean verbose) {
++        cVerbose.set(verbose);
++    }
++
++}
+
+From b9fe534c7f5876eced6494a6d6c1deaf2528a579 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Mon, 2 Mar 2015 20:10:49 +0000
+Subject: [PATCH 15/23] Format Etc/* time-zone without using Etc prefix
+
+Fixes #244
+---
+ RELEASE-NOTES.txt                                       | 3 +++
+ src/main/java/org/joda/time/tz/DefaultNameProvider.java | 3 +++
+ 2 files changed, 6 insertions(+)
+
+diff --git a/RELEASE-NOTES.txt b/RELEASE-NOTES.txt
+index b64e55b3f..c5e90dd80 100644
+--- a/RELEASE-NOTES.txt
++++ b/RELEASE-NOTES.txt
+@@ -149,6 +149,9 @@ Bug fixes since 2.7
+ - Fix Period.parse() [#238]
+   Negative periods of a fraction of a second were not parsed correctly.
+ 
++- Format Etc/GMT time-zone using GMT data [#244]
++  This change will provide better text formats for pattern letter 'z'.
++
+ 
+ Scala
+ --------
+diff --git a/src/main/java/org/joda/time/tz/DefaultNameProvider.java b/src/main/java/org/joda/time/tz/DefaultNameProvider.java
+index da17cd00a..de4dd3937 100644
+--- a/src/main/java/org/joda/time/tz/DefaultNameProvider.java
++++ b/src/main/java/org/joda/time/tz/DefaultNameProvider.java
+@@ -116,6 +116,9 @@ public String getName(Locale locale, String id, String nameKey, boolean standard
+         if (locale == null || id == null || nameKey == null) {
+             return null;
+         }
++        if (id.startsWith("Etc/")) {
++            id = id.substring(4);
++        }
+ 
+         Map<String, Map<Boolean, Object>> byIdCache = iByLocaleCache2.get(locale);
+         if (byIdCache == null) {
+
+From ecc4725ed1ec5c90b6739702ba1f8091e8a895bb Mon Sep 17 00:00:00 2001
+From: jishi9 <jishi9@gmail.com>
+Date: Tue, 24 Mar 2015 16:22:13 +0000
+Subject: [PATCH 16/23] Fixed Seconds.standardSecondsIn javadoc
+
+---
+ src/main/java/org/joda/time/Seconds.java | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/main/java/org/joda/time/Seconds.java b/src/main/java/org/joda/time/Seconds.java
+index f75ee922b..7ee4e373a 100644
+--- a/src/main/java/org/joda/time/Seconds.java
++++ b/src/main/java/org/joda/time/Seconds.java
+@@ -149,7 +149,7 @@ public static Seconds secondsIn(ReadableInterval interval) {
+      * durations for each field. Only those fields which have a precise duration in
+      * the ISO UTC chronology can be converted.
+      * <ul>
+-     * <li>One week consists of 7 seconds.
++     * <li>One week consists of 7 days.
+      * <li>One day consists of 24 hours.
+      * <li>One hour consists of 60 minutes.
+      * <li>One minute consists of 60 seconds.
+
+From d9d4806d4135046d3f3d1d6e93e0a1f5e1aa3ff4 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Sat, 25 Apr 2015 14:50:59 +0100
+Subject: [PATCH 17/23] Revive zones destroyed by the IANA tzdb maintainer
+
+Clarify docs
+---
+ RELEASE-NOTES.txt | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/RELEASE-NOTES.txt b/RELEASE-NOTES.txt
+index c5e90dd80..f2eb3549d 100644
+--- a/RELEASE-NOTES.txt
++++ b/RELEASE-NOTES.txt
+@@ -130,6 +130,9 @@ Data compatible - Yes
+  * America/St_Vincent
+  * America/Tortola
+ 
++The change made should mean that further damage by the IANA time-zone database maintainer
++will be less noticeable.
++
+ Semantic compatible - Yes
+ 
+ 
+
+From 6e008a1c643f4dce6cf23cae3587f7d463a0562a Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Sun, 26 Apr 2015 12:16:58 +0100
+Subject: [PATCH 18/23] Clarify period addition Javadoc
+
+See #261
+---
+ src/main/java/org/joda/time/Period.java | 20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
+
+diff --git a/src/main/java/org/joda/time/Period.java b/src/main/java/org/joda/time/Period.java
+index 5ea67a7c1..16ac2903e 100644
+--- a/src/main/java/org/joda/time/Period.java
++++ b/src/main/java/org/joda/time/Period.java
+@@ -501,6 +501,16 @@ public Period(long startInstant, long endInstant, PeriodType type, Chronology ch
+      * (exposed as 4 weeks and 2 days).
+      * The results are explained by considering that the start date plus the
+      * calculated period result in the end date.
++     * <p>
++     * Another special case is around daylight savings. Consider the case where there
++     * is a DST gap from 01:00 to 02:00. The period from 00:30 to 02:30 will return
++     * one hour, not two, due to the missing hour.
++     * However, once the period exceeds one day, a different effect comes into play.
++     * Consider the period from 00:30 just before the DST gap to 02:30 one day later.
++     * Since this exceeds a day, the algorithm first adds one day following normal period
++     * rules, to get 00:30 one day later, and then adds 2 hours to reach 02:30.
++     * In this way, the DST gap effectively "disappears".
++     * In other words, the addition of days takes precedence over the addition of hours.
+      *
+      * @param startInstant  interval start, null means now
+      * @param endInstant  interval end, null means now
+@@ -519,6 +529,16 @@ public Period(ReadableInstant startInstant, ReadableInstant endInstant) {
+      * By contrast, 2013-01-31 to 2013-03-30 is treated as one month and 30 days.
+      * The results are explained by considering that the start date plus the
+      * calculated period result in the end date.
++     * <p>
++     * Another special case is around daylight savings. Consider the case where there
++     * is a DST gap from 01:00 to 02:00. The period from 00:30 to 02:30 will return
++     * one hour, not two, due to the missing hour.
++     * However, once the period exceeds one day, a different effect comes into play.
++     * Consider the period from 00:30 just before the DST gap to 02:30 one day later.
++     * Since this exceeds a day, the algorithm first adds one day following normal period
++     * rules, to get 00:30 one day later, and then adds 2 hours to reach 02:30.
++     * In this way, the DST gap effectively "disappears".
++     * In other words, the addition of days takes precedence over the addition of hours.
+      *
+      * @param startInstant  interval start, null means now
+      * @param endInstant  interval end, null means now
+
+From 070bf6036e924eeb817440e8819a0c06025d44fb Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Sun, 26 Apr 2015 12:37:36 +0100
+Subject: [PATCH 19/23] Fix Property.toInterval()
+
+Change dateTime.hourOfDay().toInterval() to retain the chronology
+Change applies to abstract class, so affects most date-time classes
+Fixes #262
+---
+ RELEASE-NOTES.txt                                           | 6 ++++++
+ .../time/field/AbstractReadableInstantFieldProperty.java    | 2 +-
+ src/test/java/org/joda/time/TestDateTime_Properties.java    | 6 +++---
+ 3 files changed, 10 insertions(+), 4 deletions(-)
+
+diff --git a/RELEASE-NOTES.txt b/RELEASE-NOTES.txt
+index f2eb3549d..270a65d43 100644
+--- a/RELEASE-NOTES.txt
++++ b/RELEASE-NOTES.txt
+@@ -155,6 +155,12 @@ Bug fixes since 2.7
+ - Format Etc/GMT time-zone using GMT data [#244]
+   This change will provide better text formats for pattern letter 'z'.
+ 
++- Fix Property.toInterval() [#262]
++  The conversion of a field property to an interval did not take the chronology into account.
++  Thus, dateTime.hourOfDay().toInterval() previously resulted in an interval in the default
++  chronology, rather than the chronology of the dateTime.
++  The chronology is now passed to the interval.
++
+ 
+ Scala
+ --------
+diff --git a/src/main/java/org/joda/time/field/AbstractReadableInstantFieldProperty.java b/src/main/java/org/joda/time/field/AbstractReadableInstantFieldProperty.java
+index ad4bdc003..01969e066 100644
+--- a/src/main/java/org/joda/time/field/AbstractReadableInstantFieldProperty.java
++++ b/src/main/java/org/joda/time/field/AbstractReadableInstantFieldProperty.java
+@@ -370,7 +370,7 @@ public Interval toInterval() {
+         DateTimeField field = getField();
+         long start = field.roundFloor(getMillis());
+         long end = field.add(start, 1);
+-        Interval interval = new Interval(start, end);
++        Interval interval = new Interval(start, end, getChronology());
+         return interval;
+     }
+ 
+diff --git a/src/test/java/org/joda/time/TestDateTime_Properties.java b/src/test/java/org/joda/time/TestDateTime_Properties.java
+index 57cab7a64..7370ec1d7 100644
+--- a/src/test/java/org/joda/time/TestDateTime_Properties.java
++++ b/src/test/java/org/joda/time/TestDateTime_Properties.java
+@@ -1343,10 +1343,10 @@ public void testPropertyToIntervalHourOfDay() {
+       assertEquals(new DateTime(2004, 6, 9, 13, 0, 0, 0), testInterval.getStart());
+       assertEquals(new DateTime(2004, 6, 9, 14, 0, 0, 0), testInterval.getEnd());
+ 
+-      DateTime midnightTest = new DateTime(2004, 6, 9, 23, 23, 43, 53);
++      DateTime midnightTest = new DateTime(2004, 6, 9, 23, 23, 43, 53, COPTIC_PARIS);
+       Interval midnightTestInterval = midnightTest.hourOfDay().toInterval();
+-      assertEquals(new DateTime(2004, 6, 9, 23, 0, 0, 0), midnightTestInterval.getStart());
+-      assertEquals(new DateTime(2004, 6, 10, 0, 0, 0, 0), midnightTestInterval.getEnd());
++      assertEquals(new DateTime(2004, 6, 9, 23, 0, 0, 0, COPTIC_PARIS), midnightTestInterval.getStart());
++      assertEquals(new DateTime(2004, 6, 10, 0, 0, 0, 0, COPTIC_PARIS), midnightTestInterval.getEnd());
+     }
+ 
+     public void testPropertyToIntervalMinuteOfHour() {
+
+From 6943477bb629d70951bfe94d4a9e6b19fbb6fea0 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Wed, 20 May 2015 21:28:04 +0100
+Subject: [PATCH 20/23] Clarify pom.xml
+
+Implementation-Title is actually controlled by src/conf/manifest.mf
+As such, this value is not used
+Setting it to the correct value to avoid confusion
+---
+ pom.xml | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/pom.xml b/pom.xml
+index a3ba7d0f3..af934659d 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -316,7 +316,7 @@
+                 <manifestFile>src/conf/MANIFEST.MF</manifestFile>
+                 <manifestEntries>
+                   <Time-Zone-Database-Version>${tz.database.version}</Time-Zone-Database-Version>
+-                  <Implementation-Title>Joda-Time-No-TZDB</Implementation-Title>
++                  <Implementation-Title>org.joda.time</Implementation-Title>
+                 </manifestEntries>
+               </archive>
+             </configuration>
+
+From 87f130a7e4e655b51d9a0d4a6cee7c6dd5d7571f Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Wed, 20 May 2015 21:37:20 +0100
+Subject: [PATCH 21/23] Update to time-zone data 2015d
+
+---
+ RELEASE-NOTES.txt                             |   2 +-
+ pom.xml                                       |   2 +-
+ src/main/java/org/joda/time/tz/src/Readme.txt |   2 +-
+ src/main/java/org/joda/time/tz/src/africa     |  67 ++----
+ src/main/java/org/joda/time/tz/src/antarctica |  51 +----
+ src/main/java/org/joda/time/tz/src/asia       |  35 +++-
+ .../java/org/joda/time/tz/src/australasia     |  27 +--
+ src/main/java/org/joda/time/tz/src/backward   |   1 +
+ src/main/java/org/joda/time/tz/src/europe     |   4 +-
+ .../java/org/joda/time/tz/src/northamerica    | 198 ++++++++++++------
+ .../java/org/joda/time/tz/src/southamerica    | 170 ++++++++-------
+ 11 files changed, 298 insertions(+), 261 deletions(-)
+
+diff --git a/RELEASE-NOTES.txt b/RELEASE-NOTES.txt
+index 270a65d43..590ddcdbd 100644
+--- a/RELEASE-NOTES.txt
++++ b/RELEASE-NOTES.txt
+@@ -37,7 +37,7 @@ Source compatible - Yes
+ Serialization compatible - Yes
+ 
+ Data compatible - Yes
+- - DateTimeZone data updated to version 2015a
++ - DateTimeZone data updated to version 2015d
+  - In the past year, the IANA time-zone database maintainer has changed unique time-zone data for many parts
+    of the world into shared "links". For example, in IANA 'Asia/Kuwait' now links to 'Asia/Riyadh'.
+    (I personally disagree with the IANA time-zone database maintainer's actions but my objections were ignored).
+diff --git a/pom.xml b/pom.xml
+index af934659d..4514aec5e 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -799,6 +799,6 @@
+     <!-- Other properties -->
+     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+-    <tz.database.version>2015a</tz.database.version>
++    <tz.database.version>2015d</tz.database.version>
+   </properties>
+ </project>
+diff --git a/src/main/java/org/joda/time/tz/src/Readme.txt b/src/main/java/org/joda/time/tz/src/Readme.txt
+index bbdd388be..988f5a074 100644
+--- a/src/main/java/org/joda/time/tz/src/Readme.txt
++++ b/src/main/java/org/joda/time/tz/src/Readme.txt
+@@ -1,2 +1,2 @@
+ The data files in this directory were obtained from the public IANA time zone database,
+-http://www.iana.org/time-zones, version 2015a.
++http://www.iana.org/time-zones, version 2015d.
+diff --git a/src/main/java/org/joda/time/tz/src/africa b/src/main/java/org/joda/time/tz/src/africa
+index 1b9bf50da..ea0171a09 100644
+--- a/src/main/java/org/joda/time/tz/src/africa
++++ b/src/main/java/org/joda/time/tz/src/africa
+@@ -319,35 +319,29 @@ Rule	Egypt	2007	only	-	Sep	Thu>=1	24:00	0	-
+ # above) says DST had no affect on electricity consumption.  There is
+ # no information about when DST will end this fall.  See:
+ # http://abcnews.go.com/International/wireStory/el-sissi-pushes-egyptians-line-23614833
++
++# From Steffen Thorsen (2015-04-08):
++# Egypt will start DST on midnight after Thursday, April 30, 2015.
++# This is based on a law (no 35) from May 15, 2014 saying it starts the last
++# Thursday of April....  Clocks will still be turned back for Ramadan, but
++# dates not yet announced....
++# http://almogaz.com/news/weird-news/2015/04/05/1947105 ...
++# http://www.timeanddate.com/news/time/egypt-starts-dst-2015.html
++
++# From Ahmed Nazmy (2015-04-20):
++# Egypt's ministers cabinet just announced ... that it will cancel DST at
++# least for 2015.
+ #
+-# For now, guess that later spring and fall transitions will use
+-# 2010's rules, and guess that Egypt will switch to standard time at
+-# 24:00 the last Thursday before Ramadan, and back to DST at 00:00 the
+-# first Friday after Ramadan.  To implement this,
+-# transition dates for 2015 through 2037 were determined by running
+-# the following program under GNU Emacs 24.3, with the results integrated
+-# by hand into the table below.  Ramadan again intrudes on the guessed
+-# DST starting in 2038, but that's beyond our somewhat-arbitrary cutoff.
+-# (let ((islamic-year 1436))
+-#   (while (< islamic-year 1460)
+-#     (let ((a (calendar-islamic-to-absolute (list 9 1 islamic-year)))
+-#           (b (calendar-islamic-to-absolute (list 10 1 islamic-year)))
+-#           (friday 5))
+-#       (while (/= friday (mod a 7))
+-#         (setq a (1- a)))
+-#       (while (/= friday (mod b 7))
+-#         (setq b (1+ b)))
+-#       (setq a (1- a))
+-#       (setq b (1- b))
+-#       (setq a (calendar-gregorian-from-absolute a))
+-#       (setq b (calendar-gregorian-from-absolute b))
+-#       (insert
+-#        (format
+-#         (concat "Rule\tEgypt\t%d\tonly\t-\t%s\t%2d\t24:00\t0\t-\n"
+-#                 "Rule\tEgypt\t%d\tonly\t-\t%s\t%2d\t24:00\t1:00\tS\n")
+-#         (car (cdr (cdr a))) (calendar-month-name (car a) t) (car (cdr a))
+-#         (car (cdr (cdr b))) (calendar-month-name (car b) t) (car (cdr b)))))
+-#     (setq islamic-year (+ 1 islamic-year))))
++# From Tim Parenti (2015-04-20):
++# http://english.ahram.org.eg/WriterArticles/NewsContentP/1/128195/Egypt/No-daylight-saving-this-summer-Egypts-prime-minist.aspx
++# "Egypt's cabinet agreed on Monday not to switch clocks for daylight saving
++# time this summer, and carry out studies on the possibility of canceling the
++# practice altogether in future years."
++#
++# From Paul Eggert (2015-04-20):
++# For now, assume DST will be canceled.  Any resumption would likely
++# use different rules anyway.
++
+ Rule	Egypt	2008	only	-	Aug	lastThu	24:00	0	-
+ Rule	Egypt	2009	only	-	Aug	20	24:00	0	-
+ Rule	Egypt	2010	only	-	Aug	10	24:00	0	-
+@@ -356,22 +350,7 @@ Rule	Egypt	2010	only	-	Sep	lastThu	24:00	0	-
+ Rule	Egypt	2014	only	-	May	15	24:00	1:00	S
+ Rule	Egypt	2014	only	-	Jun	26	24:00	0	-
+ Rule	Egypt	2014	only	-	Jul	31	24:00	1:00	S
+-Rule	Egypt	2014	max	-	Sep	lastThu	24:00	0	-
+-Rule	Egypt	2015	2019	-	Apr	lastFri	 0:00s	1:00	S
+-Rule	Egypt	2015	only	-	Jun	11	24:00	0	-
+-Rule	Egypt	2015	only	-	Jul	23	24:00	1:00	S
+-Rule	Egypt	2016	only	-	Jun	 2	24:00	0	-
+-Rule	Egypt	2016	only	-	Jul	 7	24:00	1:00	S
+-Rule	Egypt	2017	only	-	May	25	24:00	0	-
+-Rule	Egypt	2017	only	-	Jun	29	24:00	1:00	S
+-Rule	Egypt	2018	only	-	May	10	24:00	0	-
+-Rule	Egypt	2018	only	-	Jun	14	24:00	1:00	S
+-Rule	Egypt	2019	only	-	May	 2	24:00	0	-
+-Rule	Egypt	2019	only	-	Jun	 6	24:00	1:00	S
+-Rule	Egypt	2020	only	-	May	28	24:00	1:00	S
+-Rule	Egypt	2021	only	-	May	13	24:00	1:00	S
+-Rule	Egypt	2022	only	-	May	 5	24:00	1:00	S
+-Rule	Egypt	2023	max	-	Apr	lastFri	 0:00s	1:00	S
++Rule	Egypt	2014	only	-	Sep	lastThu	24:00	0	-
+ 
+ # Zone	NAME		GMTOFF	RULES	FORMAT	[UNTIL]
+ Zone	Africa/Cairo	2:05:09 -	LMT	1900 Oct
+diff --git a/src/main/java/org/joda/time/tz/src/antarctica b/src/main/java/org/joda/time/tz/src/antarctica
+index ebae99407..2af088f0b 100644
+--- a/src/main/java/org/joda/time/tz/src/antarctica
++++ b/src/main/java/org/joda/time/tz/src/antarctica
+@@ -15,41 +15,6 @@
+ # I made up all time zone abbreviations mentioned here; corrections welcome!
+ # FORMAT is 'zzz' and GMTOFF is 0 for locations while uninhabited.
+ 
+-# These rules are stolen from the 'southamerica' file.
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
+-Rule	ArgAQ	1964	1966	-	Mar	 1	0:00	0	-
+-Rule	ArgAQ	1964	1966	-	Oct	15	0:00	1:00	S
+-Rule	ArgAQ	1967	only	-	Apr	 2	0:00	0	-
+-Rule	ArgAQ	1967	1968	-	Oct	Sun>=1	0:00	1:00	S
+-Rule	ArgAQ	1968	1969	-	Apr	Sun>=1	0:00	0	-
+-Rule	ArgAQ	1974	only	-	Jan	23	0:00	1:00	S
+-Rule	ArgAQ	1974	only	-	May	 1	0:00	0	-
+-Rule	ChileAQ	1972	1986	-	Mar	Sun>=9	3:00u	0	-
+-Rule	ChileAQ	1974	1987	-	Oct	Sun>=9	4:00u	1:00	S
+-Rule	ChileAQ	1987	only	-	Apr	12	3:00u	0	-
+-Rule	ChileAQ	1988	1989	-	Mar	Sun>=9	3:00u	0	-
+-Rule	ChileAQ	1988	only	-	Oct	Sun>=1	4:00u	1:00	S
+-Rule	ChileAQ	1989	only	-	Oct	Sun>=9	4:00u	1:00	S
+-Rule	ChileAQ	1990	only	-	Mar	18	3:00u	0	-
+-Rule	ChileAQ	1990	only	-	Sep	16	4:00u	1:00	S
+-Rule	ChileAQ	1991	1996	-	Mar	Sun>=9	3:00u	0	-
+-Rule	ChileAQ	1991	1997	-	Oct	Sun>=9	4:00u	1:00	S
+-Rule	ChileAQ	1997	only	-	Mar	30	3:00u	0	-
+-Rule	ChileAQ	1998	only	-	Mar	Sun>=9	3:00u	0	-
+-Rule	ChileAQ	1998	only	-	Sep	27	4:00u	1:00	S
+-Rule	ChileAQ	1999	only	-	Apr	 4	3:00u	0	-
+-Rule	ChileAQ	1999	2010	-	Oct	Sun>=9	4:00u	1:00	S
+-Rule	ChileAQ	2000	2007	-	Mar	Sun>=9	3:00u	0	-
+-# N.B.: the end of March 29 in Chile is March 30 in Universal time,
+-# which is used below in specifying the transition.
+-Rule	ChileAQ	2008	only	-	Mar	30	3:00u	0	-
+-Rule	ChileAQ	2009	only	-	Mar	Sun>=9	3:00u	0	-
+-Rule	ChileAQ	2010	only	-	Apr	Sun>=1	3:00u	0	-
+-Rule	ChileAQ	2011	only	-	May	Sun>=2	3:00u	0	-
+-Rule	ChileAQ	2011	only	-	Aug	Sun>=16	4:00u	1:00	S
+-Rule	ChileAQ	2012	2015	-	Apr	Sun>=23	3:00u	0	-
+-Rule	ChileAQ	2012	2014	-	Sep	Sun>=2	4:00u	1:00	S
+-
+ # Argentina - year-round bases
+ # Belgrano II, Confin Coast, -770227-0343737, since 1972-02-05
+ # Carlini, Potter Cove, King George Island, -6414-0602320, since 1982-01
+@@ -344,21 +309,7 @@ Zone Antarctica/Rothera	0	-	zzz	1976 Dec  1
+ # USA - year-round bases
+ #
+ # Palmer, Anvers Island, since 1965 (moved 2 miles in 1968)
+-#
+-# From Ethan Dicks (1996-10-06):
+-# It keeps the same time as Punta Arenas, Chile, because, just like us
+-# and the South Pole, that's the other end of their supply line....
+-# I verified with someone who was there that since 1980,
+-# Palmer has followed Chile.  Prior to that, before the Falklands War,
+-# Palmer used to be supplied from Argentina.
+-#
+-# Zone	NAME		GMTOFF	RULES	FORMAT	[UNTIL]
+-Zone Antarctica/Palmer	0	-	zzz	1965
+-			-4:00	ArgAQ	AR%sT	1969 Oct  5
+-			-3:00	ArgAQ	AR%sT	1982 May
+-			-4:00	ChileAQ	CL%sT	2015 Apr 26 3:00u
+-			-3:00	-	CLT
+-#
++# See 'southamerica' for Antarctica/Palmer, since it uses South American DST.
+ #
+ # McMurdo Station, Ross Island, since 1955-12
+ # Amundsen-Scott South Pole Station, continuously occupied since 1956-11-20
+diff --git a/src/main/java/org/joda/time/tz/src/asia b/src/main/java/org/joda/time/tz/src/asia
+index 8f33b1620..756e3d0e5 100644
+--- a/src/main/java/org/joda/time/tz/src/asia
++++ b/src/main/java/org/joda/time/tz/src/asia
+@@ -1904,6 +1904,13 @@ Zone	Indian/Maldives	4:54:00 -	LMT	1880 # Male
+ # was at the start of 2008-03-31 (the day of Steffen Thorsen's report);
+ # this is almost surely wrong.
+ 
++# From Ganbold Tsagaankhuu (2015-03-10):
++# It seems like yesterday Mongolian Government meeting has concluded to use
++# daylight saving time in Mongolia....  Starting at 2:00AM of last Saturday of
++# March 2015, daylight saving time starts.  And 00:00AM of last Saturday of
++# September daylight saving time ends.  Source:
++# http://zasag.mn/news/view/8969
++
+ # Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
+ Rule	Mongol	1983	1984	-	Apr	1	0:00	1:00	S
+ Rule	Mongol	1983	only	-	Oct	1	0:00	0	-
+@@ -1924,6 +1931,8 @@ Rule	Mongol	1984	1998	-	Sep	lastSun	0:00	0	-
+ Rule	Mongol	2001	only	-	Apr	lastSat	2:00	1:00	S
+ Rule	Mongol	2001	2006	-	Sep	lastSat	2:00	0	-
+ Rule	Mongol	2002	2006	-	Mar	lastSat	2:00	1:00	S
++Rule	Mongol	2015	max	-	Mar	lastSat	2:00	1:00	S
++Rule	Mongol	2015	max	-	Sep	lastSat	0:00	0	-
+ 
+ # Zone	NAME		GMTOFF	RULES	FORMAT	[UNTIL]
+ # Hovd, a.k.a. Chovd, Dund-Us, Dzhargalant, Khovd, Jirgalanta
+@@ -2342,13 +2351,19 @@ Zone	Asia/Karachi	4:28:12 -	LMT	1907
+ # official source...:
+ # http://www.palestinecabinet.gov.ps/ar/Views/ViewDetails.aspx?pid=1252
+ 
+-# From Paul Eggert (2013-09-24):
+-# For future dates, guess the last Thursday in March at 24:00 through
+-# the first Friday on or after September 21 at 00:00.  This is consistent with
+-# the predictions in today's editions of the following URLs,
+-# which are for Gaza and Hebron respectively:
+-# http://www.timeanddate.com/worldclock/timezone.html?n=702
+-# http://www.timeanddate.com/worldclock/timezone.html?n=2364
++# From Steffen Thorsen (2015-03-03):
++# Sources such as http://www.alquds.com/news/article/view/id/548257
++# and http://www.raya.ps/ar/news/890705.html say Palestine areas will
++# start DST on 2015-03-28 00:00 which is one day later than expected.
++#
++# From Paul Eggert (2015-03-03):
++# http://www.timeanddate.com/time/change/west-bank/ramallah?year=2014
++# says that the fall 2014 transition was Oct 23 at 24:00.
++# For future dates, guess the last Friday in March at 24:00 through
++# the first Friday on or after October 21 at 00:00.  This is consistent with
++# the predictions in today's editions of the following URLs:
++# http://www.timeanddate.com/time/change/gaza-strip/gaza
++# http://www.timeanddate.com/time/change/west-bank/hebron
+ 
+ # Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
+ Rule EgyptAsia	1957	only	-	May	10	0:00	1:00	S
+@@ -2374,9 +2389,11 @@ Rule Palestine	2011	only	-	Apr	 1	0:01	1:00	S
+ Rule Palestine	2011	only	-	Aug	 1	0:00	0	-
+ Rule Palestine	2011	only	-	Aug	30	0:00	1:00	S
+ Rule Palestine	2011	only	-	Sep	30	0:00	0	-
+-Rule Palestine	2012	max	-	Mar	lastThu	24:00	1:00	S
++Rule Palestine	2012	2014	-	Mar	lastThu	24:00	1:00	S
+ Rule Palestine	2012	only	-	Sep	21	1:00	0	-
+-Rule Palestine	2013	max	-	Sep	Fri>=21	0:00	0	-
++Rule Palestine	2013	only	-	Sep	Fri>=21	0:00	0	-
++Rule Palestine	2014	max	-	Oct	Fri>=21	0:00	0	-
++Rule Palestine	2015	max	-	Mar	lastFri	24:00	1:00	S
+ 
+ # Zone	NAME		GMTOFF	RULES	FORMAT	[UNTIL]
+ Zone	Asia/Gaza	2:17:52	-	LMT	1900 Oct
+diff --git a/src/main/java/org/joda/time/tz/src/australasia b/src/main/java/org/joda/time/tz/src/australasia
+index 911e68176..3e2c0b345 100644
+--- a/src/main/java/org/joda/time/tz/src/australasia
++++ b/src/main/java/org/joda/time/tz/src/australasia
+@@ -373,6 +373,7 @@ Zone	Pacific/Guam	-14:21:00 -	LMT	1844 Dec 31
+ 			 9:39:00 -	LMT	1901        # Agana
+ 			10:00	-	GST	2000 Dec 23 # Guam
+ 			10:00	-	ChST	# Chamorro Standard Time
++Link Pacific/Guam Pacific/Saipan # N Mariana Is
+ 
+ # Kiribati
+ # Zone	NAME		GMTOFF	RULES	FORMAT	[UNTIL]
+@@ -388,12 +389,7 @@ Zone Pacific/Kiritimati	-10:29:20 -	LMT	1901
+ 			 14:00	-	LINT
+ 
+ # N Mariana Is
+-# Zone	NAME		GMTOFF	RULES	FORMAT	[UNTIL]
+-Zone Pacific/Saipan	-14:17:00 -	LMT	1844 Dec 31
+-			 9:43:00 -	LMT	1901
+-			 9:00	-	MPT	1969 Oct    # N Mariana Is Time
+-			10:00	-	MPT	2000 Dec 23
+-			10:00	-	ChST	# Chamorro Standard Time
++# See Pacific/Guam.
+ 
+ # Marshall Is
+ # Zone	NAME		GMTOFF	RULES	FORMAT	[UNTIL]
+@@ -563,6 +559,7 @@ Zone Pacific/Pago_Pago	 12:37:12 -	LMT	1879 Jul  5
+ 			-11:00	-	NST	1967 Apr    # N=Nome
+ 			-11:00	-	BST	1983 Nov 30 # B=Bering
+ 			-11:00	-	SST	            # S=Samoa
++Link Pacific/Pago_Pago Pacific/Midway # in US minor outlying islands
+ 
+ # Samoa (formerly and also known as Western Samoa)
+ 
+@@ -744,23 +741,7 @@ Zone Pacific/Funafuti	11:56:52 -	LMT	1901
+ # uninhabited
+ 
+ # Midway
+-#
+-# From Mark Brader (2005-01-23):
+-# [Fallacies and Fantasies of Air Transport History, by R.E.G. Davies,
+-# published 1994 by Paladwr Press, McLean, VA, USA; ISBN 0-9626483-5-3]
+-# reproduced a Pan American Airways timetable from 1936, for their weekly
+-# "Orient Express" flights between San Francisco and Manila, and connecting
+-# flights to Chicago and the US East Coast.  As it uses some time zone
+-# designations that I've never seen before:....
+-# Fri. 6:30A Lv. HONOLOLU (Pearl Harbor), H.I.   H.L.T. Ar. 5:30P Sun.
+-#  "   3:00P Ar. MIDWAY ISLAND . . . . . . . . . M.L.T. Lv. 6:00A  "
+-#
+-Zone Pacific/Midway	-11:49:28 -	LMT	1901
+-			-11:00	-	NST	1956 Jun  3
+-			-11:00	1:00	NDT	1956 Sep  2
+-			-11:00	-	NST	1967 Apr    # N=Nome
+-			-11:00	-	BST	1983 Nov 30 # B=Bering
+-			-11:00	-	SST	            # S=Samoa
++# See Pacific/Pago_Pago.
+ 
+ # Palmyra
+ # uninhabited since World War II; was probably like Pacific/Kiritimati
+diff --git a/src/main/java/org/joda/time/tz/src/backward b/src/main/java/org/joda/time/tz/src/backward
+index 3ceda884b..8b0fef582 100644
+--- a/src/main/java/org/joda/time/tz/src/backward
++++ b/src/main/java/org/joda/time/tz/src/backward
+@@ -20,6 +20,7 @@ Link	America/Argentina/Jujuy	America/Jujuy
+ Link	America/Indiana/Knox	America/Knox_IN
+ Link	America/Kentucky/Louisville	America/Louisville
+ Link	America/Argentina/Mendoza	America/Mendoza
++Link	America/Toronto		America/Montreal
+ Link	America/Rio_Branco	America/Porto_Acre
+ Link	America/Argentina/Cordoba	America/Rosario
+ Link	America/Denver		America/Shiprock
+diff --git a/src/main/java/org/joda/time/tz/src/europe b/src/main/java/org/joda/time/tz/src/europe
+index 60dfc1dce..c64c41bec 100644
+--- a/src/main/java/org/joda/time/tz/src/europe
++++ b/src/main/java/org/joda/time/tz/src/europe
+@@ -76,7 +76,7 @@
+ #        1:00:14    SET           Swedish (1879-1899)*
+ #        2:00       EET EEST      Eastern Europe
+ #        3:00       FET           Further-eastern Europe (2011-2014)*
+-#        3:00       MSK MSD  MSM* Moscow
++#        3:00       MSK MSD  MSM* Minsk, Moscow
+ 
+ # From Peter Ilieve (1994-12-04),
+ # The original six [EU members]: Belgium, France, (West) Germany, Italy,
+@@ -2400,7 +2400,7 @@ Zone Europe/Volgograd	 2:57:40 -	LMT	1920 Jan  3
+ 			 4:00	Russia	VOL%sT	1989 Mar 26  2:00s # Volgograd T
+ 			 3:00	Russia	VOL%sT	1991 Mar 31  2:00s
+ 			 4:00	-	VOLT	1992 Mar 29  2:00s
+-			 3:00	Russia	MSK	2011 Mar 27  2:00s
++			 3:00	Russia	MSK/MSD	2011 Mar 27  2:00s
+ 			 4:00	-	MSK	2014 Oct 26  2:00s
+ 			 3:00	-	MSK
+ 
+diff --git a/src/main/java/org/joda/time/tz/src/northamerica b/src/main/java/org/joda/time/tz/src/northamerica
+index cb94c5e50..c3af9eb39 100644
+--- a/src/main/java/org/joda/time/tz/src/northamerica
++++ b/src/main/java/org/joda/time/tz/src/northamerica
+@@ -227,9 +227,14 @@ Zone	PST8PDT		 -8:00	US	P%sT
+ # The law doesn't give abbreviations.
+ #
+ # From Paul Eggert (2000-01-08), following a heads-up from Rives McDow:
+-# Public law 106-564 (2000-12-23) introduced the abbreviation
+-# "Chamorro Standard Time" for time in Guam and the Northern Marianas.
+-# See the file "australasia".
++# Public law 106-564 (2000-12-23) introduced ... "Chamorro Standard Time"
++# for time in Guam and the Northern Marianas.  See the file "australasia".
++#
++# From Paul Eggert (2015-04-17):
++# HST and HDT are standardized abbreviations for Hawaii-Aleutian
++# standard and daylight times.  See section 9.47 (p 234) of the
++# U.S. Government Printing Office Style Manual (2008)
++# http://www.gpo.gov/fdsys/pkg/GPO-STYLEMANUAL-2008/pdf/GPO-STYLEMANUAL-2008.pdf
+ 
+ # From Arthur David Olson, 2005-08-09
+ # The following was signed into law on 2005-08-08.
+@@ -536,7 +541,7 @@ Zone America/Adak	 12:13:21 -	LMT	1867 Oct 18
+ 			-11:00	-	BST	1969
+ 			-11:00	US	B%sT	1983 Oct 30  2:00
+ 			-10:00	US	AH%sT	1983 Nov 30
+-			-10:00	US	HA%sT
++			-10:00	US	H%sT
+ # The following switches don't quite make our 1970 cutoff.
+ #
+ # Shanks writes that part of southwest Alaska (e.g. Aniak)
+@@ -1331,14 +1336,9 @@ Zone America/Moncton	-4:19:08 -	LMT	1883 Dec  9
+ 
+ # Quebec
+ 
+-# From Paul Eggert (2013-08-30):
+-# Since 1970 most of Quebec has been like Toronto.
+-# However, because earlier versions of the tz database mistakenly relied on data
+-# from Shanks & Pottenger saying that Quebec differed from Ontario after 1970,
+-# a separate entry was created for most of Quebec.  We're loath to lose
+-# its pre-1970 info, even though the tz database is normally limited to
+-# zones that differ after 1970, so keep this otherwise out-of-scope entry.
+-
++# From Paul Eggert (2015-03-24):
++# See America/Toronto for most of Quebec, including Montreal.
++#
+ # Matthews and Vincent (1998) also write that Quebec east of the -63
+ # meridian is supposed to observe AST, but residents as far east as
+ # Natashquan use EST/EDT, and residents east of Natashquan use AST.
+@@ -1352,39 +1352,10 @@ Zone America/Moncton	-4:19:08 -	LMT	1883 Dec  9
+ # For lack of better info, guess this practice began around 1970, contra to
+ # Shanks & Pottenger who have this region observing AST/ADT.
+ 
+-# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
+-Rule	Mont	1917	only	-	Mar	25	2:00	1:00	D
+-Rule	Mont	1917	only	-	Apr	24	0:00	0	S
+-Rule	Mont	1919	only	-	Mar	31	2:30	1:00	D
+-Rule	Mont	1919	only	-	Oct	25	2:30	0	S
+-Rule	Mont	1920	only	-	May	 2	2:30	1:00	D
+-Rule	Mont	1920	1922	-	Oct	Sun>=1	2:30	0	S
+-Rule	Mont	1921	only	-	May	 1	2:00	1:00	D
+-Rule	Mont	1922	only	-	Apr	30	2:00	1:00	D
+-Rule	Mont	1924	only	-	May	17	2:00	1:00	D
+-Rule	Mont	1924	1926	-	Sep	lastSun	2:30	0	S
+-Rule	Mont	1925	1926	-	May	Sun>=1	2:00	1:00	D
+-Rule	Mont	1927	1937	-	Apr	lastSat	24:00	1:00	D
+-Rule	Mont	1927	1937	-	Sep	lastSat	24:00	0	S
+-Rule	Mont	1938	1940	-	Apr	lastSun	0:00	1:00	D
+-Rule	Mont	1938	1939	-	Sep	lastSun	0:00	0	S
+-Rule	Mont	1946	1973	-	Apr	lastSun	2:00	1:00	D
+-Rule	Mont	1945	1948	-	Sep	lastSun	2:00	0	S
+-Rule	Mont	1949	1950	-	Oct	lastSun	2:00	0	S
+-Rule	Mont	1951	1956	-	Sep	lastSun	2:00	0	S
+-Rule	Mont	1957	1973	-	Oct	lastSun	2:00	0	S
+-
+ # Zone	NAME		GMTOFF	RULES	FORMAT	[UNTIL]
+ Zone America/Blanc-Sablon -3:48:28 -	LMT	1884
+ 			-4:00	Canada	A%sT	1970
+ 			-4:00	-	AST
+-Zone America/Montreal	-4:54:16 -	LMT	1884
+-			-5:00	Mont	E%sT	1918
+-			-5:00	Canada	E%sT	1919
+-			-5:00	Mont	E%sT	1942 Feb  9  2:00s
+-			-5:00	Canada	E%sT	1946
+-			-5:00	Mont	E%sT	1974
+-			-5:00	Canada	E%sT
+ 
+ # Ontario
+ 
+@@ -1875,17 +1846,115 @@ Zone America/Creston	-7:46:04 -	LMT	1884
+ # Dawson switched to PST in 1973.  Inuvik switched to MST in 1979.
+ # Mathew Englander (1996-10-07) gives the following refs:
+ #	* 1967. Paragraph 28(34)(g) of the Interpretation Act, S.C. 1967-68,
+-#	c. 7 defines Yukon standard time as UTC-9.  This is still valid;
++#	c. 7 defines Yukon standard time as UTC-9....
+ #	see Interpretation Act, R.S.C. 1985, c. I-21, s. 35(1).
++#	[http://canlii.ca/t/7vhg]
+ #	* C.O. 1973/214 switched Yukon to PST on 1973-10-28 00:00.
+ #	* O.I.C. 1980/02 established DST.
+ #	* O.I.C. 1987/056 changed DST to Apr firstSun 2:00 to Oct lastSun 2:00.
+-# Shanks & Pottenger say Yukon's 1973-10-28 switch was at 2:00; go
+-# with Englander.
+-# From Chris Walton (2006-06-26):
+-# Here is a link to the old daylight saving portion of the interpretation
+-# act which was last updated in 1987:
+-# http://www.gov.yk.ca/legislation/regs/oic1987_056.pdf
++
++# From Brian Inglis (2015-04-14):
++#
++# I tried to trace the history of Yukon time and found the following
++# regulations, giving the reference title and URL if found, regulation name,
++# and relevant quote if available.  Each regulation specifically revokes its
++# predecessor.  The final reference is to the current Interpretation Act
++# authorizing and resulting from these regulatory changes.
++#
++# Only recent regulations were retrievable via Yukon government site search or
++# index, and only some via Canadian legal sources.  Other sources used include
++# articles titled "Standard Time and Time Zones in Canada" from JRASC via ADS
++# Abstracts, cited by ADO for 1932 ..., and updated versions from 1958 and
++# 1970 quoted below; each article includes current extracts from provincial
++# and territorial ST and DST regulations at the end, summaries and details of
++# standard times and daylight saving time at many locations across Canada,
++# with time zone maps, tables and calculations for Canadian Sunrise, Sunset,
++# and LMST; they also cover many countries and global locations, with a chart
++# and table showing current Universal Time offsets, and may be useful as
++# another source of information for 1970 and earlier.
++#
++# * Standard Time and Time Zones in Canada; Smith, C.C.; JRASC, Vol. 26,
++#   pp.49-77; February 1932; SAO/NASA Astrophysics Data System (ADS)
++#   http://adsabs.harvard.edu/abs/1932JRASC..26...49S from p.75:
++#   Yukon Interpretation Ordinance
++#   Yukon standard time is the local mean time at the one hundred and
++#   thirty-fifth meridian.
++#
++# * Standard Time and Time Zones in Canada; Smith, C.C.; Thomson, Malcolm M.;
++#   JRASC, Vol. 52, pp.193-223; October 1958; SAO/NASA Astrophysics Data System
++#   (ADS) http://adsabs.harvard.edu/abs/1958JRASC..52..193S from pp.220-1:
++#   Yukon Interpretation Ordinance, 1955, Chap. 16.
++#
++#     (1) Subject to this section, standard time shall be reckoned as nine
++#     hours behind Greenwich Time and called Yukon Standard Time.
++#
++#     (2) Notwithstanding subsection (1), the Commissioner may make regulations
++#     varying the manner of reckoning standard time.
++#
++# * Yukon Territory Commissioner's Order 1966-20 Interpretation Ordinance
++#   http://? - no online source found
++#
++# * Standard Time and Time Zones in Canada; Thomson, Malcolm M.; JRASC,
++#   Vol. 64, pp.129-162; June 1970; SAO/NASA Astrophysics Data System (ADS)
++#   http://adsabs.harvard.edu/abs/1970JRASC..64..129T from p.156: Yukon
++#   Territory Commissioner's Order 1967-59 Interpretation Ordinance ...
++#
++#     1. Commissioner's Order 1966-20 dated at Whitehorse in the Yukon
++#     Territory on 27th January, 1966, is hereby revoked.
++#
++#     2. Yukon (East) Standard Time as defined by section 36 of the
++#     Interpretation Ordinance from and after mid-night on the 28th day of May,
++#     1967 shall be reckoned in the same manner as Pacific Standard Time, that
++#     is to say, eight hours behind Greenwich Time in the area of the Yukon
++#     Territory lying east of the 138th degree longitude west.
++#
++#     3. In the remainder of the Territory, lying west of the 138th degree
++#     longitude west, Yukon (West) Standard Time shall be reckoned as nine
++#     hours behind Greenwich Time.
++#
++# * Yukon Standard Time defined as Pacific Standard Time, YCO 1973/214
++#   http://www.canlii.org/en/yk/laws/regu/yco-1973-214/latest/yco-1973-214.html
++#   C.O. 1973/214 INTERPRETATION ACT ...
++#
++#     1. Effective October 28, 1973 Commissioner's Order 1967/59 is hereby
++#     revoked.
++#
++#     2. Yukon Standard Time as defined by section 36 of the Interpretation
++#     Act from and after midnight on the twenty-eighth day of October, 1973
++#     shall be reckoned in the same manner as Pacific Standard Time, that is
++#     to say eight hours behind Greenwich Time.
++#
++# * O.I.C. 1980/02 INTERPRETATION ACT
++#   http://? - no online source found
++#
++# * Yukon Daylight Saving Time, YOIC 1987/56
++#   http://www.canlii.org/en/yk/laws/regu/yoic-1987-56/latest/yoic-1987-56.html
++#   O.I.C. 1987/056 INTERPRETATION ACT ...
++#
++#   In every year between
++#     (a) two o'clock in the morning in the first Sunday in April, and
++#     (b) two o'clock in the morning in the last Sunday in October,
++#   Standard Time shall be reckoned as seven hours behind Greenwich Time and
++#   called Yukon Daylight Saving Time.
++#   ...
++#   Dated ... 9th day of March, A.D., 1987.
++#
++# * Yukon Daylight Saving Time 2006, YOIC 2006/127
++#   http://www.canlii.org/en/yk/laws/regu/yoic-2006-127/latest/yoic-2006-127.html
++#   O.I.C. 2006/127 INTERPRETATION ACT ...
++#
++#     1. In Yukon each year the time for general purposes shall be 7 hours
++#     behind Greenwich mean time during the period commencing at two o'clock
++#     in the forenoon on the second Sunday of March and ending at two o'clock
++#     in the forenoon on the first Sunday of November and shall be called
++#     Yukon Daylight Saving Time.
++#
++#     2. Order-in-Council 1987/56 is revoked.
++#
++#     3. This order comes into force January 1, 2007.
++#
++# * Interpretation Act, RSY 2002, c 125
++# http://www.canlii.org/en/yk/laws/stat/rsy-2002-c-125/latest/rsy-2002-c-125.html
+ 
+ # From Rives McDow (1999-09-04):
+ # Nunavut ... moved ... to incorporate the whole territory into one time zone.
+@@ -2111,7 +2180,7 @@ Zone America/Inuvik	0	-	zzz	1953 # Inuvik founded
+ 			-7:00	NT_YK	M%sT	1980
+ 			-7:00	Canada	M%sT
+ Zone America/Whitehorse	-9:00:12 -	LMT	1900 Aug 20
+-			-9:00	NT_YK	Y%sT	1966 Jul  1  2:00
++			-9:00	NT_YK	Y%sT	1967 May 28  0:00
+ 			-8:00	NT_YK	P%sT	1980
+ 			-8:00	Canada	P%sT
+ Zone America/Dawson	-9:17:40 -	LMT	1900 Aug 20
+@@ -2312,8 +2381,24 @@ Zone America/Dawson	-9:17:40 -	LMT	1900 Aug 20
+ # "...the new time zone will come into effect at two o'clock on the first Sunday
+ # of February, when we will have to advance the clock one hour from its current
+ # time..."
+-#
+ # Also, the new zone will not use DST.
++#
++# From Carlos Raúl Perasso (2015-02-02):
++# The decree that modifies the Mexican Hour System Law has finally
++# been published at the Diario Oficial de la Federación
++# http://www.dof.gob.mx/nota_detalle.php?codigo=5380123&fecha=31/01/2015
++# It establishes 5 zones for Mexico:
++# 1- Zona Centro (Central Zone): Corresponds to longitude 90 W,
++#    includes most of Mexico, excluding what's mentioned below.
++# 2- Zona Pacífico (Pacific Zone): Longitude 105 W, includes the
++#    states of Baja California Sur; Chihuahua; Nayarit (excluding Bahía
++#    de Banderas which lies in Central Zone); Sinaloa and Sonora.
++# 3- Zona Noroeste (Northwest Zone): Longitude 120 W, includes the
++#    state of Baja California.
++# 4- Zona Sureste (Southeast Zone): Longitude 75 W, includes the state
++#    of Quintana Roo.
++# 5- The islands, reefs and keys shall take their timezone from the
++#    longitude they are located at.
+ 
+ # Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
+ Rule	Mexico	1939	only	-	Feb	5	0:00	1:00	D
+@@ -2508,13 +2593,8 @@ Zone America/Santa_Isabel	-7:39:28 -	LMT	1922 Jan  1  0:20:32
+ ###############################################################################
+ 
+ # Anguilla
+-# See America/Port_of_Spain.
+-
+ # Antigua and Barbuda
+-# Zone	NAME		GMTOFF	RULES	FORMAT	[UNTIL]
+-Zone	America/Antigua	-4:07:12 -	LMT	1912 Mar 2
+-			-5:00	-	EST	1951
+-			-4:00	-	AST
++# See America/Port_of_Spain.
+ 
+ # Bahamas
+ #
+@@ -2581,10 +2661,7 @@ Zone Atlantic/Bermuda	-4:19:18 -	LMT	1930 Jan  1  2:00 # Hamilton
+ 			-4:00	US	A%sT
+ 
+ # Cayman Is
+-# Zone	NAME		GMTOFF	RULES	FORMAT	[UNTIL]
+-Zone	America/Cayman	-5:25:32 -	LMT	1890     # Georgetown
+-			-5:07:11 -	KMT	1912 Feb # Kingston Mean Time
+-			-5:00	-	EST
++# See America/Panama.
+ 
+ # Costa Rica
+ 
+@@ -3107,6 +3184,7 @@ Zone	America/Managua	-5:45:08 -	LMT	1890
+ Zone	America/Panama	-5:18:08 -	LMT	1890
+ 			-5:19:36 -	CMT	1908 Apr 22 # Colón Mean Time
+ 			-5:00	-	EST
++Link America/Panama America/Cayman
+ 
+ # Puerto Rico
+ # There are too many San Juans elsewhere, so we'll use 'Puerto_Rico'.
+diff --git a/src/main/java/org/joda/time/tz/src/southamerica b/src/main/java/org/joda/time/tz/src/southamerica
+index 3ab353e32..be63a88d5 100644
+--- a/src/main/java/org/joda/time/tz/src/southamerica
++++ b/src/main/java/org/joda/time/tz/src/southamerica
+@@ -1098,6 +1098,60 @@ Zone America/Rio_Branco	-4:31:12 -	LMT	1914
+ 
+ # Chile
+ 
++# From Paul Eggert (2015-04-03):
++# Shanks & Pottenger says America/Santiago introduced standard time in
++# 1890 and rounds its UTC offset to 70W40; guess that in practice this
++# was the same offset as in 1916-1919.  It also says Pacific/Easter
++# standardized on 109W22 in 1890; assume this didn't change the clocks.
++#
++# Dates for America/Santiago from 1910 to 2004 are primarily from
++# the following source, cited by Oscar van Vlijmen (2006-10-08):
++# [1] Chile Law
++# http://www.webexhibits.org/daylightsaving/chile.html
++# This contains a copy of a this official table:
++# Cambios en la hora oficial de Chile desde 1900 (retrieved 2008-03-30)
++# http://web.archive.org/web/20080330200901/http://www.horaoficial.cl/cambio.htm
++# [1] needs several corrections, though.
++#
++# The first set of corrections is from:
++# [2] History of the Official Time of Chile
++# http://www.horaoficial.cl/ing/horaof_ing.html (retrieved 2012-03-06).  See:
++# http://web.archive.org/web/20120306042032/http://www.horaoficial.cl/ing/horaof_ing.html
++# This is an English translation of:
++# Historia de la hora oficial de Chile (retrieved 2012-10-24).  See:
++# http://web.archive.org/web/20121024234627/http://www.horaoficial.cl/horaof.htm
++# A fancier Spanish version (requiring mouse-clicking) is at:
++# http://www.horaoficial.cl/historia_hora.html
++# Conflicts between [1] and [2] were resolved as follows:
++#
++#  - [1] says the 1910 transition was Jan 1, [2] says Jan 10 and cites
++#    Boletín Nº 1, Aviso Nº 1 (1910).  Go with [2].
++#
++#  - [1] says SMT was -4:42:45, [2] says Chile's official time from
++#    1916 to 1919 was -4:42:46.3, the meridian of Chile's National
++#    Astronomical Observatory (OAN), then located in what is now
++#    Quinta Normal in Santiago.  Go with [2], rounding it to -4:42:46.
++#
++#  - [1] says the 1918 transition was Sep 1, [2] says Sep 10 and cites
++#    Boletín Nº 22, Aviso Nº 129/1918 (1918-08-23).  Go with [2].
++#
++#  - [1] does not give times for transitions; assume they occur
++#    at midnight mainland time, the current common practice.  However,
++#    go with [2]'s specification of 23:00 for the 1947-05-21 transition.
++#
++# Another correction to [1] is from Jesper Nørgaard Welen, who
++# wrote (2006-10-08), "I think that there are some obvious mistakes in
++# the suggested link from Oscar van Vlijmen,... for instance entry 66
++# says that GMT-4 ended 1990-09-12 while entry 67 only begins GMT-3 at
++# 1990-09-15 (they should have been 1990-09-15 and 1990-09-16
++# respectively), but anyhow it clears up some doubts too."
++#
++# Data for Pacific/Easter from 1910 through 1967 come from Shanks &
++# Pottenger.  After that, for lack of better info assume
++# Pacific/Easter is always two hours behind America/Santiago;
++# this is known to work for DST transitions starting in 2008 and
++# may well be true for earlier transitions.
++
+ # From Eduardo Krell (1995-10-19):
+ # The law says to switch to DST at midnight [24:00] on the second SATURDAY
+ # of October....  The law is the same for March and October.
+@@ -1110,78 +1164,35 @@ Zone America/Rio_Branco	-4:31:12 -	LMT	1914
+ # Because of the same drought, the government decided to end DST later,
+ # on April 3, (one-time change).
+ 
+-# From Oscar van Vlijmen (2006-10-08):
+-# http://www.horaoficial.cl/cambio.htm
+-
+-# From Jesper Nørgaard Welen (2006-10-08):
+-# I think that there are some obvious mistakes in the suggested link
+-# from Oscar van Vlijmen,... for instance entry 66 says that GMT-4
+-# ended 1990-09-12 while entry 67 only begins GMT-3 at 1990-09-15
+-# (they should have been 1990-09-15 and 1990-09-16 respectively), but
+-# anyhow it clears up some doubts too.
+-
+-# From Paul Eggert (2014-08-12):
+-# The following data entries for Chile and America/Santiago are from
+-# <http://www.horaoficial.cl/horaof.htm> (2006-09-20), transcribed by
+-# Jesper Nørgaard Welen.  The data entries for Pacific/Easter are from Shanks
+-# & Pottenger, except with DST transitions after 1932 cloned from
+-# America/Santiago.  The pre-1980 Pacific/Easter data entries are dubious,
+-# but we have no other source.
+-
+ # From Germán Poo-Caamaño (2008-03-03):
+ # Due to drought, Chile extends Daylight Time in three weeks.  This
+ # is one-time change (Saturday 3/29 at 24:00 for America/Santiago
+ # and Saturday 3/29 at 22:00 for Pacific/Easter)
+ # The Supreme Decree is located at
+ # http://www.shoa.cl/servicios/supremo316.pdf
+-# and the instructions for 2008 are located in:
+-# http://www.horaoficial.cl/cambio.htm
+-
++#
+ # From José Miguel Garrido (2008-03-05):
+-# ...
+-# You could see the announces of the change on
+ # http://www.shoa.cl/noticias/2008/04hora/hora.htm
+ 
+ # From Angel Chiang (2010-03-04):
+ # Subject: DST in Chile exceptionally extended to 3 April due to earthquake
+ # http://www.gobiernodechile.cl/viewNoticia.aspx?idArticulo=30098
+-# (in Spanish, last paragraph).
+ #
+-# This is breaking news. There should be more information available later.
+-
+ # From Arthur David Olson (2010-03-06):
+ # Angel Chiang's message confirmed by Julio Pacheco; Julio provided a patch.
+ 
+-# From Glenn Eychaner (2011-03-02):
+-# It appears that the Chilean government has decided to postpone the
+-# change from summer time to winter time again, by three weeks to April
+-# 2nd:
+-# http://www.emol.com/noticias/nacional/detalle/detallenoticias.asp?idnoticia=467651
+-#
+-# This is not yet reflected in the official "cambio de hora" site, but
+-# probably will be soon:
+-# http://www.horaoficial.cl/cambio.htm
+-
+-# From Arthur David Olson (2011-03-02):
+-# The emol.com article mentions a water shortage as the cause of the
+-# postponement, which may mean that it's not a permanent change.
+-
+ # From Glenn Eychaner (2011-03-28):
+-# The article:
+ # http://diario.elmercurio.com/2011/03/28/_portada/_portada/noticias/7565897A-CA86-49E6-9E03-660B21A4883E.htm?id=3D{7565897A-CA86-49E6-9E03-660B21A4883E}
+-#
+ # In English:
+ # Chile's clocks will go back an hour this year on the 7th of May instead
+ # of this Saturday. They will go forward again the 3rd Saturday in
+-# August, not in October as they have since 1968. This is a pilot plan
+-# which will be reevaluated in 2012.
++# August, not in October as they have since 1968.
+ 
+ # From Mauricio Parada (2012-02-22), translated by Glenn Eychaner (2012-02-23):
+ # As stated in the website of the Chilean Energy Ministry
+ # http://www.minenergia.cl/ministerio/noticias/generales/gobierno-anuncia-fechas-de-cambio-de.html
+ # The Chilean Government has decided to postpone the entrance into winter time
+-# (to leave DST) from March 11 2012 to April 28th 2012. The decision has not
+-# been yet formalized but it will within the next days.
++# (to leave DST) from March 11 2012 to April 28th 2012....
+ # Quote from the website communication:
+ #
+ # 6. For the year 2012, the dates of entry into winter time will be as follows:
+@@ -1206,22 +1217,17 @@ Zone America/Rio_Branco	-4:31:12 -	LMT	1914
+ # DST Start: first Saturday of September 2014 (Sun 07 Sep 2014 04:00 UTC)
+ # http://www.diariooficial.interior.gob.cl//media/2014/02/19/do-20140219.pdf
+ 
+-# From Juan Correa (2015-01-28):
+-# ... today the Ministry of Energy announced that Chile will drop DST, will keep
+-# "summer time" (UTC -3 / UTC -5) all year round....
+-# http://www.minenergia.cl/ministerio/noticias/generales/ministerio-de-energia-anuncia.html
+-
+-# NOTE: ChileAQ rules for Antarctic bases are stored separately in the
+-# 'antarctica' file.
++# From Eduardo Romero Urra (2015-03-03):
++# Today has been published officially that Chile will use the DST time
++# permanently until March 25 of 2017
++# http://www.diariooficial.interior.gob.cl/media/2015/03/03/1-large.jpg
++#
++# From Paul Eggert (2015-03-03):
++# For now, assume that the extension will persist indefinitely.
+ 
+ # Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
+-Rule	Chile	1927	1932	-	Sep	 1	0:00	1:00	S
++Rule	Chile	1927	1931	-	Sep	 1	0:00	1:00	S
+ Rule	Chile	1928	1932	-	Apr	 1	0:00	0	-
+-Rule	Chile	1942	only	-	Jun	 1	4:00u	0	-
+-Rule	Chile	1942	only	-	Aug	 1	5:00u	1:00	S
+-Rule	Chile	1946	only	-	Jul	15	4:00u	1:00	S
+-Rule	Chile	1946	only	-	Sep	 1	3:00u	0:00	-
+-Rule	Chile	1947	only	-	Apr	 1	4:00u	0	-
+ Rule	Chile	1968	only	-	Nov	 3	4:00u	1:00	S
+ Rule	Chile	1969	only	-	Mar	30	3:00u	0	-
+ Rule	Chile	1969	only	-	Nov	23	4:00u	1:00	S
+@@ -1232,10 +1238,8 @@ Rule	Chile	1972	1986	-	Mar	Sun>=9	3:00u	0	-
+ Rule	Chile	1973	only	-	Sep	30	4:00u	1:00	S
+ Rule	Chile	1974	1987	-	Oct	Sun>=9	4:00u	1:00	S
+ Rule	Chile	1987	only	-	Apr	12	3:00u	0	-
+-Rule	Chile	1988	1989	-	Mar	Sun>=9	3:00u	0	-
+-Rule	Chile	1988	only	-	Oct	Sun>=1	4:00u	1:00	S
+-Rule	Chile	1989	only	-	Oct	Sun>=9	4:00u	1:00	S
+-Rule	Chile	1990	only	-	Mar	18	3:00u	0	-
++Rule	Chile	1988	1990	-	Mar	Sun>=9	3:00u	0	-
++Rule	Chile	1988	1989	-	Oct	Sun>=9	4:00u	1:00	S
+ Rule	Chile	1990	only	-	Sep	16	4:00u	1:00	S
+ Rule	Chile	1991	1996	-	Mar	Sun>=9	3:00u	0	-
+ Rule	Chile	1991	1997	-	Oct	Sun>=9	4:00u	1:00	S
+@@ -1258,17 +1262,23 @@ Rule	Chile	2012	2014	-	Sep	Sun>=2	4:00u	1:00	S
+ # (1996-09) says 1998-03-08.  Ignore these.
+ # Zone	NAME		GMTOFF	RULES	FORMAT	[UNTIL]
+ Zone America/Santiago	-4:42:46 -	LMT	1890
+-			-4:42:46 -	SMT	1910        # Santiago Mean Time
++			-4:42:46 -	SMT	1910 Jan 10 # Santiago Mean Time
+ 			-5:00	-	CLT	1916 Jul  1 # Chile Time
+-			-4:42:46 -	SMT	1918 Sep  1 # Santiago Mean Time
+-			-4:00	-	CLT	1919 Jul  1 # Chile Time
+-			-4:42:46 -	SMT	1927 Sep  1 # Santiago Mean Time
+-			-5:00	Chile	CL%sT	1947 May 22 # Chile Time
++			-4:42:46 -	SMT	1918 Sep 10
++			-4:00	-	CLT	1919 Jul  1
++			-4:42:46 -	SMT	1927 Sep  1
++			-5:00	Chile	CL%sT	1932 Sep  1
++			-4:00	-	CLT	1942 Jun  1
++			-5:00	-	CLT	1942 Aug  1
++			-4:00	-	CLT	1946 Jul 15
++			-4:00	1:00	CLST	1946 Sep  1 # central Chile
++			-4:00	-	CLT	1947 Apr  1
++			-5:00	-	CLT	1947 May 21 23:00
+ 			-4:00	Chile	CL%sT	2015 Apr 26  3:00u
+ 			-3:00	-	CLT
+-Zone Pacific/Easter	-7:17:44 -	LMT	1890
++Zone Pacific/Easter	-7:17:28 -	LMT	1890
+ 			-7:17:28 -	EMT	1932 Sep    # Easter Mean Time
+-			-7:00	Chile	EAS%sT	1982 Mar 13 3:00u # Easter Time
++			-7:00	Chile	EAS%sT	1982 Mar 14 3:00u # Easter Time
+ 			-6:00	Chile	EAS%sT	2015 Apr 26 3:00u
+ 			-5:00	-	EAST
+ #
+@@ -1276,6 +1286,25 @@ Zone Pacific/Easter	-7:17:44 -	LMT	1890
+ # Other Chilean locations, including Juan Fernández Is, Desventuradas Is,
+ # and Antarctic bases, are like America/Santiago.
+ 
++# Antarctic base using South American rules
++# (See the file 'antarctica' for more.)
++#
++# Palmer, Anvers Island, since 1965 (moved 2 miles in 1968)
++#
++# From Ethan Dicks (1996-10-06):
++# It keeps the same time as Punta Arenas, Chile, because, just like us
++# and the South Pole, that's the other end of their supply line....
++# I verified with someone who was there that since 1980,
++# Palmer has followed Chile.  Prior to that, before the Falklands War,
++# Palmer used to be supplied from Argentina.
++#
++# Zone	NAME		GMTOFF	RULES	FORMAT	[UNTIL]
++Zone Antarctica/Palmer	0	-	zzz	1965
++			-4:00	Arg	AR%sT	1969 Oct  5
++			-3:00	Arg	AR%sT	1982 May
++			-4:00	Chile	CL%sT	2015 Apr 26 3:00u
++			-3:00	-	CLT
++
+ # Colombia
+ 
+ # Milne gives 4:56:16.4 for Bogotá time in 1899; round to nearest.  He writes,
+@@ -1603,6 +1632,7 @@ Zone America/Port_of_Spain -4:06:04 -	LMT	1912 Mar 2
+ 
+ # These all agree with Trinidad and Tobago since 1970.
+ Link America/Port_of_Spain America/Anguilla
++Link America/Port_of_Spain America/Antigua
+ Link America/Port_of_Spain America/Dominica
+ Link America/Port_of_Spain America/Grenada
+ Link America/Port_of_Spain America/Guadeloupe
+
+From a3b1a16ee43af611939799a99c7c461d051d40e7 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Wed, 20 May 2015 22:08:46 +0100
+Subject: [PATCH 22/23] Update plugin versions
+
+---
+ pom.xml | 18 +++++++++---------
+ 1 file changed, 9 insertions(+), 9 deletions(-)
+
+diff --git a/pom.xml b/pom.xml
+index 4514aec5e..5ed540b0b 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -257,7 +257,7 @@
+       <plugin>
+         <groupId>org.codehaus.mojo</groupId>      
+         <artifactId>exec-maven-plugin</artifactId>
+-        <version>1.3.2</version>
++        <version>1.4.0</version>
+         <executions>
+           <execution>
+             <id>compile-tzdb</id>
+@@ -760,22 +760,22 @@
+   <!-- ==================================================================== -->
+   <properties>
+     <!-- Plugin version numbers -->
+-    <maven-assembly-plugin.version>2.5.3</maven-assembly-plugin.version>
++    <maven-assembly-plugin.version>2.5.4</maven-assembly-plugin.version>
+     <maven-changes-plugin.version>2.11</maven-changes-plugin.version>
+-    <maven-checkstyle-plugin.version>2.13</maven-checkstyle-plugin.version>
++    <maven-checkstyle-plugin.version>2.15</maven-checkstyle-plugin.version>
+     <maven-clean-plugin.version>2.6.1</maven-clean-plugin.version>
+-    <maven-compiler-plugin.version>3.2</maven-compiler-plugin.version>
++    <maven-compiler-plugin.version>3.3</maven-compiler-plugin.version>
+     <maven-deploy-plugin.version>2.8.2</maven-deploy-plugin.version>
+-    <maven-dependency-plugin.version>2.9</maven-dependency-plugin.version>
++    <maven-dependency-plugin.version>2.10</maven-dependency-plugin.version>
+     <maven-gpg-plugin.version>1.6</maven-gpg-plugin.version>
+     <maven-install-plugin.version>2.5.2</maven-install-plugin.version>
+-    <maven-jar-plugin.version>2.5</maven-jar-plugin.version>
+-    <maven-javadoc-plugin.version>2.10.1</maven-javadoc-plugin.version>
++    <maven-jar-plugin.version>2.6</maven-jar-plugin.version>
++    <maven-javadoc-plugin.version>2.10.3</maven-javadoc-plugin.version>
+     <maven-jxr-plugin.version>2.5</maven-jxr-plugin.version>
+     <maven-plugin-plugin.version>3.4</maven-plugin-plugin.version>
+-    <maven-pmd-plugin.version>3.3</maven-pmd-plugin.version>
++    <maven-pmd-plugin.version>3.4</maven-pmd-plugin.version>
+     <maven-project-info-reports-plugin.version>2.8</maven-project-info-reports-plugin.version>
+-    <maven-repository-plugin.version>2.3.1</maven-repository-plugin.version>
++    <maven-repository-plugin.version>2.4</maven-repository-plugin.version>
+     <maven-resources-plugin.version>2.7</maven-resources-plugin.version>
+     <maven-site-plugin.version>3.4</maven-site-plugin.version>
+     <maven-source-plugin.version>2.4</maven-source-plugin.version>
+
+From eeeaa099d771c09b3c4a2d6f0c56dfbec2b11768 Mon Sep 17 00:00:00 2001
+From: Stephen Colebourne <scolebourne@joda.org>
+Date: Fri, 29 May 2015 16:51:30 +0100
+Subject: [PATCH 23/23] Release 2.8
+
+---
+ README.md                      |   4 +-
+ pom.xml                        |   2 +-
+ src/conf/MANIFEST.MF           |  20 ++--
+ src/site/markdown/index.md     |   6 +-
+ src/site/xdoc/installation.xml |   1 +
+ src/site/xdoc/upgradeto280.xml | 189 +++++++++++++++++++++++++++++++++
+ 6 files changed, 206 insertions(+), 16 deletions(-)
+ create mode 100644 src/site/xdoc/upgradeto280.xml
+
+diff --git a/README.md b/README.md
+index b7059a367..1672b60d9 100644
+--- a/README.md
++++ b/README.md
+@@ -46,11 +46,11 @@ Various documentation is available:
+ 
+ 
+ ### Releases
+-[Release 2.7](http://www.joda.org/joda-time/download.html) is the current latest release.
++[Release 2.8](http://www.joda.org/joda-time/download.html) is the current latest release.
+ This release is considered stable and worthy of the 1.x tag.
+ It depends on JDK 1.5 or later.
+ 
+-Available in the [Maven Central repository](http://search.maven.org/#artifactdetails|joda-time|joda-time|2.7|jar)
++Available in the [Maven Central repository](http://search.maven.org/#artifactdetails|joda-time|joda-time|2.8|jar)
+ 
+ 
+ ### Related projects
+diff --git a/pom.xml b/pom.xml
+index 5ed540b0b..92674c58a 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -9,7 +9,7 @@
+   <artifactId>joda-time</artifactId>
+   <packaging>jar</packaging>
+   <name>Joda-Time</name>
+-  <version>2.8-SNAPSHOT</version>
++  <version>2.8</version>
+   <description>Date and time library to replace JDK date handling</description>
+   <url>http://www.joda.org/joda-time/</url>
+ 
+diff --git a/src/conf/MANIFEST.MF b/src/conf/MANIFEST.MF
+index 2440984dd..bdac042e7 100644
+--- a/src/conf/MANIFEST.MF
++++ b/src/conf/MANIFEST.MF
+@@ -2,22 +2,22 @@ Package: org.joda.time
+ Extension-Name: joda-time
+ Specification-Title: Joda-Time
+ Specification-Vendor: Joda.org
+-Specification-Version: 2.7
++Specification-Version: 2.8
+ Implementation-Vendor: Joda.org
+ Implementation-Title: org.joda.time
+-Implementation-Version: 2.7
++Implementation-Version: 2.8
+ Implementation-Vendor-Id: org.joda
+ Bundle-ManifestVersion: 2
+ Bundle-Vendor: Joda.org
+ Bundle-Name: Joda-Time
+ Bundle-SymbolicName: joda-time
+-Bundle-Version: 2.7
+-Export-Package: org.joda.time;version=2.7,
+- org.joda.time.base;version=2.7,
+- org.joda.time.chrono;version=2.7,
+- org.joda.time.convert;version=2.7,
+- org.joda.time.field;version=2.7,
+- org.joda.time.format;version=2.7,
+- org.joda.time.tz;version=2.7
++Bundle-Version: 2.8
++Export-Package: org.joda.time;version=2.8,
++ org.joda.time.base;version=2.8,
++ org.joda.time.chrono;version=2.8,
++ org.joda.time.convert;version=2.8,
++ org.joda.time.field;version=2.8,
++ org.joda.time.format;version=2.8,
++ org.joda.time.tz;version=2.8
+ Bundle-License: Apache 2.0
+ Bundle-DocURL: http://www.joda.org/joda-time/
+diff --git a/src/site/markdown/index.md b/src/site/markdown/index.md
+index 033707bf2..044252fc4 100644
+--- a/src/site/markdown/index.md
++++ b/src/site/markdown/index.md
+@@ -125,7 +125,7 @@ Joda-Time is licenced under the business friendly <a href="license.html">Apache
+ 
+ ## <i></i> Releases
+ 
+-[Release 2.7](download.html) is the current latest release.
++[Release 2.8](download.html) is the current latest release.
+ This release is considered stable and worthy of the 2.x tag.
+ See the [upgrade notes](upgradeto270.html) for full details.
+ 
+@@ -133,13 +133,13 @@ Joda-Time requires Java SE 5 or later and has [no dependencies](dependencies.htm
+ There is a *compile-time* dependency on [Joda-Convert](http://www.joda.org/joda-convert/),
+ but this is not required at runtime thanks to the magic of annotations.
+ 
+-Available in [Maven Central](http://search.maven.org/#artifactdetails%7Cjoda-time%7Cjoda-time%7C2.7%7Cjar).
++Available in [Maven Central](http://search.maven.org/#artifactdetails%7Cjoda-time%7Cjoda-time%7C2.8%7Cjar).
+ 
+ ```xml
+ <dependency>
+   <groupId>joda-time</groupId>
+   <artifactId>joda-time</artifactId>
+-  <version>2.7</version>
++  <version>2.8</version>
+ </dependency>
+ ```
+ 
+diff --git a/src/site/xdoc/installation.xml b/src/site/xdoc/installation.xml
+index 53723e196..87a1ca52d 100644
+--- a/src/site/xdoc/installation.xml
++++ b/src/site/xdoc/installation.xml
+@@ -22,6 +22,7 @@ of the source code suitable for linking to the jar file in IDEs such as Eclipse.
+ <p>
+ The release notes for upgraders can be found here:
+ <ul>
++<li><a href="upgradeto280.html">Version 2.8</a> - upgrade from Version 2.7</li>
+ <li><a href="upgradeto270.html">Version 2.7</a> - upgrade from Version 2.6</li>
+ <li><a href="upgradeto260.html">Version 2.6</a> - upgrade from Version 2.5</li>
+ <li><a href="upgradeto250.html">Version 2.5</a> - upgrade from Version 2.4</li>
+diff --git a/src/site/xdoc/upgradeto280.xml b/src/site/xdoc/upgradeto280.xml
+new file mode 100644
+index 000000000..7f75fdc9b
+--- /dev/null
++++ b/src/site/xdoc/upgradeto280.xml
+@@ -0,0 +1,189 @@
++<?xml version="1.0" encoding="ISO-8859-1"?>
++
++<document>
++ <properties>
++  <title>Java date and time API - Upgrade from 2.7 to 2.8</title>
++  <author>Stephen Colebourne</author>
++ </properties>
++
++<body>
++
++<section name="Upgrade">
++<p>
++These are the release notes and advice for upgrading Joda-Time from version 2.7 to version 2.8.
++<source>
++Joda-Time version 2.8
++---------------------
++
++Joda-Time is a date and time handling library that seeks to replace the JDK
++Date and Calendar classes.
++
++This release contains enhancements, bug fixes and a time zone update.
++The release runs on JDK 5 or later.
++
++Joda-Time is licensed under the business-friendly Apache License Version 2.
++This is the same license as all of Apache, plus other open source projects such as Spring.
++The intent is to make the code available to the Java community with the minimum
++of restrictions. If the license causes you problems please contact the mailing list.
++
++**  Please also check out our related projects   **
++** http://www.joda.org/joda-time/related.html **
++
++
++Enhancements since 2.7
++----------------------
++- Encode properties files using unicode escapes [#228]
++  The properties files are supposed to be loaded using ISO 8859-1 but Android seems to have issues with that.
++  Re-encode the files using unicode escapes to sidestep the issue.
++
++- Avoid ProGuard errors in Android jar [#246]
++  Separate logging from time-zone compilation
++
++
++Compatibility with 2.7
++----------------------
++Build system - Yes
++
++Binary compatible - Yes
++
++Source compatible - Yes
++
++Serialization compatible - Yes
++
++Data compatible - Yes
++ - DateTimeZone data updated to version 2015d
++ - In the past year, the IANA time-zone database maintainer has changed unique time-zone data for many parts
++   of the world into shared "links". For example, in IANA 'Asia/Kuwait' now links to 'Asia/Riyadh'.
++   (I personally disagree with the IANA time-zone database maintainer's actions but my objections were ignored).
++   This was a problem for Joda-Time as we interpreted the concept of links (many years ago) as only being used
++   for backwards compatibility. Links are exposed in Joda-Time, because if you request a time-zone for a linked
++   identifier you get the target of the link back. As such, in recent versions of Joda-Time, it was not possible
++   to obtain a DateTimeZone with an appropriate identifier for many parts of the world, such as 'Asia/Kuwait'.
++   With this release, most links in the main IANA files are now restored to be real zones.
++   As a side effect of this, some identifiers that used to act as links are now real zones.
++   In summary, in the last Joda-Time release, requesting 'Asia/Kuwait' would have given back 'Asia/Riyadh',
++   but it now returns 'Asia/Kuwait' (where 'Asia/Kuwait' and 'Asia/Riyadh' have the same time-zone rules).
++   In most cases, this won't have any impact on your application.
++ Zones affected (now real zones rather than incorrect links):
++ * Africa/Bamako
++ * Africa/Banjul
++ * Africa/Conakry
++ * Africa/Dakar
++ * Africa/Freetown
++ * Africa/Lome
++ * Africa/Nouakchott
++ * Africa/Ouagadougou
++ * Africa/Sao_Tome
++ * Atlantic/St_Helena
++ * Africa/Addis_Ababa
++ * Africa/Asmara
++ * Africa/Dar_es_Salaam
++ * Africa/Djibouti
++ * Africa/Kampala
++ * Africa/Mogadishu
++ * Indian/Antananarivo
++ * Indian/Comoro
++ * Indian/Mayotte
++ * Africa/Blantyre
++ * Africa/Bujumbura
++ * Africa/Gaborone
++ * Africa/Harare
++ * Africa/Kigali
++ * Africa/Lubumbashi
++ * Africa/Lusaka
++ * Africa/Bangui
++ * Africa/Brazzaville
++ * Africa/Douala
++ * Africa/Kinshasa
++ * Africa/Libreville
++ * Africa/Luanda
++ * Africa/Malabo
++ * Africa/Niamey
++ * Africa/Porto-Novo
++ * Africa/Maseru
++ * Africa/Mbabane
++ * Africa/Juba
++ * Europe/Nicosia
++ * Asia/Bahrain
++ * Asia/Aden
++ * Asia/Kuwait
++ * Asia/Phnom_Penh
++ * Asia/Vientiane
++ * Asia/Muscat
++ * Antarctica/McMurdo
++ * Europe/Jersey
++ * Europe/Guernsey
++ * Europe/Isle_of_Man
++ * Europe/Mariehamn
++ * Europe/Busingen
++ * Europe/Vatican
++ * Europe/San_Marino
++ * Europe/Vaduz
++ * Arctic/Longyearbyen
++ * Europe/Ljubljana
++ * Europe/Podgorica
++ * Europe/Sarajevo
++ * Europe/Skopje
++ * Europe/Zagreb
++ * Europe/Bratislava
++ * Asia/Istanbul
++ * Pacific/Johnston
++ * America/Aruba
++ * America/Lower_Princes
++ * America/Kralendijk
++ * America/Anguilla
++ * America/Dominica
++ * America/Grenada
++ * America/Guadeloupe
++ * America/Marigot
++ * America/Montserrat
++ * America/St_Barthelemy
++ * America/St_Kitts
++ * America/St_Lucia
++ * America/St_Thomas
++ * America/St_Vincent
++ * America/Tortola
++
++The change made should mean that further damage by the IANA time-zone database maintainer
++will be less noticeable.
++
++Semantic compatible - Yes
++
++
++Deprecations since 2.7
++----------------------
++
++
++Bug fixes since 2.7
++-------------------
++- Fix MonthDay.plusDays() [#227]
++  The algorithm was incorrect when adding enough days to cause the month to change twice.
++
++- Fix DateTime.withDate() DateTime.withTime() [#233]
++  The algorithm incorrectly changed the hour of day when certain DST dates were hit.
++  The new algorithm avoids an IllegalInstantException when moving to a DST gap.
++
++- Fix Period.parse() [#238]
++  Negative periods of a fraction of a second were not parsed correctly.
++
++- Format Etc/GMT time-zone using GMT data [#244]
++  This change will provide better text formats for pattern letter 'z'.
++
++- Fix Property.toInterval() [#262]
++  The conversion of a field property to an interval did not take the chronology into account.
++  Thus, dateTime.hourOfDay().toInterval() previously resulted in an interval in the default
++  chronology, rather than the chronology of the dateTime.
++  The chronology is now passed to the interval.
++
++
++Scala
++--------
++Joda-Time uses annotations from Joda-Convert.
++In the Java programming language, this dependency is optional, however in Scala it is not.
++Scala users must manually add the Joda-Convert v1.2 dependency.
++</source>
++</p>
++</section>
++
++</body>
++</document>

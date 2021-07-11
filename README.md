@@ -16,7 +16,7 @@ You can set to true which script you want to run:
 
 ```
 
-## Extract Graph Data
+## Extract ODEM Graph Data
 
 The .odem files you want to read must be on the following path:
 

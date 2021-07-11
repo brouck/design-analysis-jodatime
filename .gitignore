@@ -38,4 +38,5 @@ vignettes/*.pdf
 # R Environment Variables
 .Renviron
 
+# Generated graphs files
 /data/results/graph/*.data

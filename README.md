@@ -20,8 +20,8 @@ You can set to true wich script you want to generate:
 
 The .odem files you want to read must be on the following path:
 
-`\design-analysis-jodatime\data\odem` 
+[`\design-analysis-jodatime\data\odem`](data/odem)
 
 And you need to set `EXECUTE_EXTRACT_GRAPH_DATA` to `true`.
 
-This generates .data files that will be exported to `design-analysis-jodatime\data\results\graph`.
+This generates .data files that will be exported to [design-analysis-jodatime\data\results\graph](data/results/graph/GRAPHDIRECTORY.md).

@@ -40,3 +40,5 @@ vignettes/*.pdf
 
 # Generated graphs files
 /data/results/graph/*.data
+/data/results/logs/*.data
+/target/

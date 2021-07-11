@@ -3,7 +3,7 @@
 
 ## How to generate data:
 
-You can set to true wich script you want to generate:
+You can set to true which script you want to run:
 
 ```java
 	private static boolean EXECUTE_EXTRACT_GRAPH_DATA = false;

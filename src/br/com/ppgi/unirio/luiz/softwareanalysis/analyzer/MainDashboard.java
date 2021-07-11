@@ -21,79 +21,69 @@ import br.com.ppgi.unirio.luiz.softwareanalysis.model.Project;
 
 public class MainDashboard {
 	/**
-	 * ODEM input directory
+	 * Executions variables
+	 * TODO: Export to a "env"like file  
+	 */
+	private static boolean EXECUTE_EXTRACT_GRAPH_DATA = false;
+	private static boolean EXECUTE_GENERATE_LOG_LIST_FILE = false;
+	private static boolean EXECUTE_EXTRACT_REVISIONS_BY_VERSION = false;
+	private static boolean EXECUTE_EXTRACT_REVISIONS_BY_YEAR = false;
+	private static boolean EXECUTE_EXTRACT_ODEM_PROJECTS_CHARACTERISTICS = false;
+	private static boolean EXECUTE_EXTRACT_JAR_PROJECTS_CHARACTERISTICS = false;
+	private static boolean EXECUTE_EXTRACT_ODEM_PACKAGE_CHARACTERISTICS = false;
+
+	/**
+	 * Input directories
 	 */
 	private static String ODEM_DIRECTORY = new File("").getAbsolutePath() + "\\data\\odem";
-
 	private static String JAR_DIRECTORY = new File("").getAbsolutePath() + "\\data\\JARFile";
-
 	private static String ODEMProjectCharacteristics_DIRECTORY= new  File("").getAbsolutePath() + "\\data\\SoftwareAnalysis\\ODEMProjectCharacteristics";
-	
 	private static String ODEMPackageCharacteristics_DIRECTORY= new  File("").getAbsolutePath() + "\\data\\SoftwareAnalysis\\ODEMPackageCharacteristics";
-	
 	private static String JARProjectCharacteristics_DIRECTORY= new  File("").getAbsolutePath() + "\\data\\SoftwareAnalysis\\JARProjectCharacteristics";
 	
-	
-	
 	/**
-	 * Graph data Output directory
+	 * Output directory
 	 */
 	private static String GRAPH_OUTPUT_DIRECTORY= new  File("").getAbsolutePath() + "\\data\\results\\graph\\";
-	
-
-	
 	
 	
 	public static final void main(String[] args) throws Throwable
 	{
-		//Working
-		//extractGraphData();
-////		
-		/**
-		 * Interpret and generate a list of log file containing the commits.
-		 */
-		generateLogListFile("joda-time");
+		if(EXECUTE_EXTRACT_GRAPH_DATA) {
+			extractGraphData();			
+		}
 
-////		
-////		/**
-////		 * generate a list of versions by commit, including the developer, the number of classes and packages
-////		 */
-		//extractRevisionsByVersion("joda-time");
-//		extractRevisionsByVersion("jedit");
-//		extractRevisionsByVersion("jhotdraw");
-////		
-////		
-////		/**
-////		 * generate a list of years by commit, including the developer, the number of classes and packages
-////		 */
-		//extractRevisionsByYear("junit");
-//		extractRevisionsByYear("jedit");
-//		extractRevisionsByYear("jhotdraw");
+		if(EXECUTE_GENERATE_LOG_LIST_FILE) {
+			generateLogListFile("joda-time");			
+		}
 
+		if(EXECUTE_EXTRACT_REVISIONS_BY_VERSION) {
+			extractRevisionsByVersion("joda-time");			
+		}
+
+		if(EXECUTE_EXTRACT_REVISIONS_BY_YEAR) {
+			extractRevisionsByYear("junit");			
+		}
+
+		if(EXECUTE_EXTRACT_ODEM_PROJECTS_CHARACTERISTICS) {
+			extractODEMProjectCharacteristics();			
+		}
 		
-//		
-//		/**
-//		 * generate a list of years by commit, including the developer, the number of classes and packages
-//		 */
-		//extractODEMProjectCharacteristics();
-//		
-//		/**
-//		 * generate a list of years by commit, including the developer, the number of classes and packages
-//		 */
-		//extractJARProjectCharacteristics();
-////			
-////		/**
-////		 * generate a list of years by commit, including the developer, the number of classes and packages
-////		 */
-		//extractODEMPackageCharacteristics();		
+		if(EXECUTE_EXTRACT_JAR_PROJECTS_CHARACTERISTICS) {
+			extractJARProjectCharacteristics();		
+		}
+		
+		if(EXECUTE_EXTRACT_ODEM_PACKAGE_CHARACTERISTICS) {
+			extractODEMPackageCharacteristics();			
+		}		
 	}
 	
-	
+	/**
+	 * generate a list of years by commit, including the developer, the number of classes and packages
+	 */
 	private static void extractODEMPackageCharacteristics() throws Exception {
 		PrintStream ps =null;
-//		FileOutputStream out = null;
 		try{
-//			out = new FileOutputStream("results\\ODEMPackageCharacteristics.data");
 			ps = new PrintStream(new FileOutputStream(ODEMPackageCharacteristics_DIRECTORY + "\\ODEMPackageCharacteristics.data"));
 		
 			ps.println("version\tpackage\tcbo\taff\teff\tlcom\tmf\tcs");
@@ -138,8 +128,9 @@ public class MainDashboard {
 		System.out.println("extractODEMPackageCharacteristics Finished!");		
 	}
 
-
-
+	/**
+	 * generate a list of years by commit, including the developer, the number of classes and packages
+	 */
 	private static void extractJARProjectCharacteristics() throws IOException, ClassNotFoundException {
 		PrintStream ps =null;
 		try{		
@@ -192,7 +183,10 @@ public class MainDashboard {
 	}
 
 
-
+	
+	/**
+	 * generate a list of years by commit, including the developer, the number of classes and packages
+	 */
 	private static void extractODEMProjectCharacteristics() throws Exception {
 		PrintStream ps =null;
 		try{
@@ -236,6 +230,9 @@ public class MainDashboard {
 		System.out.println("extractCharacteristics Finished!");
 	}
 	
+	/**
+	 * generate a list of years by commit, including the developer, the number of classes and packages
+	 */
 	private static void extractRevisionsByYear(String projectName) throws IOException {
 		PrintStream ps = null;
 		try{
@@ -257,6 +254,10 @@ public class MainDashboard {
 		System.out.println("generateRevisionsByYear Finished!");
 	}
 
+
+	/**
+	 * generate a list of versions by commit, including the developer, the number of classes and packages
+	 */
 	private static void extractRevisionsByVersion(String projectName) throws IOException, XMLParseException, ParseException {
 		PrintStream ps = null;
 		try{
@@ -278,6 +279,9 @@ public class MainDashboard {
 		System.out.println("generateRevisionsByVersion Finished!");
 	}
 
+	/**
+	 * Interpret and generate a list of log file containing the commits.
+	 */
 	private static void generateLogListFile(String projectName ) throws IOException, Throwable {
 		PrintStream ps = null;
 		try{

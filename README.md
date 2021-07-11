@@ -6,14 +6,31 @@
 You can set to true which script you want to run:
 
 ```java
-	private static boolean EXECUTE_EXTRACT_GRAPH_DATA = false;
-	private static boolean EXECUTE_GENERATE_LOG_LIST_FILE = false;
-	private static boolean EXECUTE_EXTRACT_REVISIONS_BY_VERSION = false;
-	private static boolean EXECUTE_EXTRACT_REVISIONS_BY_YEAR = false;
-	private static boolean EXECUTE_EXTRACT_ODEM_PROJECTS_CHARACTERISTICS = false;
-	private static boolean EXECUTE_EXTRACT_JAR_PROJECTS_CHARACTERISTICS = false;
-	private static boolean EXECUTE_EXTRACT_ODEM_PACKAGE_CHARACTERISTICS = false;
+private static boolean EXECUTE_EXTRACT_GRAPH_DATA = false;
+private static boolean EXECUTE_GENERATE_LOG_LIST_FILE = false;
+private static boolean EXECUTE_EXTRACT_REVISIONS_BY_VERSION = false;
+private static boolean EXECUTE_EXTRACT_REVISIONS_BY_YEAR = false;
+private static boolean EXECUTE_EXTRACT_ODEM_PROJECTS_CHARACTERISTICS =false;
+private static boolean EXECUTE_EXTRACT_JAR_PROJECTS_CHARACTERISTICS =false;
+private static boolean EXECUTE_EXTRACT_ODEM_PACKAGE_CHARACTERISTICS =false;
 
+```
+
+Readable data paths, this is the default paths:
+```java
+//TODO
+private static String ODEM_DIRECTORY = new File("").getAbsolutePath() + "\\data\\odem";
+```
+
+Output Directories:
+```java
+//TODO
+
+```
+
+Project name:
+```java
+private static String PROJECT_NAME = "joda-time";
 ```
 
 ## Execute Extract ODEM Graph Data

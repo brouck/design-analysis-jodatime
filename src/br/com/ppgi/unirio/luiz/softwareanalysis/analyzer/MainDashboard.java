@@ -46,6 +46,10 @@ public class MainDashboard {
 	 */
 	private static String GRAPH_OUTPUT_DIRECTORY= new  File("").getAbsolutePath() + "\\data\\results\\graph\\";
 	
+	/**
+	 * Project Name
+	 */
+	private static String PROJECT_NAME = "joda-time";
 	
 	public static final void main(String[] args) throws Throwable
 	{
@@ -54,15 +58,15 @@ public class MainDashboard {
 		}
 
 		if(EXECUTE_GENERATE_LOG_LIST_FILE) {
-			generateLogListFile("joda-time");			
+			generateLogListFile(PROJECT_NAME);			
 		}
 
 		if(EXECUTE_EXTRACT_REVISIONS_BY_VERSION) {
-			extractRevisionsByVersion("joda-time");			
+			extractRevisionsByVersion(PROJECT_NAME);			
 		}
 
 		if(EXECUTE_EXTRACT_REVISIONS_BY_YEAR) {
-			extractRevisionsByYear("junit");			
+			extractRevisionsByYear(PROJECT_NAME);			
 		}
 
 		if(EXECUTE_EXTRACT_ODEM_PROJECTS_CHARACTERISTICS) {

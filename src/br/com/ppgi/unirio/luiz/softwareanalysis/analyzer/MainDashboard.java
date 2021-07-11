@@ -46,14 +46,14 @@ public class MainDashboard {
 	
 	public static final void main(String[] args) throws Throwable
 	{
-		extractGraphData();
+		//Working
+		//extractGraphData();
 ////		
-////		/**
-////		 * Interpret and generate a list of log file containing the commits.
-////		 */
-//		generateLogListFile("joda-time");
-//		generateLogListFile("jedit");
-//		generateLogListFile("jhotdraw");
+		/**
+		 * Interpret and generate a list of log file containing the commits.
+		 */
+		generateLogListFile("joda-time");
+
 ////		
 ////		/**
 ////		 * generate a list of versions by commit, including the developer, the number of classes and packages
@@ -258,7 +258,6 @@ public class MainDashboard {
 	}
 
 	private static void extractRevisionsByVersion(String projectName) throws IOException, XMLParseException, ParseException {
-		// TODO Auto-generated method stub
 		PrintStream ps = null;
 		try{
 			FileOutputStream out = new FileOutputStream("results\\" + projectName + "_RevisionsByVersion.data");
@@ -282,8 +281,8 @@ public class MainDashboard {
 	private static void generateLogListFile(String projectName ) throws IOException, Throwable {
 		PrintStream ps = null;
 		try{
-			String path = "results\\" + projectName + "_LogListFile.data";
-			String loadPath = "data\\log\\" + projectName + "log_raw.data";
+			String path = "data\\results\\logs\\" + projectName + "_LogListFile.data";
+			String loadPath = "data\\log\\" + projectName + "_log_raw.data";
 			FileOutputStream out = new FileOutputStream(path);
 			ps = new PrintStream(out);
 			VersionYearLog mainVersionLog = new VersionYearLog();

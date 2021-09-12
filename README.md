@@ -25,12 +25,13 @@ private static String ODEM_DIRECTORY = new File("").getAbsolutePath() + "\\data\
 Output Directories:
 ```java
 //TODO
-
+	private static String GRAPH_OUTPUT_DIRECTORY= new  File("").getAbsolutePath() + "\\data\\results\\graph\\";
 ```
 
-Project name:
+Other:
 ```java
 private static String PROJECT_NAME = "joda-time";
+private static boolean LOG_FILE_FROM_GIT = true;
 ```
 
 ## Execute Extract ODEM Graph Data
@@ -52,4 +53,17 @@ The log list raw file must be on the following path:
 
 Set `EXECUTE_GENERATE_LOG_LIST_FILE` to `true`.
 
+Set `LOG_FILE_FROM_GIT` to `true` if you generate the log file from git and to `false` if you used SVN.
+
+To generate the log file from git in the supported format:
+```
+git log --name-status --find-renames > <log file name>.txt 
+```
+
+
+
 This generates .data files that will be exported to [design-analysis-jodatime\data\results\logs](data/results/logs/LOGDIRECTORY.md).
+
+
+## TODO
+- Add how to generate the log in the svn supported format.

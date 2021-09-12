@@ -155,68 +155,106 @@ public class VersionYearLog {
 		br.close();
 	}
 
-	public void loadLogFile(String filename, PrintStream ps) throws IOException, ParseException
+	/**
+	 * Generate the data file based on the commit logs
+	 * @param filename Name of the file that will be loaded
+	 * @param ps The prinstream
+	 * @param isGit Boolean that represents if the log file is from git
+	 * @throws IOException
+	 * @throws ParseException
+	 */
+	public void loadLogFile(String filename, PrintStream ps, boolean isGit) throws IOException, ParseException
 	{
 		BufferedReader br = new BufferedReader(new FileReader(filename));
 		String line;
-		
 		String revision = "";
 		String author = "";
 		String date = "";
 		String type = "";
-		
 		
 		new ArrayList<String>();
 		ps.println("version\tauthor\tclasses\tpackages");
 		
 		while ((line = br.readLine()) != null) 
 		{
+
+			
 			try {
-				if (line.length() > 0)
-				{
-				String tokens[] = line.split(":");
-				String tokensSpace[] = line.split("\t");
-				if(tokens[0].equals("Revision")) {
-					if (tokens.length>1) {
-						revision = tokens[1];	
+				if (line.length() > 0) {
+					String tokens[] = line.split(":");
+					String tokensTab[] = line.split("\t");
+					String tokensSpace[] = line.split(" ");
+
+					
+					/* If log file is generated from git log we'll use the commit hash to replace the revision */
+					if(isGit && tokensSpace.length > 1) {					
+						if(tokensSpace[0].equals("commit")) {
+							if (tokensSpace.length>1) {
+								revision = tokensSpace[1];	
+							}
+						}
+					} else {
+						if(tokens[0].equals("Revision")) {
+							if (tokens.length>1) {
+								revision = tokens[1];	
+							}
+						}
 					}
 				
-				}
 				
-				if(tokens[0].equals("Author")) {
-					if (tokens.length>1) {
-						author = tokens[1].trim().length()==0 ? "N/A" : tokens[1];	
-					}
-					
-				}
-				
-				else if(tokens[0].equals("Date")) {
-					
-						String str = tokens[1].substring(1, tokens[1].length() -2);
-						System.out.println(str);
+					if(tokens[0].equals("Author")) {
 						if (tokens.length>1) {
-							Date date1=new SimpleDateFormat("EEE, d MMM yyyy", Locale.ENGLISH).parse(tokens[1].substring(1, tokens[1].length() -2).trim());
-//							Date date1=new SimpleDateFormat("EEEE, MMMM dd, yyyy hh:mm:ss aaa", Locale.ENGLISH).parse(tokens[1]+":"+tokens[2]+":"+tokens[3]);
-							
+							author = tokens[1].trim().length()==0 ? "N/A" : tokens[1];	
+						}
+					
+					}
+				
+					else if(isGit && tokens[0].equals("Date")) {
+						String str = tokens[1].substring(1, tokens[1].length() -2);
+						if (tokens.length>1) {
+							//Fri Dec 19 03:00:43 2003 +0000
+							Date date1=new SimpleDateFormat("EEE MMM d", Locale.ENGLISH).parse(str.trim());
 							DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");  
 							date = dateFormat.format(date1);	
 						}	
 					
-				}
-				
-				else if(tokensSpace[0].equals("M") || tokensSpace[0].equals("A") || tokensSpace[0].equals("R")) {
-					if (tokensSpace.length>1) {
-						if (tokensSpace[1].endsWith(".java")) {
-							type = tokensSpace[1];
-							ps.println(date + " R" + revision.trim() + " " + author.trim() + " " + type.trim());
-						}	
 					}
+					
+					else if(!isGit && tokens[0].equals("Date")) {
+						String str = tokens[1].substring(1, tokens[1].length() -2);
+						if (tokens.length>1) {
+							Date date1=new SimpleDateFormat("EEE, d MMM yyyy", Locale.ENGLISH).parse(str.trim());
+							DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");  
+							date = dateFormat.format(date1);	
+						}	
+					
+					}
+					
+					/* Git uses D to represent deletions*/
+					else if(isGit && (tokensTab[0].equals("M") || tokensTab[0].equals("A") || tokensTab[0].equals("D"))) {
+						if (tokensTab.length>1) {
+							if (tokensTab[1].endsWith(".java")) {
+								type = tokensTab[1];
+								ps.println(date + " "+ revision.trim() + " " + author.trim().replace(' ', '-') + " " + type.trim());
+							}
+					}
+						
+					else if(!isGit && (tokensTab[0].equals("M") || tokensTab[0].equals("A") || tokensTab[0].equals("R"))) {
+						if (tokensTab.length>1) {
+							if (tokensTab[1].endsWith(".java")) {
+								type = tokensTab[1];
+								ps.println(date + " R" + revision.trim() + " " + author.trim() + " " + type.trim());
+							}	
+						}
+					}
+						
 				}
-			}}
+				}
+			}
 			catch(Exception  e) {
 				System.out.println(e);
 			}
 		}
-			br.close();	
+		br.close();
 	}
 }

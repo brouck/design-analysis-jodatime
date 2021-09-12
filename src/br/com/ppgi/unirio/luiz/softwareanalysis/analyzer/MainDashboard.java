@@ -25,7 +25,7 @@ public class MainDashboard {
 	 * TODO: Export to a "env"like file  
 	 */
 	private static boolean EXECUTE_EXTRACT_GRAPH_DATA = false;
-	private static boolean EXECUTE_GENERATE_LOG_LIST_FILE = false;
+	private static boolean EXECUTE_GENERATE_LOG_LIST_FILE = true;
 	private static boolean EXECUTE_EXTRACT_REVISIONS_BY_VERSION = false;
 	private static boolean EXECUTE_EXTRACT_REVISIONS_BY_YEAR = false;
 	private static boolean EXECUTE_EXTRACT_ODEM_PROJECTS_CHARACTERISTICS = false;
@@ -47,9 +47,10 @@ public class MainDashboard {
 	private static String GRAPH_OUTPUT_DIRECTORY= new  File("").getAbsolutePath() + "\\data\\results\\graph\\";
 	
 	/**
-	 * Project Name
+	 * Others
 	 */
 	private static String PROJECT_NAME = "joda-time";
+	private static boolean LOG_FILE_FROM_GIT = true;
 	
 	public static final void main(String[] args) throws Throwable
 	{
@@ -286,16 +287,16 @@ public class MainDashboard {
 	/**
 	 * Interpret and generate a list of log file containing the commits.
 	 */
-	private static void generateLogListFile(String projectName ) throws IOException, Throwable {
+	private static void generateLogListFile(String projectName) throws IOException, Throwable {
 		PrintStream ps = null;
 		try{
 			String path = "data\\results\\logs\\" + projectName + "_LogListFile.data";
-			String loadPath = "data\\log\\" + projectName + "_log_raw.data";
+			String loadPath = "data\\log\\" + projectName + "_log_raw.txt";
 			FileOutputStream out = new FileOutputStream(path);
 			ps = new PrintStream(out);
 			VersionYearLog mainVersionLog = new VersionYearLog();
-			File file = new File(loadPath);
-			mainVersionLog.loadLogFile(loadPath, ps);
+			//File file = new File(loadPath);
+			mainVersionLog.loadLogFile(loadPath, ps, LOG_FILE_FROM_GIT);
 		}
 		catch (Exception e) {
 			System.out.println(e);
@@ -309,6 +310,7 @@ public class MainDashboard {
 			
 			System.out.println("generateLogListFile Finished!");		
 	}
+
 
 	public static final void extractGraphData() throws IOException, Exception
 	{

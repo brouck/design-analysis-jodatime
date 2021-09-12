@@ -48,7 +48,7 @@ This generates .data files that will be exported to [design-analysis-jodatime\da
 
 The log list raw file must be on the following path:
 
-[`\design-analysis-jodatime\data\odem`](data/log)
+[`\design-analysis-jodatime\data\log`](data/log)
 
 Set `EXECUTE_GENERATE_LOG_LIST_FILE` to `true`.
 

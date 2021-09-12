@@ -13,11 +13,10 @@ import java.util.Objects;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
-import javax.management.modelmbean.XMLParseException;
+import br.com.ppgi.unirio.luiz.softwareanalysis.controller.*;
+import br.com.ppgi.unirio.luiz.softwareanalysis.model.*;
 
-import br.com.ppgi.unirio.luiz.softwareanalysis.controller.ClusteringCalculator;
-import br.com.ppgi.unirio.luiz.softwareanalysis.controller.ProjectLoader;
-import br.com.ppgi.unirio.luiz.softwareanalysis.model.Project;
+import javax.management.modelmbean.XMLParseException;
 
 public class MainDashboard {
 	/**

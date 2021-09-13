@@ -19,13 +19,13 @@ import br.com.ppgi.unirio.luiz.softwareanalysis.controller.ProjectLoader;
 public class VersionYearLog {
 	private static String findVersion(String sdata, String project, String ODEM_DIRECTORY)
 			throws XMLParseException, ParseException {
-		ProjectLoader pl = new ProjectLoader(ODEM_DIRECTORY + "\\" + project);
+		ProjectLoader pl = new ProjectLoader(ODEM_DIRECTORY);
 		String version = "";
 		Date date1 = null;
 		Date date2 = null;
 		Date date3 = new SimpleDateFormat("yyyy-MM-dd").parse("9999-12-31");
 		for (int i = 0; i < pl.PROJECT_INFO.length; i++) {
-			if (pl.PROJECT_INFO[i][0].equals(project)) {
+			if (pl.PROJECT_INFO[i][0].equals(project.split("-")[0])) {
 //				if (sdata.compareToIgnoreCase(pl.PROJECT_INFO[i][2]) < 0) {
 				date1 = new SimpleDateFormat("yyyy-MM-dd").parse(sdata);
 				date2 = new SimpleDateFormat("ddMMyyyy").parse(pl.PROJECT_INFO[i][2]);
@@ -166,6 +166,7 @@ public class VersionYearLog {
 	public void loadLogFile(String filename, PrintStream ps, boolean isGit) throws IOException, ParseException
 	{
 		BufferedReader br = new BufferedReader(new FileReader(filename));
+		
 		String line;
 		String revision = "";
 		String author = "";
@@ -210,10 +211,10 @@ public class VersionYearLog {
 					}
 				
 					else if(isGit && tokens[0].equals("Date")) {
-						String str = tokens[1].substring(1, tokens[1].length() -2);
+						String str = tokensTab[0].split(": ")[1].trim();
 						if (tokens.length>1) {
 							//Fri Dec 19 03:00:43 2003 +0000
-							Date date1=new SimpleDateFormat("EEE MMM d", Locale.ENGLISH).parse(str.trim());
+							Date date1=new SimpleDateFormat("EEE MMM d HH:mm:ss YYYY ZZZZZ", Locale.ENGLISH).parse(str.trim());
 							DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");  
 							date = dateFormat.format(date1);	
 						}	

@@ -48,6 +48,10 @@ public class ProjectLoader
 		loadODEMRealVersionInfo(PROJECT_ODEM_DIRECTORY);	
 	}
 	
+	public  ProjectLoader(String PROJECT_ODEM_DIRECTORY, String delimeter) throws XMLParseException{
+		loadVersionInfo(PROJECT_ODEM_DIRECTORY, delimeter);	
+	}
+	
 	
 	/**
 	 * Known external dependencies for real versions
@@ -596,6 +600,28 @@ public class ProjectLoader
 				PROJECT_INFO[count][0] = tokens[0];
 				PROJECT_INFO[count][1] = tokens[1];
 				PROJECT_INFO[count][2] = tokens[2].substring(0,8);	
+			}
+			count++;
+		}				
+	}
+	
+	public void loadVersionInfo(String PROJECT_LOG_DIRECTORY, String delimeter) throws XMLParseException
+	{
+		List<File> files = new ArrayList<File>();
+		
+		File dir = new File(PROJECT_LOG_DIRECTORY);
+		
+		listFilesOnly(dir,files);
+		
+		PROJECT_INFO = new String[files.size()][3];
+		int count =0;
+		for (File file1: files) {
+			if(file1.isDirectory() == false && getFileExtension(file1).equals("odem")) {
+				String tokens[] = file1.getName().split(delimeter);
+				
+				PROJECT_INFO[count][0] = tokens[0];
+				PROJECT_INFO[count][1] = tokens[1].replace("-", ".");
+				PROJECT_INFO[count][2] = tokens[2].substring(0,10);	
 			}
 			count++;
 		}				

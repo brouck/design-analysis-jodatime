@@ -1,6 +1,7 @@
 package br.com.ppgi.unirio.luiz.softwareanalysis.analyzer;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -17,18 +18,18 @@ import javax.management.modelmbean.XMLParseException;
 import br.com.ppgi.unirio.luiz.softwareanalysis.controller.ProjectLoader;
 
 public class VersionYearLog {
-	private static String findVersion(String sdata, String project, String ODEM_DIRECTORY)
+	private static String findVersion(String sdata, String project, String LOG_DIRECTORY)
 			throws XMLParseException, ParseException {
-		ProjectLoader pl = new ProjectLoader(ODEM_DIRECTORY);
+		ProjectLoader pl = new ProjectLoader(LOG_DIRECTORY, "_");
 		String version = "";
 		Date date1 = null;
 		Date date2 = null;
 		Date date3 = new SimpleDateFormat("yyyy-MM-dd").parse("9999-12-31");
 		for (int i = 0; i < pl.PROJECT_INFO.length; i++) {
-			if (pl.PROJECT_INFO[i][0].equals(project.split("-")[0])) {
+			if (pl.PROJECT_INFO[i][0].equals(project)) {
 //				if (sdata.compareToIgnoreCase(pl.PROJECT_INFO[i][2]) < 0) {
 				date1 = new SimpleDateFormat("yyyy-MM-dd").parse(sdata);
-				date2 = new SimpleDateFormat("ddMMyyyy").parse(pl.PROJECT_INFO[i][2]);
+				date2 = new SimpleDateFormat("dd-MM-yyyy").parse(pl.PROJECT_INFO[i][2]);
 
 				if (date1.compareTo(date2) < 0) {
 					if (date2.compareTo(date3) < 0) {
@@ -50,7 +51,7 @@ public class VersionYearLog {
 		return false;
 	}
 
-	public void saveRevisionsByVersion(String filename, PrintStream ps, String project, String ODEM_DIRECTORY)
+	public void saveRevisionsByVersion(String filename, PrintStream ps, String project, String LOG_DIRECTORY)
 			throws IOException, XMLParseException, ParseException {
 		BufferedReader br = new BufferedReader(new FileReader(filename));
 		String line;
@@ -87,7 +88,7 @@ public class VersionYearLog {
 					if (lastVersion.length() > 0)
 						ps.println(lastVersion + "\t" + lastAuthor + "\t" + lastClasses + "\t" + lastPackages.size());
 
-					lastVersion = findVersion(sdata, project, ODEM_DIRECTORY);
+					lastVersion = findVersion(sdata, project, LOG_DIRECTORY);
 					lastRevision = revision;
 					lastAuthor = author;
 					lastClasses = 0;

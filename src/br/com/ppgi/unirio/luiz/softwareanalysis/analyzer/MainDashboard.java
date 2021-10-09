@@ -24,7 +24,7 @@ public class MainDashboard {
 	 * TODO: Export to a "env"like file  
 	 */
 	private static boolean EXECUTE_EXTRACT_GRAPH_DATA = false;
-	private static boolean EXECUTE_GENERATE_LOG_LIST_FILE = true;
+	private static boolean EXECUTE_GENERATE_LOG_LIST_FILE = false;
 	private static boolean EXECUTE_EXTRACT_REVISIONS_BY_VERSION = false;
 	private static boolean EXECUTE_EXTRACT_REVISIONS_BY_YEAR = false;
 	private static boolean EXECUTE_EXTRACT_ODEM_PROJECTS_CHARACTERISTICS = false;
@@ -35,6 +35,7 @@ public class MainDashboard {
 	 * Input directories
 	 */
 	private static String ODEM_DIRECTORY = new File("").getAbsolutePath() + "\\data\\odem";
+	private static String LOG_DIRECTORY = new File("").getAbsolutePath() + "\\data\\logFiles";
 	private static String JAR_DIRECTORY = new File("").getAbsolutePath() + "\\data\\JARFile";
 	private static String ODEMProjectCharacteristics_DIRECTORY= new  File("").getAbsolutePath() + "\\data\\SoftwareAnalysis\\ODEMProjectCharacteristics";
 	private static String ODEMPackageCharacteristics_DIRECTORY= new  File("").getAbsolutePath() + "\\data\\SoftwareAnalysis\\ODEMPackageCharacteristics";
@@ -265,10 +266,10 @@ public class MainDashboard {
 	private static void extractRevisionsByVersion(String projectName) throws IOException, XMLParseException, ParseException {
 		PrintStream ps = null;
 		try{
-			FileOutputStream out = new FileOutputStream("results\\" + projectName + "_RevisionsByVersion.data");
+			FileOutputStream out = new FileOutputStream("data\\results\\revisions\\" + projectName + "_RevisionsByVersion.data");
 			ps = new PrintStream(out);
 			VersionYearLog mainVersionLog = new VersionYearLog();
-			mainVersionLog.saveRevisionsByVersion("results\\" + projectName + "_LogListFile.data", ps, projectName, ODEM_DIRECTORY);
+			mainVersionLog.saveRevisionsByVersion("data\\results\\logs\\" + projectName + "_LogListFile.data", ps, projectName, LOG_DIRECTORY);
 		}
 		catch (Exception e) {
 			

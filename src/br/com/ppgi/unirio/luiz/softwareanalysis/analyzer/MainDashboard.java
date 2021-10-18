@@ -28,7 +28,7 @@ public class MainDashboard {
 	private static boolean EXECUTE_EXTRACT_REVISIONS_BY_VERSION = false;
 	private static boolean EXECUTE_EXTRACT_REVISIONS_BY_YEAR = false;
 	private static boolean EXECUTE_EXTRACT_ODEM_PROJECTS_CHARACTERISTICS = false;
-	private static boolean EXECUTE_EXTRACT_JAR_PROJECTS_CHARACTERISTICS = false;
+	private static boolean EXECUTE_EXTRACT_JAR_PROJECTS_CHARACTERISTICS = true;
 	private static boolean EXECUTE_EXTRACT_ODEM_PACKAGE_CHARACTERISTICS = false;
 
 	/**
@@ -36,10 +36,10 @@ public class MainDashboard {
 	 */
 	private static String ODEM_DIRECTORY = new File("").getAbsolutePath() + "\\data\\odem";
 	private static String LOG_DIRECTORY = new File("").getAbsolutePath() + "\\data\\logFiles";
-	private static String JAR_DIRECTORY = new File("").getAbsolutePath() + "\\data\\JARFile";
+	private static String JAR_DIRECTORY = new File("").getAbsolutePath() + "\\data\\jar";
 	private static String ODEMProjectCharacteristics_DIRECTORY= new  File("").getAbsolutePath() + "\\data\\SoftwareAnalysis\\ODEMProjectCharacteristics";
 	private static String ODEMPackageCharacteristics_DIRECTORY= new  File("").getAbsolutePath() + "\\data\\SoftwareAnalysis\\ODEMPackageCharacteristics";
-	private static String JARProjectCharacteristics_DIRECTORY= new  File("").getAbsolutePath() + "\\data\\SoftwareAnalysis\\JARProjectCharacteristics";
+	private static String JARProjectCharacteristics_DIRECTORY= new  File("").getAbsolutePath() + "\\data\\results\\graph";
 	
 	/**
 	 * Output directory

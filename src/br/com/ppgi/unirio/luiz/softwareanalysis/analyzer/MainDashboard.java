@@ -26,9 +26,9 @@ public class MainDashboard {
 	private static boolean EXECUTE_EXTRACT_GRAPH_DATA = false;
 	private static boolean EXECUTE_GENERATE_LOG_LIST_FILE = false;
 	private static boolean EXECUTE_EXTRACT_REVISIONS_BY_VERSION = false;
-	private static boolean EXECUTE_EXTRACT_REVISIONS_BY_YEAR = false;
+	private static boolean EXECUTE_EXTRACT_REVISIONS_BY_YEAR = true;
 	private static boolean EXECUTE_EXTRACT_ODEM_PROJECTS_CHARACTERISTICS = false;
-	private static boolean EXECUTE_EXTRACT_JAR_PROJECTS_CHARACTERISTICS = true;
+	private static boolean EXECUTE_EXTRACT_JAR_PROJECTS_CHARACTERISTICS = false;
 	private static boolean EXECUTE_EXTRACT_ODEM_PACKAGE_CHARACTERISTICS = false;
 
 	/**
@@ -241,13 +241,13 @@ public class MainDashboard {
 	private static void extractRevisionsByYear(String projectName) throws IOException {
 		PrintStream ps = null;
 		try{
-			FileOutputStream out = new FileOutputStream("results\\" + projectName + "_RevisionsByYear.data");
+			FileOutputStream out = new FileOutputStream("data\\results\\revisions\\" + projectName + "_RevisionsByYear.data");
 			ps = new PrintStream(out);
 			VersionYearLog mainVersionYearLog = new VersionYearLog();
-			mainVersionYearLog.saveRevisionsByYear("results\\" + projectName + "_LogListFile.data", ps);
+			mainVersionYearLog.saveRevisionsByYear("data\\results\\logs\\" + projectName + "_LogListFile.data", ps);
 		}
 		catch (Exception e) {
-			
+			System.out.println(e);
 		}
 		
 		finally {
@@ -272,7 +272,7 @@ public class MainDashboard {
 			mainVersionLog.saveRevisionsByVersion("data\\results\\logs\\" + projectName + "_LogListFile.data", ps, projectName, LOG_DIRECTORY);
 		}
 		catch (Exception e) {
-			
+			System.out.println(e);
 		}
 		
 		finally {

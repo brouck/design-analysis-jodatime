@@ -215,9 +215,10 @@ public class VersionYearLog {
 						String str = tokensTab[0].split(": ")[1].trim();
 						if (tokens.length>1) {
 							//Fri Dec 19 03:00:43 2003 +0000
-							Date date1=new SimpleDateFormat("EEE MMM d HH:mm:ss YYYY ZZZZZ", Locale.ENGLISH).parse(str.trim());
+							@SuppressWarnings("deprecation")
+							Date dateFromString = new Date(str);
 							DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");  
-							date = dateFormat.format(date1);	
+							date = dateFormat.format(dateFromString);	
 						}	
 					
 					}
